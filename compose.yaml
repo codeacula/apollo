@@ -8,3 +8,5 @@ services:
       dockerfile: src/Rydia/Dockerfile
     ports:
       - 80:5144
+    env_file:
+      - .env
