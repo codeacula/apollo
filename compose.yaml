@@ -7,4 +7,4 @@ services:
       context: .
       dockerfile: src/Rydia/Dockerfile
     ports:
-      - 5144:5144
+      - 80:5144
