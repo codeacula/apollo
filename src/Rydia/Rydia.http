@@ -1,0 +1,6 @@
+@Rydia_HostAddress = http://localhost:5144
+
+GET {{Rydia_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
