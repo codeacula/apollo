@@ -1,0 +1,16 @@
+# Please refer https://aka.ms/HTTPSinContainer on how to setup an https developer certificate for your ASP.NET Core service.
+
+services:
+  rydia:
+    image: rydia
+    build:
+      context: .
+      dockerfile: src/Rydia/Dockerfile
+      args:
+        - configuration=Debug
+    ports:
+      - 5144:5144
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    volumes:
+      - ~/.vsdbg:/remote_debugger:rw
