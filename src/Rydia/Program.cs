@@ -7,7 +7,8 @@ using Rydia;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddOpenApi();
+builder.Services
+    .AddControllers();
 
 builder.Services.AddDiscordRest()
     .AddHttpApplicationCommands();
@@ -27,8 +28,15 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+app.MapControllers();
+
 app.UseHttpsRedirection();
 
+app.UseDefaultFiles();
+app.UseStaticFiles();
+
 app.UseHttpInteractions("/interactions");
+
+app.MapFallbackToFile("index.html");
 
 app.Run();

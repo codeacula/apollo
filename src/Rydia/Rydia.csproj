@@ -1,17 +1,20 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>e33e2b92-70b6-4727-ab3c-475c4f06ee77</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.3.0" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.8" />
     <PackageReference Include="NetCord" Version="1.0.0-alpha.422" />
     <PackageReference Include="NetCord.Hosting" Version="1.0.0-alpha.422" />
     <PackageReference Include="NetCord.Hosting.AspNetCore" Version="1.0.0-alpha.422" />
     <PackageReference Include="NetCord.Hosting.Services" Version="1.0.0-alpha.422" />
+    <PackageReference Include="Quartz" Version="3.15.0" />
   </ItemGroup>
 
 </Project>
