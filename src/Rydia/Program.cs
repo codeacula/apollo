@@ -1,7 +1,5 @@
 using NetCord.Gateway;
-using NetCord.Hosting.AspNetCore;
 using NetCord.Hosting.Gateway;
-using NetCord.Hosting.Rest;
 using NetCord.Hosting.Services.ApplicationCommands;
 using Rydia;
 
@@ -10,7 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services
     .AddControllers();
 
-builder.Services.AddDiscordRest()
+builder.Services
     .AddHttpApplicationCommands();
 
 builder.Services
@@ -33,7 +31,5 @@ app.UseHttpsRedirection();
 
 app.UseDefaultFiles();
 app.UseStaticFiles();
-
-app.UseHttpInteractions("/interactions");
 
 app.Run();
