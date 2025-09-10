@@ -36,6 +36,4 @@ app.UseStaticFiles();
 
 app.UseHttpInteractions("/interactions");
 
-app.MapFallbackToFile("index.html");
-
 app.Run();
