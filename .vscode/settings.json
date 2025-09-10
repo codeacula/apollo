@@ -1,3 +1,6 @@
 {
-    "dotnet.defaultSolution": "Rydia.sln"
+    "dotnet.defaultSolution": "Rydia.sln",
+    "cSpell.words": [
+        "Rydia"
+    ]
 }

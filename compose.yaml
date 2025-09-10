@@ -1,21 +1,10 @@
-# Please refer https://aka.ms/HTTPSinContainer on how to setup an https developer certificate for your ASP.NET Core service.
-
 services:
   rydia:
     image: rydia
     build:
       context: .
       dockerfile: src/Rydia/Dockerfile
-    volumes:
-      - /root/rydia.pem:/https/rydia.pem
-      - /root/rydia.key:/https/rydia.key
     ports:
-      - 80:5144
-      - 443:8443
-    environment:
-      - ASPNETCORE_URLS="https://+;http://+"
-      - ASPNETCORE_HTTPS_PORT=8443
-      - Kestrel__Certificates__Default__Path=/https/rydia.pem
-      - Kestrel__Certificates__Default__KeyPath=/https/rydia.key
+      - 5144:5144
     env_file:
       - .env
