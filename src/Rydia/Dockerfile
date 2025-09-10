@@ -7,7 +7,7 @@ ENV ASPNETCORE_URLS=http://+:5144
 USER app
 
 # Build the client
-FROM node:20-alpine AS client-build
+FROM node:24-alpine AS client-build
 WORKDIR /src
 COPY ./src/Client/package*.json ./src/Client/
 RUN cd ./src/Client && npm ci

@@ -1,6 +1,6 @@
-using Microsoft.AspNetCore.Mvc;
+namespace Rydia.Controllers;
 
-namespace Rydia;
+using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
 [Route("/api")]
