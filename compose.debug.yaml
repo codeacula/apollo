@@ -16,3 +16,20 @@ services:
       - ~/.vsdbg:/remote_debugger:rw
     env_file:
       - .env
+    depends_on:
+      - pgsql
+
+  pgsql:
+    image: postgres
+    restart: always
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-rydia}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-rydia}
+      - POSTGRES_DB=${POSTGRES_DB:-rydia_db}
+    volumes:
+      - pgsql_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+volumes:
+  pgsql_data:

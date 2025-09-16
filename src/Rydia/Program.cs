@@ -1,6 +1,7 @@
 using NetCord.Gateway;
 using NetCord.Hosting.Gateway;
 using NetCord.Hosting.Services.ApplicationCommands;
+using Quartz;
 using Rydia;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,6 +19,23 @@ builder.Services
 })
 .AddGatewayHandlers(typeof(IRydiaApp).Assembly);
 
+var connectionString = builder.Configuration.GetConnectionString("Rydia") ?? throw new NullReferenceException();
+
+builder.Services
+    .AddQuartz(q =>
+    {
+        q.UsePersistentStore(s =>
+        {
+            s.UseProperties = true;
+            s.UsePostgres(connectionString);
+            s.UseSystemTextJsonSerializer();
+        });
+    })
+    .AddQuartzHostedService(opt =>
+    {
+        opt.WaitForJobsToComplete = true;
+    });
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -32,4 +50,4 @@ app.UseHttpsRedirection();
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
-app.Run();
+await app.RunAsync();
