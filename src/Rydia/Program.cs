@@ -1,8 +1,10 @@
+using Microsoft.EntityFrameworkCore;
 using NetCord.Gateway;
 using NetCord.Hosting.Gateway;
 using NetCord.Hosting.Services.ApplicationCommands;
 using Quartz;
 using Rydia;
+using Rydia.Database;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +22,11 @@ builder.Services
 .AddGatewayHandlers(typeof(IRydiaApp).Assembly);
 
 var connectionString = builder.Configuration.GetConnectionString("Rydia") ?? throw new NullReferenceException();
+
+builder.Services.AddDbContextPool<RydiaDbContext>(options =>
+{
+    options.UseNpgsql(connectionString);
+});
 
 builder.Services
     .AddQuartz(q =>
