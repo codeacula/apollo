@@ -20,6 +20,13 @@ public partial class ToDoModule(ILogger<ToDoModule> logger) : ApplicationCommand
 
         responseBuilder.AppendLine("# HERRO");
 
+        if (Context.Guild is null)
+        {
+            throw new Exception("Unable");
+        }
+
+        Context.Guild.Channels.Select(x => x.Value.Name).ToList().ForEach(x => responseBuilder.AppendLine(x));
+
         var container = new ComponentContainerProperties
         {
             AccentColor = new Color(0x3B5BA5),
@@ -37,7 +44,6 @@ public partial class ToDoModule(ILogger<ToDoModule> logger) : ApplicationCommand
 
     [LoggerMessage(
         Level = LogLevel.Information,
-
         Message = "configure-daily-alert initialized by {Username}"
     )]
     public static partial void LogStartConfigure(ILogger logger, string username);

@@ -40,7 +40,11 @@ try
             q.UsePersistentStore(s =>
             {
                 s.UseProperties = true;
-                s.UsePostgres(connectionString);
+                s.UsePostgres(options =>
+                {
+                    options.ConnectionString = connectionString;
+                    options.TablePrefix = "QRTZ_";
+                });
                 s.UseSystemTextJsonSerializer();
             });
         })
