@@ -22,4 +22,8 @@
     <PackageReference Include="Quartz.Serialization.SystemTextJson" Version="3.15.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Rydia.Database\Rydia.Database.csproj" />
+  </ItemGroup>
+
 </Project>

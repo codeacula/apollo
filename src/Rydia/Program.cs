@@ -1,4 +1,6 @@
+using Microsoft.EntityFrameworkCore;
 using NetCord;
+
 using NetCord.Gateway;
 using NetCord.Hosting.Gateway;
 using NetCord.Hosting.Rest;
@@ -8,6 +10,7 @@ using NetCord.Hosting.Services.ComponentInteractions;
 using NetCord.Services.ComponentInteractions;
 using Quartz;
 using Rydia;
+using Rydia.Database;
 
 try
 {
@@ -33,6 +36,11 @@ try
         .AddGatewayHandlers(typeof(IRydiaApp).Assembly);
 
     var connectionString = builder.Configuration.GetConnectionString("Rydia") ?? throw new NullReferenceException();
+
+    builder.Services.AddDbContextPool<RydiaDbContext>(options =>
+{
+    options.UseNpgsql(connectionString);
+});
 
     builder.Services
         .AddQuartz(q =>
