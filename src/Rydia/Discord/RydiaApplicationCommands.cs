@@ -1,4 +1,3 @@
-using System.Text;
 using NetCord;
 using NetCord.Rest;
 using NetCord.Services.ApplicationCommands;
