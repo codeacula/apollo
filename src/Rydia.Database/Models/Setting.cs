@@ -5,11 +5,12 @@ namespace Rydia.Database.Models;
 /// <summary>
 /// Represents a configuration setting stored in the database
 /// </summary>
-public class Setting
+public record Setting
 {
     /// <summary>
     /// Unique identifier for the setting
     /// </summary>
+    [Key]
     public int Id { get; set; }
 
     /// <summary>
