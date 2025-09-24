@@ -41,6 +41,45 @@ public partial class SettingsService(RydiaDbContext context, ILogger<SettingsSer
         }
     }
 
+    public async Task<bool> GetBooleanSettingAsync(string key, bool defaultValue = false)
+    {
+        var value = await GetSettingAsync(key);
+        if (value == null)
+        {
+            return defaultValue;
+        }
+
+        if (bool.TryParse(value, out bool result))
+        {
+            return result;
+        }
+
+        // Handle common string representations of booleans
+        var lowerValue = value.ToLowerInvariant();
+        return lowerValue is "1" or "yes" or "on" or "enabled" ? true : defaultValue;
+    }
+
+    public async Task<int> GetIntegerSettingAsync(string key, int defaultValue = 0)
+    {
+        var value = await GetSettingAsync(key);
+        if (value == null)
+        {
+            return defaultValue;
+        }
+
+        return int.TryParse(value, out int result) ? result : defaultValue;
+    }
+
+    public async Task<bool> SetBooleanSettingAsync(string key, bool value)
+    {
+        return await SetSettingAsync(key, value.ToString().ToLowerInvariant());
+    }
+
+    public async Task<bool> SetIntegerSettingAsync(string key, int value)
+    {
+        return await SetSettingAsync(key, value.ToString());
+    }
+
     public async Task<bool> SetSettingAsync(string key, string value)
     {
         if (string.IsNullOrWhiteSpace(key))
