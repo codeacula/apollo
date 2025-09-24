@@ -12,6 +12,7 @@ using NetCord.Services.ComponentInteractions;
 using Quartz;
 using Rydia;
 using Rydia.Database;
+using Rydia.Database.Services;
 
 try
 {
@@ -42,6 +43,9 @@ try
     {
         options.UseNpgsql(connectionString);
     });
+
+    // Register settings service
+    builder.Services.AddScoped<ISettingsService, SettingsService>();
 
     builder.Services
         .AddQuartz(q =>
