@@ -1,10 +1,13 @@
 #pragma warning disable 1591
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace Rydia.Database.Migrations;
 
+[DbContext(typeof(RydiaDbContext))]
+[Migration("20240924000000_InitialQuartzSetup")]
 public partial class InitialQuartzSetup : Migration
 {
     protected override void Up(MigrationBuilder migrationBuilder)

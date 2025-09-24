@@ -13,7 +13,7 @@ partial class RydiaDbContextModelSnapshot : ModelSnapshot
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
         modelBuilder
-            .HasAnnotation("ProductVersion", "9.0.8")
+            .HasAnnotation("ProductVersion", "9.0.1")
             .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
         NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
