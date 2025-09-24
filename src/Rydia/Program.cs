@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using NetCord;
 
 using NetCord.Gateway;
@@ -38,9 +39,9 @@ try
     var connectionString = builder.Configuration.GetConnectionString("Rydia") ?? throw new NullReferenceException();
 
     builder.Services.AddDbContextPool<RydiaDbContext>(options =>
-{
-    options.UseNpgsql(connectionString);
-});
+    {
+        options.UseNpgsql(connectionString);
+    });
 
     builder.Services
         .AddQuartz(q =>
@@ -62,6 +63,12 @@ try
         });
 
     var app = builder.Build();
+
+    using (var scope = app.Services.CreateScope())
+    {
+        var dbContext = scope.ServiceProvider.GetRequiredService<RydiaDbContext>();
+        await dbContext.Database.MigrateAsync();
+    }
 
     app.AddModules(typeof(IRydiaApp).Assembly);
     app.UseRequestLocalization();
