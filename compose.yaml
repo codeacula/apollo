@@ -10,6 +10,8 @@ services:
       - .env
     depends_on:
       - pgsql
+    networks:
+      - rydia
 
   pgsql:
     image: postgres
@@ -22,6 +24,12 @@ services:
       - pgsql_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    networks:
+      - rydia
 
 volumes:
   pgsql_data:
+
+networks:
+  rydia:
+    driver: bridge

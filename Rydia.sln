@@ -7,6 +7,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{827E0CD3-B72
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rydia", "src\Rydia\Rydia.csproj", "{8DB64EF7-DD23-4076-A031-54D92A581764}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rydia.Database", "src\Rydia.Database\Rydia.Database.csproj", "{5335E6C4-C07A-4C8C-A2A7-9104D3248FE1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -29,11 +31,24 @@ Global
 		{8DB64EF7-DD23-4076-A031-54D92A581764}.Release|x64.Build.0 = Release|Any CPU
 		{8DB64EF7-DD23-4076-A031-54D92A581764}.Release|x86.ActiveCfg = Release|Any CPU
 		{8DB64EF7-DD23-4076-A031-54D92A581764}.Release|x86.Build.0 = Release|Any CPU
+		{5335E6C4-C07A-4C8C-A2A7-9104D3248FE1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5335E6C4-C07A-4C8C-A2A7-9104D3248FE1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5335E6C4-C07A-4C8C-A2A7-9104D3248FE1}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{5335E6C4-C07A-4C8C-A2A7-9104D3248FE1}.Debug|x64.Build.0 = Debug|Any CPU
+		{5335E6C4-C07A-4C8C-A2A7-9104D3248FE1}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{5335E6C4-C07A-4C8C-A2A7-9104D3248FE1}.Debug|x86.Build.0 = Debug|Any CPU
+		{5335E6C4-C07A-4C8C-A2A7-9104D3248FE1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5335E6C4-C07A-4C8C-A2A7-9104D3248FE1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5335E6C4-C07A-4C8C-A2A7-9104D3248FE1}.Release|x64.ActiveCfg = Release|Any CPU
+		{5335E6C4-C07A-4C8C-A2A7-9104D3248FE1}.Release|x64.Build.0 = Release|Any CPU
+		{5335E6C4-C07A-4C8C-A2A7-9104D3248FE1}.Release|x86.ActiveCfg = Release|Any CPU
+		{5335E6C4-C07A-4C8C-A2A7-9104D3248FE1}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{8DB64EF7-DD23-4076-A031-54D92A581764} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
+		{5335E6C4-C07A-4C8C-A2A7-9104D3248FE1} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 	EndGlobalSection
 EndGlobal
