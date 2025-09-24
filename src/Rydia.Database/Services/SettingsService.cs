@@ -1,14 +1,14 @@
-namespace Rydia.Database.Services;
-
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Rydia.Database.Constants;
+using Rydia.Core.Constants;
 using Rydia.Database.Models;
+
+namespace Rydia.Database.Services;
 
 /// <summary>
 /// Service for managing configuration settings in the database
 /// </summary>
-public class SettingsService(RydiaDbContext context, ILogger<SettingsService> logger) : ISettingsService
+public partial class SettingsService(RydiaDbContext context, ILogger<SettingsService> logger) : ISettingsService
 {
     private readonly RydiaDbContext _context = context;
     private readonly ILogger<SettingsService> _logger = logger;
@@ -17,13 +17,13 @@ public class SettingsService(RydiaDbContext context, ILogger<SettingsService> lo
     {
         if (string.IsNullOrWhiteSpace(key))
         {
-            _logger.LogWarning("Attempted to get setting with null or empty key");
+            LogNullOrEmptyKey(_logger);
             return null;
         }
 
         if (!SettingKeys.IsValidKey(key))
         {
-            _logger.LogWarning("Attempted to get setting with invalid key: {Key}", key);
+            LogInvalidKey(_logger, key);
             return null;
         }
 
@@ -36,7 +36,7 @@ public class SettingsService(RydiaDbContext context, ILogger<SettingsService> lo
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error retrieving setting with key: {Key}", key);
+            LogErrorRetrievingSetting(_logger, ex, key);
             return null;
         }
     }
@@ -45,19 +45,19 @@ public class SettingsService(RydiaDbContext context, ILogger<SettingsService> lo
     {
         if (string.IsNullOrWhiteSpace(key))
         {
-            _logger.LogWarning("Attempted to set setting with null or empty key");
+            LogNullOrEmptyKey(_logger);
             return false;
         }
 
         if (!SettingKeys.IsValidKey(key))
         {
-            _logger.LogWarning("Attempted to set setting with invalid key: {Key}", key);
+            LogInvalidKey(_logger, key);
             return false;
         }
 
         if (value == null)
         {
-            _logger.LogWarning("Attempted to set setting with null value for key: {Key}", key);
+            LogNullValue(_logger, key);
             return false;
         }
 
@@ -69,21 +69,18 @@ public class SettingsService(RydiaDbContext context, ILogger<SettingsService> lo
             if (existingSetting != null)
             {
                 existingSetting.Value = value;
-                existingSetting.UpdatedAt = DateTime.UtcNow;
-                _logger.LogInformation("Updated setting {Key}", key);
+                LogSettingUpdated(_logger, key);
             }
             else
             {
                 var newSetting = new Setting
                 {
                     Key = key,
-                    Value = value,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
+                    Value = value
                 };
 
                 _context.Settings.Add(newSetting);
-                _logger.LogInformation("Created new setting {Key}", key);
+                LogSettingCreated(_logger, key);
             }
 
             await _context.SaveChangesAsync();
@@ -91,7 +88,7 @@ public class SettingsService(RydiaDbContext context, ILogger<SettingsService> lo
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error setting value for key: {Key}", key);
+            LogErrorSettingSetting(_logger, ex, key);
             return false;
         }
     }
@@ -108,7 +105,7 @@ public class SettingsService(RydiaDbContext context, ILogger<SettingsService> lo
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error retrieving all settings");
+            LogErrorRetrievingAllSettings(_logger, ex);
             return new Dictionary<string, string>();
         }
     }
@@ -117,7 +114,7 @@ public class SettingsService(RydiaDbContext context, ILogger<SettingsService> lo
     {
         if (string.IsNullOrWhiteSpace(key))
         {
-            _logger.LogWarning("Attempted to delete setting with null or empty key");
+            LogNullOrEmptyKey(_logger);
             return false;
         }
 
@@ -128,19 +125,19 @@ public class SettingsService(RydiaDbContext context, ILogger<SettingsService> lo
 
             if (setting == null)
             {
-                _logger.LogInformation("Setting not found for deletion: {Key}", key);
+                LogSettingNotFound(_logger, key);
                 return false;
             }
 
             _context.Settings.Remove(setting);
             await _context.SaveChangesAsync();
             
-            _logger.LogInformation("Deleted setting {Key}", key);
+            LogSettingDeleted(_logger, key);
             return true;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error deleting setting with key: {Key}", key);
+            LogErrorDeletingSetting(_logger, ex, key);
             return false;
         }
     }
@@ -158,8 +155,44 @@ public class SettingsService(RydiaDbContext context, ILogger<SettingsService> lo
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error checking if setting exists with key: {Key}", key);
+            LogErrorCheckingSettingExists(_logger, ex, key);
             return false;
         }
     }
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Attempted to access setting with null or empty key")]
+    private static partial void LogNullOrEmptyKey(ILogger logger);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Attempted to access setting with invalid key: {Key}")]
+    private static partial void LogInvalidKey(ILogger logger, string key);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Attempted to set setting with null value for key: {Key}")]
+    private static partial void LogNullValue(ILogger logger, string key);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Updated setting {Key}")]
+    private static partial void LogSettingUpdated(ILogger logger, string key);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Created new setting {Key}")]
+    private static partial void LogSettingCreated(ILogger logger, string key);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Setting not found for deletion: {Key}")]
+    private static partial void LogSettingNotFound(ILogger logger, string key);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Deleted setting {Key}")]
+    private static partial void LogSettingDeleted(ILogger logger, string key);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Error retrieving setting with key: {Key}")]
+    private static partial void LogErrorRetrievingSetting(ILogger logger, Exception exception, string key);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Error setting value for key: {Key}")]
+    private static partial void LogErrorSettingSetting(ILogger logger, Exception exception, string key);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Error retrieving all settings")]
+    private static partial void LogErrorRetrievingAllSettings(ILogger logger, Exception exception);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Error deleting setting with key: {Key}")]
+    private static partial void LogErrorDeletingSetting(ILogger logger, Exception exception, string key);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Error checking if setting exists with key: {Key}")]
+    private static partial void LogErrorCheckingSettingExists(ILogger logger, Exception exception, string key);
 }

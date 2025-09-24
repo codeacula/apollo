@@ -1,7 +1,7 @@
-namespace Rydia.Database;
-
 using Microsoft.EntityFrameworkCore;
 using Rydia.Database.Models;
+
+namespace Rydia.Database;
 
 public class RydiaDbContext(DbContextOptions<RydiaDbContext> options) : DbContext(options)
 {
@@ -17,12 +17,7 @@ public class RydiaDbContext(DbContextOptions<RydiaDbContext> options) : DbContex
         // Configure Setting entity
         modelBuilder.Entity<Setting>(entity =>
         {
-            entity.HasKey(e => e.Id);
             entity.HasIndex(e => e.Key).IsUnique(); // Ensure key uniqueness
-            entity.Property(e => e.Key).IsRequired().HasMaxLength(100);
-            entity.Property(e => e.Value).IsRequired().HasMaxLength(500);
-            entity.Property(e => e.CreatedAt).IsRequired();
-            entity.Property(e => e.UpdatedAt).IsRequired();
         });
     }
 }

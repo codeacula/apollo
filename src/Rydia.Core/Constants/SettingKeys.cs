@@ -1,4 +1,4 @@
-namespace Rydia.Database.Constants;
+namespace Rydia.Core.Constants;
 
 /// <summary>
 /// Defines the available setting keys that can be stored in the database
