@@ -36,7 +36,7 @@ try
         .AddComponentInteractions<ChannelMenuInteraction, ChannelMenuInteractionContext>()
         .AddComponentInteractions<ModalInteraction, ModalInteractionContext>()
         .AddGatewayHandlers(typeof(IRydiaApp).Assembly)
-        .AddGatewayHandlers(typeof(Rydia.Discord.Modules.RydiaApplicationCommands).Assembly);
+        .AddGatewayHandlers(typeof(Rydia.Discord.IRydiaDiscord).Assembly);
 
     var connectionString = builder.Configuration.GetConnectionString("Rydia") ?? throw new NullReferenceException();
 
@@ -76,7 +76,7 @@ try
     }
 
     app.AddModules(typeof(IRydiaApp).Assembly);
-    app.AddModules(typeof(Rydia.Discord.Modules.RydiaApplicationCommands).Assembly);
+    app.AddModules(typeof(Rydia.Discord.IRydiaDiscord).Assembly);
     app.UseRequestLocalization();
 
     if (app.Environment.IsDevelopment())
