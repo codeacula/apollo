@@ -1,4 +1,4 @@
-namespace Rydia.Constants;
+namespace Rydia.Discord.Constants;
 
 public static class Colors
 {
