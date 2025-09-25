@@ -18,4 +18,8 @@
     </PackageReference>
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Rydia.Core\Rydia.Core.csproj" />
+  </ItemGroup>
+
 </Project>

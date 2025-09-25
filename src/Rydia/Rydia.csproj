@@ -24,6 +24,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Rydia.Database\Rydia.Database.csproj" />
+    <ProjectReference Include="..\Rydia.Core\Rydia.Core.csproj" />
   </ItemGroup>
 
 </Project>
