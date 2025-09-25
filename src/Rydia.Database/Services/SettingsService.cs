@@ -44,7 +44,7 @@ public partial class SettingsService(RydiaDbContext context, ILogger<SettingsSer
     public async Task<bool> GetBooleanSettingAsync(string key, bool defaultValue = false)
     {
         var value = await GetSettingAsync(key);
-        if (value == null)
+        if (string.IsNullOrWhiteSpace(value))
         {
             return defaultValue;
         }
@@ -62,7 +62,7 @@ public partial class SettingsService(RydiaDbContext context, ILogger<SettingsSer
     public async Task<int> GetIntegerSettingAsync(string key, int defaultValue = 0)
     {
         var value = await GetSettingAsync(key);
-        if (value == null)
+        if (string.IsNullOrWhiteSpace(value))
         {
             return defaultValue;
         }
