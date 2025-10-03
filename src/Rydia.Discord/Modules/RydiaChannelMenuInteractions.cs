@@ -24,6 +24,6 @@ public partial class RydiaChannelMenuInteractions(ILogger<RydiaChannelMenuIntera
     {
         await RespondAsync(InteractionCallback.DeferredMessage());
 
-        await RespondAsync(new ToDoChannelSelectComponent());
+        await RespondAsync(new ToDoRoleSelectComponent());
     }
 }
