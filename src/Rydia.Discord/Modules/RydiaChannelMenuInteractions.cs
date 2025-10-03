@@ -1,20 +1,26 @@
+using System.Globalization;
 using Microsoft.Extensions.Logging;
 using NetCord;
 using NetCord.Rest;
 using NetCord.Services.ComponentInteractions;
+using Rydia.Core.Constants;
+using Rydia.Core.Services;
 using Rydia.Discord.Components;
 
 namespace Rydia.Discord.Modules;
 
-public partial class RydiaChannelMenuInteractions(ILogger<RydiaChannelMenuInteractions> logger) : ComponentInteractionModule<ChannelMenuInteractionContext>
+public partial class RydiaChannelMenuInteractions(
+    ILogger<RydiaChannelMenuInteractions> logger,
+    ISettingsService settingsService) : ComponentInteractionModule<ChannelMenuInteractionContext>
 {
     private readonly ILogger<RydiaChannelMenuInteractions> _logger = logger;
+    private readonly ISettingsService _settingsService = settingsService;
 
-    private Task<RestMessage> RespondAsync(IMessageComponentProperties component)
+    private Task<RestMessage> RespondAsync(params IMessageComponentProperties[] components)
     {
         return ModifyResponseAsync(message =>
         {
-            message.Components = [component];
+            message.Components = components;
             message.Flags = MessageFlags.IsComponentsV2;
         });
     }
@@ -24,6 +30,57 @@ public partial class RydiaChannelMenuInteractions(ILogger<RydiaChannelMenuIntera
     {
         await RespondAsync(InteractionCallback.DeferredMessage());
 
-        await RespondAsync(new ToDoRoleSelectComponent());
+        var selectedChannels = Context.Interaction.Data.SelectedValues;
+
+        if (selectedChannels is not { Count: > 0 })
+        {
+            LogNoChannelSelected(_logger, Context.User.Id);
+            await RespondAsync(
+                new GeneralErrorComponent("Please select a forum channel before continuing."),
+                new ToDoChannelSelectComponent());
+            return;
+        }
+
+        var channelId = selectedChannels[0];
+
+        try
+        {
+            var persisted = await _settingsService.SetSettingAsync(SettingKeys.DailyAlertChannelId, channelId.ToString(CultureInfo.InvariantCulture));
+
+            if (!persisted)
+            {
+                LogPersistenceFailed(_logger, channelId, Context.User.Id);
+                await RespondAsync(
+                    new GeneralErrorComponent("We couldn't save that forum selection. Please try again."),
+                    new ToDoChannelSelectComponent());
+                return;
+            }
+        }
+        catch (Exception ex)
+        {
+            LogPersistenceError(_logger, ex, channelId, Context.User.Id);
+            await RespondAsync(
+                new GeneralErrorComponent("We couldn't save that forum selection. Please try again."),
+                new ToDoChannelSelectComponent());
+            return;
+        }
+
+        LogPersistenceSuccess(_logger, channelId, Context.User.Id);
+
+        await RespondAsync(
+            new SuccessNotificationComponent("Daily alert forum saved", $"Daily updates will now post in <#{channelId}>."),
+            new ToDoRoleSelectComponent());
     }
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "No channel selected for daily alert configuration by {UserId}")]
+    private static partial void LogNoChannelSelected(ILogger logger, ulong userId);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Failed to persist daily alert channel {ChannelId} selected by {UserId}")]
+    private static partial void LogPersistenceFailed(ILogger logger, ulong channelId, ulong userId);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Error saving daily alert channel {ChannelId} for user {UserId}")]
+    private static partial void LogPersistenceError(ILogger logger, Exception exception, ulong channelId, ulong userId);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Daily alert channel set to {ChannelId} by {UserId}")]
+    private static partial void LogPersistenceSuccess(ILogger logger, ulong channelId, ulong userId);
 }
