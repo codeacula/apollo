@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using NetCord;
 
 using NetCord.Gateway;
@@ -35,7 +34,7 @@ try
         .AddComponentInteractions<MentionableMenuInteraction, MentionableMenuInteractionContext>()
         .AddComponentInteractions<ChannelMenuInteraction, ChannelMenuInteractionContext>()
         .AddComponentInteractions<ModalInteraction, ModalInteractionContext>()
-        .AddGatewayHandlers(typeof(IRydiaApp).Assembly)
+        .AddGatewayHandlers(typeof(IRydiaAPIApp).Assembly)
         .AddGatewayHandlers(typeof(Rydia.Discord.IRydiaDiscord).Assembly);
 
     var connectionString = builder.Configuration.GetConnectionString("Rydia") ?? throw new NullReferenceException();
@@ -75,7 +74,7 @@ try
         await dbContext.Database.MigrateAsync();
     }
 
-    app.AddModules(typeof(IRydiaApp).Assembly);
+    app.AddModules(typeof(IRydiaAPIApp).Assembly);
     app.AddModules(typeof(Rydia.Discord.IRydiaDiscord).Assembly);
     app.UseRequestLocalization();
 

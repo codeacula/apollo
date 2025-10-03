@@ -1,4 +1,4 @@
 // Marker interface for the Rydia App
 namespace Rydia.API;
 
-public interface IRydiaApp { };
+public interface IRydiaAPIApp { };
