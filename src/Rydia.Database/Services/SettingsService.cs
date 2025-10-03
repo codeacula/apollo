@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Rydia.Core.Constants;
+using Rydia.Core.Services;
 using Rydia.Database.Models;
 
 namespace Rydia.Database.Services;
@@ -172,7 +173,7 @@ public partial class SettingsService(RydiaDbContext context, ILogger<SettingsSer
 
             _context.Settings.Remove(setting);
             await _context.SaveChangesAsync();
-            
+
             LogSettingDeleted(_logger, key);
             return true;
         }
