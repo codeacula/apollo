@@ -57,5 +57,7 @@ When a user runs the `/configure-daily-alert` command, they are given a list of 
 
 - 2025-10-03: Authored the implementation plan for persisting the daily alert forum selection.
 - 2025-10-03: Updated plan, decisions, and risks per product owner guidance on dependencies, flow, and UI.
+- 2025-10-03: Relocated `ISettingsService` abstraction to `src/Rydia.Core/Services/ISettingsService.cs` and updated consuming code in `src/Rydia.Database/Services/SettingsService.cs` and `src/Rydia.API/Program.cs`.
+- 2025-10-03: Persisted `/configure-daily-alert` channel selections in `src/Rydia.Discord/Modules/RydiaChannelMenuInteractions.cs` with new success feedback component (`src/Rydia.Discord/Components/SuccessNotificationComponent.cs`) and LoggerMessage-based logging.
 
 

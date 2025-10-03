@@ -1,4 +1,7 @@
-namespace Rydia.Database.Services;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+namespace Rydia.Core.Services;
 
 /// <summary>
 /// Interface for settings service operations
