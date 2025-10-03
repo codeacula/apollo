@@ -5,7 +5,7 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{827E0CD3-B72D-47B6-A68D-7590B98EB39B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rydia", "src\Rydia\Rydia.csproj", "{8DB64EF7-DD23-4076-A031-54D92A581764}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rydia.API", "src\Rydia.API\Rydia.API.csproj", "{8DB64EF7-DD23-4076-A031-54D92A581764}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rydia.Database", "src\Rydia.Database\Rydia.Database.csproj", "{5335E6C4-C07A-4C8C-A2A7-9104D3248FE1}"
 EndProject

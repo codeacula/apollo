@@ -10,7 +10,7 @@ public partial class ToDoChannelSelectComponent : ComponentContainerProperties
     {
         AccentColor = Constants.Colors.RydiaGreen;
         Components = [
-            new TextDisplayProperties("# Channels Available For Daily Updates"),
+            new TextDisplayProperties("# Select Forum Channel"),
             new TextDisplayProperties("Select which forum channel you would like daily updates to be posted in."),
             new ChannelMenuProperties(CustomId)
             {

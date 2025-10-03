@@ -10,7 +10,7 @@ using NetCord.Hosting.Services.ApplicationCommands;
 using NetCord.Hosting.Services.ComponentInteractions;
 using NetCord.Services.ComponentInteractions;
 using Quartz;
-using Rydia;
+using Rydia.API;
 using Rydia.Database;
 using Rydia.Database.Services;
 

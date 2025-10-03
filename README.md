@@ -1,15 +1,19 @@
-# Rydia
+# Rydia, Codeacula's Personal Assistant
 
-Rydia, Codeacula's Personal Assistant
+## Introduction
 
-- **Accent Color**: #3B5BA5
-- **Success Color**: #57F287
-- **Warning Color**: #FEE75C
-- **Error Color**: #ED4245
-- **Rydia Green Color**: #ADFF2F
+Radia is a personal assistant that is meant to help neurodivergent people with their daily routines. I wrote specifically to help me manage my daily tasks, to check in on me and make sure I'm staying on track, and help me manage my time better. It is not meant to be a full-fledged AI assistant like Siri or Alexa, but rather a tool to help me stay organized and focused.
 
-## Database
+Explain Rydia's purpose, target audience, and key features here.
 
-- Entity Framework Core migrations are stored in `src/Rydia.Database/Migrations` and include the full Quartz persistent store schema.
-- On startup, Rydia automatically applies any pending migrations to the database configured in `appsettings.Development.json` (or the active environment).
-- This means a fresh install only requires providing database credentials; the schema is created and kept up to date without running SQL scripts manually.
+## Features
+
+### Planned Features
+
+## Tech Stack
+
+- **Backend**: ASP.NET Core
+- **Frontend**: Vue.js
+- **Database**: SQL Server
+- **Caching**: Redis
+- **Task Scheduling**: Quartz.NET

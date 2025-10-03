@@ -3,7 +3,7 @@ services:
     image: rydia
     build:
       context: .
-      dockerfile: src/Rydia/Dockerfile
+      dockerfile: src/Rydia.API/Dockerfile
     ports:
       - 5144:5144
     env_file:
