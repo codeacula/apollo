@@ -1,4 +1,4 @@
-namespace Rydia.Controllers;
+namespace Rydia.API.Controllers;
 
 using Microsoft.AspNetCore.Mvc;
 

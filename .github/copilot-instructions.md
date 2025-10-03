@@ -6,7 +6,7 @@ This document provides essential guidance for AI coding agents working in the Ry
 
 Rydia is a Discord bot with a web interface, structured as:
 
-- Backend (`src/Rydia/`): ASP.NET Core application that:
+- Backend (`src/Rydia.API/`): ASP.NET Core application that:
   - Handles Discord gateway integration using NetCord
   - Provides REST API endpoints
   - Uses Quartz for scheduled tasks with PostgreSQL persistence
@@ -36,7 +36,7 @@ Rydia is a Discord bot with a web interface, structured as:
    ```
 
 2. Database initialization:
-   - PostgreSQL schemas are in `src/Rydia/sql/`
+   - PostgreSQL schemas are in `src/Rydia.API/sql/`
    - Quartz tables must be initialized using `quartz_tables_postgres.sql`
 
 ### Running the Application
@@ -45,7 +45,7 @@ Development:
 
 ```powershell
 # Backend
-cd src/Rydia
+cd src/Rydia.API
 dotnet run
 
 # Frontend
@@ -63,12 +63,12 @@ docker compose up --build
 ## Key Integration Points
 
 1. Discord Command Registration:
-   - New slash commands go in `src/Rydia/DiscordModules/`
+   - New slash commands go in `src/Rydia.API/DiscordModules/`
    - Inherit from `ApplicationCommandModule<ApplicationCommandContext>`
    - Use `[SlashCommand]` attribute for command definitions
 
 2. API Controllers:
-   - Located in `src/Rydia/Controllers/`
+   - Located in `src/Rydia.API/Controllers/`
    - Use standard ASP.NET Core controller patterns
    - Base route prefix is `/api`
 
