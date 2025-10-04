@@ -43,6 +43,12 @@ public partial class SettingsProvider : ISettingsProvider
                 settings.DailyAlertRoleId = roleId;
             }
 
+            // Load DailyAlertTime
+            settings.DailyAlertTime = await _settingsService.GetSettingAsync(RydiaSettings.Keys.DailyAlertTime);
+
+            // Load DailyAlertInitialMessage
+            settings.DailyAlertInitialMessage = await _settingsService.GetSettingAsync(RydiaSettings.Keys.DailyAlertInitialMessage);
+
             // Load DefaultTimezone
             settings.DefaultTimezone = await _settingsService.GetSettingAsync(RydiaSettings.Keys.DefaultTimezone);
 
