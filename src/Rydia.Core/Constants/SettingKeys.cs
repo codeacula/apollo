@@ -11,6 +11,11 @@ public static class SettingKeys
     public const string DailyAlertChannelId = "daily_alert_channel_id";
 
     /// <summary>
+    /// The Discord role ID to notify for daily alerts
+    /// </summary>
+    public const string DailyAlertRoleId = "daily_alert_role_id";
+
+    /// <summary>
     /// Default timezone for scheduled tasks
     /// </summary>
     public const string DefaultTimezone = "default_timezone";
@@ -31,6 +36,7 @@ public static class SettingKeys
     public static readonly IReadOnlyList<string> AllKeys = new List<string>
     {
         DailyAlertChannelId,
+        DailyAlertRoleId,
         DefaultTimezone,
         BotPrefix,
         DebugLoggingEnabled
