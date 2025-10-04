@@ -3,7 +3,6 @@ using Microsoft.Extensions.Logging;
 using NetCord;
 using NetCord.Rest;
 using NetCord.Services.ComponentInteractions;
-using Rydia.Core.Constants;
 using Rydia.Core.Services;
 using Rydia.Discord.Components;
 
@@ -11,10 +10,12 @@ namespace Rydia.Discord.Modules;
 
 public partial class RydiaChannelMenuInteractions(
     ILogger<RydiaChannelMenuInteractions> logger,
-    ISettingsService settingsService) : ComponentInteractionModule<ChannelMenuInteractionContext>
+    ISettingsService settingsService,
+    ISettingsProvider settingsProvider) : ComponentInteractionModule<ChannelMenuInteractionContext>
 {
     private readonly ILogger<RydiaChannelMenuInteractions> _logger = logger;
     private readonly ISettingsService _settingsService = settingsService;
+    private readonly ISettingsProvider _settingsProvider = settingsProvider;
 
     private Task<RestMessage> RespondAsync(params IMessageComponentProperties[] components)
     {
@@ -45,7 +46,7 @@ public partial class RydiaChannelMenuInteractions(
 
         try
         {
-            var persisted = await _settingsService.SetSettingAsync(SettingKeys.DailyAlertChannelId, channelId.ToString(CultureInfo.InvariantCulture));
+            var persisted = await _settingsService.SetSettingAsync("daily_alert_channel_id", channelId.ToString(CultureInfo.InvariantCulture));
 
             if (!persisted)
             {
@@ -55,6 +56,9 @@ public partial class RydiaChannelMenuInteractions(
                     new ToDoChannelSelectComponent());
                 return;
             }
+
+            // Reload settings to update the IOptions
+            await _settingsProvider.ReloadAsync();
         }
         catch (Exception ex)
         {

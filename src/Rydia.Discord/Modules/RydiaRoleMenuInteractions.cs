@@ -3,7 +3,6 @@ using Microsoft.Extensions.Logging;
 using NetCord;
 using NetCord.Rest;
 using NetCord.Services.ComponentInteractions;
-using Rydia.Core.Constants;
 using Rydia.Core.Services;
 using Rydia.Discord.Components;
 
@@ -11,10 +10,12 @@ namespace Rydia.Discord.Modules;
 
 public partial class RydiaRoleMenuInteractions(
     ILogger<RydiaRoleMenuInteractions> logger,
-    ISettingsService settingsService) : ComponentInteractionModule<RoleMenuInteractionContext>
+    ISettingsService settingsService,
+    ISettingsProvider settingsProvider) : ComponentInteractionModule<RoleMenuInteractionContext>
 {
     private readonly ILogger<RydiaRoleMenuInteractions> _logger = logger;
     private readonly ISettingsService _settingsService = settingsService;
+    private readonly ISettingsProvider _settingsProvider = settingsProvider;
 
     private Task<RestMessage> RespondAsync(params IMessageComponentProperties[] components)
     {
@@ -45,7 +46,7 @@ public partial class RydiaRoleMenuInteractions(
 
         try
         {
-            var persisted = await _settingsService.SetSettingAsync(SettingKeys.DailyAlertRoleId, roleId.ToString(CultureInfo.InvariantCulture));
+            var persisted = await _settingsService.SetSettingAsync("daily_alert_role_id", roleId.ToString(CultureInfo.InvariantCulture));
 
             if (!persisted)
             {
@@ -55,6 +56,9 @@ public partial class RydiaRoleMenuInteractions(
                     new ToDoRoleSelectComponent());
                 return;
             }
+
+            // Reload settings to update the IOptions
+            await _settingsProvider.ReloadAsync();
         }
         catch (Exception ex)
         {

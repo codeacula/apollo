@@ -14,7 +14,7 @@ public class Setting
     public int Id { get; set; }
 
     /// <summary>
-    /// The setting key (must be from SettingKeys enum)
+    /// The setting key
     /// </summary>
     [Required]
     public string Key { get; set; } = string.Empty;

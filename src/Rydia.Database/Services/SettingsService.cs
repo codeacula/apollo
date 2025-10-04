@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Rydia.Core.Constants;
 using Rydia.Core.Services;
 using Rydia.Database.Models;
 
@@ -19,12 +18,6 @@ public partial class SettingsService(RydiaDbContext context, ILogger<SettingsSer
         if (string.IsNullOrWhiteSpace(key))
         {
             LogNullOrEmptyKey(_logger);
-            return null;
-        }
-
-        if (!SettingKeys.IsValidKey(key))
-        {
-            LogInvalidKey(_logger, key);
             return null;
         }
 
@@ -86,12 +79,6 @@ public partial class SettingsService(RydiaDbContext context, ILogger<SettingsSer
         if (string.IsNullOrWhiteSpace(key))
         {
             LogNullOrEmptyKey(_logger);
-            return false;
-        }
-
-        if (!SettingKeys.IsValidKey(key))
-        {
-            LogInvalidKey(_logger, key);
             return false;
         }
 
@@ -202,9 +189,6 @@ public partial class SettingsService(RydiaDbContext context, ILogger<SettingsSer
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Attempted to access setting with null or empty key")]
     private static partial void LogNullOrEmptyKey(ILogger logger);
-
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Attempted to access setting with invalid key: {Key}")]
-    private static partial void LogInvalidKey(ILogger logger, string key);
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Attempted to set setting with null value for key: {Key}")]
     private static partial void LogNullValue(ILogger logger, string key);

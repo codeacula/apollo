@@ -3,6 +3,10 @@ namespace Rydia.Core.Constants;
 /// <summary>
 /// Defines the available setting keys that can be stored in the database
 /// </summary>
+/// <remarks>
+/// This class is obsolete. Use IOptions&lt;RydiaSettings&gt; for strongly-typed configuration instead.
+/// </remarks>
+[Obsolete("Use IOptions<RydiaSettings> from Rydia.Core.Configuration for strongly-typed settings access")]
 public static class SettingKeys
 {
     /// <summary>

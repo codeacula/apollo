@@ -199,11 +199,15 @@ public class SettingsServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task SetSettingAsync_WithInvalidKey_ReturnsFalse()
+    public async Task SetSettingAsync_WithAnyKey_Succeeds()
     {
-        var result = await _service.SetSettingAsync("invalid_key", "value");
+        // After IOptions migration, any key is allowed (no longer restricted by SettingKeys)
+        var result = await _service.SetSettingAsync("custom_key", "value");
 
-        Assert.False(result);
+        Assert.True(result);
+        var savedSetting = await _context.Settings.FirstOrDefaultAsync(s => s.Key == "custom_key");
+        Assert.NotNull(savedSetting);
+        Assert.Equal("value", savedSetting.Value);
     }
 
     [Fact]
