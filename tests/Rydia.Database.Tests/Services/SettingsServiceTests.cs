@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Rydia.Core.Constants;
+using Rydia.Core.Configuration;
 using Rydia.Database.Models;
 using Rydia.Database.Services;
 
@@ -32,11 +32,11 @@ public class SettingsServiceTests : IDisposable
     [Fact]
     public async Task GetSettingAsync_WithValidKey_ReturnsValue()
     {
-        var setting = new Setting { Key = SettingKeys.BotPrefix, Value = "!" };
+        var setting = new Setting { Key = RydiaSettings.Keys.BotPrefix, Value = "!" };
         _context.Settings.Add(setting);
         await _context.SaveChangesAsync();
 
-        var result = await _service.GetSettingAsync(SettingKeys.BotPrefix);
+        var result = await _service.GetSettingAsync(RydiaSettings.Keys.BotPrefix);
 
         Assert.Equal("!", result);
     }
@@ -44,7 +44,7 @@ public class SettingsServiceTests : IDisposable
     [Fact]
     public async Task GetSettingAsync_WithNonExistentKey_ReturnsNull()
     {
-        var result = await _service.GetSettingAsync(SettingKeys.BotPrefix);
+        var result = await _service.GetSettingAsync(RydiaSettings.Keys.BotPrefix);
 
         Assert.Null(result);
     }
@@ -76,11 +76,11 @@ public class SettingsServiceTests : IDisposable
     [Fact]
     public async Task GetBooleanSettingAsync_WithTrueValue_ReturnsTrue()
     {
-        var setting = new Setting { Key = SettingKeys.DebugLoggingEnabled, Value = "true" };
+        var setting = new Setting { Key = RydiaSettings.Keys.DebugLoggingEnabled, Value = "true" };
         _context.Settings.Add(setting);
         await _context.SaveChangesAsync();
 
-        var result = await _service.GetBooleanSettingAsync(SettingKeys.DebugLoggingEnabled);
+        var result = await _service.GetBooleanSettingAsync(RydiaSettings.Keys.DebugLoggingEnabled);
 
         Assert.True(result);
     }
@@ -88,11 +88,11 @@ public class SettingsServiceTests : IDisposable
     [Fact]
     public async Task GetBooleanSettingAsync_WithFalseValue_ReturnsFalse()
     {
-        var setting = new Setting { Key = SettingKeys.DebugLoggingEnabled, Value = "false" };
+        var setting = new Setting { Key = RydiaSettings.Keys.DebugLoggingEnabled, Value = "false" };
         _context.Settings.Add(setting);
         await _context.SaveChangesAsync();
 
-        var result = await _service.GetBooleanSettingAsync(SettingKeys.DebugLoggingEnabled);
+        var result = await _service.GetBooleanSettingAsync(RydiaSettings.Keys.DebugLoggingEnabled);
 
         Assert.False(result);
     }
@@ -107,11 +107,11 @@ public class SettingsServiceTests : IDisposable
     [InlineData("off", false)]
     public async Task GetBooleanSettingAsync_WithAlternativeValues_ReturnsCorrectResult(string value, bool expected)
     {
-        var setting = new Setting { Key = SettingKeys.DebugLoggingEnabled, Value = value };
+        var setting = new Setting { Key = RydiaSettings.Keys.DebugLoggingEnabled, Value = value };
         _context.Settings.Add(setting);
         await _context.SaveChangesAsync();
 
-        var result = await _service.GetBooleanSettingAsync(SettingKeys.DebugLoggingEnabled);
+        var result = await _service.GetBooleanSettingAsync(RydiaSettings.Keys.DebugLoggingEnabled);
 
         Assert.Equal(expected, result);
     }
@@ -119,7 +119,7 @@ public class SettingsServiceTests : IDisposable
     [Fact]
     public async Task GetBooleanSettingAsync_WithNonExistentKey_ReturnsDefault()
     {
-        var result = await _service.GetBooleanSettingAsync(SettingKeys.DebugLoggingEnabled, true);
+        var result = await _service.GetBooleanSettingAsync(RydiaSettings.Keys.DebugLoggingEnabled, true);
 
         Assert.True(result);
     }
@@ -127,11 +127,11 @@ public class SettingsServiceTests : IDisposable
     [Fact]
     public async Task GetIntegerSettingAsync_WithValidValue_ReturnsInteger()
     {
-        var setting = new Setting { Key = SettingKeys.DefaultTimezone, Value = "42" };
+        var setting = new Setting { Key = RydiaSettings.Keys.DefaultTimezone, Value = "42" };
         _context.Settings.Add(setting);
         await _context.SaveChangesAsync();
 
-        var result = await _service.GetIntegerSettingAsync(SettingKeys.DefaultTimezone);
+        var result = await _service.GetIntegerSettingAsync(RydiaSettings.Keys.DefaultTimezone);
 
         Assert.Equal(42, result);
     }
@@ -139,11 +139,11 @@ public class SettingsServiceTests : IDisposable
     [Fact]
     public async Task GetIntegerSettingAsync_WithInvalidValue_ReturnsDefault()
     {
-        var setting = new Setting { Key = SettingKeys.DefaultTimezone, Value = "not_a_number" };
+        var setting = new Setting { Key = RydiaSettings.Keys.DefaultTimezone, Value = "not_a_number" };
         _context.Settings.Add(setting);
         await _context.SaveChangesAsync();
 
-        var result = await _service.GetIntegerSettingAsync(SettingKeys.DefaultTimezone, 10);
+        var result = await _service.GetIntegerSettingAsync(RydiaSettings.Keys.DefaultTimezone, 10);
 
         Assert.Equal(10, result);
     }
@@ -151,7 +151,7 @@ public class SettingsServiceTests : IDisposable
     [Fact]
     public async Task GetIntegerSettingAsync_WithNonExistentKey_ReturnsDefault()
     {
-        var result = await _service.GetIntegerSettingAsync(SettingKeys.DefaultTimezone, 5);
+        var result = await _service.GetIntegerSettingAsync(RydiaSettings.Keys.DefaultTimezone, 5);
 
         Assert.Equal(5, result);
     }
@@ -159,10 +159,10 @@ public class SettingsServiceTests : IDisposable
     [Fact]
     public async Task SetSettingAsync_WithNewKey_CreatesNewSetting()
     {
-        var result = await _service.SetSettingAsync(SettingKeys.BotPrefix, "!");
+        var result = await _service.SetSettingAsync(RydiaSettings.Keys.BotPrefix, "!");
 
         Assert.True(result);
-        var savedSetting = await _context.Settings.FirstOrDefaultAsync(s => s.Key == SettingKeys.BotPrefix);
+        var savedSetting = await _context.Settings.FirstOrDefaultAsync(s => s.Key == RydiaSettings.Keys.BotPrefix);
         Assert.NotNull(savedSetting);
         Assert.Equal("!", savedSetting.Value);
     }
@@ -170,14 +170,14 @@ public class SettingsServiceTests : IDisposable
     [Fact]
     public async Task SetSettingAsync_WithExistingKey_UpdatesSetting()
     {
-        var setting = new Setting { Key = SettingKeys.BotPrefix, Value = "!" };
+        var setting = new Setting { Key = RydiaSettings.Keys.BotPrefix, Value = "!" };
         _context.Settings.Add(setting);
         await _context.SaveChangesAsync();
 
-        var result = await _service.SetSettingAsync(SettingKeys.BotPrefix, "?");
+        var result = await _service.SetSettingAsync(RydiaSettings.Keys.BotPrefix, "?");
 
         Assert.True(result);
-        var updatedSetting = await _context.Settings.FirstOrDefaultAsync(s => s.Key == SettingKeys.BotPrefix);
+        var updatedSetting = await _context.Settings.FirstOrDefaultAsync(s => s.Key == RydiaSettings.Keys.BotPrefix);
         Assert.NotNull(updatedSetting);
         Assert.Equal("?", updatedSetting.Value);
     }
@@ -199,17 +199,21 @@ public class SettingsServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task SetSettingAsync_WithInvalidKey_ReturnsFalse()
+    public async Task SetSettingAsync_WithAnyKey_Succeeds()
     {
-        var result = await _service.SetSettingAsync("invalid_key", "value");
+        // After IOptions migration, any key is allowed (no longer restricted by SettingKeys)
+        var result = await _service.SetSettingAsync("custom_key", "value");
 
-        Assert.False(result);
+        Assert.True(result);
+        var savedSetting = await _context.Settings.FirstOrDefaultAsync(s => s.Key == "custom_key");
+        Assert.NotNull(savedSetting);
+        Assert.Equal("value", savedSetting.Value);
     }
 
     [Fact]
     public async Task SetSettingAsync_WithNullValue_ReturnsFalse()
     {
-        var result = await _service.SetSettingAsync(SettingKeys.BotPrefix, null!);
+        var result = await _service.SetSettingAsync(RydiaSettings.Keys.BotPrefix, null!);
 
         Assert.False(result);
     }
@@ -217,10 +221,10 @@ public class SettingsServiceTests : IDisposable
     [Fact]
     public async Task SetBooleanSettingAsync_WithTrue_SavesLowercaseTrue()
     {
-        var result = await _service.SetBooleanSettingAsync(SettingKeys.DebugLoggingEnabled, true);
+        var result = await _service.SetBooleanSettingAsync(RydiaSettings.Keys.DebugLoggingEnabled, true);
 
         Assert.True(result);
-        var savedSetting = await _context.Settings.FirstOrDefaultAsync(s => s.Key == SettingKeys.DebugLoggingEnabled);
+        var savedSetting = await _context.Settings.FirstOrDefaultAsync(s => s.Key == RydiaSettings.Keys.DebugLoggingEnabled);
         Assert.NotNull(savedSetting);
         Assert.Equal("true", savedSetting.Value);
     }
@@ -228,10 +232,10 @@ public class SettingsServiceTests : IDisposable
     [Fact]
     public async Task SetBooleanSettingAsync_WithFalse_SavesLowercaseFalse()
     {
-        var result = await _service.SetBooleanSettingAsync(SettingKeys.DebugLoggingEnabled, false);
+        var result = await _service.SetBooleanSettingAsync(RydiaSettings.Keys.DebugLoggingEnabled, false);
 
         Assert.True(result);
-        var savedSetting = await _context.Settings.FirstOrDefaultAsync(s => s.Key == SettingKeys.DebugLoggingEnabled);
+        var savedSetting = await _context.Settings.FirstOrDefaultAsync(s => s.Key == RydiaSettings.Keys.DebugLoggingEnabled);
         Assert.NotNull(savedSetting);
         Assert.Equal("false", savedSetting.Value);
     }
@@ -239,10 +243,10 @@ public class SettingsServiceTests : IDisposable
     [Fact]
     public async Task SetIntegerSettingAsync_SavesValueAsString()
     {
-        var result = await _service.SetIntegerSettingAsync(SettingKeys.DefaultTimezone, 123);
+        var result = await _service.SetIntegerSettingAsync(RydiaSettings.Keys.DefaultTimezone, 123);
 
         Assert.True(result);
-        var savedSetting = await _context.Settings.FirstOrDefaultAsync(s => s.Key == SettingKeys.DefaultTimezone);
+        var savedSetting = await _context.Settings.FirstOrDefaultAsync(s => s.Key == RydiaSettings.Keys.DefaultTimezone);
         Assert.NotNull(savedSetting);
         Assert.Equal("123", savedSetting.Value);
     }
@@ -250,15 +254,15 @@ public class SettingsServiceTests : IDisposable
     [Fact]
     public async Task GetAllSettingsAsync_ReturnsAllSettings()
     {
-        _context.Settings.Add(new Setting { Key = SettingKeys.BotPrefix, Value = "!" });
-        _context.Settings.Add(new Setting { Key = SettingKeys.DefaultTimezone, Value = "UTC" });
+        _context.Settings.Add(new Setting { Key = RydiaSettings.Keys.BotPrefix, Value = "!" });
+        _context.Settings.Add(new Setting { Key = RydiaSettings.Keys.DefaultTimezone, Value = "UTC" });
         await _context.SaveChangesAsync();
 
         var result = await _service.GetAllSettingsAsync();
 
         Assert.Equal(2, result.Count);
-        Assert.Equal("!", result[SettingKeys.BotPrefix]);
-        Assert.Equal("UTC", result[SettingKeys.DefaultTimezone]);
+        Assert.Equal("!", result[RydiaSettings.Keys.BotPrefix]);
+        Assert.Equal("UTC", result[RydiaSettings.Keys.DefaultTimezone]);
     }
 
     [Fact]
@@ -272,21 +276,21 @@ public class SettingsServiceTests : IDisposable
     [Fact]
     public async Task DeleteSettingAsync_WithExistingKey_DeletesSetting()
     {
-        var setting = new Setting { Key = SettingKeys.BotPrefix, Value = "!" };
+        var setting = new Setting { Key = RydiaSettings.Keys.BotPrefix, Value = "!" };
         _context.Settings.Add(setting);
         await _context.SaveChangesAsync();
 
-        var result = await _service.DeleteSettingAsync(SettingKeys.BotPrefix);
+        var result = await _service.DeleteSettingAsync(RydiaSettings.Keys.BotPrefix);
 
         Assert.True(result);
-        var deletedSetting = await _context.Settings.FirstOrDefaultAsync(s => s.Key == SettingKeys.BotPrefix);
+        var deletedSetting = await _context.Settings.FirstOrDefaultAsync(s => s.Key == RydiaSettings.Keys.BotPrefix);
         Assert.Null(deletedSetting);
     }
 
     [Fact]
     public async Task DeleteSettingAsync_WithNonExistentKey_ReturnsFalse()
     {
-        var result = await _service.DeleteSettingAsync(SettingKeys.BotPrefix);
+        var result = await _service.DeleteSettingAsync(RydiaSettings.Keys.BotPrefix);
 
         Assert.False(result);
     }
@@ -310,11 +314,11 @@ public class SettingsServiceTests : IDisposable
     [Fact]
     public async Task SettingExistsAsync_WithExistingKey_ReturnsTrue()
     {
-        var setting = new Setting { Key = SettingKeys.BotPrefix, Value = "!" };
+        var setting = new Setting { Key = RydiaSettings.Keys.BotPrefix, Value = "!" };
         _context.Settings.Add(setting);
         await _context.SaveChangesAsync();
 
-        var result = await _service.SettingExistsAsync(SettingKeys.BotPrefix);
+        var result = await _service.SettingExistsAsync(RydiaSettings.Keys.BotPrefix);
 
         Assert.True(result);
     }
@@ -322,7 +326,7 @@ public class SettingsServiceTests : IDisposable
     [Fact]
     public async Task SettingExistsAsync_WithNonExistentKey_ReturnsFalse()
     {
-        var result = await _service.SettingExistsAsync(SettingKeys.BotPrefix);
+        var result = await _service.SettingExistsAsync(RydiaSettings.Keys.BotPrefix);
 
         Assert.False(result);
     }

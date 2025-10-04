@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using NetCord;
 using NetCord.Gateway;
 using NetCord.Hosting.Gateway;
@@ -9,6 +10,7 @@ using NetCord.Hosting.Services.ComponentInteractions;
 using NetCord.Services.ComponentInteractions;
 using Quartz;
 using Rydia.API;
+using Rydia.Core.Configuration;
 using Rydia.Core.Services;
 using Rydia.Database;
 using Rydia.Database.Services;
@@ -46,6 +48,10 @@ try
 
     // Register settings service
     builder.Services.AddScoped<ISettingsService, SettingsService>();
+    
+    // Register settings provider for IOptions pattern
+    builder.Services.AddSingleton<ISettingsProvider, SettingsProvider>();
+    builder.Services.AddSingleton<IOptions<RydiaSettings>, RydiaSettingsOptions>();
 
     builder.Services
         .AddQuartz(q =>
@@ -73,6 +79,10 @@ try
         var dbContext = scope.ServiceProvider.GetRequiredService<RydiaDbContext>();
         await dbContext.Database.MigrateAsync();
     }
+
+    // Initialize settings from database
+    var settingsProvider = app.Services.GetRequiredService<ISettingsProvider>();
+    await settingsProvider.ReloadAsync();
 
     app.AddModules(typeof(IRydiaAPIApp).Assembly);
     app.AddModules(typeof(Rydia.Discord.IRydiaDiscord).Assembly);
