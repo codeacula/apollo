@@ -72,6 +72,11 @@ Thanks for helping build Rydia! This guide walks through the essentials for gett
   ```powershell
   dotnet test
   ```
+- Run backend tests with code coverage:
+  ```powershell
+  dotnet test --collect:"XPlat Code Coverage"
+  ```
+  Coverage reports are generated in `tests/*/TestResults/*/coverage.cobertura.xml`
 - Run frontend checks (when available) from `src/Client`:
   ```powershell
   npm run test
