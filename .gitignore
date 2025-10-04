@@ -55,3 +55,6 @@ nunit-*.xml
 .env
 rydia.key
 rydia.pem
+
+# Frontend build output
+src/Rydia.API/wwwroot/
