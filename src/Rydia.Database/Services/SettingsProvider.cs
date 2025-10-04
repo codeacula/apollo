@@ -30,27 +30,27 @@ public partial class SettingsProvider : ISettingsProvider
             var settings = new RydiaSettings();
 
             // Load DailyAlertChannelId
-            var channelIdStr = await _settingsService.GetSettingAsync("daily_alert_channel_id");
+            var channelIdStr = await _settingsService.GetSettingAsync(RydiaSettings.Keys.DailyAlertChannelId);
             if (!string.IsNullOrWhiteSpace(channelIdStr) && ulong.TryParse(channelIdStr, out var channelId))
             {
                 settings.DailyAlertChannelId = channelId;
             }
 
             // Load DailyAlertRoleId
-            var roleIdStr = await _settingsService.GetSettingAsync("daily_alert_role_id");
+            var roleIdStr = await _settingsService.GetSettingAsync(RydiaSettings.Keys.DailyAlertRoleId);
             if (!string.IsNullOrWhiteSpace(roleIdStr) && ulong.TryParse(roleIdStr, out var roleId))
             {
                 settings.DailyAlertRoleId = roleId;
             }
 
             // Load DefaultTimezone
-            settings.DefaultTimezone = await _settingsService.GetSettingAsync("default_timezone");
+            settings.DefaultTimezone = await _settingsService.GetSettingAsync(RydiaSettings.Keys.DefaultTimezone);
 
             // Load BotPrefix
-            settings.BotPrefix = await _settingsService.GetSettingAsync("bot_prefix");
+            settings.BotPrefix = await _settingsService.GetSettingAsync(RydiaSettings.Keys.BotPrefix);
 
             // Load DebugLoggingEnabled
-            settings.DebugLoggingEnabled = await _settingsService.GetBooleanSettingAsync("debug_logging_enabled");
+            settings.DebugLoggingEnabled = await _settingsService.GetBooleanSettingAsync(RydiaSettings.Keys.DebugLoggingEnabled);
 
             lock (_lock)
             {

@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using NetCord;
 using NetCord.Rest;
 using NetCord.Services.ComponentInteractions;
+using Rydia.Core.Configuration;
 using Rydia.Core.Services;
 using Rydia.Discord.Components;
 
@@ -46,7 +47,7 @@ public partial class RydiaRoleMenuInteractions(
 
         try
         {
-            var persisted = await _settingsService.SetSettingAsync("daily_alert_role_id", roleId.ToString(CultureInfo.InvariantCulture));
+            var persisted = await _settingsService.SetSettingAsync(RydiaSettings.Keys.DailyAlertRoleId, roleId.ToString(CultureInfo.InvariantCulture));
 
             if (!persisted)
             {

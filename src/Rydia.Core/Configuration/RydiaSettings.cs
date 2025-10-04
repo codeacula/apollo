@@ -6,6 +6,18 @@ namespace Rydia.Core.Configuration;
 public class RydiaSettings
 {
     /// <summary>
+    /// Database key constants for settings
+    /// </summary>
+    public static class Keys
+    {
+        public const string DailyAlertChannelId = "daily_alert_channel_id";
+        public const string DailyAlertRoleId = "daily_alert_role_id";
+        public const string DefaultTimezone = "default_timezone";
+        public const string BotPrefix = "bot_prefix";
+        public const string DebugLoggingEnabled = "debug_logging_enabled";
+    }
+
+    /// <summary>
     /// The Discord channel ID where daily alerts are posted
     /// </summary>
     public ulong? DailyAlertChannelId { get; set; }

@@ -1,48 +1,19 @@
-# Settings Migration Guide: SettingKeys to IOptions
+# Settings Migration Guide: IOptions Pattern
 
-This guide explains how to migrate from using the deprecated `SettingKeys` constants to the new strongly-typed `IOptions<RydiaSettings>` pattern.
+This guide explains the strongly-typed `IOptions<RydiaSettings>` pattern for configuration management.
 
 ## Overview
 
-The codebase has migrated from using static `SettingKeys` constants to a strongly-typed configuration approach using the `IOptions` pattern. This provides:
+The codebase uses a strongly-typed configuration approach using the `IOptions` pattern with database-backed settings. This provides:
 
 - **Compile-time safety**: TypeScript-like IntelliSense for settings
 - **Better testability**: Easy to mock and inject test values
 - **Validation support**: Built-in .NET configuration validation
-- **Cleaner code**: No string literals scattered throughout the codebase
+- **No magic strings**: All database keys are constants in `RydiaSettings.Keys`
 
 ## What Changed
 
-### Old Approach (Deprecated)
-```csharp
-using Rydia.Core.Constants;
-using Rydia.Core.Services;
-
-public class MyService
-{
-    private readonly ISettingsService _settingsService;
-    
-    public MyService(ISettingsService settingsService)
-    {
-        _settingsService = settingsService;
-    }
-    
-    public async Task DoSomething()
-    {
-        var channelId = await _settingsService.GetSettingAsync(SettingKeys.DailyAlertChannelId);
-        var roleId = await _settingsService.GetSettingAsync(SettingKeys.DailyAlertRoleId);
-        
-        // Parse manually...
-        if (ulong.TryParse(channelId, out var channel) && 
-            ulong.TryParse(roleId, out var role))
-        {
-            // Use values...
-        }
-    }
-}
-```
-
-### New Approach (Recommended)
+## Usage Pattern
 ```csharp
 using Microsoft.Extensions.Options;
 using Rydia.Core.Configuration;
@@ -92,11 +63,6 @@ using Rydia.Core.Configuration;
 using Rydia.Core.Services;
 ```
 
-Remove:
-```csharp
-using Rydia.Core.Constants; // Deprecated
-```
-
 ### 2. Update Constructor Injection
 
 **Before:**
@@ -118,13 +84,7 @@ public MyClass(IOptions<RydiaSettings> settings, ISettingsProvider settingsProvi
 
 ### 3. Update Settings Access
 
-**Before:**
-```csharp
-var channelId = await _settingsService.GetSettingAsync(SettingKeys.DailyAlertChannelId);
-var isDebug = await _settingsService.GetBooleanSettingAsync(SettingKeys.DebugLoggingEnabled);
-```
-
-**After:**
+Access settings through the strongly-typed properties:
 ```csharp
 var channelId = _settings.DailyAlertChannelId; // Already parsed as ulong?
 var isDebug = _settings.DebugLoggingEnabled;    // Already parsed as bool
@@ -132,26 +92,31 @@ var isDebug = _settings.DebugLoggingEnabled;    // Already parsed as bool
 
 ### 4. Update Settings Writes
 
-When writing settings, you should reload the provider to update the cached values:
+When writing settings, use the constants from `RydiaSettings.Keys` and reload the provider:
 
-**Before:**
 ```csharp
-await _settingsService.SetSettingAsync(SettingKeys.DailyAlertChannelId, "12345");
-```
-
-**After:**
-```csharp
-await _settingsService.SetSettingAsync("daily_alert_channel_id", "12345");
+await _settingsService.SetSettingAsync(RydiaSettings.Keys.DailyAlertChannelId, "12345");
 await _settingsProvider.ReloadAsync(); // Refresh the IOptions cache
 ```
 
 ## Available Settings
 
-The `RydiaSettings` class includes:
+The `RydiaSettings` class includes database key constants and strongly-typed properties:
 
 ```csharp
 public class RydiaSettings
 {
+    // Database key constants
+    public static class Keys
+    {
+        public const string DailyAlertChannelId = "daily_alert_channel_id";
+        public const string DailyAlertRoleId = "daily_alert_role_id";
+        public const string DefaultTimezone = "default_timezone";
+        public const string BotPrefix = "bot_prefix";
+        public const string DebugLoggingEnabled = "debug_logging_enabled";
+    }
+
+    // Strongly-typed properties
     public ulong? DailyAlertChannelId { get; set; }
     public ulong? DailyAlertRoleId { get; set; }
     public string? DefaultTimezone { get; set; }
@@ -190,40 +155,9 @@ public class MyServiceTests
 }
 ```
 
-## API Usage Example
 
-The `ApiController` demonstrates using IOptions to expose settings:
 
-```csharp
-[ApiController]
-[Route("/api")]
-public class ApiController : ControllerBase
-{
-    private readonly RydiaSettings _settings;
 
-    public ApiController(IOptions<RydiaSettings> settings)
-    {
-        _settings = settings.Value;
-    }
-
-    [HttpGet("settings")]
-    public ActionResult<RydiaSettings> GetSettings()
-    {
-        return Ok(_settings);
-    }
-}
-```
-
-## Backwards Compatibility
-
-The `SettingKeys` class is marked as `[Obsolete]` but still functional during the transition period. The database schema and `ISettingsService` remain unchanged for backwards compatibility.
-
-To suppress obsolete warnings during migration, add to your `.csproj`:
-```xml
-<PropertyGroup>
-  <NoWarn>$(NoWarn);CS0618</NoWarn>
-</PropertyGroup>
-```
 
 ## Benefits
 
@@ -231,8 +165,5 @@ To suppress obsolete warnings during migration, add to your `.csproj`:
 2. **Performance**: Settings cached in memory, no database queries on each access
 3. **IntelliSense**: Full IDE support with property discovery
 4. **Testability**: Easy to mock and inject test values
-5. **Validation**: Built-in support for .NET configuration validation
-
-## Questions?
-
-For questions about the migration, please open an issue in the GitHub repository.
+5. **No Magic Strings**: All database keys are constants in `RydiaSettings.Keys`
+6. **Validation**: Built-in support for .NET configuration validation
