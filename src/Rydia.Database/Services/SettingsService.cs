@@ -108,9 +108,7 @@ public partial class SettingsService(RydiaDbContext context, ILogger<SettingsSer
 
             if (existingSetting != null)
             {
-                var updatedSetting = existingSetting with { Value = value };
-                _context.Settings.Remove(existingSetting);
-                _context.Settings.Add(updatedSetting);
+                existingSetting.Value = value;
                 LogSettingUpdated(_logger, key);
             }
             else
