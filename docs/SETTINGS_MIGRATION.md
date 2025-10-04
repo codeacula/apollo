@@ -111,6 +111,8 @@ public class RydiaSettings
     {
         public const string DailyAlertChannelId = "daily_alert_channel_id";
         public const string DailyAlertRoleId = "daily_alert_role_id";
+        public const string DailyAlertTime = "daily_alert_time";
+        public const string DailyAlertInitialMessage = "daily_alert_initial_message";
         public const string DefaultTimezone = "default_timezone";
         public const string BotPrefix = "bot_prefix";
         public const string DebugLoggingEnabled = "debug_logging_enabled";
@@ -119,6 +121,8 @@ public class RydiaSettings
     // Strongly-typed properties
     public ulong? DailyAlertChannelId { get; set; }
     public ulong? DailyAlertRoleId { get; set; }
+    public string? DailyAlertTime { get; set; }
+    public string? DailyAlertInitialMessage { get; set; }
     public string? DefaultTimezone { get; set; }
     public string? BotPrefix { get; set; }
     public bool DebugLoggingEnabled { get; set; }

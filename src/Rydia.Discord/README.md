@@ -6,11 +6,18 @@ This library contains all Discord/NetCord-specific functionality for the Rydia b
 
 - **Components/**: Discord UI components
   - `GeneralErrorComponent.cs`: Error display component
+  - `SuccessNotificationComponent.cs`: Success notification component
   - `ToDoChannelSelectComponent.cs`: Channel selection component
+  - `ToDoRoleSelectComponent.cs`: Role selection component
+  - `DailyAlertTimeConfigComponent.cs`: Button component to trigger time/message configuration
+  - `DailyAlertTimeConfigModal.cs`: Modal for entering daily alert time and message
 
 - **Modules/**: Discord command and interaction handlers
   - `RydiaApplicationCommands.cs`: Slash command handlers
   - `RydiaChannelMenuInteractions.cs`: Channel menu interaction handlers
+  - `RydiaRoleMenuInteractions.cs`: Role menu interaction handlers
+  - `RydiaButtonInteractions.cs`: Button interaction handlers
+  - `RydiaModalInteractions.cs`: Modal interaction handlers
 
 - **Constants/**: Discord-specific constants
   - `Colors.cs`: NetCord color definitions for Discord embeds
