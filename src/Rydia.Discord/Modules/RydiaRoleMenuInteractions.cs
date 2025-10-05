@@ -73,7 +73,8 @@ public partial class RydiaRoleMenuInteractions(
         LogPersistenceSuccess(_logger, roleId, Context.User.Id);
 
         await RespondAsync(
-            new SuccessNotificationComponent("Daily alert role saved", $"The <@&{roleId}> role will now be notified for daily updates."));
+            new SuccessNotificationComponent("Daily alert role saved", $"The <@&{roleId}> role will now be notified for daily updates."),
+            new DailyAlertTimeConfigComponent());
     }
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "No role selected for daily alert configuration by {UserId}")]
