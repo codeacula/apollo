@@ -7,13 +7,13 @@ namespace Apollo.Discord.Tests.Components;
 public class DailyAlertTimeConfigComponentTests
 {
     [Fact]
-    public void Constructor_SetsAccentColorToRydiaGreen()
+    public void Constructor_SetsAccentColorToApolloGreen()
     {
         // Act
         var component = new DailyAlertTimeConfigComponent();
 
         // Assert
-        Assert.Equal(Constants.Colors.RydiaGreen, component.AccentColor);
+        Assert.Equal(Constants.Colors.ApolloGreen, component.AccentColor);
     }
 
     [Fact]
