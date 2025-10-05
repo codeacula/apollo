@@ -1,7 +1,7 @@
 namespace Apollo.Core.Configuration;
 
 /// <summary>
-/// Strongly-typed configuration settings for Rydia
+/// Strongly-typed configuration settings for Apollo
 /// </summary>
 public class ApolloSettings
 {

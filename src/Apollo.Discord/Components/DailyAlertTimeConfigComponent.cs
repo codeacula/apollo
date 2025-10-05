@@ -9,7 +9,7 @@ public partial class DailyAlertTimeConfigComponent : ComponentContainerPropertie
 
     public DailyAlertTimeConfigComponent() : base()
     {
-        AccentColor = Constants.Colors.RydiaGreen;
+        AccentColor = Constants.Colors.ApolloGreen;
         Components = [
             new TextDisplayProperties("# Configure Daily Update Schedule"),
             new TextDisplayProperties("Now let's set when and what the initial daily update post should say."),

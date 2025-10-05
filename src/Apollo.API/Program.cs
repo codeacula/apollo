@@ -39,7 +39,7 @@ try
         .AddGatewayHandlers(typeof(IApolloAPIApp).Assembly)
         .AddGatewayHandlers(typeof(Apollo.Discord.IApolloDiscord).Assembly);
 
-    var connectionString = builder.Configuration.GetConnectionString("Rydia") ?? throw new NullReferenceException();
+    var connectionString = builder.Configuration.GetConnectionString("Apollo") ?? throw new NullReferenceException();
 
     builder.Services.AddDbContextPool<ApolloDbContext>(options =>
     {

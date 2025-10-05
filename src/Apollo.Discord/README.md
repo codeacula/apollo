@@ -1,6 +1,6 @@
-# Rydia.Discord
+# Apollo.Discord
 
-This library contains all Discord/NetCord-specific functionality for the Rydia bot application.
+This library contains all Discord/NetCord-specific functionality for the Apollo bot application.
 
 ## Structure
 
@@ -13,11 +13,11 @@ This library contains all Discord/NetCord-specific functionality for the Rydia b
   - `DailyAlertTimeConfigModal.cs`: Modal for entering daily alert time and message
 
 - **Modules/**: Discord command and interaction handlers
-  - `RydiaApplicationCommands.cs`: Slash command handlers
-  - `RydiaChannelMenuInteractions.cs`: Channel menu interaction handlers
-  - `RydiaRoleMenuInteractions.cs`: Role menu interaction handlers
-  - `RydiaButtonInteractions.cs`: Button interaction handlers
-  - `RydiaModalInteractions.cs`: Modal interaction handlers
+  - `ApolloApplicationCommands.cs`: Slash command handlers
+  - `ApolloChannelMenuInteractions.cs`: Channel menu interaction handlers
+  - `ApolloRoleMenuInteractions.cs`: Role menu interaction handlers
+  - `ApolloButtonInteractions.cs`: Button interaction handlers
+  - `ApolloModalInteractions.cs`: Modal interaction handlers
 
 - **Constants/**: Discord-specific constants
   - `Colors.cs`: NetCord color definitions for Discord embeds
@@ -26,9 +26,9 @@ This library contains all Discord/NetCord-specific functionality for the Rydia b
 
 - NetCord and NetCord.Hosting packages for Discord integration
 - Microsoft.Extensions.Logging.Abstractions for logging
-- Rydia.Core for shared constants and utilities
+- Apollo.Core for shared constants and utilities
 
 ## Usage
 
-This library is automatically registered in the main Rydia application via Program.cs.
+This library is automatically registered in the main Apollo application via Program.cs.
 All Discord modules are discovered and registered through the NetCord hosting services.
