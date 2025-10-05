@@ -1,4 +1,4 @@
-# Rydia Copilot Instructions
+# Apollo Copilot Instructions
 
 - Ensure documents are properly formatted.
 

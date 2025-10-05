@@ -14,7 +14,7 @@ export default defineConfig({
   },
   build: {
     // Build straight into ASP.NET's static files for production
-    outDir: '../Rydia.API/wwwroot',
+    outDir: '../Apollo.API/wwwroot',
     emptyOutDir: true,
   },
 })

@@ -5,10 +5,10 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "C#: Rydia Debug",
+            "name": "C#: Apollo Debug",
             "type": "dotnet",
             "request": "launch",
-            "projectPath": "${workspaceFolder}/src/Rydia.API/Rydia.API.csproj"
+            "projectPath": "${workspaceFolder}/src/Apollo.API/Apollo.API.csproj"
         }
     ]
 }

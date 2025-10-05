@@ -1,6 +1,6 @@
-# Contributing to Rydia
+# Contributing to Apollo
 
-Thanks for helping build Rydia! This guide walks through the essentials for getting a local environment running and contributing code.
+Thanks for helping build Apollo! This guide walks through the essentials for getting a local environment running and contributing code.
 
 ## Prerequisites
 
@@ -14,13 +14,13 @@ Thanks for helping build Rydia! This guide walks through the essentials for gett
 1. Clone the repository and switch to the branch you are working on.
 2. Copy `.env.example` to `.env` (create it if it does not exist) and populate the database credentials:
 	```env
-	POSTGRES_USER=rydia
-	POSTGRES_PASSWORD=rydia
-	POSTGRES_DB=rydia_db
+	POSTGRES_USER=apollo
+	POSTGRES_PASSWORD=apollo
+	POSTGRES_DB=apollo_db
 	```
 3. Restore .NET dependencies:
 	```powershell
-	cd src/Rydia.API
+	cd src/Apollo.API
 	dotnet restore
 	```
 4. Install frontend dependencies:
@@ -34,7 +34,7 @@ Thanks for helping build Rydia! This guide walks through the essentials for gett
 ### Backend API
 
 1. Ensure PostgreSQL is available (see Database section below).
-2. From `src/Rydia.API`, run:
+2. From `src/Apollo.API`, run:
 	```powershell
 	dotnet run
 	```
@@ -46,7 +46,7 @@ Thanks for helping build Rydia! This guide walks through the essentials for gett
 	```powershell
 	npm run dev
 	```
-2. Open the displayed local URL in a browser to access the Rydia web interface.
+2. Open the displayed local URL in a browser to access the Apollo web interface.
 
 ### Docker (Optional All-In-One)
 
@@ -58,8 +58,8 @@ Thanks for helping build Rydia! This guide walks through the essentials for gett
 
 ## Database
 
-- Entity Framework Core migrations live in `src/Rydia.Database/Migrations` and include the Quartz persistent store schema.
-- On startup, Rydia automatically applies pending migrations to the configured PostgreSQL database (e.g., from `appsettings.Development.json`).
+- Entity Framework Core migrations live in `src/Apollo.Database/Migrations` and include the Quartz persistent store schema.
+- On startup, Apollo automatically applies pending migrations to the configured PostgreSQL database (e.g., from `appsettings.Development.json`).
 - For local development, you can run PostgreSQL via Docker:
   ```powershell
   docker compose up postgres
@@ -90,4 +90,4 @@ Thanks for helping build Rydia! This guide walks through the essentials for gett
 4. Open a pull request and reference related issues when applicable.
 5. Be ready to iterate based on review feedback.
 
-Thanks again for contributing—your help keeps Rydia improving!
+Thanks again for contributing—your help keeps Apollo improving!

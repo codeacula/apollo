@@ -53,8 +53,8 @@ CodeCoverage/
 TestResult.xml
 nunit-*.xml
 .env
-rydia.key
-rydia.pem
+apollo.key
+apollo.pem
 
 # Frontend build output
-src/Rydia.API/wwwroot/
+src/apollo.API/wwwroot/
