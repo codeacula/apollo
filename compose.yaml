@@ -1,9 +1,9 @@
 services:
-  rydia:
-    image: rydia
+  apollo:
+    image: apollo
     build:
       context: .
-      dockerfile: src/Rydia.API/Dockerfile
+      dockerfile: src/apollo.API/Dockerfile
     ports:
       - 5144:5144
     env_file:
@@ -11,25 +11,25 @@ services:
     depends_on:
       - pgsql
     networks:
-      - rydia
+      - apollo
 
   pgsql:
     image: postgres
     restart: always
     environment:
-      - POSTGRES_USER=${POSTGRES_USER:-rydia}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-rydia}
-      - POSTGRES_DB=${POSTGRES_DB:-rydia_db}
+      - POSTGRES_USER=${POSTGRES_USER:-apollo}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-apollo}
+      - POSTGRES_DB=${POSTGRES_DB:-apollo_db}
     volumes:
       - pgsql_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     networks:
-      - rydia
+      - apollo
 
 volumes:
   pgsql_data:
 
 networks:
-  rydia:
+  apollo:
     driver: bridge

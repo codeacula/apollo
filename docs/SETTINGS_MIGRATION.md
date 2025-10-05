@@ -1,6 +1,6 @@
 # Settings Migration Guide: IOptions Pattern
 
-This guide explains the strongly-typed `IOptions<RydiaSettings>` pattern for configuration management.
+This guide explains the strongly-typed `IOptions<ApolloSettings>` pattern for configuration management.
 
 ## Overview
 
@@ -9,22 +9,22 @@ The codebase uses a strongly-typed configuration approach using the `IOptions` p
 - **Compile-time safety**: TypeScript-like IntelliSense for settings
 - **Better testability**: Easy to mock and inject test values
 - **Validation support**: Built-in .NET configuration validation
-- **No magic strings**: All database keys are constants in `RydiaSettings.Keys`
+- **No magic strings**: All database keys are constants in `ApolloSettings.Keys`
 
 ## What Changed
 
 ## Usage Pattern
 ```csharp
 using Microsoft.Extensions.Options;
-using Rydia.Core.Configuration;
-using Rydia.Core.Services;
+using Apollo.Core.Configuration;
+using Apollo.Core.Services;
 
 public class MyService
 {
-    private readonly RydiaSettings _settings;
+    private readonly ApolloSettings _settings;
     private readonly ISettingsProvider _settingsProvider;
     
-    public MyService(IOptions<RydiaSettings> settings, ISettingsProvider settingsProvider)
+    public MyService(IOptions<ApolloSettings> settings, ISettingsProvider settingsProvider)
     {
         _settings = settings.Value;
         _settingsProvider = settingsProvider;
@@ -59,8 +59,8 @@ public class MyService
 Add these using statements:
 ```csharp
 using Microsoft.Extensions.Options;
-using Rydia.Core.Configuration;
-using Rydia.Core.Services;
+using Apollo.Core.Configuration;
+using Apollo.Core.Services;
 ```
 
 ### 2. Update Constructor Injection
@@ -75,7 +75,7 @@ public MyClass(ISettingsService settingsService)
 
 **After:**
 ```csharp
-public MyClass(IOptions<RydiaSettings> settings, ISettingsProvider settingsProvider)
+public MyClass(IOptions<ApolloSettings> settings, ISettingsProvider settingsProvider)
 {
     _settings = settings.Value;
     _settingsProvider = settingsProvider;
@@ -92,19 +92,19 @@ var isDebug = _settings.DebugLoggingEnabled;    // Already parsed as bool
 
 ### 4. Update Settings Writes
 
-When writing settings, use the constants from `RydiaSettings.Keys` and reload the provider:
+When writing settings, use the constants from `ApolloSettings.Keys` and reload the provider:
 
 ```csharp
-await _settingsService.SetSettingAsync(RydiaSettings.Keys.DailyAlertChannelId, "12345");
+await _settingsService.SetSettingAsync(ApolloSettings.Keys.DailyAlertChannelId, "12345");
 await _settingsProvider.ReloadAsync(); // Refresh the IOptions cache
 ```
 
 ## Available Settings
 
-The `RydiaSettings` class includes database key constants and strongly-typed properties:
+The `ApolloSettings` class includes database key constants and strongly-typed properties:
 
 ```csharp
-public class RydiaSettings
+public class ApolloSettings
 {
     // Database key constants
     public static class Keys
@@ -140,12 +140,12 @@ public class MyServiceTests
     public void TestMethod()
     {
         // Arrange
-        var settings = new RydiaSettings 
+        var settings = new ApolloSettings 
         { 
             BotPrefix = "!",
             DebugLoggingEnabled = true 
         };
-        var options = new TestOptions<RydiaSettings>(settings);
+        var options = new TestOptions<ApolloSettings>(settings);
         var service = new MyService(options);
         
         // Act & Assert...
@@ -169,5 +169,5 @@ public class MyServiceTests
 2. **Performance**: Settings cached in memory, no database queries on each access
 3. **IntelliSense**: Full IDE support with property discovery
 4. **Testability**: Easy to mock and inject test values
-5. **No Magic Strings**: All database keys are constants in `RydiaSettings.Keys`
+5. **No Magic Strings**: All database keys are constants in `ApolloSettings.Keys`
 6. **Validation**: Built-in support for .NET configuration validation

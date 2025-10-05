@@ -1,3 +1,3 @@
-# Rydia's Documentation
+# Apollo's Documentation
 
 - [Design Philosophy](./Design%20Philosophy.md)
