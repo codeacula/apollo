@@ -51,12 +51,12 @@ public partial class ApolloModalInteractions(
         // Use default values if inputs are empty
         if (string.IsNullOrWhiteSpace(timeInput))
         {
-            timeInput = "06:00";
+            timeInput = DailyAlertTimeConfigModal.DefaultTime;
         }
 
         if (string.IsNullOrWhiteSpace(messageInput))
         {
-            messageInput = "Good morning! What are your goals for today?";
+            messageInput = DailyAlertTimeConfigModal.DefaultMessage;
         }
 
         // Validate time format (HH:mm)

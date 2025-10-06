@@ -51,8 +51,8 @@ public class DailyAlertTimeConfigModalTests
         Assert.NotNull(timeInput);
         Assert.Equal(DailyAlertTimeConfigModal.TimeInputCustomId, timeInput.CustomId);
         Assert.Equal(TextInputStyle.Short, timeInput.Style);
-        Assert.Equal("06:00", timeInput.Placeholder);
-        Assert.Equal("06:00", timeInput.Value);
+        Assert.Equal(DailyAlertTimeConfigModal.DefaultTime, timeInput.Placeholder);
+        Assert.Equal(DailyAlertTimeConfigModal.DefaultTime, timeInput.Value);
         Assert.False(timeInput.Required);
         Assert.Equal(5, timeInput.MinLength);
         Assert.Equal(5, timeInput.MaxLength);
@@ -74,8 +74,8 @@ public class DailyAlertTimeConfigModalTests
         Assert.NotNull(messageInput);
         Assert.Equal(DailyAlertTimeConfigModal.MessageInputCustomId, messageInput.CustomId);
         Assert.Equal(TextInputStyle.Paragraph, messageInput.Style);
-        Assert.Equal("Good morning! What are your goals for today?", messageInput.Placeholder);
-        Assert.Equal("Good morning! What are your goals for today?", messageInput.Value);
+        Assert.Equal(DailyAlertTimeConfigModal.DefaultMessage, messageInput.Placeholder);
+        Assert.Equal(DailyAlertTimeConfigModal.DefaultMessage, messageInput.Value);
         Assert.False(messageInput.Required);
         Assert.Equal(1, messageInput.MinLength);
         Assert.Equal(2000, messageInput.MaxLength);
@@ -88,5 +88,13 @@ public class DailyAlertTimeConfigModalTests
         Assert.Equal("daily_alert_time_config_modal", DailyAlertTimeConfigModal.CustomId);
         Assert.Equal("daily_alert_time_input", DailyAlertTimeConfigModal.TimeInputCustomId);
         Assert.Equal("daily_alert_message_input", DailyAlertTimeConfigModal.MessageInputCustomId);
+    }
+
+    [Fact]
+    public void DefaultConstants_AreCorrect()
+    {
+        // Assert
+        Assert.Equal("06:00", DailyAlertTimeConfigModal.DefaultTime);
+        Assert.Equal("Good morning! What are your goals for today?", DailyAlertTimeConfigModal.DefaultMessage);
     }
 }
