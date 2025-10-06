@@ -1,14 +1,21 @@
+using Apollo.Core.Services;
+using Apollo.Discord.Components;
+using Apollo.Discord.Services;
 using Microsoft.Extensions.Logging;
 using NetCord;
 using NetCord.Rest;
 using NetCord.Services.ApplicationCommands;
-using Apollo.Discord.Components;
 
 namespace Apollo.Discord.Modules;
 
-public partial class ApolloApplicationCommands(ILogger<ApolloApplicationCommands> logger) : ApplicationCommandModule<ApplicationCommandContext>
+public partial class ApolloApplicationCommands(
+    ILogger<ApolloApplicationCommands> logger,
+    ISettingsProvider settingsProvider,
+    IDailyAlertSetupSessionStore sessionStore) : ApplicationCommandModule<ApplicationCommandContext>
 {
     private readonly ILogger<ApolloApplicationCommands> _logger = logger;
+    private readonly ISettingsProvider _settingsProvider = settingsProvider;
+    private readonly IDailyAlertSetupSessionStore _sessionStore = sessionStore;
 
     private Task<RestMessage> RespondAsync(IMessageComponentProperties component)
     {
@@ -33,7 +40,29 @@ public partial class ApolloApplicationCommands(ILogger<ApolloApplicationCommands
             return;
         }
 
-        await RespondAsync(new ToDoChannelSelectComponent());
+        var guildId = Context.Guild.Id;
+        var userId = Context.User.Id;
+
+        var session = await _sessionStore.GetSessionAsync(guildId, userId);
+
+        if (session is null)
+        {
+            var settings = _settingsProvider.GetSettings();
+            session = new DailyAlertSetupSession
+            {
+                ChannelId = settings.DailyAlertChannelId,
+                RoleId = settings.DailyAlertRoleId,
+                Time = settings.DailyAlertTime,
+                Message = settings.DailyAlertInitialMessage
+            };
+            await _sessionStore.SetSessionAsync(guildId, userId, session);
+        }
+
+        await RespondAsync(new DailyAlertSetupComponent(
+            session.ChannelId,
+            session.RoleId,
+            session.Time,
+            session.Message));
     }
 
     [LoggerMessage(

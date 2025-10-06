@@ -1,22 +1,25 @@
 using System.Globalization;
+using Apollo.Core.Configuration;
+using Apollo.Core.Services;
+using Apollo.Discord.Components;
+using Apollo.Discord.Services;
 using Microsoft.Extensions.Logging;
 using NetCord;
 using NetCord.Rest;
 using NetCord.Services.ComponentInteractions;
-using Apollo.Core.Configuration;
-using Apollo.Core.Services;
-using Apollo.Discord.Components;
 
 namespace Apollo.Discord.Modules;
 
 public partial class ApolloChannelMenuInteractions(
     ILogger<ApolloChannelMenuInteractions> logger,
     ISettingsService settingsService,
-    ISettingsProvider settingsProvider) : ComponentInteractionModule<ChannelMenuInteractionContext>
+    ISettingsProvider settingsProvider,
+    IDailyAlertSetupSessionStore sessionStore) : ComponentInteractionModule<ChannelMenuInteractionContext>
 {
     private readonly ILogger<ApolloChannelMenuInteractions> _logger = logger;
     private readonly ISettingsService _settingsService = settingsService;
     private readonly ISettingsProvider _settingsProvider = settingsProvider;
+    private readonly IDailyAlertSetupSessionStore _sessionStore = sessionStore;
 
     private Task<RestMessage> RespondAsync(params IMessageComponentProperties[] components)
     {
@@ -58,7 +61,6 @@ public partial class ApolloChannelMenuInteractions(
                 return;
             }
 
-            // Reload settings to update the IOptions
             await _settingsProvider.ReloadAsync();
         }
         catch (Exception ex)
@@ -77,6 +79,56 @@ public partial class ApolloChannelMenuInteractions(
             new ToDoRoleSelectComponent());
     }
 
+    [ComponentInteraction(DailyAlertSetupComponent.ChannelSelectCustomId)]
+    public async Task UpdateChannelSelectionAsync()
+    {
+        await RespondAsync(InteractionCallback.DeferredMessage());
+
+        var guildId = Context.Guild?.Id;
+        var userId = Context.User.Id;
+
+        if (!guildId.HasValue)
+        {
+            LogNoGuildProvided(_logger, Context.User.Username);
+            await RespondAsync(new GeneralErrorComponent("No guild provided."));
+            return;
+        }
+
+        var selectedChannels = Context.Interaction.Data.SelectedValues;
+
+        if (selectedChannels is not { Count: > 0 })
+        {
+            LogNoChannelSelected(_logger, userId);
+            var session = await _sessionStore.GetSessionAsync(guildId.Value, userId) ?? new DailyAlertSetupSession();
+            await RespondAsync(
+                new GeneralErrorComponent("Please select a forum channel."),
+                new DailyAlertSetupComponent(session.ChannelId, session.RoleId, session.Time, session.Message));
+            return;
+        }
+
+        var channelId = selectedChannels[0];
+
+        try
+        {
+            var session = await _sessionStore.GetSessionAsync(guildId.Value, userId) ?? new DailyAlertSetupSession();
+            session.ChannelId = channelId;
+            await _sessionStore.SetSessionAsync(guildId.Value, userId, session);
+
+            LogChannelStaged(_logger, channelId, userId);
+
+            await RespondAsync(new DailyAlertSetupComponent(
+                session.ChannelId,
+                session.RoleId,
+                session.Time,
+                session.Message));
+        }
+        catch (Exception ex)
+        {
+            LogSessionUpdateError(_logger, ex, userId);
+            await RespondAsync(new GeneralErrorComponent("We couldn't update your selection. Please try again."));
+        }
+    }
+
     [LoggerMessage(Level = LogLevel.Warning, Message = "No channel selected for daily alert configuration by {UserId}")]
     private static partial void LogNoChannelSelected(ILogger logger, ulong userId);
 
@@ -88,4 +140,13 @@ public partial class ApolloChannelMenuInteractions(
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Daily alert channel set to {ChannelId} by {UserId}")]
     private static partial void LogPersistenceSuccess(ILogger logger, ulong channelId, ulong userId);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Channel {ChannelId} staged for user {UserId}")]
+    private static partial void LogChannelStaged(ILogger logger, ulong channelId, ulong userId);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Error updating session for user {UserId}")]
+    private static partial void LogSessionUpdateError(ILogger logger, Exception exception, ulong userId);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "No guild provided for {GuildName}")]
+    private static partial void LogNoGuildProvided(ILogger logger, string guildName);
 }

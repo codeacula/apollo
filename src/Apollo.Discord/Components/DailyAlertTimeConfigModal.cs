@@ -10,13 +10,17 @@ public partial class DailyAlertTimeConfigModal : ModalProperties
     public const string DefaultTime = "06:00";
     public const string DefaultMessage = "Good morning! What are your goals for today?";
 
-    public DailyAlertTimeConfigModal() : base(CustomId, "Configure Daily Update")
+    public DailyAlertTimeConfigModal() : this(DefaultTime, DefaultMessage)
+    {
+    }
+
+    public DailyAlertTimeConfigModal(string? defaultTime, string? defaultMessage) : base(CustomId, "Configure Daily Update")
     {
         Components = [
             new LabelProperties("Time (HH:mm format, 24-hour)", new TextInputProperties(TimeInputCustomId, TextInputStyle.Short)
             {
                 Placeholder = DefaultTime,
-                Value = DefaultTime,
+                Value = defaultTime ?? DefaultTime,
                 Required = false,
                 MinLength = 5,
                 MaxLength = 5
@@ -24,7 +28,7 @@ public partial class DailyAlertTimeConfigModal : ModalProperties
             new LabelProperties("Initial Message Text", new TextInputProperties(MessageInputCustomId, TextInputStyle.Paragraph)
             {
                 Placeholder = DefaultMessage,
-                Value = DefaultMessage,
+                Value = defaultMessage ?? DefaultMessage,
                 Required = false,
                 MinLength = 1,
                 MaxLength = 2000

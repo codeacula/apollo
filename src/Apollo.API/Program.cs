@@ -1,3 +1,8 @@
+using Apollo.API;
+using Apollo.Core.Configuration;
+using Apollo.Core.Services;
+using Apollo.Database;
+using Apollo.Database.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using NetCord;
@@ -9,11 +14,6 @@ using NetCord.Hosting.Services.ApplicationCommands;
 using NetCord.Hosting.Services.ComponentInteractions;
 using NetCord.Services.ComponentInteractions;
 using Quartz;
-using Apollo.API;
-using Apollo.Core.Configuration;
-using Apollo.Core.Services;
-using Apollo.Database;
-using Apollo.Database.Services;
 
 try
 {
@@ -48,10 +48,16 @@ try
 
     // Register settings service
     builder.Services.AddScoped<ISettingsService, SettingsService>();
-    
+
     // Register settings provider for IOptions pattern
     builder.Services.AddSingleton<ISettingsProvider, SettingsProvider>();
     builder.Services.AddSingleton<IOptions<ApolloSettings>, ApolloSettingsOptions>();
+
+    // Register Redis for session management
+    var redisConnectionString = builder.Configuration.GetConnectionString("Redis") ?? "localhost:6379,password=apollo_redis";
+    builder.Services.AddSingleton<StackExchange.Redis.IConnectionMultiplexer>(sp =>
+        StackExchange.Redis.ConnectionMultiplexer.Connect(redisConnectionString));
+    builder.Services.AddSingleton<Apollo.Discord.Services.IDailyAlertSetupSessionStore, Apollo.Discord.Services.RedisDailyAlertSetupSessionStore>();
 
     builder.Services
         .AddQuartz(q =>
