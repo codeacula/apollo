@@ -12,12 +12,29 @@ Thanks for helping build Apollo! This guide walks through the essentials for get
 ## Initial Setup
 
 1. Clone the repository and switch to the branch you are working on.
-2. Copy `.env.example` to `.env` (create it if it does not exist) and populate the database credentials:
+2. Copy `.env.example` to `.env` and configure the required environment variables:
 	```env
+	# PostgreSQL Database Configuration
 	POSTGRES_USER=apollo
 	POSTGRES_PASSWORD=apollo
 	POSTGRES_DB=apollo_db
+	
+	# Discord Bot Configuration
+	# Get these values from https://discord.com/developers/applications
+	Discord__Token=your_discord_bot_token_here
+	Discord__PublicKey=your_discord_public_key_here
+	
+	# Database Connection String
+	# For Docker: use 'pgsql' as host (service name from compose.yaml)
+	# For local development: use 'localhost' as host
+	ConnectionStrings__Apollo="Host=pgsql;Database=apollo_db;Username=apollo;Password=apollo"
 	```
+	
+	**Important Notes:**
+	- The Discord token and public key are required for the bot to connect to Discord. You can obtain these from the [Discord Developer Portal](https://discord.com/developers/applications).
+	- When running locally (without Docker), change the `Host` in `ConnectionStrings__Apollo` from `pgsql` to `localhost`.
+	- The database credentials in `POSTGRES_*` variables should match those in the connection string.
+
 3. Restore .NET dependencies:
 	```powershell
 	cd src/Apollo.API
@@ -34,11 +51,15 @@ Thanks for helping build Apollo! This guide walks through the essentials for get
 ### Backend API
 
 1. Ensure PostgreSQL is available (see Database section below).
-2. From `src/Apollo.API`, run:
+2. If running without Docker, update your `.env` file to use `localhost` instead of `pgsql` in the connection string:
+	```env
+	ConnectionStrings__Apollo="Host=localhost;Database=apollo_db;Username=apollo;Password=apollo"
+	```
+3. From `src/Apollo.API`, run:
 	```powershell
 	dotnet run
 	```
-3. The ASP.NET Core backend exposes the REST API and connects to Discord via NetCord when configured.
+4. The ASP.NET Core backend exposes the REST API and connects to Discord via NetCord when configured.
 
 ### Frontend Client
 
