@@ -3,7 +3,7 @@ services:
     image: apollo
     build:
       context: .
-      dockerfile: src/apollo.API/Dockerfile
+      dockerfile: src/Apollo.API/Dockerfile
     ports:
       - 5144:5144
     env_file:
