@@ -53,7 +53,7 @@ public class DailyAlertTimeConfigModalTests
         Assert.Equal(TextInputStyle.Short, timeInput.Style);
         Assert.Equal("06:00", timeInput.Placeholder);
         Assert.Equal("06:00", timeInput.Value);
-        Assert.True(timeInput.Required);
+        Assert.False(timeInput.Required);
         Assert.Equal(5, timeInput.MinLength);
         Assert.Equal(5, timeInput.MaxLength);
     }
@@ -76,7 +76,7 @@ public class DailyAlertTimeConfigModalTests
         Assert.Equal(TextInputStyle.Paragraph, messageInput.Style);
         Assert.Equal("Good morning! What are your goals for today?", messageInput.Placeholder);
         Assert.Equal("Good morning! What are your goals for today?", messageInput.Value);
-        Assert.True(messageInput.Required);
+        Assert.False(messageInput.Required);
         Assert.Equal(1, messageInput.MinLength);
         Assert.Equal(2000, messageInput.MaxLength);
     }

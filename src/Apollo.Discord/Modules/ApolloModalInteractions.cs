@@ -48,14 +48,15 @@ public partial class ApolloModalInteractions(
             .FirstOrDefault(c => c.CustomId == DailyAlertTimeConfigModal.MessageInputCustomId)
             ?.Value?.Trim();
 
-        // Validate inputs
-        if (string.IsNullOrWhiteSpace(timeInput) || string.IsNullOrWhiteSpace(messageInput))
+        // Use default values if inputs are empty
+        if (string.IsNullOrWhiteSpace(timeInput))
         {
-            LogInvalidInput(_logger, Context.User.Id, "Empty input");
-            await RespondAsync(
-                new GeneralErrorComponent("Both time and message are required. Please try again."),
-                new DailyAlertTimeConfigComponent());
-            return;
+            timeInput = "06:00";
+        }
+
+        if (string.IsNullOrWhiteSpace(messageInput))
+        {
+            messageInput = "Good morning! What are your goals for today?";
         }
 
         // Validate time format (HH:mm)

@@ -15,7 +15,7 @@ public partial class DailyAlertTimeConfigModal : ModalProperties
             {
                 Placeholder = "06:00",
                 Value = "06:00",
-                Required = true,
+                Required = false,
                 MinLength = 5,
                 MaxLength = 5
             }),
@@ -23,7 +23,7 @@ public partial class DailyAlertTimeConfigModal : ModalProperties
             {
                 Placeholder = "Good morning! What are your goals for today?",
                 Value = "Good morning! What are your goals for today?",
-                Required = true,
+                Required = false,
                 MinLength = 1,
                 MaxLength = 2000
             })
