@@ -21,7 +21,8 @@ public partial class ApolloModalInteractions(
     private readonly ISettingsService _settingsService = settingsService;
     private readonly ISettingsProvider _settingsProvider = settingsProvider;
     private readonly IDailyAlertSetupSessionStore _sessionStore = sessionStore;
-    private static readonly Regex TimeFormatRegex = new(@"^([0-1][0-9]|2[0-3]):[0-5][0-9]$", RegexOptions.Compiled);
+    private const string TimeFormatPattern = @"^([0-1][0-9]|2[0-3]):[0-5][0-9]$";
+    private static readonly Regex TimeFormatRegex = new(TimeFormatPattern, RegexOptions.Compiled);
 
     private Task<RestMessage> RespondAsync(params IMessageComponentProperties[] components)
     {
