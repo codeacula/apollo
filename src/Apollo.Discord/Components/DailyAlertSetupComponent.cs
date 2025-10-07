@@ -9,6 +9,7 @@ public partial class DailyAlertSetupComponent : ComponentContainerProperties
     public const string RoleSelectCustomId = "daily_alert_setup_role";
     public const string ConfigureTimeButtonCustomId = "daily_alert_setup_time_button";
     public const string SaveButtonCustomId = "daily_alert_setup_save_button";
+    public const int MaxMessageLength = 50;
 
     public DailyAlertSetupComponent(
         ulong? selectedChannelId = null,
@@ -96,7 +97,7 @@ public partial class DailyAlertSetupComponent : ComponentContainerProperties
 
         if (!string.IsNullOrWhiteSpace(message))
         {
-            var preview = message.Length > 50 ? message[..50] + "..." : message;
+            var preview = message.Length > MaxMessageLength ? message[..MaxMessageLength] + "..." : message;
             lines.Add($"✅ Message: {preview}");
         }
         else

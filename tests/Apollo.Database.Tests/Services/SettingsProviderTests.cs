@@ -1,8 +1,8 @@
+using Apollo.Database.Models;
+using Apollo.Database.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Apollo.Database.Models;
-using Apollo.Database.Services;
 
 namespace Apollo.Database.Tests.Services;
 
@@ -89,7 +89,7 @@ public class SettingsProviderTests : IDisposable
     }
 
     [Fact]
-    public async Task GetSettings_ReturnsDefaultsBeforeReload()
+    public void GetSettings_ReturnsDefaultsBeforeReload()
     {
         // Act
         var settings = _provider.GetSettings();

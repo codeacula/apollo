@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Text.RegularExpressions;
 using Apollo.Core.Configuration;
 using Apollo.Core.Services;
@@ -22,7 +21,7 @@ public partial class ApolloModalInteractions(
     private readonly ISettingsProvider _settingsProvider = settingsProvider;
     private readonly IDailyAlertSetupSessionStore _sessionStore = sessionStore;
     private const string TimeFormatPattern = @"^([0-1][0-9]|2[0-3]):[0-5][0-9]$";
-    private static readonly Regex TimeFormatRegex = new(TimeFormatPattern, RegexOptions.Compiled);
+    private static readonly Regex TimeFormatRegex = MyRegex();
 
     private Task<RestMessage> RespondAsync(params IMessageComponentProperties[] components)
     {
@@ -157,4 +156,6 @@ public partial class ApolloModalInteractions(
 
     [LoggerMessage(Level = LogLevel.Error, Message = "Error updating session for user {UserId}")]
     private static partial void LogSessionUpdateError(ILogger logger, Exception exception, ulong userId);
+    [GeneratedRegex(TimeFormatPattern, RegexOptions.Compiled)]
+    private static partial Regex MyRegex();
 }

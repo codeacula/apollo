@@ -31,7 +31,7 @@ public partial class RedisDailyAlertSetupSessionStore : IDailyAlertSetupSessionS
                 return null;
             }
 
-            var session = JsonSerializer.Deserialize<DailyAlertSetupSession>(value!);
+            var session = JsonSerializer.Deserialize<DailyAlertSetupSession>(value!, JsonSerializerOptions.Default);
             LogSessionRetrieved(_logger, guildId, userId);
             return session;
         }
@@ -70,6 +70,7 @@ public partial class RedisDailyAlertSetupSessionStore : IDailyAlertSetupSessionS
         catch (Exception ex)
         {
             LogDeleteSessionError(_logger, ex, guildId, userId);
+            throw;
         }
     }
 
