@@ -55,7 +55,6 @@ public partial class RedisDailyAlertSetupSessionStore : IDailyAlertSetupSessionS
         catch (Exception ex)
         {
             LogSetSessionError(_logger, ex, guildId, userId);
-            throw;
         }
     }
 
