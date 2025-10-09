@@ -1,11 +1,6 @@
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using Moq;
-using Apollo.Core.Configuration;
-using Apollo.Database.Models;
-using Apollo.Database.Services;
-
 namespace Apollo.Database.Tests.Services;
+
+using Apollo.Database.Services;
 
 public class SettingsServiceTests : IDisposable
 {
@@ -36,7 +31,7 @@ public class SettingsServiceTests : IDisposable
         _context.Settings.Add(setting);
         await _context.SaveChangesAsync();
 
-        var result = await _service.GetSettingAsync(ApolloSettings.Keys.BotPrefix);
+        var result = await _service.GetSetPersistencetingAsync(ApolloSettings.Keys.BotPrefix);
 
         Assert.Equal("!", result);
     }

@@ -1,5 +1,11 @@
 namespace Apollo.Database.Tests.Services;
 
+using Apollo.Database.Models;
+using Apollo.Database.Services;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Moq;
+
 public class SettingsProviderTests : IDisposable
 {
     private readonly ApolloDbContext _context;
