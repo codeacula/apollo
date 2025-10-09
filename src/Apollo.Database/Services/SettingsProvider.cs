@@ -1,8 +1,8 @@
 using System.Globalization;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Apollo.Core.Configuration;
 using Apollo.Core.Services;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Apollo.Database.Services;
 
