@@ -109,8 +109,19 @@ public partial class ApolloButtonInteractions(
                 return;
             }
 
-            await _settingsProvider.ReloadAsync();
-            await _sessionStore.DeleteSessionAsync(guildId.Value, userId);
+            try
+            {
+                await _settingsProvider.ReloadAsync();
+                await _sessionStore.DeleteSessionAsync(guildId.Value, userId);
+            }
+            catch (Exception ex)
+            {
+                LogSaveError(_logger, ex, userId);
+                await RespondAsync(
+                    new GeneralErrorComponent("We couldn't save your configuration. Please try again."),
+                    new DailyAlertSetupComponent(session.ChannelId, session.RoleId, session.Time, session.Message));
+                return;
+            }
 
             LogSaveSuccess(_logger, userId, session.ChannelId.Value, session.RoleId.Value, session.Time);
 
