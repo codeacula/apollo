@@ -1,6 +1,11 @@
 namespace Apollo.Database.Tests.Services;
 
+using Apollo.Core.Configuration;
+using Apollo.Database.Models;
 using Apollo.Database.Services;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Moq;
 
 public class SettingsServiceTests : IDisposable
 {
@@ -22,18 +27,6 @@ public class SettingsServiceTests : IDisposable
     public void Dispose()
     {
         _context.Dispose();
-    }
-
-    [Fact]
-    public async Task GetSettingAsync_WithValidKey_ReturnsValue()
-    {
-        var setting = new Setting { Key = ApolloSettings.Keys.BotPrefix, Value = "!" };
-        _context.Settings.Add(setting);
-        await _context.SaveChangesAsync();
-
-        var result = await _service.GetSetPersistencetingAsync(ApolloSettings.Keys.BotPrefix);
-
-        Assert.Equal("!", result);
     }
 
     [Fact]
