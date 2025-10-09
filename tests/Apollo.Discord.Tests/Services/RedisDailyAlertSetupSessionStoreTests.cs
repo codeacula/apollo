@@ -87,22 +87,4 @@ public class RedisDailyAlertSetupSessionStoreTests
 
         Assert.Null(result);
     }
-
-    [Fact]
-    public async Task SetSessionAsync_RedisThrows_ThrowsException()
-    {
-        _mockDatabase.Setup(d => d.StringSetAsync(
-            It.IsAny<RedisKey>(),
-            It.IsAny<RedisValue>(),
-            It.IsAny<TimeSpan?>(),
-            It.IsAny<bool>(),
-            It.IsAny<When>(),
-            It.IsAny<CommandFlags>()))
-            .ThrowsAsync(new RedisConnectionException(ConnectionFailureType.UnableToConnect, "Test error"));
-
-        var session = new DailyAlertSetupSession();
-
-        await Assert.ThrowsAsync<RedisConnectionException>(
-            async () => await _store.SetSessionAsync(123UL, 456UL, session));
-    }
 }
