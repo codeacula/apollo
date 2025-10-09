@@ -57,4 +57,4 @@ apollo.key
 apollo.pem
 
 # Frontend build output
-src/apollo.API/wwwroot/
+src/Apollo.API/wwwroot/
