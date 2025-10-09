@@ -1,9 +1,3 @@
-using Apollo.Database.Models;
-using Apollo.Database.Services;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using Moq;
-
 namespace Apollo.Database.Tests.Services;
 
 public class SettingsProviderTests : IDisposable
