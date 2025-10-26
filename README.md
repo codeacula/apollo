@@ -1,56 +1,27 @@
-# Apollo, Codeacula's Personal Assistant
+# 🐈 Apollo - A Personal Assitant for Neurodivergent Folks
 
-## Introduction
+Apollo is a personal assistant that is meant to help neurodivergent people with their daily routines. I wrote Apollo specifically to help me manage my daily tasks, to check in on me and make sure I'm staying on track, and help me manage my time better. It is not meant to be a full-fledged AI assistant like Siri or Alexa, but rather a tool to help me stay organized and focused.
 
-Apollo is a personal assistant that is meant to help neurodivergent people with their daily routines. I wrote specifically to help me manage my daily tasks, to check in on me and make sure I'm staying on track, and help me manage my time better. It is not meant to be a full-fledged AI assistant like Siri or Alexa, but rather a tool to help me stay organized and focused.
+I strongly believe in open source code provided freely to my peers. That's why I proudly license all of my software under the [MIT License](LICENSE) 😊.
 
-Explain Apollo's purpose, target audience, and key features here.
+## 🏳️‍🌈 Code of Conduct
 
-## Features
+Read the [Code of Conduct](CODE_OF_CONDUCT.md) to get a feel for how I handle my communities.
 
-### Planned Features
+## 💗 Contributing
 
-## Tech Stack
+If you want to help out, we outline how to do so in [CONTRIBUTING](CONTRIBUTING.md).
 
-- **Backend**: ASP.NET Core
-- **Frontend**: Vue.js
-- **Database**: PostgreSQL
-- **Caching**: Redis (required for Discord interaction session management)
-- **Task Scheduling**: Quartz.NET
+## 🕵🏼‍♀️ Security Issue
 
-## Getting Started
+Please follow the directions in [SECURITY](SECURITY.md).
 
-### Prerequisites
+## 📜 Documentation
 
-- .NET 9.0 SDK
-- Docker and Docker Compose
-- Node.js (for frontend development)
+This documentation is meant to be broken up so it's easy for both humans and AI to consume. Aside from specific documentation to support GitHub, all documentation should live inside the `/docs` folder. We use [Obsidian](https://obsidian.md/) style markdown in the documentation.
 
-### Running with Docker Compose
+If you'd like a starting place, [Index](docs/Index.md) has you covered.
 
-The easiest way to run Apollo is using Docker Compose, which will start all required services (API, PostgreSQL, Redis):
+## 🔮 About
 
-```bash
-docker-compose up -d
-```
-
-### Local Development
-
-1. Ensure PostgreSQL and Redis are running (via Docker Compose or locally)
-2. Update connection strings in `src/Apollo.API/appsettings.Development.json`
-3. Run database migrations:
-   ```bash
-   dotnet ef database update --project src/Apollo.Database
-   ```
-4. Start the API:
-   ```bash
-   dotnet run --project src/Apollo.API
-   ```
-
-### Redis Configuration
-
-Redis is required for managing Discord interaction sessions. The default configuration expects:
-- Host: `localhost:6379`
-- Password: `apollo_redis`
-
-Update the `Redis` connection string in `appsettings.Development.json` or set the `REDIS_PASSWORD` environment variable for production deployments.
+I'm Codeacula (Jack Timmons), a software engineer with a passion for helping others and creating tools to solve problems. You can find out more about me at my website, [Codeacula.com](https://codeacula.com).

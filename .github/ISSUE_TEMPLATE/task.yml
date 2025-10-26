@@ -1,0 +1,41 @@
+# .github/ISSUE_TEMPLATE/task.yml
+name: Development Task
+description: Track a scoped task that Copilot will mirror in /tasks
+title: "[Task] <short summary>"
+labels: ["task", "triage"]
+body:
+  - type: input
+    id: summary
+    attributes:
+      label: Summary
+    validations:
+      required: true
+  - type: dropdown
+    id: size
+    attributes:
+      label: Estimated size
+      options:
+        - 1
+        - 2
+        - 3
+        - 5
+        - 8
+  - type: textarea
+    id: context
+    attributes:
+      label: Context / background
+  - type: textarea
+    id: plan
+    attributes:
+      label: Implementation plan
+      description: Outline steps Copilot should append to /tasks/<id>/task.md
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Checkbox list
+      placeholder: |
+        - [ ] criterion 1
+        - [ ] criterion 2
+    validations:
+      required: true
