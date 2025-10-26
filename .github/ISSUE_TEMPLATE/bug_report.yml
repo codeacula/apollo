@@ -1,0 +1,73 @@
+name: Bug Report
+description: Reproducible defect in the Apollo codebase
+title: "[Bug] <short summary>"
+labels: ["bug", "needs triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Please search existing issues first.**
+        Fill all required sections so we can reproduce and fix the problem.
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options:
+        - crash or data loss
+        - broken core feature (Domain / Application / Api)
+        - bot or ECS simulation error
+        - cosmetic / docs
+    validations:
+      required: true
+  - type: dropdown
+    id: layer
+    attributes:
+      label: Affected layer
+      options:
+        - Domain
+        - Application
+        - Api
+        - Infrastructure
+        - Bot
+        - Frontend
+  - type: input
+    id: version
+    attributes:
+      label: Git tag or commit
+      placeholder: "v0.9.3 (6a1b2c3)"
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Numbered list
+      placeholder: |
+        1. Run ./scripts/dev.sh
+        2. POST /api/characters with payload ...
+        3. Observe HTTP 500
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Log output or stack trace
+      render: shell
+  - type: textarea
+    id: env
+    attributes:
+      label: Environment
+      description: OS, .NET version, DB engine, GPU, etc.
+      placeholder: "Windows 11, .NET 9 preview 5, PostgreSQL 16, RTX 3080"
