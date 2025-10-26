@@ -1,4 +1,5 @@
 using Apollo.API;
+using Apollo.API.Services;
 using Apollo.Core.Configuration;
 using Apollo.Core.Services;
 using Apollo.Database;
@@ -58,6 +59,9 @@ try
     builder.Services.AddSingleton<StackExchange.Redis.IConnectionMultiplexer>(sp =>
         StackExchange.Redis.ConnectionMultiplexer.Connect(redisConnectionString));
     builder.Services.AddSingleton<Apollo.Discord.Services.IDailyAlertSetupSessionStore, Apollo.Discord.Services.RedisDailyAlertSetupSessionStore>();
+
+    // Register Discord message sender abstraction
+    builder.Services.AddScoped<IDiscordMessageSender, NetCordDiscordMessageSender>();
 
     builder.Services
         .AddQuartz(q =>
