@@ -1,3 +1,5 @@
+using Apollo.AI;
+using Apollo.AI.Config;
 using Apollo.API;
 using Apollo.Core.Configuration;
 using Apollo.Core.Services;
@@ -15,6 +17,12 @@ try
 {
   WebApplicationBuilder webAppBuilder = WebApplication.CreateBuilder(args);
   _ = webAppBuilder.Services.AddControllers();
+  _ = webAppBuilder.Services.AddAiServices(webAppBuilder.Configuration);
+  _ = webAppBuilder.Services.AddSingleton(sp =>
+  {
+    var cfg = sp.GetRequiredService<IOptions<ApolloAIConfig>>().Value;
+    return new ApolloAIAgent(cfg);
+  });
 
   // TODO: Determine an appropriate exception to throw. Not having a connection string is a configuration error.
   string connectionString = webAppBuilder.Configuration.GetConnectionString("Apollo") ?? throw new InvalidOperationException("Apollo connection string is required");
