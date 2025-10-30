@@ -1,4 +1,5 @@
 using Apollo.AI.Config;
+using Apollo.AI.Plugins;
 
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
@@ -20,6 +21,7 @@ public class ApolloAIAgent
     var builder = Kernel.CreateBuilder();
     _ = builder.Services.AddOpenAIChatCompletion(apolloAIConfig.ModelId, new Uri(apolloAIConfig.Endpoint));
     _kernel = builder.Build();
+    _ = _kernel.Plugins.AddFromType<TimePlugin>("Time");
   }
 
   public async Task<string> ChatAsync(string chatMessage)
