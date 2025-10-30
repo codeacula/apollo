@@ -1,10 +1,7 @@
 using Apollo.AI;
 using Apollo.AI.Config;
 using Apollo.API;
-using Apollo.Core.Configuration;
-using Apollo.Core.Services;
 using Apollo.Database;
-using Apollo.Database.Services;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -28,14 +25,6 @@ try
   string connectionString = webAppBuilder.Configuration.GetConnectionString("Apollo") ?? throw new InvalidOperationException("Apollo connection string is required");
 
   _ = webAppBuilder.Services.AddDbContextPool<ApolloDbContext>(options => options.UseNpgsql(connectionString));
-
-  // Register settings service
-  _ = webAppBuilder.Services.AddScoped<ISettingsService, SettingsService>();
-
-  // Register settings provider for IOptions pattern
-  _ = webAppBuilder.Services
-    .AddSingleton<ISettingsProvider, SettingsProvider>()
-    .AddSingleton<IOptions<ApolloSettings>, ApolloSettingsOptions>();
 
   // Register Redis for session management
   string redisConnectionString = webAppBuilder.Configuration.GetConnectionString("Redis") ?? "localhost:6379,password=apollo_redis";
@@ -68,10 +57,6 @@ try
     ApolloDbContext dbContext = scope.ServiceProvider.GetRequiredService<ApolloDbContext>();
     await dbContext.Database.MigrateAsync();
   }
-
-  // Initialize settings from database
-  ISettingsProvider settingsProvider = app.Services.GetRequiredService<ISettingsProvider>();
-  await settingsProvider.ReloadAsync();
 
   _ = app.AddModules(typeof(IApolloAPIApp).Assembly);
   // app.AddModules(typeof(Apollo.Discord.IApolloDiscord).Assembly);

@@ -24,18 +24,26 @@ public class ApolloAIAgent
 
   public async Task<string> ChatAsync(string chatMessage)
   {
-    _chatHistory.AddUserMessage(chatMessage);
+    try
+    {
+      _chatHistory.AddUserMessage(chatMessage);
 
-    var chatCompletionService = _kernel.GetRequiredService<IChatCompletionService>();
+      var chatCompletionService = _kernel.GetRequiredService<IChatCompletionService>();
 
-    var result = await chatCompletionService.GetChatMessageContentAsync(
-        _chatHistory,
-        executionSettings: _promptExecutionSettings,
-        kernel: _kernel);
+      var result = await chatCompletionService.GetChatMessageContentAsync(
+          _chatHistory,
+          executionSettings: _promptExecutionSettings,
+          kernel: _kernel);
 
-    Console.WriteLine("Assistant > " + result);
-    _chatHistory.AddMessage(result.Role, result.Content ?? string.Empty);
+      Console.WriteLine("Assistant > " + result);
+      _chatHistory.AddMessage(result.Role, result.Content ?? string.Empty);
 
-    return result.Content ?? "Nuffin";
+      return result.Content ?? "Nuffin";
+    }
+    catch (Exception ex)
+    {
+      Console.WriteLine("Error during chat: " + ex.Message);
+      throw;
+    }
   }
 }
