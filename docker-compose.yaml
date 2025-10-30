@@ -22,7 +22,7 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-apollo}
       - POSTGRES_DB=${POSTGRES_DB:-apollo_db}
     volumes:
-      - pgsql_data:/var/lib/postgresql/data
+      - pgsql_data:/var/lib/postgresql
     ports:
       - "5432:5432"
     networks:
