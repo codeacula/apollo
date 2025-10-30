@@ -1,9 +1,10 @@
 using System.Text.RegularExpressions;
+
 using Apollo.Core.Configuration;
 using Apollo.Core.Services;
 using Apollo.Discord.Components;
 using Apollo.Discord.Services;
-using Microsoft.Extensions.Logging;
+
 using NetCord;
 using NetCord.Rest;
 using NetCord.Services.ComponentInteractions;
@@ -16,146 +17,146 @@ public partial class ApolloModalInteractions(
     ISettingsProvider settingsProvider,
     IDailyAlertSetupSessionStore sessionStore) : ComponentInteractionModule<ModalInteractionContext>
 {
-    private readonly ILogger<ApolloModalInteractions> _logger = logger;
-    private readonly ISettingsService _settingsService = settingsService;
-    private readonly ISettingsProvider _settingsProvider = settingsProvider;
-    private readonly IDailyAlertSetupSessionStore _sessionStore = sessionStore;
-    private const string TimeFormatPattern = @"^([0-1][0-9]|2[0-3]):[0-5][0-9]$";
-    private static readonly Regex TimeFormatRegex = MyRegex();
+  private readonly ILogger<ApolloModalInteractions> _logger = logger;
+  private readonly ISettingsService _settingsService = settingsService;
+  private readonly ISettingsProvider _settingsProvider = settingsProvider;
+  private readonly IDailyAlertSetupSessionStore _sessionStore = sessionStore;
+  private const string TimeFormatPattern = "^([0-1][0-9]|2[0-3]):[0-5][0-9]$";
+  private static readonly Regex TimeFormatRegex = MyRegex();
 
-    private Task<RestMessage> RespondAsync(params IMessageComponentProperties[] components)
+  private Task<RestMessage> RespondAsync(params IMessageComponentProperties[] components)
+  {
+    return ModifyResponseAsync(message =>
     {
-        return ModifyResponseAsync(message =>
-        {
-            message.Components = components;
-            message.Flags = MessageFlags.IsComponentsV2;
-        });
+      message.Components = components;
+      message.Flags = MessageFlags.IsComponentsV2;
+    });
+  }
+
+  [ComponentInteraction(DailyAlertTimeConfigModal.CustomId)]
+  public async Task ConfigureDailyAlertTimeAsync()
+  {
+    _ = await RespondAsync(InteractionCallback.DeferredMessage());
+
+    ulong? guildId = Context.Guild?.Id;
+    ulong userId = Context.User.Id;
+
+    IReadOnlyList<IModalComponent> components = Context.Interaction.Data.Components;
+
+    string? timeInput = components
+        .OfType<TextInput>()
+        .FirstOrDefault(c => c.CustomId == DailyAlertTimeConfigModal.TimeInputCustomId)
+        ?.Value?.Trim();
+
+    string? messageInput = components
+        .OfType<TextInput>()
+        .FirstOrDefault(c => c.CustomId == DailyAlertTimeConfigModal.MessageInputCustomId)
+        ?.Value?.Trim();
+
+    if (string.IsNullOrWhiteSpace(timeInput))
+    {
+      timeInput = DailyAlertTimeConfigModal.DefaultTime;
     }
 
-    [ComponentInteraction(DailyAlertTimeConfigModal.CustomId)]
-    public async Task ConfigureDailyAlertTimeAsync()
+    if (string.IsNullOrWhiteSpace(messageInput))
     {
-        await RespondAsync(InteractionCallback.DeferredMessage());
-
-        var guildId = Context.Guild?.Id;
-        var userId = Context.User.Id;
-
-        var components = Context.Interaction.Data.Components;
-
-        var timeInput = components
-            .OfType<TextInput>()
-            .FirstOrDefault(c => c.CustomId == DailyAlertTimeConfigModal.TimeInputCustomId)
-            ?.Value?.Trim();
-
-        var messageInput = components
-            .OfType<TextInput>()
-            .FirstOrDefault(c => c.CustomId == DailyAlertTimeConfigModal.MessageInputCustomId)
-            ?.Value?.Trim();
-
-        if (string.IsNullOrWhiteSpace(timeInput))
-        {
-            timeInput = DailyAlertTimeConfigModal.DefaultTime;
-        }
-
-        if (string.IsNullOrWhiteSpace(messageInput))
-        {
-            messageInput = DailyAlertTimeConfigModal.DefaultMessage;
-        }
-
-        if (!TimeFormatRegex.IsMatch(timeInput))
-        {
-            LogInvalidInput(_logger, userId, $"Invalid time format: {timeInput}");
-
-            if (guildId.HasValue)
-            {
-                var sessionForError = await _sessionStore.GetSessionAsync(guildId.Value, userId) ?? new DailyAlertSetupSession();
-                await RespondAsync(
-                    new GeneralErrorComponent("Invalid time format. Please use HH:mm format (e.g., 06:00 or 14:30)."),
-                    new DailyAlertSetupComponent(sessionForError.ChannelId, sessionForError.RoleId, sessionForError.Time, sessionForError.Message));
-            }
-            else
-            {
-                await RespondAsync(
-                    new GeneralErrorComponent("Invalid time format. Please use HH:mm format (e.g., 06:00 or 14:30)."),
-                    new DailyAlertTimeConfigComponent());
-            }
-            return;
-        }
-
-        if (guildId.HasValue)
-        {
-            try
-            {
-                var session = await _sessionStore.GetSessionAsync(guildId.Value, userId) ?? new DailyAlertSetupSession();
-                session.Time = timeInput;
-                session.Message = messageInput;
-                await _sessionStore.SetSessionAsync(guildId.Value, userId, session);
-
-                LogTimeAndMessageStaged(_logger, userId, timeInput);
-
-                await RespondAsync(new DailyAlertSetupComponent(
-                    session.ChannelId,
-                    session.RoleId,
-                    session.Time,
-                    session.Message));
-            }
-            catch (Exception ex)
-            {
-                LogSessionUpdateError(_logger, ex, userId);
-                await RespondAsync(new GeneralErrorComponent("We couldn't update your configuration. Please try again."));
-            }
-        }
-        else
-        {
-            try
-            {
-                var timePersisted = await _settingsService.SetSettingAsync(ApolloSettings.Keys.DailyAlertTime, timeInput);
-                var messagePersisted = await _settingsService.SetSettingAsync(ApolloSettings.Keys.DailyAlertInitialMessage, messageInput);
-
-                if (!timePersisted || !messagePersisted)
-                {
-                    LogPersistenceFailed(_logger, userId);
-                    await RespondAsync(
-                        new GeneralErrorComponent("We couldn't save your configuration. Please try again."),
-                        new DailyAlertTimeConfigComponent());
-                    return;
-                }
-
-                await _settingsProvider.ReloadAsync();
-                LogPersistenceSuccess(_logger, timeInput, userId);
-
-                await RespondAsync(
-                    new SuccessNotificationComponent(
-                        "Daily alert configuration complete",
-                        $"Daily updates will now be posted at **{timeInput}** with your custom message."));
-            }
-            catch (Exception ex)
-            {
-                LogPersistenceError(_logger, ex, userId);
-                await RespondAsync(
-                    new GeneralErrorComponent("We couldn't save your configuration. Please try again."),
-                    new DailyAlertTimeConfigComponent());
-            }
-        }
+      messageInput = DailyAlertTimeConfigModal.DefaultMessage;
     }
 
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Invalid input for daily alert time config by {UserId}: {Reason}")]
-    private static partial void LogInvalidInput(ILogger logger, ulong userId, string reason);
+    if (!TimeFormatRegex.IsMatch(timeInput))
+    {
+      LogInvalidInput(_logger, userId, $"Invalid time format: {timeInput}");
 
-    [LoggerMessage(Level = LogLevel.Error, Message = "Failed to persist daily alert time config for user {UserId}")]
-    private static partial void LogPersistenceFailed(ILogger logger, ulong userId);
+      if (guildId.HasValue)
+      {
+        DailyAlertSetupSession sessionForError = await _sessionStore.GetSessionAsync(guildId.Value, userId) ?? new DailyAlertSetupSession();
+        _ = await RespondAsync(
+            new GeneralErrorComponent("Invalid time format. Please use HH:mm format (e.g., 06:00 or 14:30)."),
+            new DailyAlertSetupComponent(sessionForError.ChannelId, sessionForError.RoleId, sessionForError.Time, sessionForError.Message));
+      }
+      else
+      {
+        _ = await RespondAsync(
+            new GeneralErrorComponent("Invalid time format. Please use HH:mm format (e.g., 06:00 or 14:30)."),
+            new DailyAlertTimeConfigComponent());
+      }
+      return;
+    }
 
-    [LoggerMessage(Level = LogLevel.Error, Message = "Error saving daily alert time config for user {UserId}")]
-    private static partial void LogPersistenceError(ILogger logger, Exception exception, ulong userId);
+    if (guildId.HasValue)
+    {
+      try
+      {
+        DailyAlertSetupSession session = await _sessionStore.GetSessionAsync(guildId.Value, userId) ?? new DailyAlertSetupSession();
+        session.Time = timeInput;
+        session.Message = messageInput;
+        await _sessionStore.SetSessionAsync(guildId.Value, userId, session);
 
-    [LoggerMessage(Level = LogLevel.Information, Message = "Daily alert time set to {Time} by {UserId}")]
-    private static partial void LogPersistenceSuccess(ILogger logger, string time, ulong userId);
+        LogTimeAndMessageStaged(_logger, userId, timeInput);
 
-    [LoggerMessage(Level = LogLevel.Information, Message = "Time {Time} and message staged for user {UserId}")]
-    private static partial void LogTimeAndMessageStaged(ILogger logger, ulong userId, string time);
+        _ = await RespondAsync(new DailyAlertSetupComponent(
+            session.ChannelId,
+            session.RoleId,
+            session.Time,
+            session.Message));
+      }
+      catch (Exception ex)
+      {
+        LogSessionUpdateError(_logger, ex, userId);
+        _ = await RespondAsync(new GeneralErrorComponent("We couldn't update your configuration. Please try again."));
+      }
+    }
+    else
+    {
+      try
+      {
+        bool timePersisted = await _settingsService.SetSettingAsync(ApolloSettings.Keys.DailyAlertTime, timeInput);
+        bool messagePersisted = await _settingsService.SetSettingAsync(ApolloSettings.Keys.DailyAlertInitialMessage, messageInput);
 
-    [LoggerMessage(Level = LogLevel.Error, Message = "Error updating session for user {UserId}")]
-    private static partial void LogSessionUpdateError(ILogger logger, Exception exception, ulong userId);
-    [GeneratedRegex(TimeFormatPattern, RegexOptions.Compiled)]
-    private static partial Regex MyRegex();
+        if (!timePersisted || !messagePersisted)
+        {
+          LogPersistenceFailed(_logger, userId);
+          _ = await RespondAsync(
+              new GeneralErrorComponent("We couldn't save your configuration. Please try again."),
+              new DailyAlertTimeConfigComponent());
+          return;
+        }
+
+        await _settingsProvider.ReloadAsync();
+        LogPersistenceSuccess(_logger, timeInput, userId);
+
+        _ = await RespondAsync(
+            new SuccessNotificationComponent(
+                "Daily alert configuration complete",
+                $"Daily updates will now be posted at **{timeInput}** with your custom message."));
+      }
+      catch (Exception ex)
+      {
+        LogPersistenceError(_logger, ex, userId);
+        _ = await RespondAsync(
+            new GeneralErrorComponent("We couldn't save your configuration. Please try again."),
+            new DailyAlertTimeConfigComponent());
+      }
+    }
+  }
+
+  [LoggerMessage(Level = LogLevel.Warning, Message = "Invalid input for daily alert time config by {UserId}: {Reason}")]
+  private static partial void LogInvalidInput(ILogger logger, ulong userId, string reason);
+
+  [LoggerMessage(Level = LogLevel.Error, Message = "Failed to persist daily alert time config for user {UserId}")]
+  private static partial void LogPersistenceFailed(ILogger logger, ulong userId);
+
+  [LoggerMessage(Level = LogLevel.Error, Message = "Error saving daily alert time config for user {UserId}")]
+  private static partial void LogPersistenceError(ILogger logger, Exception exception, ulong userId);
+
+  [LoggerMessage(Level = LogLevel.Information, Message = "Daily alert time set to {Time} by {UserId}")]
+  private static partial void LogPersistenceSuccess(ILogger logger, string time, ulong userId);
+
+  [LoggerMessage(Level = LogLevel.Information, Message = "Time {Time} and message staged for user {UserId}")]
+  private static partial void LogTimeAndMessageStaged(ILogger logger, ulong userId, string time);
+
+  [LoggerMessage(Level = LogLevel.Error, Message = "Error updating session for user {UserId}")]
+  private static partial void LogSessionUpdateError(ILogger logger, Exception exception, ulong userId);
+  [GeneratedRegex(TimeFormatPattern, RegexOptions.Compiled)]
+  private static partial Regex MyRegex();
 }

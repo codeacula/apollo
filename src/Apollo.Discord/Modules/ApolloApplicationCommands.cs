@@ -1,7 +1,7 @@
 using Apollo.Core.Services;
 using Apollo.Discord.Components;
 using Apollo.Discord.Services;
-using Microsoft.Extensions.Logging;
+
 using NetCord;
 using NetCord.Rest;
 using NetCord.Services.ApplicationCommands;
@@ -13,67 +13,67 @@ public partial class ApolloApplicationCommands(
     ISettingsProvider settingsProvider,
     IDailyAlertSetupSessionStore sessionStore) : ApplicationCommandModule<ApplicationCommandContext>
 {
-    private readonly ILogger<ApolloApplicationCommands> _logger = logger;
-    private readonly ISettingsProvider _settingsProvider = settingsProvider;
-    private readonly IDailyAlertSetupSessionStore _sessionStore = sessionStore;
+  private readonly ILogger<ApolloApplicationCommands> _logger = logger;
+  private readonly ISettingsProvider _settingsProvider = settingsProvider;
+  private readonly IDailyAlertSetupSessionStore _sessionStore = sessionStore;
 
-    private Task<RestMessage> RespondAsync(IMessageComponentProperties component)
+  private Task<RestMessage> RespondAsync(IMessageComponentProperties component)
+  {
+    return ModifyResponseAsync(message =>
     {
-        return ModifyResponseAsync(message =>
-        {
-            message.Components = [component];
-            message.Flags = MessageFlags.IsComponentsV2;
-        });
+      message.Components = [component];
+      message.Flags = MessageFlags.IsComponentsV2;
+    });
+  }
+
+
+  [SlashCommand("configure-daily-alert", "Set up which forum daily alerts are posted to.")]
+  public async Task ConfigureDailyAlertAsync()
+  {
+    LogStartConfigure(_logger, Context.User.Username);
+    _ = await RespondAsync(InteractionCallback.DeferredMessage());
+
+    if (Context.Guild is null)
+    {
+      LogNoGuildProvided(_logger, Context.User.Username);
+      _ = await RespondAsync(new GeneralErrorComponent("No guild provided."));
+      return;
     }
 
+    ulong guildId = Context.Guild.Id;
+    ulong userId = Context.User.Id;
 
-    [SlashCommand("configure-daily-alert", "Set up which forum daily alerts are posted to.")]
-    public async Task ConfigureDailyAlertAsync()
+    DailyAlertSetupSession? session = await _sessionStore.GetSessionAsync(guildId, userId);
+
+    if (session is null)
     {
-        LogStartConfigure(_logger, Context.User.Username);
-        await RespondAsync(InteractionCallback.DeferredMessage());
-
-        if (Context.Guild is null)
-        {
-            LogNoGuildProvided(_logger, Context.User.Username);
-            await RespondAsync(new GeneralErrorComponent("No guild provided."));
-            return;
-        }
-
-        var guildId = Context.Guild.Id;
-        var userId = Context.User.Id;
-
-        var session = await _sessionStore.GetSessionAsync(guildId, userId);
-
-        if (session is null)
-        {
-            var settings = _settingsProvider.GetSettings();
-            session = new DailyAlertSetupSession
-            {
-                ChannelId = settings.DailyAlertChannelId,
-                RoleId = settings.DailyAlertRoleId,
-                Time = settings.DailyAlertTime,
-                Message = settings.DailyAlertInitialMessage
-            };
-            await _sessionStore.SetSessionAsync(guildId, userId, session);
-        }
-
-        await RespondAsync(new DailyAlertSetupComponent(
-            session.ChannelId,
-            session.RoleId,
-            session.Time,
-            session.Message));
+      Core.Configuration.ApolloSettings settings = _settingsProvider.GetSettings();
+      session = new DailyAlertSetupSession
+      {
+        ChannelId = settings.DailyAlertChannelId,
+        RoleId = settings.DailyAlertRoleId,
+        Time = settings.DailyAlertTime,
+        Message = settings.DailyAlertInitialMessage
+      };
+      await _sessionStore.SetSessionAsync(guildId, userId, session);
     }
 
-    [LoggerMessage(
-        Level = LogLevel.Information,
-        Message = "configure-daily-alert initialized by {Username}"
-    )]
-    public static partial void LogStartConfigure(ILogger logger, string username);
+    _ = await RespondAsync(new DailyAlertSetupComponent(
+        session.ChannelId,
+        session.RoleId,
+        session.Time,
+        session.Message));
+  }
 
-    [LoggerMessage(
-        Level = LogLevel.Error,
-        Message = "No guild provided for {GuildName}"
-    )]
-    public static partial void LogNoGuildProvided(ILogger logger, string guildName);
+  [LoggerMessage(
+      Level = LogLevel.Information,
+      Message = "configure-daily-alert initialized by {Username}"
+  )]
+  public static partial void LogStartConfigure(ILogger logger, string username);
+
+  [LoggerMessage(
+      Level = LogLevel.Error,
+      Message = "No guild provided for {GuildName}"
+  )]
+  public static partial void LogNoGuildProvided(ILogger logger, string guildName);
 }

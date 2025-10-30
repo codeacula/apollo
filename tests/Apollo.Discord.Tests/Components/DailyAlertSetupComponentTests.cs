@@ -1,4 +1,5 @@
 using Apollo.Discord.Components;
+
 using NetCord;
 using NetCord.Rest;
 
@@ -6,101 +7,101 @@ namespace Apollo.Discord.Tests.Components;
 
 public class DailyAlertSetupComponentTests
 {
-    [Fact]
-    public void Constructor_WithNoParameters_CreatesComponent()
-    {
-        var component = new DailyAlertSetupComponent();
+  [Fact]
+  public void ConstructorWithNoParametersCreatesComponent()
+  {
+    DailyAlertSetupComponent component = [];
 
-        Assert.NotNull(component);
-        Assert.Equal(Constants.Colors.ApolloGreen, component.AccentColor);
-    }
+    Assert.NotNull(component);
+    Assert.Equal(Constants.Colors.ApolloGreen, component.AccentColor);
+  }
 
-    [Fact]
-    public void Constructor_WithAllParameters_PreSelectsValues()
-    {
-        var channelId = 123456789UL;
-        var roleId = 987654321UL;
-        var time = "08:00";
-        var message = "Good morning!";
+  [Fact]
+  public void ConstructorWithAllParametersPreSelectsValues()
+  {
+    const ulong channelId = 123456789UL;
+    const ulong roleId = 987654321UL;
+    const string time = "08:00";
+    const string message = "Good morning!";
 
-        var component = new DailyAlertSetupComponent(channelId, roleId, time, message);
+    DailyAlertSetupComponent component = new(channelId, roleId, time, message);
 
-        Assert.NotNull(component);
-    }
+    Assert.NotNull(component);
+  }
 
-    [Fact]
-    public void Constructor_HasRequiredComponents()
-    {
-        var component = new DailyAlertSetupComponent();
-        var components = component.Components.ToList();
+  [Fact]
+  public void ConstructorHasRequiredComponents()
+  {
+    DailyAlertSetupComponent component = [];
+    var components = component.Components.ToList();
 
-        Assert.True(components.Count >= 5);
-    }
+    Assert.True(components.Count >= 5);
+  }
 
-    [Fact]
-    public void Constructor_HasChannelMenu()
-    {
-        var component = new DailyAlertSetupComponent();
-        var components = component.Components.ToList();
+  [Fact]
+  public void ConstructorHasChannelMenu()
+  {
+    DailyAlertSetupComponent component = [];
+    var components = component.Components.ToList();
 
-        var channelMenu = components.OfType<ChannelMenuProperties>().FirstOrDefault();
-        Assert.NotNull(channelMenu);
-        Assert.Equal(DailyAlertSetupComponent.ChannelSelectCustomId, channelMenu.CustomId);
-        Assert.Contains(ChannelType.ForumGuildChannel, channelMenu.ChannelTypes!);
-    }
+    ChannelMenuProperties? channelMenu = components.OfType<ChannelMenuProperties>().FirstOrDefault();
+    Assert.NotNull(channelMenu);
+    Assert.Equal(DailyAlertSetupComponent.ChannelSelectCustomId, channelMenu.CustomId);
+    Assert.Contains(ChannelType.ForumGuildChannel, channelMenu.ChannelTypes!);
+  }
 
-    [Fact]
-    public void Constructor_HasRoleMenu()
-    {
-        var component = new DailyAlertSetupComponent();
-        var components = component.Components.ToList();
+  [Fact]
+  public void ConstructorHasRoleMenu()
+  {
+    DailyAlertSetupComponent component = [];
+    var components = component.Components.ToList();
 
-        var roleMenu = components.OfType<RoleMenuProperties>().FirstOrDefault();
-        Assert.NotNull(roleMenu);
-        Assert.Equal(DailyAlertSetupComponent.RoleSelectCustomId, roleMenu.CustomId);
-    }
+    RoleMenuProperties? roleMenu = components.OfType<RoleMenuProperties>().FirstOrDefault();
+    Assert.NotNull(roleMenu);
+    Assert.Equal(DailyAlertSetupComponent.RoleSelectCustomId, roleMenu.CustomId);
+  }
 
-    [Fact]
-    public void Constructor_IncompleteConfig_ShowsOnlyConfigureButton()
-    {
-        var component = new DailyAlertSetupComponent();
-        var components = component.Components.ToList();
+  [Fact]
+  public void ConstructorIncompleteConfigShowsOnlyConfigureButton()
+  {
+    DailyAlertSetupComponent component = [];
+    var components = component.Components.ToList();
 
-        var actionRow = components.OfType<ActionRowProperties>().FirstOrDefault();
-        Assert.NotNull(actionRow);
-        Assert.Single(actionRow.Components);
+    ActionRowProperties? actionRow = components.OfType<ActionRowProperties>().FirstOrDefault();
+    Assert.NotNull(actionRow);
+    _ = Assert.Single(actionRow.Components);
 
-        var button = actionRow.Components.First() as ButtonProperties;
-        Assert.NotNull(button);
-        Assert.Equal(DailyAlertSetupComponent.ConfigureTimeButtonCustomId, button.CustomId);
-    }
+    ButtonProperties? button = actionRow.Components.First() as ButtonProperties;
+    Assert.NotNull(button);
+    Assert.Equal(DailyAlertSetupComponent.ConfigureTimeButtonCustomId, button.CustomId);
+  }
 
-    [Fact]
-    public void Constructor_CompleteConfig_ShowsBothButtons()
-    {
-        var component = new DailyAlertSetupComponent(123UL, 456UL, "08:00", "Test message");
-        var components = component.Components.ToList();
+  [Fact]
+  public void ConstructorCompleteConfigShowsBothButtons()
+  {
+    DailyAlertSetupComponent component = new(123UL, 456UL, "08:00", "Test message");
+    var components = component.Components.ToList();
 
-        var actionRow = components.OfType<ActionRowProperties>().FirstOrDefault();
-        Assert.NotNull(actionRow);
-        Assert.Equal(2, actionRow.Components.Count());
+    ActionRowProperties? actionRow = components.OfType<ActionRowProperties>().FirstOrDefault();
+    Assert.NotNull(actionRow);
+    Assert.Equal(2, actionRow.Components.Count());
 
-        var configureButton = actionRow.Components.First() as ButtonProperties;
-        Assert.NotNull(configureButton);
-        Assert.Equal(DailyAlertSetupComponent.ConfigureTimeButtonCustomId, configureButton.CustomId);
+    ButtonProperties? configureButton = actionRow.Components.First() as ButtonProperties;
+    Assert.NotNull(configureButton);
+    Assert.Equal(DailyAlertSetupComponent.ConfigureTimeButtonCustomId, configureButton.CustomId);
 
-        var saveButton = actionRow.Components.Last() as ButtonProperties;
-        Assert.NotNull(saveButton);
-        Assert.Equal(DailyAlertSetupComponent.SaveButtonCustomId, saveButton.CustomId);
-        Assert.Equal(ButtonStyle.Success, saveButton.Style);
-    }
+    ButtonProperties? saveButton = actionRow.Components.Last() as ButtonProperties;
+    Assert.NotNull(saveButton);
+    Assert.Equal(DailyAlertSetupComponent.SaveButtonCustomId, saveButton.CustomId);
+    Assert.Equal(ButtonStyle.Success, saveButton.Style);
+  }
 
-    [Fact]
-    public void CustomIdConstants_AreCorrect()
-    {
-        Assert.Equal("daily_alert_setup_channel", DailyAlertSetupComponent.ChannelSelectCustomId);
-        Assert.Equal("daily_alert_setup_role", DailyAlertSetupComponent.RoleSelectCustomId);
-        Assert.Equal("daily_alert_setup_time_button", DailyAlertSetupComponent.ConfigureTimeButtonCustomId);
-        Assert.Equal("daily_alert_setup_save_button", DailyAlertSetupComponent.SaveButtonCustomId);
-    }
+  [Fact]
+  public void CustomIdConstantsAreCorrect()
+  {
+    Assert.Equal("daily_alert_setup_channel", DailyAlertSetupComponent.ChannelSelectCustomId);
+    Assert.Equal("daily_alert_setup_role", DailyAlertSetupComponent.RoleSelectCustomId);
+    Assert.Equal("daily_alert_setup_time_button", DailyAlertSetupComponent.ConfigureTimeButtonCustomId);
+    Assert.Equal("daily_alert_setup_save_button", DailyAlertSetupComponent.SaveButtonCustomId);
+  }
 }

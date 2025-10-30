@@ -7,13 +7,13 @@ namespace Apollo.Core.Services;
 /// </summary>
 public interface ISettingsProvider
 {
-    /// <summary>
-    /// Reloads settings from the database
-    /// </summary>
-    Task ReloadAsync();
+  /// <summary>
+  /// Reloads settings from the database
+  /// </summary>
+  Task ReloadAsync();
 
-    /// <summary>
-    /// Gets the current settings
-    /// </summary>
-    ApolloSettings GetSettings();
+  /// <summary>
+  /// Gets the current settings
+  /// </summary>
+  ApolloSettings GetSettings();
 }
