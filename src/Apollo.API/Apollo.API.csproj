@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
+    <ProjectReference Include="../Apollo.AI/Apollo.AI.csproj" />
     <ProjectReference Include="..\Apollo.Database\Apollo.Database.csproj" />
     <ProjectReference Include="..\Apollo.Core\Apollo.Core.csproj" />
     <ProjectReference Include="..\Apollo.Discord\Apollo.Discord.csproj" />

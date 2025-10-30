@@ -3,15 +3,15 @@ using NetCord.Rest;
 
 namespace Apollo.Discord.Components;
 
-public partial class DailyAlertTimeConfigComponent : ComponentContainerProperties
+public class DailyAlertTimeConfigComponent : ComponentContainerProperties
 {
-    public const string ButtonCustomId = "daily_alert_time_config_button";
+  public const string ButtonCustomId = "daily_alert_time_config_button";
 
-    public DailyAlertTimeConfigComponent() : base()
-    {
-        AccentColor = Constants.Colors.ApolloGreen;
-        Components = [
-            new TextDisplayProperties("# Configure Daily Update Schedule"),
+  public DailyAlertTimeConfigComponent()
+  {
+    AccentColor = Constants.Colors.ApolloGreen;
+    Components = [
+        new TextDisplayProperties("# Configure Daily Update Schedule"),
             new TextDisplayProperties("Now let's set when and what the initial daily update post should say."),
             new ActionRowProperties()
             {
@@ -19,6 +19,6 @@ public partial class DailyAlertTimeConfigComponent : ComponentContainerPropertie
                     new ButtonProperties(ButtonCustomId, "Configure Time and Message", ButtonStyle.Primary)
                 ]
             }
-        ];
-    }
+    ];
+  }
 }

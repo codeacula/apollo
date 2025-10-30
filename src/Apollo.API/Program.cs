@@ -1,118 +1,89 @@
 using Apollo.API;
-using Apollo.API.Services;
 using Apollo.Core.Configuration;
 using Apollo.Core.Services;
 using Apollo.Database;
 using Apollo.Database.Services;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using NetCord;
-using NetCord.Gateway;
-using NetCord.Hosting.Gateway;
-using NetCord.Hosting.Rest;
+
 using NetCord.Hosting.Services;
-using NetCord.Hosting.Services.ApplicationCommands;
-using NetCord.Hosting.Services.ComponentInteractions;
-using NetCord.Services.ComponentInteractions;
+
 using Quartz;
 
 try
 {
-    var builder = WebApplication.CreateBuilder(args);
+  WebApplicationBuilder webAppBuilder = WebApplication.CreateBuilder(args);
+  _ = webAppBuilder.Services.AddControllers();
 
-    builder.Services
-        .AddControllers();
+  // TODO: Determine an appropriate exception to throw. Not having a connection string is a configuration error.
+  string connectionString = webAppBuilder.Configuration.GetConnectionString("Apollo") ?? throw new InvalidOperationException("Apollo connection string is required");
 
-    builder.Services
-    .AddDiscordGateway(options =>
-    {
-        options.Intents = GatewayIntents.All;
-    })
-        .AddApplicationCommands()
-        .AddDiscordRest()
-        .AddComponentInteractions<ButtonInteraction, ButtonInteractionContext>()
-        .AddComponentInteractions<StringMenuInteraction, StringMenuInteractionContext>()
-        .AddComponentInteractions<UserMenuInteraction, UserMenuInteractionContext>()
-        .AddComponentInteractions<RoleMenuInteraction, RoleMenuInteractionContext>()
-        .AddComponentInteractions<MentionableMenuInteraction, MentionableMenuInteractionContext>()
-        .AddComponentInteractions<ChannelMenuInteraction, ChannelMenuInteractionContext>()
-        .AddComponentInteractions<ModalInteraction, ModalInteractionContext>()
-        .AddGatewayHandlers(typeof(IApolloAPIApp).Assembly)
-        .AddGatewayHandlers(typeof(Apollo.Discord.IApolloDiscord).Assembly);
+  _ = webAppBuilder.Services.AddDbContextPool<ApolloDbContext>(options => options.UseNpgsql(connectionString));
 
-    var connectionString = builder.Configuration.GetConnectionString("Apollo") ?? throw new NullReferenceException();
+  // Register settings service
+  _ = webAppBuilder.Services.AddScoped<ISettingsService, SettingsService>();
 
-    builder.Services.AddDbContextPool<ApolloDbContext>(options =>
-    {
-        options.UseNpgsql(connectionString);
-    });
+  // Register settings provider for IOptions pattern
+  _ = webAppBuilder.Services
+    .AddSingleton<ISettingsProvider, SettingsProvider>()
+    .AddSingleton<IOptions<ApolloSettings>, ApolloSettingsOptions>();
 
-    // Register settings service
-    builder.Services.AddScoped<ISettingsService, SettingsService>();
+  // Register Redis for session management
+  string redisConnectionString = webAppBuilder.Configuration.GetConnectionString("Redis") ?? "localhost:6379,password=apollo_redis";
 
-    // Register settings provider for IOptions pattern
-    builder.Services.AddSingleton<ISettingsProvider, SettingsProvider>();
-    builder.Services.AddSingleton<IOptions<ApolloSettings>, ApolloSettingsOptions>();
+  // TODO: Investigate if we can clean this up any more
+  _ = webAppBuilder.Services.AddSingleton<StackExchange.Redis.IConnectionMultiplexer>(_ =>
+      StackExchange.Redis.ConnectionMultiplexer.Connect(redisConnectionString));
 
-    // Register Redis for session management
-    var redisConnectionString = builder.Configuration.GetConnectionString("Redis") ?? "localhost:6379,password=apollo_redis";
-    builder.Services.AddSingleton<StackExchange.Redis.IConnectionMultiplexer>(sp =>
-        StackExchange.Redis.ConnectionMultiplexer.Connect(redisConnectionString));
-    builder.Services.AddSingleton<Apollo.Discord.Services.IDailyAlertSetupSessionStore, Apollo.Discord.Services.RedisDailyAlertSetupSessionStore>();
+  _ = webAppBuilder.Services
+      .AddQuartz(q =>
+      {
+        q.UsePersistentStore(s =>
+          {
+            s.UseProperties = true;
+            s.UsePostgres(options =>
+              {
+                options.ConnectionString = connectionString;
+                options.TablePrefix = "QRTZ_";
+              });
+            s.UseSystemTextJsonSerializer();
+          });
+      })
+      .AddQuartzHostedService(opt => opt.WaitForJobsToComplete = true);
 
-    // Register Discord message sender abstraction
-    builder.Services.AddScoped<IDiscordMessageSender, NetCordDiscordMessageSender>();
+  WebApplication app = webAppBuilder.Build();
 
-    builder.Services
-        .AddQuartz(q =>
-        {
-            q.UsePersistentStore(s =>
-            {
-                s.UseProperties = true;
-                s.UsePostgres(options =>
-                {
-                    options.ConnectionString = connectionString;
-                    options.TablePrefix = "QRTZ_";
-                });
-                s.UseSystemTextJsonSerializer();
-            });
-        })
-        .AddQuartzHostedService(opt =>
-        {
-            opt.WaitForJobsToComplete = true;
-        });
+  // Apply database migrations
+  using (IServiceScope scope = app.Services.CreateScope())
+  {
+    ApolloDbContext dbContext = scope.ServiceProvider.GetRequiredService<ApolloDbContext>();
+    await dbContext.Database.MigrateAsync();
+  }
 
-    var app = builder.Build();
+  // Initialize settings from database
+  ISettingsProvider settingsProvider = app.Services.GetRequiredService<ISettingsProvider>();
+  await settingsProvider.ReloadAsync();
 
-    using (var scope = app.Services.CreateScope())
-    {
-        var dbContext = scope.ServiceProvider.GetRequiredService<ApolloDbContext>();
-        await dbContext.Database.MigrateAsync();
-    }
+  _ = app.AddModules(typeof(IApolloAPIApp).Assembly);
+  // app.AddModules(typeof(Apollo.Discord.IApolloDiscord).Assembly);
+  _ = app.UseRequestLocalization();
 
-    // Initialize settings from database
-    var settingsProvider = app.Services.GetRequiredService<ISettingsProvider>();
-    await settingsProvider.ReloadAsync();
+  if (app.Environment.IsDevelopment())
+  {
+    _ = app.MapOpenApi();
+  }
 
-    app.AddModules(typeof(IApolloAPIApp).Assembly);
-    app.AddModules(typeof(Apollo.Discord.IApolloDiscord).Assembly);
-    app.UseRequestLocalization();
+  _ = app.MapControllers();
 
-    if (app.Environment.IsDevelopment())
-    {
-        app.MapOpenApi();
-    }
+  _ = app.UseHttpsRedirection();
 
-    app.MapControllers();
+  _ = app.UseDefaultFiles();
+  _ = app.UseStaticFiles();
 
-    app.UseHttpsRedirection();
-
-    app.UseDefaultFiles();
-    app.UseStaticFiles();
-
-    await app.RunAsync();
+  await app.RunAsync();
 }
 catch (Exception ex)
 {
-    await Console.Error.WriteLineAsync(ex.ToString());
+  await Console.Error.WriteLineAsync(ex.ToString());
 }

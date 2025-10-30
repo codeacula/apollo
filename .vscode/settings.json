@@ -1,30 +1,40 @@
 {
-    "github.copilot.chat.codesearch.enabled": true,
-    "github.copilot.chat.agent.thinkingTool": true,
-    "github.copilot.chat.alternateGptPrompt.enabled": true,
-    "github.copilot.chat.editor.temporalContext.enabled": true,
-    "github.copilot.chat.edits.temporalContext.enabled": true,
-    "github.copilot.chat.executePrompt.enabled": true,
-    "github.copilot.chat.generateTests.codeLens": true,
-    "github.copilot.chat.gpt5AlternatePrompt": "default",
-    "github.copilot.chat.languageContext.fix.typescript.enabled": true,
-    "github.copilot.chat.languageContext.inline.typescript.enabled": true,
-    "github.copilot.chat.languageContext.typescript.enabled": true,
-    "github.copilot.chat.languageContext.typescript.includeDocumentation": true,
-    "github.copilot.chat.newWorkspace.useContext7": true,
-    "github.copilot.chat.notebook.enhancedNextEditSuggestions.enabled": false,
-    "github.copilot.chat.responsesApiReasoningEffort": "high",
-    "chat.agentSessionsViewLocation": "view",
-    "chat.allowAnonymousAccess": true,
-    "chat.checkpoints.showFileChanges": true,
-    "chat.edits2.enabled": true,
-    "chat.emptyState.history.enabled": true,
-    "chat.mcp.assisted.nuget.enabled": true,
-    "chat.renderRelatedFiles": true,
-    "chat.tools.terminal.autoReplyToPrompts": true,
-    "github.copilot.chat.reviewSelection.instructions": [
-        {
-            "file": "docs/Code Review Instructions.md"
-        }
-    ]
+  "github.copilot.chat.codesearch.enabled": true,
+  "github.copilot.chat.agent.thinkingTool": true,
+  "github.copilot.chat.alternateGptPrompt.enabled": true,
+  "github.copilot.chat.editor.temporalContext.enabled": true,
+  "github.copilot.chat.edits.temporalContext.enabled": true,
+  "github.copilot.chat.executePrompt.enabled": true,
+  "github.copilot.chat.generateTests.codeLens": true,
+  "github.copilot.chat.gpt5AlternatePrompt": "default",
+  "github.copilot.chat.languageContext.fix.typescript.enabled": true,
+  "github.copilot.chat.languageContext.inline.typescript.enabled": true,
+  "github.copilot.chat.languageContext.typescript.enabled": true,
+  "github.copilot.chat.languageContext.typescript.includeDocumentation": true,
+  "github.copilot.chat.newWorkspace.useContext7": true,
+  "github.copilot.chat.notebook.enhancedNextEditSuggestions.enabled": false,
+  "github.copilot.chat.responsesApiReasoningEffort": "high",
+  "chat.agentSessionsViewLocation": "view",
+  "chat.allowAnonymousAccess": true,
+  "chat.checkpoints.showFileChanges": true,
+  "chat.edits2.enabled": true,
+  "chat.emptyState.history.enabled": true,
+  "chat.mcp.assisted.nuget.enabled": true,
+  "chat.renderRelatedFiles": true,
+  "chat.tools.terminal.autoReplyToPrompts": true,
+  "github.copilot.chat.reviewSelection.instructions": [
+    {
+      "file": "docs/Code Review Instructions.md"
+    }
+  ],
+  "debug.terminal.clearBeforeReusing": true,
+  "dotnet.formatting.organizeImportsOnFormat": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "always",
+    "source.fixAll.markdownlint": "always",
+    "source.fixAll.eslint": "always",
+    "source.organizeImports": "always"
+  },
+  "editor.smoothScrolling": true,
+  "dotnetAcquisitionExtension.highVerbosity": true,
 }

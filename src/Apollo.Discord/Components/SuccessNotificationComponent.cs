@@ -2,15 +2,15 @@ using NetCord.Rest;
 
 namespace Apollo.Discord.Components;
 
-public partial class SuccessNotificationComponent : ComponentContainerProperties
+public class SuccessNotificationComponent : ComponentContainerProperties
 {
-    public SuccessNotificationComponent(string heading, string message) : base()
-    {
-        AccentColor = Constants.Colors.Success;
-        Components =
-        [
-            new TextDisplayProperties($"# {heading}"),
+  public SuccessNotificationComponent(string heading, string message)
+  {
+    AccentColor = Constants.Colors.Success;
+    Components =
+    [
+        new TextDisplayProperties($"# {heading}"),
             new TextDisplayProperties(message)
-        ];
-    }
+    ];
+  }
 }
