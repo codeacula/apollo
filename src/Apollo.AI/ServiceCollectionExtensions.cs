@@ -11,8 +11,9 @@ public static class ServiceCollectionExtensions
   {
     var apolloAiConfig = configuration.GetSection(nameof(ApolloAIConfig)).Get<ApolloAIConfig>() ?? new ApolloAIConfig();
 
-    _ = services.AddSingleton(apolloAiConfig);
-    _ = services.AddTransient<IApolloAIAgent, ApolloAIAgent>();
+    _ = services
+      .AddSingleton(apolloAiConfig);
+    _ = services.AddSingleton<IApolloAIAgent, ApolloAIAgent>();
 
     return services;
   }

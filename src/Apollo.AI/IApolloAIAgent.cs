@@ -2,5 +2,5 @@ namespace Apollo.AI;
 
 public interface IApolloAIAgent
 {
-  Task<string> ChatAsync(string chatMessage);
+  Task<string> ChatAsync(string username, string chatMessage);
 }
