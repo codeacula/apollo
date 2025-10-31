@@ -10,7 +10,7 @@ public class MessageCreateHandler(IApolloAIAgent apolloAIAgent) : IMessageCreate
   public async ValueTask HandleAsync(Message arg)
   {
     // This is here because when Apollo replies to the user, we get yet another MessageCreate event
-    if (arg.Author.IsBot || arg.Channel != null || arg.Author.Username == "Apollo")
+    if (arg.Channel != null || arg.Author.Username == "Apollo")
     {
       return;
     }
