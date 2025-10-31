@@ -1,5 +1,4 @@
 using Apollo.AI;
-using Apollo.Database;
 using Apollo.Database.Repository;
 
 using Microsoft.SemanticKernel.ChatCompletion;
