@@ -6,7 +6,7 @@ namespace Apollo.Database.Models;
 public class ApolloChat
 {
   [Key]
-  public required Guid Id { get; set; }
+  public required Guid Id { get; set; } = Guid.NewGuid();
 
   [Required]
   public required Guid UserId { get; set; }

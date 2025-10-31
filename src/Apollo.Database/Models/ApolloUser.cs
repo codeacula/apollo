@@ -5,7 +5,7 @@ namespace Apollo.Database.Models;
 public class ApolloUser
 {
   [Key]
-  public required Guid Id { get; set; }
+  public Guid Id { get; set; } = Guid.NewGuid();
 
   public string DisplayName { get; set; } = string.Empty;
 
