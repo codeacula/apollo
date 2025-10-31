@@ -10,6 +10,7 @@ var configuration = webAppBuilder.Configuration;
 
 _ = webAppBuilder.Services.AddControllers();
 _ = webAppBuilder.Services
+  .AddDatabaseServices(configuration)
   .AddAPIServices(configuration)
   .AddAiServices(configuration)
   .AddDiscordServices();

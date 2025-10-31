@@ -1,6 +1,4 @@
 using Apollo.Core.Exceptions;
-using Apollo.Core.Services;
-using Apollo.Database.Services;
 
 using Quartz;
 
@@ -10,8 +8,6 @@ public static class ServiceCollectionExtensions
 {
   public static IServiceCollection AddAPIServices(this IServiceCollection services, IConfiguration configuration)
   {
-    _ = services.AddScoped<ISettingsService, SettingsService>();
-
     // Register Redis for session management
     string redisConnectionString = configuration.GetConnectionString("Redis") ?? throw new MissingDatabaseStringException("Redis");
 
