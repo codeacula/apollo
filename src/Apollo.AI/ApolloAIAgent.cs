@@ -7,7 +7,7 @@ using Microsoft.SemanticKernel.Connectors.OpenAI;
 
 namespace Apollo.AI;
 
-public class ApolloAIAgent
+public class ApolloAIAgent : IApolloAIAgent
 {
   private readonly ChatHistory _chatHistory = [];
   private readonly Kernel _kernel;

@@ -4,21 +4,15 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Apollo.Database;
 
-public class ApolloDbContext(DbContextOptions<ApolloDbContext> options) : DbContext(options)
+public class ApolloDbContext(DbContextOptions<ApolloDbContext> options) : DbContext(options), IApolloDbContext
 {
   /// <summary>
   /// Database set for configuration settings
   /// </summary>
   public DbSet<Setting> Settings { get; set; }
 
-  protected override void OnModelCreating(ModelBuilder modelBuilder)
+  public async Task MigrateAsync(CancellationToken cancellationToken = default)
   {
-    base.OnModelCreating(modelBuilder);
-
-    // Configure Setting entity
-    _ = modelBuilder.Entity<Setting>(entity =>
-    {
-      _ = entity.HasIndex(e => e.Key).IsUnique(); // Ensure key uniqueness
-    });
+    await Database.MigrateAsync(cancellationToken);
   }
 }

@@ -11,6 +11,8 @@ public static class ServiceCollectionExtensions
   {
     _ = services.Configure<ApolloAIConfig>(configuration.GetSection(nameof(ApolloAIConfig)));
 
+    _ = services.AddTransient<IApolloAIAgent, ApolloAIAgent>();
+
     return services;
   }
 }
