@@ -37,4 +37,23 @@
   },
   "editor.smoothScrolling": true,
   "dotnetAcquisitionExtension.highVerbosity": true,
+  "dbcode.connections": [
+    {
+      "connectionId": "-YWw14tPQtMvcy4Eux7kq",
+      "name": "Development",
+      "driver": "postgres",
+      "color": "#0085CC",
+      "connectionType": "host",
+      "host": "localhost",
+      "port": 5432,
+      "ssl": false,
+      "username": "apollo",
+      "password": "",
+      "savePassword": "secretStorage",
+      "database": "apollo_db",
+      "readOnly": false,
+      "postConnectionSqlType": "inline",
+      "connectionTimeout": 30
+    }
+  ],
 }
