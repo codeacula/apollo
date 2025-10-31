@@ -9,8 +9,9 @@ public static class ServiceCollectionExtensions
 {
   public static IServiceCollection AddAiServices(this IServiceCollection services, IConfiguration configuration)
   {
-    _ = services.Configure<ApolloAIConfig>(configuration.GetSection(nameof(ApolloAIConfig)));
+    var apolloAiConfig = configuration.GetSection(nameof(ApolloAIConfig)).Get<ApolloAIConfig>() ?? new ApolloAIConfig();
 
+    _ = services.AddSingleton(apolloAiConfig);
     _ = services.AddTransient<IApolloAIAgent, ApolloAIAgent>();
 
     return services;
