@@ -14,7 +14,7 @@ public static class ServiceCollectionExtensions
     var connectionString = configuration.GetConnectionString(connectionKey) ?? throw new MissingDatabaseStringException(connectionKey);
 
     _ = services.AddDbContextPool<ApolloDbContext>(options => options.UseNpgsql(connectionString));
-    _ = services.AddTransient<IApolloDbContext, ApolloDbContext>();
+    _ = services.AddScoped<IApolloDbContext>(sp => sp.GetRequiredService<ApolloDbContext>());
 
     return services;
   }
