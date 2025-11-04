@@ -9,6 +9,15 @@ public class ApolloDbContext(DbContextOptions<ApolloDbContext> options) : DbCont
   public DbSet<ApolloChat> Chats { get; set; }
   public DbSet<ApolloUser> Users { get; set; }
 
+  protected override void OnModelCreating(ModelBuilder modelBuilder)
+  {
+    base.OnModelCreating(modelBuilder);
+
+    modelBuilder.Entity<ApolloUser>()
+      .HasIndex(u => u.Username)
+      .IsUnique();
+  }
+
   public async Task MigrateAsync(CancellationToken cancellationToken = default)
   {
     await Database.MigrateAsync(cancellationToken);
