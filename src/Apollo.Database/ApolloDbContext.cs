@@ -13,7 +13,7 @@ public class ApolloDbContext(DbContextOptions<ApolloDbContext> options) : DbCont
   {
     base.OnModelCreating(modelBuilder);
 
-    modelBuilder.Entity<ApolloUser>()
+    _ = modelBuilder.Entity<ApolloUser>()
       .HasIndex(u => u.Username)
       .IsUnique();
   }
