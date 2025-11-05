@@ -1,3 +1,5 @@
+using System.Collections.Concurrent;
+
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 
@@ -5,7 +7,7 @@ namespace Apollo.AI;
 
 public class GlobalChatHistory
 {
-  public Dictionary<string, ChatHistory> ChatHistories { get; } = [];
+  public ConcurrentDictionary<string, ChatHistory> ChatHistories { get; } = new();
 
   public ChatHistory GetChatHistoryForUser(string userName)
   {

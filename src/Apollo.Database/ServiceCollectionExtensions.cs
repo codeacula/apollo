@@ -1,4 +1,5 @@
 using Apollo.Core.Exceptions;
+using Apollo.Database.Repository;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -15,6 +16,8 @@ public static class ServiceCollectionExtensions
 
     _ = services.AddDbContextPool<ApolloDbContext>(options => options.UseNpgsql(connectionString));
     _ = services.AddScoped<IApolloDbContext>(sp => sp.GetRequiredService<ApolloDbContext>());
+
+    _ = services.AddTransient<IApolloUserRepo, ApolloUserRepo>();
 
     return services;
   }
