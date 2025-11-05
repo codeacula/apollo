@@ -9,11 +9,16 @@ public static class ServiceCollectionExtensions
 {
   public static IServiceCollection AddAiServices(this IServiceCollection services, IConfiguration configuration)
   {
-    var apolloAiConfig = configuration.GetSection(nameof(ApolloAIConfig)).Get<ApolloAIConfig>() ?? new ApolloAIConfig();
+    var apolloAiConfig = configuration.GetSection(nameof(ApolloAIConfig)).Get<ApolloAIConfig>();
+
+    if (apolloAiConfig == null)
+    {
+      Console.WriteLine("No AI configuration set; using default settings.");
+    }
 
     _ = services
-      .AddSingleton(apolloAiConfig);
-    _ = services.AddSingleton<IApolloAIAgent, ApolloAIAgent>();
+      .AddSingleton(apolloAiConfig ?? new ApolloAIConfig())
+      .AddSingleton<IApolloAIAgent, ApolloAIAgent>();
 
     return services;
   }
