@@ -1,37 +1,11 @@
-using Apollo.Core.Services;
-
 using NetCord.Rest;
 
 namespace Apollo.Discord.Services;
 
-public class NetCordDiscordMessageSender(ISettingsProvider settingsProvider, RestClient restClient, ILogger<NetCordDiscordMessageSender> logger) : IDiscordMessageSender
+public class NetCordDiscordMessageSender(RestClient restClient, ILogger<NetCordDiscordMessageSender> logger) : IDiscordMessageSender
 {
-  private readonly ISettingsProvider _settingsProvider = settingsProvider;
   private readonly RestClient _restClient = restClient;
   private readonly ILogger<NetCordDiscordMessageSender> _logger = logger;
-
-  public async Task<(bool Success, string? Error, ulong? MessageId)> SendToDailyAlertAsync(string content, CancellationToken ct)
-  {
-    ulong? channelId = _settingsProvider.GetSettings().DailyAlertChannelId;
-    if (channelId == null)
-    {
-      return (false, "DailyAlertChannelId is not configured.", null);
-    }
-
-    try
-    {
-      Log.SendingMessage(_logger, channelId.Value);
-      MessageProperties props = new() { Content = content };
-      RestMessage message = await _restClient.SendMessageAsync(channelId.Value, props, null, ct);
-      Log.MessageSent(_logger, channelId.Value, message.Id);
-      return (true, null, message.Id);
-    }
-    catch (Exception ex)
-    {
-      Log.MessageSendFailed(_logger, channelId.Value, ex.Message);
-      return (false, "Discord REST call failed.", null);
-    }
-  }
 
   public async Task<(bool Success, string? Error, ulong? ThreadId, ulong? MessageId)> CreateForumPostAsync(ulong forumChannelId, string title, string content, IEnumerable<ulong>? appliedTagIds, CancellationToken ct)
   {

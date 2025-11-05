@@ -24,6 +24,9 @@ dotnet_diagnostic.VSTHRD111.severity = none
 # IDE0008: Use explicit type
 dotnet_diagnostic.IDE0008.severity = none
 
+# RCS1194: Implement exception constructors
+dotnet_diagnostic.RCS1194.severity = none
+
 [*.md]
 indent_style = space
 indent_size = 4

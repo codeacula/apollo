@@ -4,21 +4,22 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Apollo.Database;
 
-public class ApolloDbContext(DbContextOptions<ApolloDbContext> options) : DbContext(options)
+public class ApolloDbContext(DbContextOptions<ApolloDbContext> options) : DbContext(options), IApolloDbContext
 {
-  /// <summary>
-  /// Database set for configuration settings
-  /// </summary>
-  public DbSet<Setting> Settings { get; set; }
+  public DbSet<ApolloChat> Chats { get; set; }
+  public DbSet<ApolloUser> Users { get; set; }
 
   protected override void OnModelCreating(ModelBuilder modelBuilder)
   {
     base.OnModelCreating(modelBuilder);
 
-    // Configure Setting entity
-    _ = modelBuilder.Entity<Setting>(entity =>
-    {
-      _ = entity.HasIndex(e => e.Key).IsUnique(); // Ensure key uniqueness
-    });
+    _ = modelBuilder.Entity<ApolloUser>()
+      .HasIndex(u => u.Username)
+      .IsUnique();
+  }
+
+  public async Task MigrateAsync(CancellationToken cancellationToken = default)
+  {
+    await Database.MigrateAsync(cancellationToken);
   }
 }

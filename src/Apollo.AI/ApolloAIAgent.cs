@@ -7,9 +7,9 @@ using Microsoft.SemanticKernel.Connectors.OpenAI;
 
 namespace Apollo.AI;
 
-public class ApolloAIAgent
+public class ApolloAIAgent : IApolloAIAgent
 {
-  private readonly ChatHistory _chatHistory = [];
+  private readonly GlobalChatHistory _globalChatHistory = new();
   private readonly Kernel _kernel;
   private readonly OpenAIPromptExecutionSettings _promptExecutionSettings = new()
   {
@@ -24,23 +24,22 @@ public class ApolloAIAgent
     _ = _kernel.Plugins.AddFromType<TimePlugin>("Time");
   }
 
-  public async Task<string> ChatAsync(string chatMessage)
+  public async Task<string> ChatAsync(string username, string chatMessage)
   {
     try
     {
-      _chatHistory.AddUserMessage(chatMessage);
-
       var chatCompletionService = _kernel.GetRequiredService<IChatCompletionService>();
+      var chatHistory = _globalChatHistory.GetChatHistoryForUser(username);
+      chatHistory.AddUserMessage(chatMessage);
 
-      var result = await chatCompletionService.GetChatMessageContentAsync(
-          _chatHistory,
+      var response = await chatCompletionService.GetChatMessageContentAsync(
+          chatHistory,
           executionSettings: _promptExecutionSettings,
           kernel: _kernel);
 
-      Console.WriteLine("Assistant > " + result);
-      _chatHistory.AddMessage(result.Role, result.Content ?? string.Empty);
+      _globalChatHistory.AddAIReply(username, response);
 
-      return result.Content ?? "Nuffin";
+      return response.Content ?? string.Empty;
     }
     catch (Exception ex)
     {

@@ -1,7 +1,5 @@
 using Apollo.Discord.Services;
 
-using Microsoft.Extensions.DependencyInjection;
-
 using NetCord;
 using NetCord.Gateway;
 using NetCord.Hosting.Gateway;
