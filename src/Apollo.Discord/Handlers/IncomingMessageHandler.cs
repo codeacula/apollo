@@ -8,7 +8,7 @@ using NetCord.Hosting.Gateway;
 
 namespace Apollo.Discord.Handlers;
 
-public class MessageCreateHandler(IApolloAIAgent apolloAIAgent, IServiceProvider serviceProvider) : IMessageCreateGatewayHandler
+public class MessageCreateHandler(IApolloAIAgent apolloAIAgent, IServiceScopeFactory scopeFactory) : IMessageCreateGatewayHandler
 {
   public async ValueTask HandleAsync(Message arg)
   {
@@ -18,7 +18,9 @@ public class MessageCreateHandler(IApolloAIAgent apolloAIAgent, IServiceProvider
       return;
     }
 
-    var apolloUserRepo = serviceProvider.GetRequiredService<IApolloUserRepo>();
+    await using var scope = scopeFactory.CreateAsyncScope();
+    var apolloUserRepo = scope.ServiceProvider.GetRequiredService<IApolloUserRepo>();
+
     var user = await apolloUserRepo.GetOrCreateApolloUserAsync(arg.Author.Username) ?? throw new InvalidOperationException("Failed to get or create Apollo user.");
 
     if (!user.HasAccess)
