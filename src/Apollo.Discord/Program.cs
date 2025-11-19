@@ -1,8 +1,6 @@
 using Apollo.Discord;
 using Apollo.GRPC;
 
-using Microsoft.AspNetCore.Builder;
-
 using NetCord;
 using NetCord.Gateway;
 using NetCord.Hosting.AspNetCore;
@@ -15,6 +13,7 @@ using NetCord.Services.ComponentInteractions;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Add services to the container.
 builder.Services
   .AddGrpcClientServices()
   .AddDiscordGateway(options =>
@@ -36,10 +35,10 @@ builder.Services
   .AddComponentInteractions<ModalInteraction, ModalInteractionContext>()
   .AddGatewayHandlers(typeof(IApolloDiscord).Assembly);
 
-var host = builder.Build();
+var app = builder.Build();
 
-host.AddModules(typeof(IApolloDiscord).Assembly);
-host.UseHttpInteractions("/interactions");
-host.UseRequestLocalization();
+app.AddModules(typeof(IApolloDiscord).Assembly);
+app.UseHttpInteractions("/interactions");
+app.UseRequestLocalization();
 
-await host.RunAsync();
+app.Run();
