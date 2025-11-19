@@ -15,7 +15,7 @@ public class MessageCreateHandler() : IMessageCreateGatewayHandler
 
     Console.WriteLine("Message: {0}", arg.Content);
 
-    _ = await arg.SendAsync("");
+    _ = await arg.SendAsync("Nah dog.");
     return;
   }
 }

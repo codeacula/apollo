@@ -41,4 +41,4 @@ app.AddModules(typeof(IApolloDiscord).Assembly);
 app.UseHttpInteractions("/interactions");
 app.UseRequestLocalization();
 
-app.Run();
+await app.RunAsync();
