@@ -17,7 +17,7 @@ public static class ServiceCollectionExtensions
     _ = services.AddDbContextPool<ApolloDbContext>(options => options.UseNpgsql(connectionString));
     _ = services.AddScoped<IApolloDbContext>(sp => sp.GetRequiredService<ApolloDbContext>());
 
-    _ = services.AddTransient<IApolloUserRepo, ApolloUserRepo>();
+    _ = services.AddScoped<IApolloUserRepo, ApolloUserRepo>();
 
     return services;
   }
