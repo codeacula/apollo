@@ -13,6 +13,10 @@ public class MessageCreateHandler() : IMessageCreateGatewayHandler
       return;
     }
 
+    // Check redis cache here to see if they have permission to use this
+
+    // Send request to API
+
     Console.WriteLine("Message: {0}", arg.Content);
 
     _ = await arg.SendAsync("Nah dog.");
