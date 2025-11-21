@@ -1,9 +1,11 @@
+using Apollo.Core.Infrastructure;
+
 using NetCord.Gateway;
 using NetCord.Hosting.Gateway;
 
 namespace Apollo.Discord.Handlers;
 
-public class MessageCreateHandler() : IMessageCreateGatewayHandler
+public class MessageCreateHandler(IApolloAPIClient apolloAPIClient) : IMessageCreateGatewayHandler
 {
   public async ValueTask HandleAsync(Message arg)
   {
@@ -16,10 +18,11 @@ public class MessageCreateHandler() : IMessageCreateGatewayHandler
     // Check redis cache here to see if they have permission to use this
 
     // Send request to API
+    var response = await apolloAPIClient.SendMessageAsync(arg.Content);
 
     Console.WriteLine("Message: {0}", arg.Content);
 
-    _ = await arg.SendAsync("Nah dog.");
+    _ = await arg.SendAsync(response);
     return;
   }
 }

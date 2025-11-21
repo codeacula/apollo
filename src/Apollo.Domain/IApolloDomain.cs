@@ -1,4 +1,6 @@
 ﻿namespace Apollo.Domain;
 
-// Marker interface for the Apollo Domain layer
+/// <summary>
+/// Marker interface for the Apollo Domain layer
+/// </summary>
 public interface IApolloDomain;
