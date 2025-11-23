@@ -1,5 +1,4 @@
 using Apollo.Domain.Common.ValueObjects;
-using Apollo.Domain.Users.ValueObjects;
 
 namespace Apollo.Domain.Users.Models;
 

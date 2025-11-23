@@ -10,7 +10,6 @@ namespace Apollo.GRPC;
 
 public class GrpcClient : IGrpcClient, IDisposable
 {
-  public IAiGrpcService AiGrpcService { get; }
   public IApolloGRPCService ApolloGrpcService { get; }
   private readonly GrpcChannel _channel;
 
@@ -23,7 +22,6 @@ public class GrpcClient : IGrpcClient, IDisposable
         metadata.Add("X-API-Token", grpcHostConfig.ApiToken);
         return metadata;
       });
-    AiGrpcService = invoker.CreateGrpcService<IAiGrpcService>();
     ApolloGrpcService = invoker.CreateGrpcService<IApolloGRPCService>();
   }
 

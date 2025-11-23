@@ -2,9 +2,8 @@ using ProtoBuf.Grpc.Configuration;
 
 namespace Apollo.GRPC.Services;
 
-[ServiceContract]
+[Service]
 public interface IApolloGRPCService
 {
-  [OperationContract]
   Task<string> SendApolloMessageAsync(string message);
 }
