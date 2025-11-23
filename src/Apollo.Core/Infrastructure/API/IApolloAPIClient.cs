@@ -1,6 +1,4 @@
-using Apollo.Core.Infrastructure.API;
-
-namespace Apollo.Core.Infrastructure;
+namespace Apollo.Core.Infrastructure.API;
 
 public interface IApolloAPIClient
 {

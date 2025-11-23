@@ -1,4 +1,4 @@
-using Apollo.Core.Infrastructure;
+using Apollo.Core.Infrastructure.API;
 
 using NetCord.Gateway;
 using NetCord.Hosting.Gateway;
@@ -20,7 +20,12 @@ public class MessageCreateHandler(IApolloAPIClient apolloAPIClient) : IMessageCr
     // Send request to API
     var response = await apolloAPIClient.SendMessageAsync(arg.Content);
 
-    Console.WriteLine("Message: {0}", arg.Content);
+    if (!response.IsSuccess)
+    {
+      Console.WriteLine("Failed to get response from Apollo API: {0}", response.Error);
+      _ = await arg.SendAsync("Sorry, something went wrong while processing your message.");
+      return;
+    }
 
     _ = await arg.SendAsync(response.Data!);
     return;
