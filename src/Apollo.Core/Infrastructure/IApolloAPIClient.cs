@@ -1,6 +1,8 @@
+using Apollo.Core.Infrastructure.API;
+
 namespace Apollo.Core.Infrastructure;
 
 public interface IApolloAPIClient
 {
-  Task<string> SendMessageAsync(string message);
+  Task<ApiResponse<string>> SendMessageAsync(string message);
 }

@@ -22,7 +22,7 @@ public class MessageCreateHandler(IApolloAPIClient apolloAPIClient) : IMessageCr
 
     Console.WriteLine("Message: {0}", arg.Content);
 
-    _ = await arg.SendAsync(response);
+    _ = await arg.SendAsync(response.Data!);
     return;
   }
 }
