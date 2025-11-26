@@ -1,7 +1,6 @@
-using System.Net.Security;
-
+using Apollo.Core.Infrastructure.API;
+using Apollo.GRPC.Client;
 using Apollo.GRPC.Interceptors;
-using Apollo.GRPC.Services;
 
 using Grpc.Net.Client;
 
@@ -10,12 +9,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 using ProtoBuf.Grpc.Client;
+using ProtoBuf.Grpc.Server;
 
 namespace Apollo.GRPC;
 
 public static class ServiceCollectionExtension
 {
-  [System.Diagnostics.CodeAnalysis.SuppressMessage("Security", "CA5359:Do Not Disable Certificate Validation", Justification = "Needed for development purposes")]
   public static IServiceCollection AddGrpcClientServices(this IServiceCollection services)
   {
     _ = services
@@ -26,41 +25,38 @@ public static class ServiceCollectionExtension
           "The configuration section for GrpcHostConfig is missing."
         );
       })
-      .AddSingleton<IGrpcClient, GrpcClient>()
       .AddSingleton<GrpcClientLoggingInterceptor>()
       .AddSingleton(services =>
-    {
-      var options = services.GetRequiredService<GrpcHostConfig>();
-      var loggerFactory = services.GetRequiredService<ILoggerFactory>();
-
-      // Enable HTTP/2 without TLS when using plain HTTP
-      GrpcClientFactory.AllowUnencryptedHttp2 = true;
-
-      // Create channel options
-      var channelOptions = new GrpcChannelOptions
-      {
-        LoggerFactory = loggerFactory
-      };
-
-      // Only configure SSL options when using HTTPS
-      if (options.UseHttps)
-      {
-        channelOptions.HttpHandler = new SocketsHttpHandler
         {
-          SslOptions = new SslClientAuthenticationOptions
+          var options = services.GetRequiredService<GrpcHostConfig>();
+          var loggerFactory = services.GetRequiredService<ILoggerFactory>();
+
+          // Enable HTTP/2 without TLS when using plain HTTP
+          GrpcClientFactory.AllowUnencryptedHttp2 = true;
+
+          // Create channel options
+          var channelOptions = new GrpcChannelOptions
           {
-            RemoteCertificateValidationCallback = options.ValidateSslCertificate ? null : static (_, _, _, _) => true,
-          },
-        };
-      }
+            LoggerFactory = loggerFactory
+          };
 
-      // Construct the appropriate URI based on config
-      var scheme = options.UseHttps ? "https" : "http";
-      var address = $"{scheme}://{options.Host}:{options.Port}";
-      Console.WriteLine($"Creating gRPC channel with address: {address}");
+          // Construct the appropriate URI based on config
+          var scheme = options.UseHttps ? "https" : "http";
+          var address = $"{scheme}://{options.Host}:{options.Port}";
+          Console.WriteLine($"Creating gRPC channel with address: {address}");
 
-      return GrpcChannel.ForAddress(address, channelOptions);
-    });
+          return GrpcChannel.ForAddress(address, channelOptions);
+        });
+
+    _ = services.AddSingleton<IApolloAPIClient, ApolloGrpcClient>();
+
+    return services;
+  }
+
+  public static IServiceCollection AddGrpcServerServices(this IServiceCollection services)
+  {
+    _ = services
+      .AddCodeFirstGrpc(config => config.ResponseCompressionLevel = System.IO.Compression.CompressionLevel.Optimal);
 
     return services;
   }

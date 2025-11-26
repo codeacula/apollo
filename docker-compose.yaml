@@ -1,6 +1,6 @@
 services:
-  apollo:
-    image: apollo
+  apollo-api:
+    image: apollo-api
     build:
       context: .
       dockerfile: src/Apollo.API/Dockerfile
@@ -10,6 +10,20 @@ services:
       - .env
     depends_on:
       - pgsql
+      - redis
+    networks:
+      - apollo
+
+  apollo-discord:
+    image: apollo-discord
+    build:
+      context: .
+      dockerfile: src/Apollo.Discord/Dockerfile
+    ports:
+      - 5145:5145
+    env_file:
+      - .env
+    depends_on:
       - redis
     networks:
       - apollo

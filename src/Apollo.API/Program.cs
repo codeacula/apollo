@@ -1,6 +1,7 @@
 using Apollo.AI;
 using Apollo.API;
 using Apollo.Database;
+using Apollo.GRPC;
 
 WebApplicationBuilder webAppBuilder = WebApplication.CreateBuilder(args);
 var configuration = webAppBuilder.Configuration;
@@ -27,5 +28,7 @@ _ = app.MapControllers();
 _ = app.UseHttpsRedirection();
 _ = app.UseDefaultFiles();
 _ = app.UseStaticFiles();
+
+_ = app.AddGrpcServices();
 
 await app.RunAsync();
