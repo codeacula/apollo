@@ -1,7 +1,6 @@
-using Apollo.Domain.Common.ValueObjects;
-using Apollo.Domain.Users.ValueObjects;
+using Apollo.Domain.ValueObjects;
 
-namespace Apollo.Domain.Users.Models;
+namespace Apollo.Domain.Models;
 
 public record Reminder()
 {

@@ -1,3 +1,3 @@
-namespace Apollo.Domain.Common.ValueObjects;
+namespace Apollo.Domain.ValueObjects;
 
 public readonly record struct QuartzJobId(Guid Value);
