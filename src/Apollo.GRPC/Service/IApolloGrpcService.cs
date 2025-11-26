@@ -1,11 +1,12 @@
-using Apollo.GRPC.Contracts;
+using System.ServiceModel;
 
-using ProtoBuf.Grpc.Configuration;
+using Apollo.GRPC.Contracts;
 
 namespace Apollo.GRPC.Service;
 
-[Service]
+[ServiceContract]
 public interface IApolloGrpcService
 {
+  [OperationContract]
   Task<GrpcResult<string>> SendApolloMessageAsync(string message);
 }

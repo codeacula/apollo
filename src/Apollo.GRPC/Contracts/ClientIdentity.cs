@@ -1,16 +1,18 @@
+using System.Runtime.Serialization;
+
 using Apollo.Core.Infrastructure;
 
 namespace Apollo.GRPC.Contracts;
 
-[ProtoContract]
+[DataContract]
 public sealed record ClientIdentity
 {
-  [ProtoMember(1)]
+  [DataMember(Order = 1)]
   public required Platform Platform { get; init; }
 
-  [ProtoMember(2)]
+  [DataMember(Order = 2)]
   public required string ChannelId { get; init; }
 
-  [ProtoMember(3)]
+  [DataMember(Order = 3)]
   public required string UserId { get; init; }
 }

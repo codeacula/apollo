@@ -7,7 +7,7 @@ namespace Apollo.GRPC;
 
 public static class WebApplicationExtension
 {
-  public static WebApplication AddGrpcServices(this WebApplication app)
+  public static WebApplication AddGrpcServerServices(this WebApplication app)
   {
     _ = app.MapGrpcService<ApolloGrpcService>();
 

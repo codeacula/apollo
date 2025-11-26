@@ -30,6 +30,6 @@ _ = app.UseHttpsRedirection();
 _ = app.UseDefaultFiles();
 _ = app.UseStaticFiles();
 
-_ = app.AddGrpcServices();
+_ = app.AddGrpcServerServices();
 
 await app.RunAsync();
