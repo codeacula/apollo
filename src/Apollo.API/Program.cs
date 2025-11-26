@@ -10,7 +10,8 @@ _ = webAppBuilder.Services.AddControllers();
 _ = webAppBuilder.Services
   .AddDatabaseServices(configuration)
   .AddAPIServices(configuration)
-  .AddAiServices(configuration);
+  .AddAiServices(configuration)
+  .AddGrpcServerServices();
 
 WebApplication app = webAppBuilder.Build();
 
