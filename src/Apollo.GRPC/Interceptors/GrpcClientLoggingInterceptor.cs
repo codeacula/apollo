@@ -1,3 +1,5 @@
+using Apollo.Core.Logging;
+
 using Grpc.Core;
 using Grpc.Core.Interceptors;
 
@@ -14,16 +16,16 @@ public sealed class GrpcClientLoggingInterceptor(ILogger<GrpcClientLoggingInterc
       ClientInterceptorContext<TRequest, TResponse> context,
       AsyncUnaryCallContinuation<TRequest, TResponse> continuation)
   {
-    GrpcLogger.LogStartingCall(_logger, context.Host ?? string.Empty, context.Method.Type.ToString(), context.Method.Name);
+    GrpcLogs.LogStartingCall(_logger, context.Host ?? string.Empty, context.Method.Type.ToString(), context.Method.Name);
     try
     {
       var response = continuation(request, context);
-      GrpcLogger.LogCallSucceeded(_logger, context.Host ?? string.Empty, context.Method.Type.ToString(), context.Method.Name, response);
+      GrpcLogs.LogCallSucceeded(_logger, context.Host ?? string.Empty, context.Method.Type.ToString(), context.Method.Name, response);
       return response;
     }
     catch (Exception ex)
     {
-      GrpcLogger.LogCallFailed(_logger, context.Host ?? string.Empty, context.Method.Type.ToString(), context.Method.Name, ex);
+      GrpcLogs.LogCallFailed(_logger, context.Host ?? string.Empty, context.Method.Type.ToString(), context.Method.Name, ex);
       throw;
     }
   }
