@@ -1,12 +1,14 @@
+using System.Runtime.Serialization;
+
 namespace Apollo.GRPC.Actions;
 
-[ProtoContract]
+[DataContract]
 public sealed record GrpcError
 {
-  [ProtoMember(1)]
+  [DataMember(Order = 1)]
   public string Message { get; init; } = string.Empty;
 
-  [ProtoMember(2)]
+  [DataMember(Order = 2)]
   public string? ErrorCode { get; init; }
 
   public GrpcError() { }
