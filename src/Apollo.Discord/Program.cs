@@ -13,6 +13,9 @@ using NetCord.Services.ComponentInteractions;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Configuration.AddEnvironmentVariables()
+  .AddUserSecrets<IApolloDiscord>();
+
 // Add services to the container.
 builder.Services
   .AddGrpcClientServices()
