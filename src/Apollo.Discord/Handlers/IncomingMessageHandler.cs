@@ -18,16 +18,22 @@ public class MessageCreateHandler(IApolloAPIClient apolloAPIClient) : IMessageCr
     // Check redis cache here to see if they have permission to use this
 
     // Send request to API
-    var response = await apolloAPIClient.SendMessageAsync(arg.Content);
-
-    if (!response.IsSuccess)
+    try
     {
-      Console.WriteLine("Failed to get response from Apollo API: {0}", response.Error);
-      _ = await arg.SendAsync("Sorry, something went wrong while processing your message.");
+      var response = await apolloAPIClient.SendMessageAsync(arg.Content);
+
+      if (!response.IsSuccess)
+      {
+        Console.WriteLine("Failed to get response from Apollo API: {0}", response.Error);
+        _ = await arg.SendAsync("Sorry, something went wrong while processing your message.");
+        return;
+      }
+    }
+    catch (Exception ex)
+    {
+      Console.WriteLine("Failed to send initial processing message: {0}", ex);
+      _ = await arg.SendAsync($"Exception occurred while processing your message. {ex.Message}");
       return;
     }
-
-    _ = await arg.SendAsync(response.Data!);
-    return;
   }
 }

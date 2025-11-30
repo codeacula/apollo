@@ -1,6 +1,6 @@
 using System.ServiceModel;
 
-using Apollo.GRPC.Actions;
+using Apollo.GRPC.Contracts;
 
 namespace Apollo.GRPC.Service;
 

@@ -1,6 +1,6 @@
 using System.Runtime.Serialization;
 
-namespace Apollo.GRPC.Actions;
+namespace Apollo.GRPC.Contracts;
 
 [DataContract]
 public sealed record GrpcResult<T> where T : class
