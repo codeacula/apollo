@@ -1,3 +1,6 @@
 namespace Apollo.GRPC;
 
-public interface IApolloGRPC;
+/// <summary>
+/// Marker interface for Apollo GRPC services
+/// </summary>
+public interface IApolloGrpc;
