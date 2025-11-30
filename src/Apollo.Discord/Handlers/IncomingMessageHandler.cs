@@ -28,6 +28,8 @@ public class MessageCreateHandler(IApolloAPIClient apolloAPIClient) : IMessageCr
         _ = await arg.SendAsync("Sorry, something went wrong while processing your message.");
         return;
       }
+
+      _ = await arg.SendAsync(response.Data!);
     }
     catch (Exception ex)
     {
