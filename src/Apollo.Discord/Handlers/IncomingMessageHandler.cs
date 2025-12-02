@@ -10,7 +10,7 @@ public class MessageCreateHandler(IApolloAPIClient apolloAPIClient) : IMessageCr
   public async ValueTask HandleAsync(Message arg)
   {
     // This is here because when Apollo replies to the user, we get yet another MessageCreate event
-    if (arg.Channel != null || arg.Author.Username == "Apollo")
+    if (arg.GuildId != null || arg.Author.Username == "Apollo")
     {
       return;
     }
