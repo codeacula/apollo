@@ -1,3 +1,5 @@
+using FluentResults;
+
 namespace Apollo.Application.Commands;
 
-public record ProcessIncomingMessage(string Message) : IRequest<string>;
+public sealed record ProcessIncomingMessage(string Message) : IRequest<Result<string>>;
