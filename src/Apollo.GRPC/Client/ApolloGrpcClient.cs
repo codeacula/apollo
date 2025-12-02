@@ -2,6 +2,8 @@ using Apollo.Core.Infrastructure.API;
 using Apollo.GRPC.Interceptors;
 using Apollo.GRPC.Service;
 
+using FluentResults;
+
 using Grpc.Core.Interceptors;
 using Grpc.Net.Client;
 
@@ -32,12 +34,12 @@ public class ApolloGrpcClient : IApolloGrpcClient, IApolloAPIClient, IDisposable
     GC.SuppressFinalize(this);
   }
 
-  public async Task<ApiResponse<string>> SendMessageAsync(string message)
+  public async Task<Result<string>> SendMessageAsync(string message)
   {
-    var grpcResult = await ApolloGrpcService.SendApolloMessageAsync(message);
+    var requestResult = await ApolloGrpcService.SendApolloMessageAsync(message);
 
-    return !grpcResult.IsSuccess
-      ? new ApiResponse<string>(new APIError("100", string.Join(", ", grpcResult.Errors)))
-      : new ApiResponse<string>(grpcResult.Data!);
+    return requestResult.IsSuccess
+      ? Result.Ok(requestResult.Value)
+      : Result.Fail<string>(string.Join(", ", requestResult.Errors));
   }
 }

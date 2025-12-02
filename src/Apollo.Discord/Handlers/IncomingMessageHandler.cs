@@ -10,7 +10,7 @@ public class MessageCreateHandler(IApolloAPIClient apolloAPIClient) : IMessageCr
   public async ValueTask HandleAsync(Message arg)
   {
     // This is here because when Apollo replies to the user, we get yet another MessageCreate event
-    if (arg.Channel != null || arg.Author.Username == "Apollo")
+    if (arg.GuildId != null || arg.Author.Username == "Apollo" || !arg.MentionedUsers.Any(u => u.Username == "Apollo"))
     {
       return;
     }
@@ -18,9 +18,19 @@ public class MessageCreateHandler(IApolloAPIClient apolloAPIClient) : IMessageCr
     // Check redis cache here to see if they have permission to use this
 
     // Send request to API
-    var response = await apolloAPIClient.SendMessageAsync(arg.Content);
+    try
+    {
+      var response = await apolloAPIClient.SendMessageAsync(arg.Content);
 
-    if (!response.IsSuccess)
+      if (response.IsFailed)
+      {
+        _ = await arg.SendAsync("Sorry, something went wrong while processing your message.");
+        return;
+      }
+
+      _ = await arg.SendAsync(response.Value);
+    }
+    catch (Exception ex)
     {
       Console.WriteLine("Failed to get response from Apollo API: {0}", response.Error);
       _ = await arg.SendAsync("Sorry, something went wrong while processing your message.");

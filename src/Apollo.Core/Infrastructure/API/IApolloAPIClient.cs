@@ -1,6 +1,8 @@
+using FluentResults;
+
 namespace Apollo.Core.Infrastructure.API;
 
 public interface IApolloAPIClient
 {
-  Task<ApiResponse<string>> SendMessageAsync(string message);
+  Task<Result<string>> SendMessageAsync(string message);
 }
