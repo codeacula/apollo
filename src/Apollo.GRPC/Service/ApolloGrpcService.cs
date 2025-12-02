@@ -1,6 +1,6 @@
 using Apollo.Application.Commands;
-
-using FluentResults;
+using Apollo.Core.Conversations;
+using Apollo.GRPC.Contracts;
 
 using MediatR;
 
@@ -8,8 +8,11 @@ namespace Apollo.GRPC.Service;
 
 public sealed class ApolloGrpcService(IMediator mediator) : IApolloGrpcService
 {
-  public async Task<Result<string>> SendApolloMessageAsync(string message)
+  public async Task<GrpcResult<string>> SendApolloMessageAsync(NewMessage message)
   {
-    return await mediator.Send(new ProcessIncomingMessage(message));
+    var requestResult = await mediator.Send(new ProcessIncomingMessage(message));
+    return requestResult.IsSuccess ?
+      requestResult.Value :
+      requestResult.Errors.Select(e => new GrpcError(e.Message)).ToArray();
   }
 }

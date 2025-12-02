@@ -1,6 +1,7 @@
 using System.ServiceModel;
 
-using FluentResults;
+using Apollo.Core.Conversations;
+using Apollo.GRPC.Contracts;
 
 namespace Apollo.GRPC.Service;
 
@@ -8,5 +9,5 @@ namespace Apollo.GRPC.Service;
 public interface IApolloGrpcService
 {
   [OperationContract]
-  Task<Result<string>> SendApolloMessageAsync(string message);
+  Task<GrpcResult<string>> SendApolloMessageAsync(NewMessage message);
 }

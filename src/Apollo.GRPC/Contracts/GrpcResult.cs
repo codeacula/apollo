@@ -33,4 +33,14 @@ public sealed record GrpcResult<T> where T : class
       Errors = [error]
     };
   }
+
+  public static implicit operator GrpcResult<T>(GrpcError[] errors)
+  {
+    return new()
+    {
+      IsSuccess = false,
+      Data = null,
+      Errors = [.. errors]
+    };
+  }
 }
