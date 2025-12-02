@@ -38,6 +38,6 @@ public class ApolloGrpcClient : IApolloGrpcClient, IApolloAPIClient, IDisposable
 
     return !grpcResult.IsSuccess
       ? new ApiResponse<string>(new APIError("100", string.Join(", ", grpcResult.Errors)))
-      : new ApiResponse<string>(grpcResult.Data!);
+      : new ApiResponse<string>(grpcResult.Value);
   }
 }
