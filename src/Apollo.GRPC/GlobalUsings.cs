@@ -1,2 +1,1 @@
-
-global using ProtoBuf;
+global using Apollo.Core.Logging;

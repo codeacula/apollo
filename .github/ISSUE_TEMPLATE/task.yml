@@ -1,15 +1,9 @@
 # .github/ISSUE_TEMPLATE/task.yml
 name: Development Task
 description: Track a scoped task that Copilot will mirror in /tasks
-title: "[Task] <short summary>"
-labels: ["task", "triage"]
+title: "<short summary>"
+labels: ["task"]
 body:
-  - type: input
-    id: summary
-    attributes:
-      label: Summary
-    validations:
-      required: true
   - type: dropdown
     id: size
     attributes:
@@ -28,7 +22,7 @@ body:
     id: plan
     attributes:
       label: Implementation plan
-      description: Outline steps Copilot should append to /tasks/<id>/task.md
+      description: Outline steps Copilot should append to /tasks/[id]/task.md
   - type: textarea
     id: acceptance
     attributes:

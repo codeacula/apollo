@@ -24,7 +24,7 @@ public class ApolloAIAgent : IApolloAIAgent
     _ = _kernel.Plugins.AddFromType<TimePlugin>("Time");
   }
 
-  public async Task<string> ChatAsync(string username, string chatMessage)
+  public async Task<string> ChatAsync(string username, string chatMessage, CancellationToken cancellationToken = default)
   {
     try
     {
@@ -35,7 +35,8 @@ public class ApolloAIAgent : IApolloAIAgent
       var response = await chatCompletionService.GetChatMessageContentAsync(
           chatHistory,
           executionSettings: _promptExecutionSettings,
-          kernel: _kernel);
+          kernel: _kernel,
+          cancellationToken: cancellationToken);
 
       _globalChatHistory.AddAIReply(username, response);
 

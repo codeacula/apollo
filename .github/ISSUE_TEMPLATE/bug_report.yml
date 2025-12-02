@@ -1,6 +1,6 @@
 name: Bug Report
 description: Reproducible defect in the Apollo codebase
-title: "[Bug] <short summary>"
+title: "<short summary>"
 labels: ["bug", "needs triage"]
 body:
   - type: markdown

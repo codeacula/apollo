@@ -1,5 +1,6 @@
 using Apollo.AI;
 using Apollo.API;
+using Apollo.Application;
 using Apollo.Database;
 using Apollo.GRPC;
 
@@ -11,6 +12,7 @@ _ = webAppBuilder.Services
   .AddDatabaseServices(configuration)
   .AddAPIServices(configuration)
   .AddAiServices(configuration)
+  .AddApplicationServices()
   .AddGrpcServerServices();
 
 WebApplication app = webAppBuilder.Build();

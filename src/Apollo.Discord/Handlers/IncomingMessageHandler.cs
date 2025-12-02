@@ -32,12 +32,8 @@ public class MessageCreateHandler(IApolloAPIClient apolloAPIClient) : IMessageCr
     }
     catch (Exception ex)
     {
-      Console.WriteLine("Failed to get response from Apollo API: {0}", response.Error);
-      _ = await arg.SendAsync("Sorry, something went wrong while processing your message.");
+      _ = await arg.SendAsync($"Exception occurred while processing your message. {ex.Message}");
       return;
     }
-
-    _ = await arg.SendAsync(response.Data!);
-    return;
   }
 }

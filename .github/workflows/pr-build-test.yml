@@ -10,34 +10,34 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-    
+
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '9.0.x'
-    
+        dotnet-version: '10.0.x'
+
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '20.x'
-    
+
     - name: Restore .NET dependencies
       run: dotnet restore
-    
+
     - name: Build .NET solution
       run: dotnet build --no-restore
-    
+
     - name: Run .NET tests
       run: dotnet test --no-build --no-restore --verbosity normal
-    
+
     - name: Install frontend dependencies
       working-directory: src/Client
       run: npm ci
-    
+
     - name: Build frontend
       working-directory: src/Client
       run: npm run build
