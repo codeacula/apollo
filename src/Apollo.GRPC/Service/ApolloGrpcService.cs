@@ -1,12 +1,15 @@
-using Apollo.GRPC.Contracts;
+using Apollo.Application.Commands;
+
+using FluentResults;
+
+using MediatR;
 
 namespace Apollo.GRPC.Service;
 
-public class ApolloGrpcService : IApolloGrpcService
+public sealed class ApolloGrpcService(IMediator mediator) : IApolloGrpcService
 {
-  public Task<GrpcResult<string>> SendApolloMessageAsync(string message)
+  public async Task<Result<string>> SendApolloMessageAsync(string message)
   {
-    // Implement the method logic here
-    throw new NotImplementedException();
+    return await mediator.Send(new ProcessIncomingMessage(message));
   }
 }

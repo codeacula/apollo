@@ -11,6 +11,7 @@
     <PackageReference Include="protobuf-net.Grpc.AspNetCore" Version="1.2.2" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Apollo.Application\Apollo.Application.csproj" />
     <ProjectReference Include="..\Apollo.Core\Apollo.Core.csproj" />
   </ItemGroup>
 </Project>

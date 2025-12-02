@@ -1,5 +1,3 @@
-using Apollo.Discord.Services;
-
 using NetCord;
 using NetCord.Gateway;
 using NetCord.Hosting.Gateway;
@@ -27,7 +25,7 @@ public static class ServiceCollectionExtensions
         .AddComponentInteractions<ModalInteraction, ModalInteractionContext>()
         .AddGatewayHandlers(typeof(IApolloDiscord).Assembly);
 
-    _ = services.AddScoped<IDiscordMessageSender, NetCordDiscordMessageSender>();
+    // _ = services.AddScoped<IDiscordMessageSender, NetCordDiscordMessageSender>();
 
     return services;
   }

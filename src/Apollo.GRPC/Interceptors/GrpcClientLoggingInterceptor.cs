@@ -1,5 +1,3 @@
-using Apollo.Core.Logging;
-
 using Grpc.Core;
 using Grpc.Core.Interceptors;
 
