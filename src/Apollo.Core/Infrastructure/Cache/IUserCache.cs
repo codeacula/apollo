@@ -1,4 +1,4 @@
-using Apollo.Domain.ValueObjects;
+using Apollo.Domain.Users.ValueObjects;
 
 using FluentResults;
 

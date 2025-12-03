@@ -19,7 +19,6 @@ public static class ServiceCollectionExtensions
     _ = services.AddScoped<IApolloDbContext>(sp => sp.GetRequiredService<ApolloDbContext>());
 
     _ = services
-      .AddScoped<IApolloUserRepo, ApolloUserRepo>()
       .AddScoped<IUserDataAccess, MockUserDataAccess>();
 
     return services;

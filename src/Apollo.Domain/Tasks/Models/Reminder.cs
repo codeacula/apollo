@@ -1,5 +1,5 @@
-using Apollo.Domain.ValueObjects;
+using Apollo.Domain.Tasks.ValueObjects;
 
-namespace Apollo.Domain.Models;
+namespace Apollo.Domain.Tasks.Models;
 
 public record Reminder(ReminderId Id, QuartzJobId QuartzJobId, ReminderTime ReminderTime);

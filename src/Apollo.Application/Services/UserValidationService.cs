@@ -2,7 +2,7 @@ using Apollo.Core.Infrastructure.Cache;
 using Apollo.Core.Infrastructure.Data;
 using Apollo.Core.Infrastructure.Services;
 using Apollo.Core.Logging;
-using Apollo.Domain.ValueObjects;
+using Apollo.Domain.Users.ValueObjects;
 
 using FluentResults;
 
