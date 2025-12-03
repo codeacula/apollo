@@ -7,19 +7,19 @@ namespace Apollo.GRPC.Tests.Contracts;
 public class GrpcResultTests
 {
   [Fact]
-  public void ImplicitCastToFluentResult_WithSuccessfulGrpcResult_ReturnsSuccessResult()
+  public void ImplicitCastToFluentResultWithSuccessfulGrpcResultReturnsSuccessResult()
   {
     // Arrange
     const string testData = "Test data";
-    GrpcResult<string> grpcResult = new()
+
+
+    // Act
+    Result<string> result = (GrpcResult<string>)new()
     {
       IsSuccess = true,
       Data = testData,
       Errors = []
     };
-
-    // Act
-    Result<string> result = grpcResult;
 
     // Assert
     Assert.True(result.IsSuccess);
@@ -29,12 +29,15 @@ public class GrpcResultTests
   }
 
   [Fact]
-  public void ImplicitCastToFluentResult_WithFailedGrpcResult_ReturnsFailedResult()
+  public void ImplicitCastToFluentResultWithFailedGrpcResultReturnsFailedResult()
   {
     // Arrange
     const string errorMessage = "Something went wrong";
     const string errorCode = "ERR001";
-    GrpcResult<string> grpcResult = new()
+
+
+    // Act
+    Result<string> result = (GrpcResult<string>)new()
     {
       IsSuccess = false,
       Data = null,
@@ -44,21 +47,21 @@ public class GrpcResultTests
       ]
     };
 
-    // Act
-    Result<string> result = grpcResult;
-
     // Assert
     Assert.False(result.IsSuccess);
     Assert.True(result.IsFailed);
-    Assert.Single(result.Errors);
+    _ = Assert.Single(result.Errors);
     Assert.Equal(errorMessage, result.Errors[0].Message);
   }
 
   [Fact]
-  public void ImplicitCastToFluentResult_WithMultipleErrors_ReturnsResultWithAllErrors()
+  public void ImplicitCastToFluentResultWithMultipleErrorsReturnsResultWithAllErrors()
   {
     // Arrange
-    GrpcResult<string> grpcResult = new()
+
+
+    // Act
+    Result<string> result = (GrpcResult<string>)new()
     {
       IsSuccess = false,
       Data = null,
@@ -70,9 +73,6 @@ public class GrpcResultTests
       ]
     };
 
-    // Act
-    Result<string> result = grpcResult;
-
     // Assert
     Assert.False(result.IsSuccess);
     Assert.True(result.IsFailed);
@@ -83,11 +83,14 @@ public class GrpcResultTests
   }
 
   [Fact]
-  public void ImplicitCastToFluentResult_WithErrorCode_PreservesErrorCode()
+  public void ImplicitCastToFluentResultWithErrorCodePreservesErrorCode()
   {
     // Arrange
     const string errorCode = "CUSTOM_ERR";
-    GrpcResult<string> grpcResult = new()
+
+
+    // Act
+    Result<string> result = (GrpcResult<string>)new()
     {
       IsSuccess = false,
       Data = null,
@@ -97,21 +100,21 @@ public class GrpcResultTests
       ]
     };
 
-    // Act
-    Result<string> result = grpcResult;
-
     // Assert
     Assert.False(result.IsSuccess);
-    Assert.Single(result.Errors);
+    _ = Assert.Single(result.Errors);
     Assert.True(result.Errors[0].HasMetadataKey("ErrorCode"));
     Assert.Equal(errorCode, result.Errors[0].Metadata["ErrorCode"]);
   }
 
   [Fact]
-  public void ImplicitCastToFluentResult_WithNullErrorCode_PreservesEmptyString()
+  public void ImplicitCastToFluentResultWithNullErrorCodePreservesEmptyString()
   {
     // Arrange
-    GrpcResult<string> grpcResult = new()
+
+
+    // Act
+    Result<string> result = (GrpcResult<string>)new()
     {
       IsSuccess = false,
       Data = null,
@@ -121,30 +124,27 @@ public class GrpcResultTests
       ]
     };
 
-    // Act
-    Result<string> result = grpcResult;
-
     // Assert
     Assert.False(result.IsSuccess);
-    Assert.Single(result.Errors);
+    _ = Assert.Single(result.Errors);
     Assert.True(result.Errors[0].HasMetadataKey("ErrorCode"));
     Assert.Equal(string.Empty, result.Errors[0].Metadata["ErrorCode"]);
   }
 
   [Fact]
-  public void ImplicitCastToFluentResult_WithComplexType_PreservesData()
+  public void ImplicitCastToFluentResultWithComplexTypePreservesData()
   {
     // Arrange
     TestObject testObject = new("Test", 42);
-    GrpcResult<TestObject> grpcResult = new()
+
+
+    // Act
+    Result<TestObject> result = (GrpcResult<TestObject>)new()
     {
       IsSuccess = true,
       Data = testObject,
       Errors = []
     };
-
-    // Act
-    Result<TestObject> result = grpcResult;
 
     // Assert
     Assert.True(result.IsSuccess);
@@ -154,44 +154,44 @@ public class GrpcResultTests
   }
 
   [Fact]
-  public void ImplicitCastToFluentResult_WithSuccessButNullData_ReturnsFailedResult()
+  public void ImplicitCastToFluentResultWithSuccessButNullDataReturnsFailedResult()
   {
     // Arrange
-    GrpcResult<string> grpcResult = new()
+
+
+    // Act
+    Result<string> result = (GrpcResult<string>)new()
     {
       IsSuccess = true,
       Data = null,
       Errors = []
     };
 
-    // Act
-    Result<string> result = grpcResult;
-
     // Assert
     Assert.False(result.IsSuccess);
     Assert.True(result.IsFailed);
-    Assert.Single(result.Errors);
+    _ = Assert.Single(result.Errors);
     Assert.Contains("null data", result.Errors[0].Message, StringComparison.OrdinalIgnoreCase);
   }
 
   [Fact]
-  public void ImplicitCastToFluentResult_WithFailedButNoErrors_ReturnsFailedResultWithMessage()
+  public void ImplicitCastToFluentResultWithFailedButNoErrorsReturnsFailedResultWithMessage()
   {
     // Arrange
-    GrpcResult<string> grpcResult = new()
+
+
+    // Act
+    Result<string> result = (GrpcResult<string>)new()
     {
       IsSuccess = false,
       Data = null,
       Errors = []
     };
 
-    // Act
-    Result<string> result = grpcResult;
-
     // Assert
     Assert.False(result.IsSuccess);
     Assert.True(result.IsFailed);
-    Assert.Single(result.Errors);
+    _ = Assert.Single(result.Errors);
     Assert.Contains("no error information", result.Errors[0].Message, StringComparison.OrdinalIgnoreCase);
   }
 

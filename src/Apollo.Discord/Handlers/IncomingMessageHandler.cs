@@ -1,16 +1,18 @@
+using Apollo.Core.Conversations;
 using Apollo.Core.Infrastructure.API;
+using Apollo.Discord.Config;
 
 using NetCord.Gateway;
 using NetCord.Hosting.Gateway;
 
 namespace Apollo.Discord.Handlers;
 
-public class MessageCreateHandler(IApolloAPIClient apolloAPIClient) : IMessageCreateGatewayHandler
+public class IncomingMessageHandler(IApolloAPIClient apolloAPIClient, DiscordConfig discordConfig) : IMessageCreateGatewayHandler
 {
   public async ValueTask HandleAsync(Message arg)
   {
     // This is here because when Apollo replies to the user, we get yet another MessageCreate event
-    if (arg.GuildId != null || arg.Author.Username == "Apollo")
+    if (arg.GuildId != null || arg.Author.Username == discordConfig.BotName)
     {
       return;
     }
@@ -20,15 +22,16 @@ public class MessageCreateHandler(IApolloAPIClient apolloAPIClient) : IMessageCr
     // Send request to API
     try
     {
-      var response = await apolloAPIClient.SendMessageAsync(arg.Content);
+      var newMessage = new NewMessage(arg.Author.Username, arg.Content);
+      var response = await apolloAPIClient.SendMessageAsync(newMessage);
 
-      if (!response.IsSuccess)
+      if (response.IsFailed)
       {
         _ = await arg.SendAsync("Sorry, something went wrong while processing your message.");
         return;
       }
 
-      _ = await arg.SendAsync(response.Data!);
+      _ = await arg.SendAsync(response.Value);
     }
     catch (Exception ex)
     {

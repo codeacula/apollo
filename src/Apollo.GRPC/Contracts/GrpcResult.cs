@@ -36,6 +36,16 @@ public sealed record GrpcResult<T> where T : class
     };
   }
 
+  public static implicit operator GrpcResult<T>(GrpcError[] errors)
+  {
+    return new()
+    {
+      IsSuccess = false,
+      Data = null,
+      Errors = [.. errors]
+    };
+  }
+
   public static implicit operator Result<T>(GrpcResult<T> grpcResult)
   {
     if (grpcResult.IsSuccess)

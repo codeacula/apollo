@@ -11,7 +11,7 @@ public sealed class ProcessIncomingMessageHandler(IApolloAIAgent apolloAIAgent) 
   {
     try
     {
-      var response = await apolloAIAgent.ChatAsync("Codeacula", request.Message, cancellationToken);
+      var response = await apolloAIAgent.ChatAsync(request.Message.Username, request.Message.Content, cancellationToken);
       return Result.Ok(response);
     }
     catch (Exception ex)
