@@ -36,7 +36,6 @@ public sealed record GrpcResult<T> where T : class
     };
   }
 
-<<<<<<< HEAD
   public static implicit operator GrpcResult<T>(GrpcError[] errors)
   {
     return new()
@@ -45,7 +44,8 @@ public sealed record GrpcResult<T> where T : class
       Data = null,
       Errors = [.. errors]
     };
-=======
+  }
+
   public static implicit operator Result<T>(GrpcResult<T> grpcResult)
   {
     if (grpcResult.IsSuccess)
@@ -70,6 +70,5 @@ public sealed record GrpcResult<T> where T : class
 
     // Handle edge case: marked as failed but no errors provided
     return Result.Fail<T>("GrpcResult marked as failed but contains no error information");
->>>>>>> main
   }
 }
