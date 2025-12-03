@@ -153,5 +153,47 @@ public class GrpcResultTests
     Assert.Equal(42, result.Value.Value);
   }
 
-  private record TestObject(string Name, int Value);
+  [Fact]
+  public void ImplicitCastToFluentResult_WithSuccessButNullData_ReturnsFailedResult()
+  {
+    // Arrange
+    GrpcResult<string> grpcResult = new()
+    {
+      IsSuccess = true,
+      Data = null,
+      Errors = []
+    };
+
+    // Act
+    Result<string> result = grpcResult;
+
+    // Assert
+    Assert.False(result.IsSuccess);
+    Assert.True(result.IsFailed);
+    Assert.Single(result.Errors);
+    Assert.Contains("null data", result.Errors[0].Message, StringComparison.OrdinalIgnoreCase);
+  }
+
+  [Fact]
+  public void ImplicitCastToFluentResult_WithFailedButNoErrors_ReturnsFailedResultWithMessage()
+  {
+    // Arrange
+    GrpcResult<string> grpcResult = new()
+    {
+      IsSuccess = false,
+      Data = null,
+      Errors = []
+    };
+
+    // Act
+    Result<string> result = grpcResult;
+
+    // Assert
+    Assert.False(result.IsSuccess);
+    Assert.True(result.IsFailed);
+    Assert.Single(result.Errors);
+    Assert.Contains("no error information", result.Errors[0].Message, StringComparison.OrdinalIgnoreCase);
+  }
+
+  private sealed record TestObject(string Name, int Value);
 }
