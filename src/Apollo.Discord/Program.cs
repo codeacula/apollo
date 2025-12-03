@@ -1,42 +1,27 @@
+using Apollo.Application;
+using Apollo.Cache;
+using Apollo.Database;
 using Apollo.Discord;
 using Apollo.GRPC;
 
-using NetCord;
-using NetCord.Gateway;
 using NetCord.Hosting.AspNetCore;
-using NetCord.Hosting.Gateway;
-using NetCord.Hosting.Rest;
 using NetCord.Hosting.Services;
-using NetCord.Hosting.Services.ApplicationCommands;
-using NetCord.Hosting.Services.ComponentInteractions;
-using NetCord.Services.ComponentInteractions;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Configuration.AddEnvironmentVariables()
   .AddUserSecrets<IApolloDiscord>();
 
+var redisConnection = builder.Configuration.GetConnectionString("Redis")
+  ?? throw new InvalidOperationException("Redis connection string not found");
+
 // Add services to the container.
 builder.Services
+  .AddDatabaseServices(builder.Configuration)
+  .AddCacheServices(redisConnection)
+  .AddApplicationServices()
   .AddGrpcClientServices()
-  .AddDiscordGateway(options =>
-    {
-      options.Intents = GatewayIntents.GuildMessages
-                        | GatewayIntents.DirectMessages
-                        | GatewayIntents.MessageContent
-                        | GatewayIntents.DirectMessageReactions
-                        | GatewayIntents.GuildMessageReactions;
-    })
-  .AddDiscordRest()
-  .AddApplicationCommands()
-  .AddComponentInteractions<ButtonInteraction, ButtonInteractionContext>()
-  .AddComponentInteractions<StringMenuInteraction, StringMenuInteractionContext>()
-  .AddComponentInteractions<UserMenuInteraction, UserMenuInteractionContext>()
-  .AddComponentInteractions<RoleMenuInteraction, RoleMenuInteractionContext>()
-  .AddComponentInteractions<MentionableMenuInteraction, MentionableMenuInteractionContext>()
-  .AddComponentInteractions<ChannelMenuInteraction, ChannelMenuInteractionContext>()
-  .AddComponentInteractions<ModalInteraction, ModalInteractionContext>()
-  .AddGatewayHandlers(typeof(IApolloDiscord).Assembly);
+  .AddDiscordServices();
 
 var app = builder.Build();
 
