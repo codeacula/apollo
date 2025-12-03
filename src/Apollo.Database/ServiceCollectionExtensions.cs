@@ -2,6 +2,8 @@ using Apollo.Core.Exceptions;
 using Apollo.Core.Infrastructure.Data;
 using Apollo.Database.Repository;
 
+using Marten;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,8 +20,18 @@ public static class ServiceCollectionExtensions
     _ = services.AddDbContextPool<ApolloDbContext>(options => options.UseNpgsql(connectionString));
     _ = services.AddScoped<IApolloDbContext>(sp => sp.GetRequiredService<ApolloDbContext>());
 
+    // Configure Marten for event sourcing and document storage
+    _ = services.AddMarten(options =>
+    {
+      options.Connection(connectionString);
+      options.Events.StreamIdentity = Marten.Events.StreamIdentity.AsGuid;
+      _ = options.Projections.Snapshot<UserReadModel>(Marten.Events.Projections.SnapshotLifecycle.Inline);
+    })
+    .UseLightweightSessions(); // Use lightweight sessions by default for better performance
+
     _ = services
-      .AddScoped<IUserDataAccess, MockUserDataAccess>();
+      .AddScoped<IUserRepository, MartenUserRepository>()
+      .AddScoped<IUserDataAccess, MartenUserDataAccess>();
 
     return services;
   }

@@ -7,6 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Marten" Version="7.36.3" />
+    <PackageReference Include="Marten.AspNetCore" Version="7.36.3" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.0-rc.2.25502.107" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.0-rc.2.25502.107" />
     <PackageReference Include="Npgsql" Version="10.0.0-rc.1" />
