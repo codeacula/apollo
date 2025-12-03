@@ -1,5 +1,7 @@
 using System.Runtime.Serialization;
 
+using FluentResults;
+
 namespace Apollo.GRPC.Contracts;
 
 [DataContract]
@@ -32,5 +34,18 @@ public sealed record GrpcResult<T> where T : class
       Data = null,
       Errors = [error]
     };
+  }
+
+  public static implicit operator Result<T>(GrpcResult<T> grpcResult)
+  {
+    if (grpcResult.IsSuccess && grpcResult.Data is not null)
+    {
+      return Result.Ok(grpcResult.Data);
+    }
+
+    var errors = grpcResult.Errors
+      .Select(e => new Error(e.Message).WithMetadata("ErrorCode", e.ErrorCode ?? string.Empty));
+
+    return Result.Fail<T>(errors);
   }
 }
