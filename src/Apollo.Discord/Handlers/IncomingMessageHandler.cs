@@ -7,7 +7,7 @@ using NetCord.Hosting.Gateway;
 
 namespace Apollo.Discord.Handlers;
 
-public class MessageCreateHandler(IApolloAPIClient apolloAPIClient, DiscordConfig discordConfig) : IMessageCreateGatewayHandler
+public class IncomingMessageHandler(IApolloAPIClient apolloAPIClient, DiscordConfig discordConfig) : IMessageCreateGatewayHandler
 {
   public async ValueTask HandleAsync(Message arg)
   {
