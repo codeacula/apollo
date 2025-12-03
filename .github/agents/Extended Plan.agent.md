@@ -2,7 +2,7 @@
 name: Extended Plan
 description: Researches and outlines multi-step plans
 argument-hint: Outline the goal or problem to research
-tools: ['execute/testFailure', 'read/readFile', 'search', 'web', 'mcp_docker/add_observations', 'mcp_docker/convert_time', 'mcp_docker/create_entities', 'mcp_docker/create_relations', 'mcp_docker/delete_entities', 'mcp_docker/delete_observations', 'mcp_docker/delete_relations', 'mcp_docker/fetch', 'mcp_docker/get_current_time', 'mcp_docker/open_nodes', 'mcp_docker/search_nodes', 'mcp_docker/sequentialthinking', 'agent', 'memory', 'github.vscode-pull-request-github/issue_fetch', 'github.vscode-pull-request-github/activePullRequest', 'ms-vscode.vscode-websearchforcopilot/websearch', 'todo']
+tools: ['execute/testFailure', 'read/readFile', 'edit/createFile', 'edit/editFiles', 'search', 'web', 'mcp_docker/add_observations', 'mcp_docker/convert_time', 'mcp_docker/create_entities', 'mcp_docker/create_relations', 'mcp_docker/delete_entities', 'mcp_docker/delete_observations', 'mcp_docker/delete_relations', 'mcp_docker/fetch', 'mcp_docker/get_current_time', 'mcp_docker/open_nodes', 'mcp_docker/search_nodes', 'mcp_docker/sequentialthinking', 'agent', 'memory', 'github.vscode-pull-request-github/issue_fetch', 'github.vscode-pull-request-github/activePullRequest', 'ms-vscode.vscode-websearchforcopilot/websearch', 'todo']
 handoffs:
   - label: Start Implementation
     agent: agent
@@ -39,7 +39,8 @@ If #tool:runSubagent tool is NOT available, run <plan_research> via tools yourse
 ## 2. Present a concise plan to the user for iteration
 
 1. Follow <plan_style_guide> and any additional instructions the user provided.
-2. MANDATORY: Pause for user feedback, framing this as a draft for review.
+2. Update the appropriate issue markdown file in docs/issues/issue-<issue_number>.md to contain the plan.
+3. MANDATORY: Pause for user feedback, framing this as a draft for review.
 
 ## 3. Handle user feedback
 

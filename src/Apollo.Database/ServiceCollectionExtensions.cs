@@ -1,4 +1,5 @@
 using Apollo.Core.Exceptions;
+using Apollo.Core.Infrastructure.Data;
 using Apollo.Database.Repository;
 
 using Microsoft.EntityFrameworkCore;
@@ -17,7 +18,9 @@ public static class ServiceCollectionExtensions
     _ = services.AddDbContextPool<ApolloDbContext>(options => options.UseNpgsql(connectionString));
     _ = services.AddScoped<IApolloDbContext>(sp => sp.GetRequiredService<ApolloDbContext>());
 
-    _ = services.AddScoped<IApolloUserRepo, ApolloUserRepo>();
+    _ = services
+      .AddScoped<IApolloUserRepo, ApolloUserRepo>()
+      .AddScoped<IUserDataAccess, MockUserDataAccess>();
 
     return services;
   }

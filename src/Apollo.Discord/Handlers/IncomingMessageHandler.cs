@@ -1,13 +1,20 @@
 using Apollo.Core.Conversations;
 using Apollo.Core.Infrastructure.API;
+using Apollo.Core.Infrastructure.Services;
+using Apollo.Core.Logging;
 using Apollo.Discord.Config;
+using Apollo.Domain.ValueObjects;
 
 using NetCord.Gateway;
 using NetCord.Hosting.Gateway;
 
 namespace Apollo.Discord.Handlers;
 
-public class IncomingMessageHandler(IApolloAPIClient apolloAPIClient, DiscordConfig discordConfig) : IMessageCreateGatewayHandler
+public class IncomingMessageHandler(
+  IApolloAPIClient apolloAPIClient,
+  IUserValidationService userValidationService,
+  DiscordConfig discordConfig,
+  ILogger<IncomingMessageHandler> logger) : IMessageCreateGatewayHandler
 {
   public async ValueTask HandleAsync(Message arg)
   {
@@ -17,12 +24,32 @@ public class IncomingMessageHandler(IApolloAPIClient apolloAPIClient, DiscordCon
       return;
     }
 
-    // Check redis cache here to see if they have permission to use this
+    // Validate user access
+    var username = new Username(arg.Author.Username);
+    var validationResult = await userValidationService.ValidateUserAccessAsync(username);
+    if (validationResult.IsFailed)
+    {
+      ValidationLogs.ValidationFailed(logger, username.Value, string.Join(", ", validationResult.Errors.Select(e => e.Message)));
+      _ = await arg.SendAsync("Sorry, unable to verify your access at this time.");
+      return;
+    }
+
+    if (!validationResult.Value)
+    {
+      ValidationLogs.AccessDenied(logger, username.Value);
+      _ = await arg.SendAsync("Sorry, you do not have access to use this bot.");
+      return;
+    }
 
     // Send request to API
     try
     {
-      var newMessage = new NewMessage(arg.Author.Username, arg.Content);
+      var newMessage = new NewMessage
+      {
+        Username = arg.Author.Username,
+        Content = arg.Content
+      };
+
       var response = await apolloAPIClient.SendMessageAsync(newMessage);
 
       if (response.IsFailed)

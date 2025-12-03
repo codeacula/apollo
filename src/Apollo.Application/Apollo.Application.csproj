@@ -8,7 +8,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Apollo.AI\Apollo.AI.csproj" />
+    <ProjectReference Include="..\Apollo.Cache\Apollo.Cache.csproj" />
     <ProjectReference Include="..\Apollo.Core\Apollo.Core.csproj" />
+    <ProjectReference Include="..\Apollo.Domain\Apollo.Domain.csproj" />
   </ItemGroup>
 
   <ItemGroup>
