@@ -1,3 +1,8 @@
+using Apollo.Discord.Config;
+
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+
 using NetCord;
 using NetCord.Gateway;
 using NetCord.Hosting.Gateway;
@@ -13,6 +18,11 @@ public static class ServiceCollectionExtensions
   public static IServiceCollection AddDiscordServices(this IServiceCollection services)
   {
     _ = services
+      .AddSingleton(services =>
+      {
+        var config = services.GetRequiredService<IConfiguration>();
+        return config.GetSection(nameof(DiscordConfig)).Get<DiscordConfig>() ?? new DiscordConfig();
+      })
     .AddDiscordGateway(options => options.Intents = GatewayIntents.All)
         .AddApplicationCommands()
         .AddDiscordRest()

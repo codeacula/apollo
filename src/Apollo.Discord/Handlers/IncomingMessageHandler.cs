@@ -1,17 +1,18 @@
 using Apollo.Core.Conversations;
 using Apollo.Core.Infrastructure.API;
+using Apollo.Discord.Config;
 
 using NetCord.Gateway;
 using NetCord.Hosting.Gateway;
 
 namespace Apollo.Discord.Handlers;
 
-public class MessageCreateHandler(IApolloAPIClient apolloAPIClient) : IMessageCreateGatewayHandler
+public class MessageCreateHandler(IApolloAPIClient apolloAPIClient, DiscordConfig discordConfig) : IMessageCreateGatewayHandler
 {
   public async ValueTask HandleAsync(Message arg)
   {
     // This is here because when Apollo replies to the user, we get yet another MessageCreate event
-    if (arg.GuildId != null || arg.Author.Username == "Apollo")
+    if (arg.GuildId != null || arg.Author.Username == discordConfig.BotName)
     {
       return;
     }
