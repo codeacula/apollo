@@ -6,5 +6,5 @@ namespace Apollo.Core.Infrastructure.Services;
 
 public interface IUserValidationService
 {
-  Task<Result<bool>> ValidateUserAccessAsync(Username username, CancellationToken cancellationToken = default);
+  Task<Result<bool>> UserHasAccessAsync(Username username, CancellationToken cancellationToken = default);
 }

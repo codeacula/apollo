@@ -26,17 +26,17 @@ public class IncomingMessageHandler(
 
     // Validate user access
     var username = new Username(arg.Author.Username);
-    var validationResult = await userValidationService.ValidateUserAccessAsync(username);
+    var validationResult = await userValidationService.UserHasAccessAsync(username);
     if (validationResult.IsFailed)
     {
-      ValidationLogs.ValidationFailed(logger, username.Value, string.Join(", ", validationResult.Errors.Select(e => e.Message)));
+      ValidationLogs.ValidationFailed(logger, username, string.Join(", ", validationResult.Errors.Select(e => e.Message)));
       _ = await arg.SendAsync("Sorry, unable to verify your access at this time.");
       return;
     }
 
     if (!validationResult.Value)
     {
-      ValidationLogs.AccessDenied(logger, username.Value);
+      ValidationLogs.AccessDenied(logger, username);
       _ = await arg.SendAsync("Sorry, you do not have access to use this bot.");
       return;
     }
@@ -46,7 +46,7 @@ public class IncomingMessageHandler(
     {
       var newMessage = new NewMessage
       {
-        Username = arg.Author.Username,
+        Username = username,
         Content = arg.Content
       };
 
@@ -54,7 +54,7 @@ public class IncomingMessageHandler(
 
       if (response.IsFailed)
       {
-        _ = await arg.SendAsync("Sorry, something went wrong while processing your message.");
+        _ = await arg.SendAsync($"An error occurred:\n{string.Join("\n", response.Errors.Select(e => e.Message))}");
         return;
       }
 
