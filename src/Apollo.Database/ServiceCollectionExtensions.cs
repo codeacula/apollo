@@ -18,7 +18,7 @@ public static class ServiceCollectionExtensions
     var connectionString = configuration.GetConnectionString(connectionKey) ?? throw new MissingDatabaseStringException(connectionKey);
 
     _ = services.AddDbContextPool<ApolloDbContext>(options => options.UseNpgsql(connectionString));
-    _ = services.AddScoped<IApolloDbContext>(sp => sp.GetRequiredService<ApolloDbContext>());
+    _ = services.AddScoped<IApolloDbContext, ApolloDbContext>();
 
     // Configure Marten for event sourcing and document storage
     _ = services.AddMarten(options =>
