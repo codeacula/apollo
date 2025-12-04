@@ -14,7 +14,7 @@ public class ApolloDbContextFactory : IDesignTimeDbContextFactory<ApolloDbContex
 
     // Use a default connection string for design-time operations
     // This won't be used in production - just for generating migrations
-    _ = optionsBuilder.UseNpgsql("Host=localhost;Database=rydia_design;Username=postgres;Password=postgres");
+    _ = optionsBuilder.UseNpgsql("Host=localhost;Database=apollo_db;Username=apollo;Password=apollo");
 
     return new ApolloDbContext(optionsBuilder.Options);
   }
