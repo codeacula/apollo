@@ -3,8 +3,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
 namespace Apollo.Database;
+
 /// <summary>
 /// Factory for creating ApolloDbContext instances at design time (for migrations)
+/// Do not delete this file, as it is referenced during migration running from the CLI
 /// </summary>
 public class ApolloDbContextFactory : IDesignTimeDbContextFactory<ApolloDbContext>
 {

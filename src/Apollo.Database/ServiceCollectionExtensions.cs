@@ -1,6 +1,4 @@
 using Apollo.Core.Exceptions;
-using Apollo.Core.Infrastructure.Data;
-using Apollo.Database.Repository;
 
 using Marten;
 
@@ -25,13 +23,9 @@ public static class ServiceCollectionExtensions
     {
       options.Connection(connectionString);
       options.Events.StreamIdentity = Marten.Events.StreamIdentity.AsGuid;
-      _ = options.Projections.Snapshot<UserReadModel>(Marten.Events.Projections.SnapshotLifecycle.Inline);
+      // _ = options.Projections.Snapshot<UserReadModel>(Marten.Events.Projections.SnapshotLifecycle.Inline);
     })
     .UseLightweightSessions(); // Use lightweight sessions by default for better performance
-
-    _ = services
-      .AddScoped<IUserRepository, MartenUserRepository>()
-      .AddScoped<IUserDataAccess, MartenUserDataAccess>();
 
     return services;
   }
