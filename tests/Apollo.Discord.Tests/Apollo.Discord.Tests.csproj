@@ -28,7 +28,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Apollo.Discord\Apollo.Discord.csproj" />
     <ProjectReference Include="..\..\src\Apollo.Core\Apollo.Core.csproj" />
-    <ProjectReference Include="..\..\src\Apollo.Database\Apollo.Database.csproj" />
   </ItemGroup>
 
 </Project>

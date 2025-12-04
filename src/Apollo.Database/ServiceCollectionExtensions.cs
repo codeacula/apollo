@@ -25,7 +25,6 @@ public static class ServiceCollectionExtensions
     _ = services.AddMarten(options =>
     {
       options.Connection(connectionString);
-      options.Events.StreamIdentity = Marten.Events.StreamIdentity.AsGuid;
       // _ = options.Projections.Snapshot<UserReadModel>(Marten.Events.Projections.SnapshotLifecycle.Inline);
     })
     .UseLightweightSessions(); // Use lightweight sessions by default for better performance

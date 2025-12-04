@@ -12,7 +12,7 @@ namespace Apollo.Application.Services;
 
 public sealed class UserValidationService(
   IUserCache userCache,
-  IUserStore userDataAccess,
+  IApolloUserStore userDataAccess,
   ILogger<UserValidationService> logger) : IUserValidationService
 {
   public async Task<Result<bool>> ValidateUserAccessAsync(Username username, CancellationToken cancellationToken = default)
@@ -53,7 +53,7 @@ public sealed class UserValidationService(
     var hasAccess = dataResult.Value;
 
     // Step 3: Update cache (best effort - don't fail if cache update fails)
-    var setCacheResult = await userCache.SetUserAccessAsync(username, hasAccess, cancellationToken);
+    var setCacheResult = await userCache.SetUserAccessAsync(username, hasAccess.Value, cancellationToken);
     if (setCacheResult.IsFailed)
     {
       ValidationLogs.CacheUpdateFailed(logger, username.Value, string.Join(", ", setCacheResult.Errors.Select(e => e.Message)));
@@ -61,10 +61,10 @@ public sealed class UserValidationService(
     }
     else
     {
-      ValidationLogs.CacheUpdated(logger, username.Value, hasAccess);
+      ValidationLogs.CacheUpdated(logger, username.Value, hasAccess.Value);
     }
 
-    ValidationLogs.UserValidated(logger, username.Value, hasAccess);
-    return Result.Ok(hasAccess);
+    ValidationLogs.UserValidated(logger, username.Value, hasAccess.Value);
+    return Result.Ok(hasAccess.Value);
   }
 }
