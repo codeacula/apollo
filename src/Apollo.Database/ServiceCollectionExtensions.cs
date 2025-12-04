@@ -1,5 +1,5 @@
 using Apollo.Core.Exceptions;
-using Apollo.Core.Infrastructure.Database.Stores;
+using Apollo.Core.Infrastructure.Data;
 using Apollo.Database.Stores;
 
 using Marten;
@@ -18,6 +18,7 @@ public static class ServiceCollectionExtensions
     var connectionString = configuration.GetConnectionString(connectionKey) ?? throw new MissingDatabaseStringException(connectionKey);
 
     _ = services.AddDbContextPool<ApolloDbContext>(options => options.UseNpgsql(connectionString));
+    _ = services.AddSingleton(new ApolloConnectionString(connectionString));
     _ = services.AddScoped<IApolloDbContext, ApolloDbContext>();
 
     // Configure Marten for event sourcing and document storage
