@@ -1,6 +1,7 @@
 using Apollo.AI;
 using Apollo.API;
 using Apollo.Application;
+using Apollo.Cache;
 using Apollo.Database;
 using Apollo.GRPC;
 
@@ -10,6 +11,7 @@ var configuration = webAppBuilder.Configuration;
 _ = webAppBuilder.Services.AddControllers();
 _ = webAppBuilder.Services
   .AddDatabaseServices(configuration)
+  .AddCacheServices(configuration.GetConnectionString("Redis")!)
   .AddAPIServices(configuration)
   .AddAiServices(configuration)
   .AddApplicationServices()

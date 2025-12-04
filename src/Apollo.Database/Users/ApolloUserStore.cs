@@ -16,8 +16,6 @@ public sealed class ApolloUserStore(ApolloConnectionString connectionString) : I
     opts.Connection(connectionString.Value);
 
     _ = opts.Events.AddEventType<UserCreatedEvent>();
-
-    _ = opts.Projections.LiveStreamAggregation<ApolloUser>();
   });
 
   public async Task<Result<User>> GetOrCreateUserAsync(Username username, CancellationToken cancellationToken = default)
@@ -33,7 +31,15 @@ public sealed class ApolloUserStore(ApolloConnectionString connectionString) : I
       return Result.Ok<User>(dbUser);
     }
 
-    throw new NotImplementedException();
+    var userId = Guid.NewGuid();
+    var userCreated = new UserCreatedEvent(userId, username, DateTime.UtcNow);
+
+    _ = session.Events.StartStream<ApolloUser>(userId, userCreated);
+    await session.SaveChangesAsync(cancellationToken);
+
+    var newUser = await session.Events.AggregateStreamAsync<ApolloUser>(userId, token: cancellationToken);
+
+    return newUser is null ? Result.Fail<User>($"Failed to create new user {username}") : Result.Ok<User>(newUser);
   }
 
   public Task<Result<HasAccess>> GetUserAccessAsync(Username username, CancellationToken cancellationToken = default)

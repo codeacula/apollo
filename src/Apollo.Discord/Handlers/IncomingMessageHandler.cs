@@ -1,6 +1,6 @@
 using Apollo.Core.Conversations;
 using Apollo.Core.Infrastructure.API;
-using Apollo.Core.Infrastructure.Services;
+using Apollo.Core.Infrastructure.Cache;
 using Apollo.Core.Logging;
 using Apollo.Discord.Config;
 using Apollo.Domain.Users.ValueObjects;
@@ -12,7 +12,7 @@ namespace Apollo.Discord.Handlers;
 
 public class IncomingMessageHandler(
   IApolloAPIClient apolloAPIClient,
-  IApolloUserService userValidationService,
+  IUserCache userCache,
   DiscordConfig discordConfig,
   ILogger<IncomingMessageHandler> logger) : IMessageCreateGatewayHandler
 {
@@ -26,15 +26,15 @@ public class IncomingMessageHandler(
 
     // Validate user access
     var username = new Username(arg.Author.Username);
-    var validationResult = await userValidationService.UserHasAccessAsync(username);
-    if (validationResult.IsFailed)
+    var validationResult = await userCache.GetUserAccessAsync(username);
+    if (validationResult.IsFailed || validationResult is null)
     {
-      ValidationLogs.ValidationFailed(logger, username, string.Join(", ", validationResult.Errors.Select(e => e.Message)));
+      ValidationLogs.ValidationFailed(logger, username, string.Join(", ", validationResult?.Errors.Select(e => e.Message) ?? []));
       _ = await arg.SendAsync("Sorry, unable to verify your access at this time.");
       return;
     }
 
-    if (!validationResult.Value)
+    if (validationResult.Value is not null && !validationResult.Value.Value)
     {
       ValidationLogs.AccessDenied(logger, username);
       _ = await arg.SendAsync("Sorry, you do not have access to use this bot.");

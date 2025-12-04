@@ -8,13 +8,13 @@ public sealed record ApolloUser
 {
   public Guid UserId { get; init; }
 
-  public required string Username { get; init; }
+  public string Username { get; init; } = "";
 
   public bool HasAccess { get; init; }
 
-  public required DateTime CreatedAt { get; init; }
+  public DateTime CreatedAt { get; init; } = DateTime.UtcNow;
 
-  public required DateTime UpdatedAt { get; init; }
+  public DateTime UpdatedAt { get; init; } = DateTime.UtcNow;
 
   public static ApolloUser Create(UserCreatedEvent userCreatedEvent)
   {
