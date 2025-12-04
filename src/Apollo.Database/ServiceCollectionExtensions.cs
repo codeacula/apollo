@@ -1,4 +1,6 @@
 using Apollo.Core.Exceptions;
+using Apollo.Core.Infrastructure.Database.Stores;
+using Apollo.Database.Stores;
 
 using Marten;
 
@@ -26,6 +28,8 @@ public static class ServiceCollectionExtensions
       // _ = options.Projections.Snapshot<UserReadModel>(Marten.Events.Projections.SnapshotLifecycle.Inline);
     })
     .UseLightweightSessions(); // Use lightweight sessions by default for better performance
+
+    _ = services.AddScoped<IApolloUserStore, ApolloUserStore>();
 
     return services;
   }

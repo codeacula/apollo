@@ -13,7 +13,7 @@ namespace Apollo.Database.Repository;
 /// This is a temporary implementation for testing the caching layer.
 /// </summary>
 /// <param name="logger">Logger instance.</param>
-public sealed class MockUserDataAccess(ILogger<MockUserDataAccess> logger) : IUserDataAccess
+public sealed class MockUserDataAccess(ILogger<MockUserDataAccess> logger) : IUserStore
 {
   private readonly ILogger<MockUserDataAccess> _logger = logger;
 

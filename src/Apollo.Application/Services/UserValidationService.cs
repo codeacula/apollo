@@ -12,7 +12,7 @@ namespace Apollo.Application.Services;
 
 public sealed class UserValidationService(
   IUserCache userCache,
-  IUserDataAccess userDataAccess,
+  IUserStore userDataAccess,
   ILogger<UserValidationService> logger) : IUserValidationService
 {
   public async Task<Result<bool>> ValidateUserAccessAsync(Username username, CancellationToken cancellationToken = default)
