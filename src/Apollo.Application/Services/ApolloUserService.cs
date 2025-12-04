@@ -1,6 +1,8 @@
 using Apollo.Core.Infrastructure.Cache;
+using Apollo.Core.Infrastructure.Data;
 using Apollo.Core.Infrastructure.Services;
 using Apollo.Core.Logging;
+using Apollo.Domain.Users.Models;
 using Apollo.Domain.Users.ValueObjects;
 
 using FluentResults;
@@ -9,10 +11,30 @@ using Microsoft.Extensions.Logging;
 
 namespace Apollo.Application.Services;
 
-public sealed class UserValidationService(
+public sealed class ApolloUserService(
+  IApolloUserStore apolloUserStore,
   IUserCache userCache,
-  ILogger<UserValidationService> logger) : IUserValidationService
+  ILogger<ApolloUserService> logger) : IApolloUserService
 {
+  public async Task<Result<User>> GetOrCreateUserAsync(Username username, CancellationToken cancellationToken = default)
+  {
+    if (!username.IsValid)
+    {
+      ValidationLogs.InvalidUsername(logger);
+      return Result.Fail<User>("Invalid username");
+    }
+
+    var userResult = await apolloUserStore.GetOrCreateUserAsync(username, cancellationToken);
+
+    if (userResult.IsFailed)
+    {
+      // TODO: Add logging here
+      return Result.Fail<User>($"Failed to get or create user {username}");
+    }
+
+    return userResult;
+  }
+
   public async Task<Result<bool>> UserHasAccessAsync(Username username, CancellationToken cancellationToken = default)
   {
     if (!username.IsValid)

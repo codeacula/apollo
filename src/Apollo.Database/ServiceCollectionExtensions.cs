@@ -1,6 +1,6 @@
 using Apollo.Core.Exceptions;
 using Apollo.Core.Infrastructure.Data;
-using Apollo.Database.Stores;
+using Apollo.Database.Users;
 
 using Marten;
 
@@ -21,13 +21,10 @@ public static class ServiceCollectionExtensions
     _ = services.AddSingleton(new ApolloConnectionString(connectionString));
     _ = services.AddScoped<IApolloDbContext, ApolloDbContext>();
 
-    // Configure Marten for event sourcing and document storage
-    _ = services.AddMarten(options =>
-    {
-      options.Connection(connectionString);
-      // _ = options.Projections.Snapshot<UserReadModel>(Marten.Events.Projections.SnapshotLifecycle.Inline);
-    })
-    .UseLightweightSessions(); // Use lightweight sessions by default for better performance
+
+    _ = services
+      .AddMarten(options => options.Connection(connectionString))
+      .UseLightweightSessions();
 
     _ = services.AddScoped<IApolloUserStore, ApolloUserStore>();
 

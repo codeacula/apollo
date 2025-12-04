@@ -11,6 +11,15 @@ public sealed class ProcessIncomingMessageHandler(IApolloAIAgent apolloAIAgent) 
   {
     try
     {
+      // Get the user
+
+      // Check user for access
+
+      // Update cache with user's access perms
+
+      // Return failure if they don't have access
+
+      // Hand message to AI here
       var response = await apolloAIAgent.ChatAsync(request.Message.Username, request.Message.Content, cancellationToken);
       return Result.Ok(response);
     }

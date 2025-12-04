@@ -11,7 +11,7 @@ public static class ServiceCollectionExtension
   {
     _ = services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<IApolloApplication>());
 
-    _ = services.AddScoped<IUserValidationService, UserValidationService>();
+    _ = services.AddScoped<IApolloUserService, ApolloUserService>();
 
     return services;
   }

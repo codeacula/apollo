@@ -12,7 +12,7 @@ namespace Apollo.Discord.Handlers;
 
 public class IncomingMessageHandler(
   IApolloAPIClient apolloAPIClient,
-  IUserValidationService userValidationService,
+  IApolloUserService userValidationService,
   DiscordConfig discordConfig,
   ILogger<IncomingMessageHandler> logger) : IMessageCreateGatewayHandler
 {
