@@ -22,15 +22,16 @@ public sealed class PersonService(
       return Result.Fail<Person>("Invalid username");
     }
 
-    var userResult = await personStore.GetOrCreateByUsernameAsync(username);
+    var userResult = await personStore.GetByUsernameAsync(username, cancellationToken);
 
-    if (userResult.IsFailed)
+    if (userResult.IsSuccess)
     {
-      // TODO: Add logging here
-      return Result.Fail<Person>($"Failed to get or create user {username}");
+      return userResult;
     }
 
-    return userResult;
+    var createResult = await personStore.CreateAsync(new(Guid.NewGuid()), username, cancellationToken);
+
+    return createResult.IsSuccess ? createResult : Result.Fail<Person>($"Failed to get or create user {username}");
   }
 
   public async Task<Result> GrantAccessAsync(Username username, CancellationToken cancellationToken = default)
@@ -41,11 +42,11 @@ public sealed class PersonService(
       return Result.Fail("Invalid username");
     }
 
-    var userResult = await apolloUserStore.GetUserByUsernameAsync(username, cancellationToken);
+    var userResult = await personStore.GetByUsernameAsync(username, cancellationToken);
 
     return userResult.IsFailed
       ? Result.Fail($"User {username} not found")
-      : await apolloUserStore.GrantAccessAsync(userResult.Value.Id, cancellationToken);
+      : await personStore.GrantAccessAsync(userResult.Value.Id, cancellationToken);
   }
 
   public async Task<Result<HasAccess>> HasAccessAsync(Username username, CancellationToken cancellationToken = default)
@@ -56,7 +57,7 @@ public sealed class PersonService(
       return Result.Fail<HasAccess>("Invalid username");
     }
 
-    var cacheResult = await userCache.GetUserAccessAsync(username, cancellationToken);
+    var cacheResult = await personCache.GetAccessAsync(username);
     if (cacheResult.IsFailed)
     {
       ValidationLogs.CacheCheckFailed(logger, username, string.Join(", ", cacheResult.Errors.Select(e => e.Message)));

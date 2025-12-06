@@ -1,7 +1,3 @@
-namespace Apollo.Domain.People.Events;
+namespace Apollo.Database.People.Events;
 
-public sealed record AccessRevokedEvent
-{
-  public required Guid UserId { get; init; }
-  public required DateTime RevokedOn { get; init; }
-}
+public sealed record AccessRevokedEvent(Guid Id, DateTime RevokedOn);

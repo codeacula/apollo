@@ -1,5 +1,5 @@
-using Apollo.Core.Exceptions;
-using Apollo.Core.Infrastructure.Data;
+using Apollo.Core.Data;
+using Apollo.Core.People;
 using Apollo.Database.People;
 
 using Marten;
@@ -26,7 +26,7 @@ public static class ServiceCollectionExtensions
       .AddMarten(options => options.Connection(connectionString))
       .UseLightweightSessions();
 
-    _ = services.AddScoped<IApolloUserStore, ApolloUserStore>();
+    _ = services.AddScoped<IPersonStore, PersonStore>();
 
     return services;
   }

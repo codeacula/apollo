@@ -1,5 +1,5 @@
+using Apollo.Core.API;
 using Apollo.Core.Conversations;
-using Apollo.Core.Infrastructure.API;
 using Apollo.GRPC.Interceptors;
 using Apollo.GRPC.Service;
 

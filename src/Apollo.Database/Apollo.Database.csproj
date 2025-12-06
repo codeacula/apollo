@@ -26,6 +26,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Build.Tasks.Core" Version="17.14.28" />
     <ProjectReference Include="..\Apollo.Core\Apollo.Core.csproj" />
+    <ProjectReference Include="..\Apollo.Domain\Apollo.Domain.csproj" />
   </ItemGroup>
 
 </Project>

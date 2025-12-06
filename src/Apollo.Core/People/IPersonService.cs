@@ -9,5 +9,5 @@ public interface IPersonService
 {
   Task<Result<Person>> GetOrCreateAsync(Username username, CancellationToken cancellationToken = default);
   Task<Result> GrantAccessAsync(Username username, CancellationToken cancellationToken = default);
-  Task<Result<HasAccess>> UserHasAccessAsync(Username username, CancellationToken cancellationToken = default);
+  Task<Result<HasAccess>> HasAccessAsync(Username username, CancellationToken cancellationToken = default);
 }

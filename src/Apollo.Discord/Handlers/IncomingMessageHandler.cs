@@ -1,18 +1,19 @@
+using Apollo.Core.API;
 using Apollo.Core.Conversations;
-using Apollo.Core.Infrastructure.API;
-using Apollo.Core.Infrastructure.Cache;
-using Apollo.Core.Logging;
+using Apollo.Core.People;
 using Apollo.Discord.Config;
 using Apollo.Domain.People.ValueObjects;
 
 using NetCord.Gateway;
 using NetCord.Hosting.Gateway;
 
+using ApolloPlatform = Apollo.Domain.Common.Enums.Platform;
+
 namespace Apollo.Discord.Handlers;
 
 public class IncomingMessageHandler(
   IApolloAPIClient apolloAPIClient,
-  IUserCache userCache,
+  IPersonCache personCache,
   DiscordConfig discordConfig,
   ILogger<IncomingMessageHandler> logger) : IMessageCreateGatewayHandler
 {
@@ -25,7 +26,7 @@ public class IncomingMessageHandler(
     }
 
     // Validate user access
-    var username = new Username(arg.Author.Username);
+    var username = new Username(arg.Author.Username, ApolloPlatform.Discord);
     // var validationResult = await userCache.GetUserAccessAsync(username);
     // if (validationResult.IsFailed || validationResult is null)
     // {
@@ -47,7 +48,8 @@ public class IncomingMessageHandler(
       var newMessage = new NewMessage
       {
         Username = username,
-        Content = arg.Content
+        Content = arg.Content,
+        Platform = ApolloPlatform.Discord
       };
 
       var response = await apolloAPIClient.SendMessageAsync(newMessage);

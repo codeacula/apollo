@@ -1,7 +1,3 @@
-namespace Apollo.Domain.People.Events;
+namespace Apollo.Database.People.Events;
 
-public sealed record AccessGrantedEvent
-{
-  public required Guid Id { get; init; }
-  public required DateTime GrantedOn { get; init; }
-}
+public sealed record AccessGrantedEvent(Guid Id, DateTime GrantedOn);
