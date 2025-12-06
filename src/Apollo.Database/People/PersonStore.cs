@@ -28,24 +28,24 @@ public sealed class PersonStore(SuperAdminConfig SuperAdminConfig, IDocumentSess
     }
   }
 
-  public async Task<Result<MPerson>> CreateAsync(PersonId Id, Username username, CancellationToken cancellationToken = default)
+  public async Task<Result<MPerson>> CreateAsync(PersonId id, Username username, CancellationToken cancellationToken = default)
   {
     try
     {
       var time = timeProvider.GetUtcNow().DateTime;
-      var pce = new PersonCreatedEvent(Id, username.Value, username.Platform, time);
+      var pce = new PersonCreatedEvent(id, username.Value, username.Platform, time);
 
       var events = new List<object> { pce };
 
       if (IsSuperAdmin(username))
       {
-        events.Add(new AccessGrantedEvent(Id.Value, time));
+        events.Add(new AccessGrantedEvent(id.Value, time));
       }
 
-      _ = session.Events.StartStream<DbPerson>(Id.Value, events);
+      _ = session.Events.StartStream<DbPerson>(id.Value, events);
       await session.SaveChangesAsync(cancellationToken);
 
-      var newPerson = await session.Events.AggregateStreamAsync<DbPerson>(Id.Value, token: cancellationToken);
+      var newPerson = await session.Events.AggregateStreamAsync<DbPerson>(id.Value, token: cancellationToken);
 
       return newPerson is null ? Result.Fail<MPerson>($"Failed to create new user {username}") : Result.Ok((MPerson)newPerson);
     }
@@ -62,11 +62,11 @@ public sealed class PersonStore(SuperAdminConfig SuperAdminConfig, IDocumentSess
       && string.Equals(username.Value, SuperAdminConfig.DiscordUsername, StringComparison.OrdinalIgnoreCase);
   }
 
-  public async Task<Result<HasAccess>> GetAccessAsync(PersonId Id, CancellationToken cancellationToken = default)
+  public async Task<Result<HasAccess>> GetAccessAsync(PersonId id, CancellationToken cancellationToken = default)
   {
     try
     {
-      var dbUser = await GetAsync(Id, cancellationToken);
+      var dbUser = await GetAsync(id, cancellationToken);
 
       return dbUser.IsFailed ? Result.Fail<HasAccess>(dbUser.Errors) : Result.Ok(dbUser.Value.HasAccess);
     }
@@ -76,12 +76,12 @@ public sealed class PersonStore(SuperAdminConfig SuperAdminConfig, IDocumentSess
     }
   }
 
-  public async Task<Result<MPerson>> GetAsync(PersonId Id, CancellationToken cancellationToken = default)
+  public async Task<Result<MPerson>> GetAsync(PersonId id, CancellationToken cancellationToken = default)
   {
     try
     {
-      var dbUser = await session.Query<DbPerson>().FirstOrDefaultAsync(u => u.Id == Id.Value, cancellationToken);
-      return dbUser is null ? Result.Fail<MPerson>($"User with ID {Id} not found") : Result.Ok((MPerson)dbUser);
+      var dbUser = await session.Query<DbPerson>().FirstOrDefaultAsync(u => u.Id == id.Value, cancellationToken);
+      return dbUser is null ? Result.Fail<MPerson>($"User with ID {id} not found") : Result.Ok((MPerson)dbUser);
     }
     catch (Exception ex)
     {
@@ -89,11 +89,11 @@ public sealed class PersonStore(SuperAdminConfig SuperAdminConfig, IDocumentSess
     }
   }
 
-  public async Task<Result> GrantAccessAsync(PersonId Id, CancellationToken cancellationToken = default)
+  public async Task<Result> GrantAccessAsync(PersonId id, CancellationToken cancellationToken = default)
   {
     try
     {
-      _ = session.Events.Append(Id.Value, new AccessGrantedEvent(Id.Value, timeProvider.GetUtcNow().DateTime));
+      _ = session.Events.Append(id.Value, new AccessGrantedEvent(id.Value, timeProvider.GetUtcNow().DateTime));
 
       await session.SaveChangesAsync(cancellationToken);
 

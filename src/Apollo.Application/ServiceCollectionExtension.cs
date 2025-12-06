@@ -13,6 +13,8 @@ public static class ServiceCollectionExtension
 
     _ = services.AddScoped<IPersonService, PersonService>();
 
+    _ = services.AddTransient(_ => TimeProvider.System);
+
     return services;
   }
 }

@@ -3,8 +3,6 @@ using Apollo.Core.People;
 using Apollo.Database.People;
 using Apollo.Database.People.Events;
 
-using JasperFx.Events.Projections;
-
 using Marten;
 
 using Microsoft.EntityFrameworkCore;
@@ -33,7 +31,7 @@ public static class ServiceCollectionExtensions
       .AddMarten(options => options.Connection(connectionString))
       .UseLightweightSessions();
 
-    _ = services.AddSingleton<IPersonStore, PersonStore>();
+    _ = services.AddScoped<IPersonStore, PersonStore>();
 
     _ = services.AddSingleton(() =>
     {
@@ -46,8 +44,6 @@ public static class ServiceCollectionExtensions
           .UniqueIndex(x => x.Username);
 
         _ = opts.Events.AddEventType<PersonCreatedEvent>();
-
-        opts.Projections.Add<PersonProjection>(ProjectionLifecycle.Inline);
       });
     });
 
