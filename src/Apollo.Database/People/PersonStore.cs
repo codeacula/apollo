@@ -1,6 +1,7 @@
 using Apollo.Core.Data;
 using Apollo.Core.People;
 using Apollo.Database.People.Events;
+using Apollo.Domain.Common.Enums;
 using Apollo.Domain.People.ValueObjects;
 
 using FluentResults;
@@ -17,13 +18,15 @@ namespace Apollo.Database.People;
 public sealed class PersonStore : IPersonStore, IDisposable
 {
   private ApolloConnectionString ConnectionString { get; init; }
+  private SuperAdminConfig SuperAdminConfig { get; init; }
   private IDocumentSession Session { get; init; }
 
   private DocumentStore Store { get; init; }
 
-  public PersonStore(ApolloConnectionString connectionString)
+  public PersonStore(ApolloConnectionString connectionString, SuperAdminConfig superAdminConfig)
   {
     ConnectionString = connectionString;
+    SuperAdminConfig = superAdminConfig;
     Store = DocumentStore.For(opts =>
     {
       opts.Connection(ConnectionString.Value);
@@ -64,7 +67,14 @@ public sealed class PersonStore : IPersonStore, IDisposable
     {
       var pce = new PersonCreatedEvent(Id, username.Value, username.Platform, DateTime.UtcNow);
 
-      _ = Session.Events.StartStream<DbPerson>(Id.Value, pce);
+      var events = new List<object> { pce };
+
+      if (IsSuperAdmin(username))
+      {
+        events.Add(new AccessGrantedEvent(Id.Value, DateTime.UtcNow));
+      }
+
+      _ = Session.Events.StartStream<DbPerson>(Id.Value, events);
       await Session.SaveChangesAsync(cancellationToken);
 
       var newPerson = await Session.Events.AggregateStreamAsync<DbPerson>(Id.Value, token: cancellationToken);
@@ -75,6 +85,13 @@ public sealed class PersonStore : IPersonStore, IDisposable
     {
       return Result.Fail(ex.Message);
     }
+  }
+
+  private bool IsSuperAdmin(Username username)
+  {
+    return !string.IsNullOrWhiteSpace(SuperAdminConfig.DiscordUsername)
+      && username.Platform == Platform.Discord
+      && string.Equals(username.Value, SuperAdminConfig.DiscordUsername, StringComparison.OrdinalIgnoreCase);
   }
 
   public async Task<Result<HasAccess>> GetAccessAsync(PersonId Id, CancellationToken cancellationToken = default)

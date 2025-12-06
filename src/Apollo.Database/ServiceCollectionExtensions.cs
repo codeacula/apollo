@@ -16,9 +16,11 @@ public static class ServiceCollectionExtensions
   {
     const string connectionKey = "Apollo";
     var connectionString = configuration.GetConnectionString(connectionKey) ?? throw new MissingDatabaseStringException(connectionKey);
+    var superAdminConfig = configuration.GetSection(nameof(SuperAdminConfig)).Get<SuperAdminConfig>() ?? new SuperAdminConfig();
 
     _ = services.AddDbContextPool<ApolloDbContext>(options => options.UseNpgsql(connectionString));
     _ = services.AddSingleton(new ApolloConnectionString(connectionString));
+    _ = services.AddSingleton(superAdminConfig);
     _ = services.AddScoped<IApolloDbContext, ApolloDbContext>();
 
 
