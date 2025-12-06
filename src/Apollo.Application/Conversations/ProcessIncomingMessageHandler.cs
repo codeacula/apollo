@@ -10,9 +10,9 @@ public sealed class ProcessIncomingMessageCommandHandler(
   IApolloAIAgent apolloAIAgent,
   IPersonService personService,
   IPersonCache personCache
-) : IRequestHandler<ProcessIncomingMessageCommmand, Result<string>>
+) : IRequestHandler<ProcessIncomingMessageCommand, Result<string>>
 {
-  public async Task<Result<string>> Handle(ProcessIncomingMessageCommmand request, CancellationToken cancellationToken)
+  public async Task<Result<string>> Handle(ProcessIncomingMessageCommand request, CancellationToken cancellationToken)
   {
     try
     {
