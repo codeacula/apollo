@@ -77,6 +77,6 @@ public sealed class PersonCache(IConnectionMultiplexer redis, ILogger<PersonCach
 
   private static string GetCacheKey(Username username)
   {
-    return KeyPrefix + username.Value.ToLowerInvariant();
+    return KeyPrefix + username.Value.ToLowerInvariant() + ":" + username.Platform.ToString().ToLowerInvariant();
   }
 }
