@@ -2,7 +2,6 @@ using Apollo.Core.Data;
 using Apollo.Core.People;
 using Apollo.Database.People;
 using Apollo.Database.People.Events;
-using Apollo.Domain.People.Models;
 
 using JasperFx.Events.Projections;
 
@@ -34,7 +33,7 @@ public static class ServiceCollectionExtensions
       .AddMarten(options => options.Connection(connectionString))
       .UseLightweightSessions();
 
-    _ = services.AddScoped<IPersonStore, PersonStore>();
+    _ = services.AddSingleton<IPersonStore, PersonStore>();
 
     _ = services.AddSingleton(() =>
     {
@@ -51,6 +50,8 @@ public static class ServiceCollectionExtensions
         opts.Projections.Add<PersonProjection>(ProjectionLifecycle.Inline);
       });
     });
+
+    return services;
   }
 
   public static async Task MigrateDatabaseAsync(this IServiceProvider serviceProvider, CancellationToken cancellationToken = default)

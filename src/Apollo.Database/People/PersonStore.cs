@@ -1,4 +1,3 @@
-using Apollo.Core.Data;
 using Apollo.Core.People;
 using Apollo.Database.People.Events;
 using Apollo.Domain.Common.Enums;
