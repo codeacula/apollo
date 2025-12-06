@@ -29,14 +29,14 @@ public class IncomingMessageHandler(
     // Validate user access
     var username = new Username(arg.Author.Username, ApolloPlatform.Discord);
     var validationResult = await personCache.GetAccessAsync(username);
-    if (validationResult.IsFailed || validationResult is null)
+    if (validationResult.IsFailed)
     {
-      ValidationLogs.ValidationFailed(logger, username, string.Join(", ", validationResult?.Errors.Select(e => e.Message) ?? []));
+      ValidationLogs.ValidationFailed(logger, username, string.Join(", ", validationResult.Errors.Select(e => e.Message)));
       _ = await arg.SendAsync("Sorry, unable to verify your access at this time.");
       return;
     }
 
-    if (validationResult.Value is not null && !validationResult.Value.Value)
+    if (!validationResult.Value!.Value)
     {
       ValidationLogs.AccessDenied(logger, username);
       _ = await arg.SendAsync("Sorry, you do not have access to use this bot.");
