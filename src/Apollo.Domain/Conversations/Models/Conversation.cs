@@ -7,7 +7,7 @@ namespace Apollo.Domain.Conversations.Models;
 public record Conversation
 {
   public ConversationId Id { get; init; }
-  public PersonId UserId { get; init; }
+  public PersonId PersonId { get; init; }
   public ICollection<Message> Messages { get; init; } = [];
   public CreatedOn CreatedOn { get; init; }
 }
