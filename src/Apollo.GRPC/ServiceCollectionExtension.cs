@@ -1,4 +1,4 @@
-using Apollo.Core.Infrastructure.API;
+using Apollo.Core.API;
 using Apollo.GRPC.Client;
 using Apollo.GRPC.Interceptors;
 

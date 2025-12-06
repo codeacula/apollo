@@ -1,6 +1,6 @@
 using System.Runtime.Serialization;
 
-using Apollo.Core.Infrastructure;
+using Apollo.Domain.Common.Enums;
 
 namespace Apollo.GRPC.Contracts;
 

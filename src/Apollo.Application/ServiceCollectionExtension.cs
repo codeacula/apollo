@@ -1,5 +1,5 @@
-using Apollo.Application.Services;
-using Apollo.Core.Infrastructure.Services;
+using Apollo.Application.People;
+using Apollo.Core.People;
 
 using Microsoft.Extensions.DependencyInjection;
 
@@ -11,7 +11,9 @@ public static class ServiceCollectionExtension
   {
     _ = services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<IApolloApplication>());
 
-    _ = services.AddScoped<IUserValidationService, UserValidationService>();
+    _ = services.AddScoped<IPersonService, PersonService>();
+
+    _ = services.AddTransient(_ => TimeProvider.System);
 
     return services;
   }

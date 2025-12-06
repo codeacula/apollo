@@ -1,18 +1,20 @@
+using Apollo.Core.API;
 using Apollo.Core.Conversations;
-using Apollo.Core.Infrastructure.API;
-using Apollo.Core.Infrastructure.Services;
 using Apollo.Core.Logging;
+using Apollo.Core.People;
 using Apollo.Discord.Config;
-using Apollo.Domain.Users.ValueObjects;
+using Apollo.Domain.People.ValueObjects;
 
 using NetCord.Gateway;
 using NetCord.Hosting.Gateway;
+
+using ApolloPlatform = Apollo.Domain.Common.Enums.Platform;
 
 namespace Apollo.Discord.Handlers;
 
 public class IncomingMessageHandler(
   IApolloAPIClient apolloAPIClient,
-  IUserValidationService userValidationService,
+  IPersonCache personCache,
   DiscordConfig discordConfig,
   ILogger<IncomingMessageHandler> logger) : IMessageCreateGatewayHandler
 {
@@ -25,18 +27,18 @@ public class IncomingMessageHandler(
     }
 
     // Validate user access
-    var username = new Username(arg.Author.Username);
-    var validationResult = await userValidationService.ValidateUserAccessAsync(username);
+    var username = new Username(arg.Author.Username, ApolloPlatform.Discord);
+    var validationResult = await personCache.GetAccessAsync(username);
     if (validationResult.IsFailed)
     {
-      ValidationLogs.ValidationFailed(logger, username.Value, string.Join(", ", validationResult.Errors.Select(e => e.Message)));
+      ValidationLogs.ValidationFailed(logger, username, string.Join(", ", validationResult.Errors.Select(e => e.Message)));
       _ = await arg.SendAsync("Sorry, unable to verify your access at this time.");
       return;
     }
 
-    if (!validationResult.Value)
+    if (!validationResult.Value!.Value)
     {
-      ValidationLogs.AccessDenied(logger, username.Value);
+      ValidationLogs.AccessDenied(logger, username);
       _ = await arg.SendAsync("Sorry, you do not have access to use this bot.");
       return;
     }
@@ -46,15 +48,16 @@ public class IncomingMessageHandler(
     {
       var newMessage = new NewMessage
       {
-        Username = arg.Author.Username,
-        Content = arg.Content
+        Username = username,
+        Content = arg.Content,
+        Platform = ApolloPlatform.Discord
       };
 
       var response = await apolloAPIClient.SendMessageAsync(newMessage);
 
       if (response.IsFailed)
       {
-        _ = await arg.SendAsync("Sorry, something went wrong while processing your message.");
+        _ = await arg.SendAsync($"An error occurred:\n{string.Join("\n", response.Errors.Select(e => e.Message))}");
         return;
       }
 

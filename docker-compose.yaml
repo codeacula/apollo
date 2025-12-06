@@ -43,7 +43,7 @@ services:
       - apollo
 
   redis:
-    image: redis:7-alpine
+    image: redis:alpine
     restart: always
     command: redis-server --requirepass ${REDIS_PASSWORD:-apollo_redis}
     ports:
