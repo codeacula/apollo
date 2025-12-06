@@ -6,8 +6,6 @@ using Apollo.Domain.People.ValueObjects;
 
 using FluentResults;
 
-using JasperFx.Events.Projections;
-
 using Marten;
 
 using DbPerson = Apollo.Database.People.Person;
@@ -15,43 +13,13 @@ using MPerson = Apollo.Domain.People.Models.Person;
 
 namespace Apollo.Database.People;
 
-public sealed class PersonStore : IPersonStore, IDisposable
+public sealed class PersonStore(SuperAdminConfig SuperAdminConfig, IDocumentSession session, TimeProvider timeProvider) : IPersonStore
 {
-  private ApolloConnectionString ConnectionString { get; init; }
-  private SuperAdminConfig SuperAdminConfig { get; init; }
-  private IDocumentSession Session { get; init; }
-
-  private DocumentStore Store { get; init; }
-
-  public PersonStore(ApolloConnectionString connectionString, SuperAdminConfig superAdminConfig)
-  {
-    ConnectionString = connectionString;
-    SuperAdminConfig = superAdminConfig;
-    Store = DocumentStore.For(opts =>
-    {
-      opts.Connection(ConnectionString.Value);
-
-      _ = opts.Schema.For<DbPerson>()
-        .Identity(x => x.Id)
-        .UniqueIndex(x => x.Username);
-
-      _ = opts.Events.AddEventType<PersonCreatedEvent>();
-
-      opts.Projections.Add<PersonProjection>(ProjectionLifecycle.Inline);
-    });
-    Session = Store.LightweightSession();
-  }
-
-  public void Dispose()
-  {
-    Session.Dispose();
-  }
-
   public async Task<Result<MPerson>> GetByUsernameAsync(Username username, CancellationToken cancellationToken = default)
   {
     try
     {
-      var dbUserResult = await Session.Query<DbPerson>().FirstOrDefaultAsync(u => u.Username == username.Value && u.Platform == username.Platform, cancellationToken);
+      var dbUserResult = await session.Query<DbPerson>().FirstOrDefaultAsync(u => u.Username == username.Value && u.Platform == username.Platform, cancellationToken);
 
       return dbUserResult is not null ? Result.Ok((MPerson)dbUserResult) : Result.Fail<MPerson>($"User with username {username.Value} not found");
     }
@@ -65,19 +33,20 @@ public sealed class PersonStore : IPersonStore, IDisposable
   {
     try
     {
-      var pce = new PersonCreatedEvent(Id, username.Value, username.Platform, DateTime.UtcNow);
+      var time = timeProvider.GetUtcNow().DateTime;
+      var pce = new PersonCreatedEvent(Id, username.Value, username.Platform, time);
 
       var events = new List<object> { pce };
 
       if (IsSuperAdmin(username))
       {
-        events.Add(new AccessGrantedEvent(Id.Value, DateTime.UtcNow));
+        events.Add(new AccessGrantedEvent(Id.Value, time));
       }
 
-      _ = Session.Events.StartStream<DbPerson>(Id.Value, events);
-      await Session.SaveChangesAsync(cancellationToken);
+      _ = session.Events.StartStream<DbPerson>(Id.Value, events);
+      await session.SaveChangesAsync(cancellationToken);
 
-      var newPerson = await Session.Events.AggregateStreamAsync<DbPerson>(Id.Value, token: cancellationToken);
+      var newPerson = await session.Events.AggregateStreamAsync<DbPerson>(Id.Value, token: cancellationToken);
 
       return newPerson is null ? Result.Fail<MPerson>($"Failed to create new user {username}") : Result.Ok((MPerson)newPerson);
     }
@@ -112,22 +81,8 @@ public sealed class PersonStore : IPersonStore, IDisposable
   {
     try
     {
-      var dbUser = await Session.Query<DbPerson>().FirstOrDefaultAsync(u => u.Id == Id.Value, cancellationToken);
+      var dbUser = await session.Query<DbPerson>().FirstOrDefaultAsync(u => u.Id == Id.Value, cancellationToken);
       return dbUser is null ? Result.Fail<MPerson>($"User with ID {Id} not found") : Result.Ok((MPerson)dbUser);
-    }
-    catch (Exception ex)
-    {
-      return Result.Fail(ex.Message);
-    }
-  }
-
-  public async Task<Result<MPerson>> GetUserByUsernameAsync(Username username, CancellationToken cancellationToken = default)
-  {
-    try
-    {
-      var dbUser = await Session.Query<DbPerson>().FirstOrDefaultAsync(u => u.Username == username.Value, cancellationToken);
-
-      return dbUser is null ? Result.Fail<MPerson>($"User with username {username.Value} not found") : Result.Ok((MPerson)dbUser);
     }
     catch (Exception ex)
     {
@@ -139,9 +94,9 @@ public sealed class PersonStore : IPersonStore, IDisposable
   {
     try
     {
-      _ = Session.Events.Append(Id.Value, new AccessGrantedEvent(Id.Value, DateTime.UtcNow));
+      _ = session.Events.Append(Id.Value, new AccessGrantedEvent(Id.Value, timeProvider.GetUtcNow().DateTime));
 
-      await Session.SaveChangesAsync(cancellationToken);
+      await session.SaveChangesAsync(cancellationToken);
 
       return Result.Ok();
     }

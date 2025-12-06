@@ -1,12 +1,18 @@
 using Apollo.Core.Data;
 using Apollo.Core.People;
 using Apollo.Database.People;
+using Apollo.Database.People.Events;
+using Apollo.Domain.People.Models;
+
+using JasperFx.Events.Projections;
 
 using Marten;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+
+using Person = Apollo.Database.People.Person;
 
 namespace Apollo.Database;
 
@@ -30,7 +36,21 @@ public static class ServiceCollectionExtensions
 
     _ = services.AddScoped<IPersonStore, PersonStore>();
 
-    return services;
+    _ = services.AddSingleton(() =>
+    {
+      return DocumentStore.For(opts =>
+      {
+        opts.Connection(connectionString);
+
+        _ = opts.Schema.For<Person>()
+          .Identity(x => x.Id)
+          .UniqueIndex(x => x.Username);
+
+        _ = opts.Events.AddEventType<PersonCreatedEvent>();
+
+        opts.Projections.Add<PersonProjection>(ProjectionLifecycle.Inline);
+      });
+    });
   }
 
   public static async Task MigrateDatabaseAsync(this IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
