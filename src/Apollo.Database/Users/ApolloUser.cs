@@ -6,7 +6,7 @@ namespace Apollo.Database.Users;
 
 public sealed record ApolloUser
 {
-  public Guid UserId { get; init; }
+  public Guid Id { get; init; }
 
   public string Username { get; init; } = "";
 
@@ -20,7 +20,7 @@ public sealed record ApolloUser
   {
     return new()
     {
-      UserId = userCreatedEvent.UserId,
+      Id = userCreatedEvent.UserId,
       Username = userCreatedEvent.Username,
       HasAccess = false,
       CreatedAt = userCreatedEvent.CreatedAt,
@@ -43,7 +43,7 @@ public sealed record ApolloUser
     {
       CreatedOn = new CreatedOn(value.CreatedAt),
       HasAccess = new HasAccess(value.HasAccess),
-      Id = new UserId(value.UserId),
+      Id = new UserId(value.Id),
       Username = new Username(value.Username),
       UpdatedOn = new UpdatedOn(value.UpdatedAt)
     };

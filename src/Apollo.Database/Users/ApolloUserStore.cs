@@ -5,6 +5,8 @@ using Apollo.Domain.Users.ValueObjects;
 
 using FluentResults;
 
+using JasperFx.Events.Projections;
+
 using Marten;
 
 namespace Apollo.Database.Users;
@@ -15,7 +17,13 @@ public sealed class ApolloUserStore(ApolloConnectionString connectionString) : I
   {
     opts.Connection(connectionString.Value);
 
+    _ = opts.Schema.For<ApolloUser>()
+      .Identity(x => x.Id)
+      .UniqueIndex(x => x.Username);
+
     _ = opts.Events.AddEventType<UserCreatedEvent>();
+
+    opts.Projections.Add<ApolloUserProjection>(ProjectionLifecycle.Inline);
   });
 
   public async Task<Result<User>> GetOrCreateUserAsync(Username username, CancellationToken cancellationToken = default)
@@ -23,7 +31,7 @@ public sealed class ApolloUserStore(ApolloConnectionString connectionString) : I
     await using var session = _store.LightweightSession();
 
     var dbUser = session.Query<ApolloUser>()
-      .Where(u => u.Username == username)
+      .Where(u => u.Username == username.Value)
       .FirstOrDefault();
 
     if (dbUser is not null)
@@ -32,7 +40,7 @@ public sealed class ApolloUserStore(ApolloConnectionString connectionString) : I
     }
 
     var userId = Guid.NewGuid();
-    var userCreated = new UserCreatedEvent(userId, username, DateTime.UtcNow);
+    var userCreated = new UserCreatedEvent(userId, username.Value, DateTime.UtcNow);
 
     _ = session.Events.StartStream<ApolloUser>(userId, userCreated);
     await session.SaveChangesAsync(cancellationToken);
