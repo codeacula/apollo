@@ -3,7 +3,7 @@ using Apollo.Core.Infrastructure.API;
 using Apollo.Core.Infrastructure.Cache;
 using Apollo.Core.Logging;
 using Apollo.Discord.Config;
-using Apollo.Domain.Users.ValueObjects;
+using Apollo.Domain.People.ValueObjects;
 
 using NetCord.Gateway;
 using NetCord.Hosting.Gateway;

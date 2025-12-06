@@ -1,6 +1,6 @@
 using Apollo.Core.Exceptions;
 using Apollo.Core.Infrastructure.Data;
-using Apollo.Database.Users;
+using Apollo.Database.People;
 
 using Marten;
 

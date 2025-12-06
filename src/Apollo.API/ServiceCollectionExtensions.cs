@@ -1,4 +1,4 @@
-using Apollo.Core.Exceptions;
+using Apollo.Core.Data;
 
 using Quartz;
 
