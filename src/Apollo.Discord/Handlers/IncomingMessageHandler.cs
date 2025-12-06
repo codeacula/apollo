@@ -1,5 +1,6 @@
 using Apollo.Core.API;
 using Apollo.Core.Conversations;
+using Apollo.Core.Logging;
 using Apollo.Core.People;
 using Apollo.Discord.Config;
 using Apollo.Domain.People.ValueObjects;
@@ -27,20 +28,20 @@ public class IncomingMessageHandler(
 
     // Validate user access
     var username = new Username(arg.Author.Username, ApolloPlatform.Discord);
-    // var validationResult = await userCache.GetUserAccessAsync(username);
-    // if (validationResult.IsFailed || validationResult is null)
-    // {
-    //   ValidationLogs.ValidationFailed(logger, username, string.Join(", ", validationResult?.Errors.Select(e => e.Message) ?? []));
-    //   _ = await arg.SendAsync("Sorry, unable to verify your access at this time.");
-    //   return;
-    // }
+    var validationResult = await personCache.GetAccessAsync(username);
+    if (validationResult.IsFailed || validationResult is null)
+    {
+      ValidationLogs.ValidationFailed(logger, username, string.Join(", ", validationResult?.Errors.Select(e => e.Message) ?? []));
+      _ = await arg.SendAsync("Sorry, unable to verify your access at this time.");
+      return;
+    }
 
-    // if (validationResult.Value is not null && !validationResult.Value.Value)
-    // {
-    //   ValidationLogs.AccessDenied(logger, username);
-    //   _ = await arg.SendAsync("Sorry, you do not have access to use this bot.");
-    //   return;
-    // }
+    if (validationResult.Value is not null && !validationResult.Value.Value)
+    {
+      ValidationLogs.AccessDenied(logger, username);
+      _ = await arg.SendAsync("Sorry, you do not have access to use this bot.");
+      return;
+    }
 
     // Send request to API
     try

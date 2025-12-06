@@ -4,4 +4,4 @@ using FluentResults;
 
 namespace Apollo.Application.Conversations;
 
-public sealed record ProcessIncomingMessageCommmand(NewMessage Message) : IRequest<Result<string>>;
+public sealed record ProcessIncomingMessageCommand(NewMessage Message) : IRequest<Result<string>>;
