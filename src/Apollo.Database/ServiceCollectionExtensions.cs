@@ -28,24 +28,22 @@ public static class ServiceCollectionExtensions
 
 
     _ = services
-      .AddMarten(options => options.Connection(connectionString))
-      .UseLightweightSessions();
-
-    _ = services.AddScoped<IPersonStore, PersonStore>();
-
-    _ = services.AddSingleton(() =>
-    {
-      return DocumentStore.For(opts =>
+      .AddMarten(options =>
       {
-        opts.Connection(connectionString);
+        options.Connection(connectionString);
 
-        _ = opts.Schema.For<Person>()
+        _ = options.Schema.For<Person>()
           .Identity(x => x.Id)
           .UniqueIndex(x => x.Username);
 
-        _ = opts.Events.AddEventType<PersonCreatedEvent>();
-      });
-    });
+        _ = options.Events.AddEventType<PersonCreatedEvent>();
+        _ = options.Events.AddEventType<AccessGrantedEvent>();
+        _ = options.Events.AddEventType<AccessRevokedEvent>();
+        _ = options.Events.AddEventType<PersonUpdatedEvent>();
+      })
+      .UseLightweightSessions();
+
+    _ = services.AddScoped<IPersonStore, PersonStore>();
 
     return services;
   }
