@@ -9,10 +9,9 @@ public class PersonIdTests
   {
     // Arrange
     var guid = Guid.NewGuid();
-    var personId = new PersonId(guid);
 
     // Act
-    Guid result = personId;
+    Guid result = new PersonId(guid);
 
     // Assert
     Assert.Equal(guid, result);

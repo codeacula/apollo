@@ -38,11 +38,8 @@ public class UsernameTests
   [Fact]
   public void ImplicitCastToStringReturnsValue()
   {
-    // Arrange
-    var username = new Username("testuser", Platform.Discord);
-
     // Act
-    string value = username;
+    string value = new Username("testuser", Platform.Discord);
 
     // Assert
     Assert.Equal("testuser", value);
