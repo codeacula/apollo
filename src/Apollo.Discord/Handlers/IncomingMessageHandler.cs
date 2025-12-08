@@ -36,7 +36,7 @@ public class IncomingMessageHandler(
       return;
     }
 
-    if (!validationResult.Value!.Value)
+    if (!validationResult.Value ?? false)
     {
       ValidationLogs.AccessDenied(logger, username);
       _ = await arg.SendAsync("Sorry, you do not have access to use this bot.");

@@ -25,6 +25,20 @@ public sealed record DbMessage
     };
   }
 
+  public static DbMessage Create(IEvent<ConversationStartedEvent> ev)
+  {
+    var eventData = ev.Data;
+
+    return new()
+    {
+      Id = Guid.NewGuid(),
+      ConversationId = eventData.Id,
+      Content = eventData.Message,
+      FromUser = true,
+      CreatedOn = eventData.CreatedOn
+    };
+  }
+
   public static DbMessage Create(IEvent<UserSentMessageEvent> ev)
   {
     var eventData = ev.Data;

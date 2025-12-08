@@ -34,7 +34,7 @@ public sealed record DbConversation
       Id = eventData.Id,
       CreatedOn = eventData.CreatedOn,
       UpdatedOn = eventData.CreatedOn,
-      Messages = [],
+      Messages = [DbMessage.Create(ev)],
       PersonId = eventData.PersonId
     };
   }

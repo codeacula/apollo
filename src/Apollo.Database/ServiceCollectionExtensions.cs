@@ -1,5 +1,8 @@
+using Apollo.Core.Conversations;
 using Apollo.Core.Data;
 using Apollo.Core.People;
+using Apollo.Database.Conversations;
+using Apollo.Database.Conversations.Events;
 using Apollo.Database.People;
 using Apollo.Database.People.Events;
 
@@ -40,10 +43,18 @@ public static class ServiceCollectionExtensions
         _ = options.Events.AddEventType<AccessGrantedEvent>();
         _ = options.Events.AddEventType<AccessRevokedEvent>();
         _ = options.Events.AddEventType<PersonUpdatedEvent>();
+
+        _ = options.Schema.For<DbConversation>()
+          .Identity(x => x.Id);
+
+        _ = options.Events.AddEventType<ConversationStartedEvent>();
+        _ = options.Events.AddEventType<UserSentMessageEvent>();
       })
       .UseLightweightSessions();
 
-    _ = services.AddScoped<IPersonStore, PersonStore>();
+    _ = services
+      .AddScoped<IConversationStore, ConversationStore>()
+      .AddScoped<IPersonStore, PersonStore>();
 
     return services;
   }
