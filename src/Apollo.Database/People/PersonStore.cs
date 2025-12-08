@@ -1,26 +1,24 @@
 using Apollo.Core.People;
 using Apollo.Database.People.Events;
 using Apollo.Domain.Common.Enums;
+using Apollo.Domain.People.Models;
 using Apollo.Domain.People.ValueObjects;
 
 using FluentResults;
 
 using Marten;
 
-using DbPerson = Apollo.Database.People.Person;
-using MPerson = Apollo.Domain.People.Models.Person;
-
 namespace Apollo.Database.People;
 
 public sealed class PersonStore(SuperAdminConfig SuperAdminConfig, IDocumentSession session, TimeProvider timeProvider) : IPersonStore
 {
-  public async Task<Result<MPerson>> GetByUsernameAsync(Username username, CancellationToken cancellationToken = default)
+  public async Task<Result<Person>> GetByUsernameAsync(Username username, CancellationToken cancellationToken = default)
   {
     try
     {
       var dbUserResult = await session.Query<DbPerson>().FirstOrDefaultAsync(u => u.Username == username.Value && u.Platform == username.Platform, cancellationToken);
 
-      return dbUserResult is not null ? Result.Ok((MPerson)dbUserResult) : Result.Fail<MPerson>($"User with username {username.Value} not found");
+      return dbUserResult is not null ? Result.Ok((Person)dbUserResult) : Result.Fail<Person>($"User with username {username.Value} not found");
     }
     catch (Exception ex)
     {
@@ -28,7 +26,7 @@ public sealed class PersonStore(SuperAdminConfig SuperAdminConfig, IDocumentSess
     }
   }
 
-  public async Task<Result<MPerson>> CreateAsync(PersonId id, Username username, CancellationToken cancellationToken = default)
+  public async Task<Result<Person>> CreateAsync(PersonId id, Username username, CancellationToken cancellationToken = default)
   {
     try
     {
@@ -47,7 +45,7 @@ public sealed class PersonStore(SuperAdminConfig SuperAdminConfig, IDocumentSess
 
       var newPerson = await session.Events.AggregateStreamAsync<DbPerson>(id.Value, token: cancellationToken);
 
-      return newPerson is null ? Result.Fail<MPerson>($"Failed to create new user {username}") : Result.Ok((MPerson)newPerson);
+      return newPerson is null ? Result.Fail<Person>($"Failed to create new user {username}") : Result.Ok((Person)newPerson);
     }
     catch (Exception ex)
     {
@@ -76,12 +74,12 @@ public sealed class PersonStore(SuperAdminConfig SuperAdminConfig, IDocumentSess
     }
   }
 
-  public async Task<Result<MPerson>> GetAsync(PersonId id, CancellationToken cancellationToken = default)
+  public async Task<Result<Person>> GetAsync(PersonId id, CancellationToken cancellationToken = default)
   {
     try
     {
       var dbUser = await session.Query<DbPerson>().FirstOrDefaultAsync(u => u.Id == id.Value, cancellationToken);
-      return dbUser is null ? Result.Fail<MPerson>($"User with ID {id} not found") : Result.Ok((MPerson)dbUser);
+      return dbUser is null ? Result.Fail<Person>($"User with ID {id} not found") : Result.Ok((Person)dbUser);
     }
     catch (Exception ex)
     {

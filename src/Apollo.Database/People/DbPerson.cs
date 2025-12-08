@@ -1,13 +1,12 @@
 using Apollo.Database.People.Events;
 using Apollo.Domain.Common.Enums;
+using Apollo.Domain.People.Models;
 
 using JasperFx.Events;
 
-using MPerson = Apollo.Domain.People.Models.Person;
-
 namespace Apollo.Database.People;
 
-public sealed record Person
+public sealed record DbPerson
 {
   public Guid Id { get; init; }
   public required string Username { get; init; }
@@ -16,7 +15,7 @@ public sealed record Person
   public DateTime CreatedOn { get; init; }
   public DateTime UpdatedOn { get; init; }
 
-  public static explicit operator MPerson(Person person)
+  public static explicit operator Person(DbPerson person)
   {
     return new()
     {
@@ -28,7 +27,7 @@ public sealed record Person
     };
   }
 
-  public static Person Create(IEvent<PersonCreatedEvent> ev)
+  public static DbPerson Create(IEvent<PersonCreatedEvent> ev)
   {
     var eventData = ev.Data;
 
@@ -43,7 +42,7 @@ public sealed record Person
     };
   }
 
-  public static Person Apply(IEvent<AccessGrantedEvent> ev, Person person)
+  public static DbPerson Apply(IEvent<AccessGrantedEvent> ev, DbPerson person)
   {
     return person with
     {
@@ -52,7 +51,7 @@ public sealed record Person
     };
   }
 
-  public static Person Apply(IEvent<AccessRevokedEvent> ev, Person person)
+  public static DbPerson Apply(IEvent<AccessRevokedEvent> ev, DbPerson person)
   {
     return person with
     {
@@ -61,7 +60,7 @@ public sealed record Person
     };
   }
 
-  public static Person Apply(IEvent<PersonUpdatedEvent> ev, Person person)
+  public static DbPerson Apply(IEvent<PersonUpdatedEvent> ev, DbPerson person)
   {
     return person with
     {

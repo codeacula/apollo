@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-using Person = Apollo.Database.People.Person;
+using DbPerson = Apollo.Database.People.DbPerson;
 
 namespace Apollo.Database;
 
@@ -32,7 +32,7 @@ public static class ServiceCollectionExtensions
       {
         options.Connection(connectionString);
 
-        _ = options.Schema.For<Person>()
+        _ = options.Schema.For<DbPerson>()
           .Identity(x => x.Id)
           .UniqueIndex(x => x.Username);
 

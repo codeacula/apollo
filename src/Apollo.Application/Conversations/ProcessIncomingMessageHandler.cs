@@ -5,6 +5,7 @@ using Apollo.AI.Enums;
 using Apollo.Core.Conversations;
 using Apollo.Core.Logging;
 using Apollo.Core.People;
+using Apollo.Domain.Common.ValueObjects;
 using Apollo.Domain.Conversations.Models;
 using Apollo.Domain.People.ValueObjects;
 
@@ -21,7 +22,7 @@ public sealed class ProcessIncomingMessageCommandHandler(
   IPersonCache personCache
 ) : IRequestHandler<ProcessIncomingMessageCommand, Result<Reply>>
 {
-  public async Task<Result<Reply>> Handle(ProcessIncomingMessageCommand request, CancellationToken cancellationToken)
+  public async Task<Result<Reply>> Handle(ProcessIncomingMessageCommand request, CancellationToken cancellationToken = default)
   {
     try
     {
@@ -58,8 +59,16 @@ public sealed class ProcessIncomingMessageCommandHandler(
         return Result.Fail<Reply>("Message content is empty.");
       }
 
-      var conversation = await conversationStore.GetConversationByPersonIdAsync(userResult.Value.Id);
-      await conversationStore.AddMessageAsync(conversation.Id, request.Message);
+      var convoResult = await conversationStore.GetOrCreateConversationByPersonIdAsync(userResult.Value.Id, new(request.Message.Content), cancellationToken);
+
+      if (convoResult.IsFailed)
+      {
+        return Result.Fail<Reply>("Unable to fetch conversation.");
+      }
+
+      var conversation = convoResult.Value;
+
+      _ = await conversationStore.AddMessageAsync(conversation.Id, new Content(request.Message.Content), cancellationToken);
 
       conversation.Messages.Add(new Message
       {
