@@ -5,7 +5,7 @@ namespace Apollo.Domain.Tests.Common.ValueObjects;
 public class ContentTests
 {
   [Fact]
-  public void Content_StoresValue()
+  public void ContentStoresValue()
   {
     // Arrange & Act
     var content = new Content("Test content");
@@ -15,7 +15,7 @@ public class ContentTests
   }
 
   [Fact]
-  public void Content_Equality_WorksCorrectly()
+  public void ContentEqualityWorksCorrectly()
   {
     // Arrange
     var content1 = new Content("Test");

@@ -5,7 +5,7 @@ namespace Apollo.Domain.Tests.People.ValueObjects;
 public class PersonIdTests
 {
   [Fact]
-  public void ImplicitCastToGuid_ReturnsValue()
+  public void ImplicitCastToGuidReturnsValue()
   {
     // Arrange
     var guid = Guid.NewGuid();
@@ -19,7 +19,7 @@ public class PersonIdTests
   }
 
   [Fact]
-  public void PersonId_Equality_WorksCorrectly()
+  public void PersonIdEqualityWorksCorrectly()
   {
     // Arrange
     var guid = Guid.NewGuid();
@@ -33,7 +33,7 @@ public class PersonIdTests
   }
 
   [Fact]
-  public void PersonId_Value_IsAccessible()
+  public void PersonIdValueIsAccessible()
   {
     // Arrange
     var guid = Guid.NewGuid();

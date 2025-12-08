@@ -6,7 +6,7 @@ namespace Apollo.Domain.Tests.People.ValueObjects;
 public class UsernameTests
 {
   [Fact]
-  public void IsValid_WithNonEmptyValue_ReturnsTrue()
+  public void IsValidWithNonEmptyValueReturnsTrue()
   {
     // Arrange
     var username = new Username("testuser", Platform.Discord);
@@ -16,7 +16,7 @@ public class UsernameTests
   }
 
   [Fact]
-  public void IsValid_WithEmptyValue_ReturnsFalse()
+  public void IsValidWithEmptyValueReturnsFalse()
   {
     // Arrange
     var username = new Username("", Platform.Discord);
@@ -26,7 +26,7 @@ public class UsernameTests
   }
 
   [Fact]
-  public void IsValid_WithWhitespaceValue_ReturnsFalse()
+  public void IsValidWithWhitespaceValueReturnsFalse()
   {
     // Arrange
     var username = new Username("   ", Platform.Discord);
@@ -36,7 +36,7 @@ public class UsernameTests
   }
 
   [Fact]
-  public void ImplicitCastToString_ReturnsValue()
+  public void ImplicitCastToStringReturnsValue()
   {
     // Arrange
     var username = new Username("testuser", Platform.Discord);
@@ -49,7 +49,7 @@ public class UsernameTests
   }
 
   [Fact]
-  public void Username_WithPlatform_StoresPlatform()
+  public void UsernameWithPlatformStoresPlatform()
   {
     // Arrange & Act
     var username = new Username("testuser", Platform.Discord);
@@ -59,7 +59,7 @@ public class UsernameTests
   }
 
   [Fact]
-  public void Username_Equality_WorksCorrectly()
+  public void UsernameEqualityWorksCorrectly()
   {
     // Arrange
     var username1 = new Username("testuser", Platform.Discord);

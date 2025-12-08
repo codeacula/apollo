@@ -5,7 +5,7 @@ namespace Apollo.Core.Tests.API;
 public class ApiResponseTests
 {
   [Fact]
-  public void ApiResponse_WithData_IsSuccess()
+  public void ApiResponseWithDataIsSuccess()
   {
     // Arrange & Act
     var response = new ApiResponse<string>("test data");
@@ -17,7 +17,7 @@ public class ApiResponseTests
   }
 
   [Fact]
-  public void ApiResponse_WithError_IsNotSuccess()
+  public void ApiResponseWithErrorIsNotSuccess()
   {
     // Arrange
     var error = new APIError("ERR001", "Test error");
@@ -32,7 +32,7 @@ public class ApiResponseTests
   }
 
   [Fact]
-  public void ApiResponse_ErrorProperties_AreAccessible()
+  public void ApiResponseErrorPropertiesAreAccessible()
   {
     // Arrange
     var error = new APIError("ERR001", "Test error");

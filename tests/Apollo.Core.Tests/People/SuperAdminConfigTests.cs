@@ -5,7 +5,7 @@ namespace Apollo.Core.Tests.People;
 public class SuperAdminConfigTests
 {
   [Fact]
-  public void SuperAdminConfig_CanBeInitialized()
+  public void SuperAdminConfigCanBeInitialized()
   {
     // Arrange & Act
     var config = new SuperAdminConfig
@@ -18,7 +18,7 @@ public class SuperAdminConfigTests
   }
 
   [Fact]
-  public void SuperAdminConfig_AllowsNullUsername()
+  public void SuperAdminConfigAllowsNullUsername()
   {
     // Arrange & Act
     var config = new SuperAdminConfig
@@ -31,7 +31,7 @@ public class SuperAdminConfigTests
   }
 
   [Fact]
-  public void SuperAdminConfig_DefaultsToNull()
+  public void SuperAdminConfigDefaultsToNull()
   {
     // Arrange & Act
     var config = new SuperAdminConfig();

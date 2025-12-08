@@ -29,7 +29,7 @@ public class PersonServiceTests
   }
 
   [Fact]
-  public async Task GetOrCreateAsync_WithValidUsername_ReturnsExistingUser()
+  public async Task GetOrCreateAsyncWithValidUsernameReturnsExistingUser()
   {
     // Arrange
     var username = new Username("testuser", Platform.Discord);
@@ -57,7 +57,7 @@ public class PersonServiceTests
   }
 
   [Fact]
-  public async Task GetOrCreateAsync_WithValidUsername_CreatesNewUserWhenNotFound()
+  public async Task GetOrCreateAsyncWithValidUsernameCreatesNewUserWhenNotFound()
   {
     // Arrange
     var username = new Username("newuser", Platform.Discord);
@@ -88,7 +88,7 @@ public class PersonServiceTests
   }
 
   [Fact]
-  public async Task GetOrCreateAsync_WithInvalidUsername_ReturnsFailure()
+  public async Task GetOrCreateAsyncWithInvalidUsernameReturnsFailure()
   {
     // Arrange
     var username = new Username("", Platform.Discord);
@@ -102,7 +102,7 @@ public class PersonServiceTests
   }
 
   [Fact]
-  public async Task GrantAccessAsync_WithValidUsername_GrantsAccess()
+  public async Task GrantAccessAsyncWithValidUsernameGrantsAccess()
   {
     // Arrange
     var username = new Username("testuser", Platform.Discord);
@@ -132,7 +132,7 @@ public class PersonServiceTests
   }
 
   [Fact]
-  public async Task GrantAccessAsync_WithInvalidUsername_ReturnsFailure()
+  public async Task GrantAccessAsyncWithInvalidUsernameReturnsFailure()
   {
     // Arrange
     var username = new Username("", Platform.Discord);
@@ -146,7 +146,7 @@ public class PersonServiceTests
   }
 
   [Fact]
-  public async Task GrantAccessAsync_WithNonExistentUser_ReturnsFailure()
+  public async Task GrantAccessAsyncWithNonExistentUserReturnsFailure()
   {
     // Arrange
     var username = new Username("nonexistent", Platform.Discord);
@@ -164,7 +164,7 @@ public class PersonServiceTests
   }
 
   [Fact]
-  public async Task HasAccessAsync_WithValidUsername_ReturnsCachedValue()
+  public async Task HasAccessAsyncWithValidUsernameReturnsCachedValue()
   {
     // Arrange
     var username = new Username("testuser", Platform.Discord);
@@ -182,7 +182,7 @@ public class PersonServiceTests
   }
 
   [Fact]
-  public async Task HasAccessAsync_WithInvalidUsername_ReturnsFailure()
+  public async Task HasAccessAsyncWithInvalidUsernameReturnsFailure()
   {
     // Arrange
     var username = new Username("", Platform.Discord);
@@ -196,7 +196,7 @@ public class PersonServiceTests
   }
 
   [Fact]
-  public async Task HasAccessAsync_WhenCacheFails_ReturnsFailure()
+  public async Task HasAccessAsyncWhenCacheFailsReturnsFailure()
   {
     // Arrange
     var username = new Username("testuser", Platform.Discord);
@@ -214,7 +214,7 @@ public class PersonServiceTests
   }
 
   [Fact]
-  public async Task HasAccessAsync_WhenCacheReturnsNull_ReturnsTrue()
+  public async Task HasAccessAsyncWhenCacheReturnsNullReturnsTrue()
   {
     // Arrange
     var username = new Username("testuser", Platform.Discord);

@@ -5,7 +5,7 @@ namespace Apollo.Domain.Tests.Common.ValueObjects;
 public class DisplayNameTests
 {
   [Fact]
-  public void DisplayName_StoresValue()
+  public void DisplayNameStoresValue()
   {
     // Arrange & Act
     var displayName = new DisplayName("Test Display Name");
@@ -15,7 +15,7 @@ public class DisplayNameTests
   }
 
   [Fact]
-  public void DisplayName_Equality_WorksCorrectly()
+  public void DisplayNameEqualityWorksCorrectly()
   {
     // Arrange
     var displayName1 = new DisplayName("Test");
