@@ -49,4 +49,10 @@ public static partial class CacheLogs
     Level = LogLevel.Error,
     Message = "Error deleting from cache for user: {Username}")]
   public static partial void CacheDeleteError(ILogger logger, Exception exception, string username);
+
+  [LoggerMessage(
+    EventId = 3007,
+    Level = LogLevel.Error,
+    Message = "Unable to set value to cache: {ErrorMessages}")]
+  public static partial void UnableToSetToCache(ILogger logger, string[] errorMessages);
 }

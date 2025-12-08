@@ -12,7 +12,7 @@ public sealed class ApolloGrpcService(IMediator mediator) : IApolloGrpcService
   {
     var requestResult = await mediator.Send(new ProcessIncomingMessageCommand(message));
     return requestResult.IsSuccess ?
-      requestResult.Value :
+      requestResult.Value.Content.Value :
       requestResult.Errors.Select(e => new GrpcError(e.Message)).ToArray();
   }
 }

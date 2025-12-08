@@ -1,4 +1,5 @@
 using Apollo.AI;
+using Apollo.Core.Logging;
 using Apollo.Core.People;
 using Apollo.Domain.People.ValueObjects;
 
@@ -8,11 +9,12 @@ namespace Apollo.Application.Conversations;
 
 public sealed class ProcessIncomingMessageCommandHandler(
   IApolloAIAgent apolloAIAgent,
+  ILogger<ProcessIncomingMessageCommandHandler> logger,
   IPersonService personService,
   IPersonCache personCache
-) : IRequestHandler<ProcessIncomingMessageCommand, Result<string>>
+) : IRequestHandler<ProcessIncomingMessageCommand, Result<Reply>>
 {
-  public async Task<Result<string>> Handle(ProcessIncomingMessageCommand request, CancellationToken cancellationToken)
+  public async Task<Result<Reply>> Handle(ProcessIncomingMessageCommand request, CancellationToken cancellationToken)
   {
     try
     {
@@ -21,7 +23,7 @@ public sealed class ProcessIncomingMessageCommandHandler(
 
       if (userResult.IsFailed)
       {
-        return Result.Fail<string>($"Failed to get or create user {request.Message.Username}: {string.Join(", ", userResult.Errors.Select(e => e.Message))}");
+        return Result.Fail<Reply>($"Failed to get or create user {request.Message.Username}: {string.Join(", ", userResult.Errors.Select(e => e.Message))}");
       }
 
       // Check user for access
@@ -31,21 +33,27 @@ public sealed class ProcessIncomingMessageCommandHandler(
 
       if (cacheResult.IsFailed)
       {
-        // TODO: Log cache set failure
+        CacheLogs.UnableToSetToCache(logger, [.. cacheResult.Errors.Select(e => e.Message)]);
       }
 
       if (!hasAccess)
       {
-        return Result.Fail<string>($"User {username.Value} does not have access.");
+        return Result.Fail<Reply>($"User {username.Value} does not have access.");
       }
 
       // Hand message to AI here
       var response = await apolloAIAgent.ChatAsync(username, request.Message.Content, cancellationToken);
-      return Result.Ok(response);
+
+      return Result.Ok(new Reply
+      {
+        Content = new(response),
+        CreatedOn = new(DateTime.UtcNow),
+        UpdatedOn = new(DateTime.UtcNow)
+      });
     }
     catch (Exception ex)
     {
-      return Result.Fail<string>(ex.Message);
+      return Result.Fail<Reply>(ex.Message);
     }
   }
 }

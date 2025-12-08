@@ -200,7 +200,7 @@ Type declarations
           Id,
           player.Id,
           player.Name,
-          _dateTimeProvider.Now);
+          _dateTimeProvider.UtcNow);
 
       Apply(@event);
       AddEvent(@event);

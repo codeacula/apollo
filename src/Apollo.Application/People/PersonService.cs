@@ -5,8 +5,6 @@ using Apollo.Domain.People.ValueObjects;
 
 using FluentResults;
 
-using Microsoft.Extensions.Logging;
-
 namespace Apollo.Application.People;
 
 public sealed class PersonService(
