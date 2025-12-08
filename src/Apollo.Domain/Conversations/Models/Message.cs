@@ -4,4 +4,12 @@ using Apollo.Domain.People.ValueObjects;
 
 namespace Apollo.Domain.Conversations.Models;
 
-public record Message(MessageId Id, PersonId SenderId, Content Content, CreatedOn CreatedOn);
+public record Message
+{
+  public MessageId Id { get; init; }
+  public ConversationId ConversationId { get; init; }
+  public PersonId PersonId { get; init; }
+  public Content Content { get; init; }
+  public CreatedOn CreatedOn { get; init; }
+  public FromUser FromUser { get; init; }
+}

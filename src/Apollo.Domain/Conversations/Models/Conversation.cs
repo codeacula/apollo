@@ -10,4 +10,5 @@ public record Conversation
   public PersonId PersonId { get; init; }
   public ICollection<Message> Messages { get; init; } = [];
   public CreatedOn CreatedOn { get; init; }
+  public UpdatedOn UpdatedOn { get; init; }
 }
