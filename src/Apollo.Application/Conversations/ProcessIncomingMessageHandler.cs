@@ -41,6 +41,14 @@ public sealed class ProcessIncomingMessageCommandHandler(
         return Result.Fail<Reply>($"User {username.Value} does not have access.");
       }
 
+      // TODO: Validate the request
+
+      // TODO: Store the incoming message
+
+      // TODO: Get the user's chat history here
+
+      // TODO: Set up AI context
+
       // Hand message to AI here
       var response = await apolloAIAgent.ChatAsync(username, request.Message.Content, cancellationToken);
 
