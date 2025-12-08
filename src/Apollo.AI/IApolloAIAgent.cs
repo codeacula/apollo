@@ -1,6 +1,8 @@
+using Apollo.AI.DTOs;
+
 namespace Apollo.AI;
 
 public interface IApolloAIAgent
 {
-  Task<string> ChatAsync(string username, string chatMessage, CancellationToken cancellationToken = default);
+  Task<string> ChatAsync(ChatCompletionRequest chatCompletionRequest, CancellationToken cancellationToken = default);
 }

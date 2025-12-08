@@ -1,3 +1,3 @@
 namespace Apollo.AI.DTOs;
 
-public sealed record ChatCompletionRequest(string SystemMessage, ICollection<ChatMessage> Messages);
+public sealed record ChatCompletionRequest(string SystemMessage, List<ChatMessage> Messages);

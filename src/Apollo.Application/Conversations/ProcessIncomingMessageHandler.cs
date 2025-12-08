@@ -1,6 +1,11 @@
 using Apollo.AI;
+using Apollo.AI.Config;
+using Apollo.AI.DTOs;
+using Apollo.AI.Enums;
+using Apollo.Core.Conversations;
 using Apollo.Core.Logging;
 using Apollo.Core.People;
+using Apollo.Domain.Conversations.Models;
 using Apollo.Domain.People.ValueObjects;
 
 using FluentResults;
@@ -8,7 +13,9 @@ using FluentResults;
 namespace Apollo.Application.Conversations;
 
 public sealed class ProcessIncomingMessageCommandHandler(
+  ApolloAIConfig aiConfig,
   IApolloAIAgent apolloAIAgent,
+  IConversationStore conversationStore,
   ILogger<ProcessIncomingMessageCommandHandler> logger,
   IPersonService personService,
   IPersonCache personCache
@@ -18,6 +25,11 @@ public sealed class ProcessIncomingMessageCommandHandler(
   {
     try
     {
+      if (string.IsNullOrEmpty(request.Message.Username))
+      {
+        return Result.Fail<Reply>("No username was provided.");
+      }
+
       var username = new Username(request.Message.Username, request.Message.Platform);
       var userResult = await personService.GetOrCreateAsync(username, cancellationToken);
 
@@ -41,16 +53,37 @@ public sealed class ProcessIncomingMessageCommandHandler(
         return Result.Fail<Reply>($"User {username.Value} does not have access.");
       }
 
-      // TODO: Validate the request
+      if (string.IsNullOrWhiteSpace(request.Message.Content))
+      {
+        return Result.Fail<Reply>("Message content is empty.");
+      }
 
-      // TODO: Store the incoming message
+      var conversation = await conversationStore.GetConversationByPersonIdAsync(userResult.Value.Id);
+      await conversationStore.AddMessageAsync(conversation.Id, request.Message);
 
-      // TODO: Get the user's chat history here
+      conversation.Messages.Add(new Message
+      {
+        Id = new(Guid.NewGuid()),
+        ConversationId = conversation.Id,
+        PersonId = userResult.Value.Id,
+        Content = new(request.Message.Content),
+        CreatedOn = new(DateTime.UtcNow),
+        FromUser = new(true),
+      });
 
-      // TODO: Set up AI context
+      string systemPrompt = aiConfig.SystemPrompt;
+
+      var messages = conversation.Messages.Select(m => new ChatMessage(
+            m.FromUser.Value ? ChatRole.User : ChatRole.Assistant,
+            m.Content.Value,
+            m.CreatedOn.Value
+          )
+        ).ToList();
+
+      var completionRequest = new ChatCompletionRequest(systemPrompt, messages);
 
       // Hand message to AI here
-      var response = await apolloAIAgent.ChatAsync(username, request.Message.Content, cancellationToken);
+      var response = await apolloAIAgent.ChatAsync(completionRequest, cancellationToken);
 
       return Result.Ok(new Reply
       {
