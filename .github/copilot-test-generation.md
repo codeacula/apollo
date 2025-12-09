@@ -3,7 +3,7 @@
 You are generating unit tests for a C# class in the Apollo project. Your goal is to create comprehensive, readable, and maintainable tests using Moq as the mocking framework.
 
 1. **Primary Guidance**:
-   - The definitive testing philosophy, conventions (including AAA pattern, naming `MethodUnderTest_GivenCondition_ShouldExpectedResult`), tooling (Moq, FluentAssertions, AutoFixture), and general best practices are detailed in the testing section of `.github/copilot-instructions.md`. You MUST adhere to all rules and guidelines in that section.
+   - The definitive testing philosophy, conventions (including AAA pattern, naming `MethodUnderTestGivenConditionShouldExpectedResult`), tooling (Moq, FluentAssertions, AutoFixture), and general best practices are detailed in the testing section of `.github/copilot-instructions.md`. You MUST adhere to all rules and guidelines in that section.
    - This document provides specific reminders and focus points for test generation with Moq.
 
 2. **Core Test Generation Requirements**:
@@ -73,7 +73,7 @@ You are generating unit tests for a C# class in the Apollo project. Your goal is
 
 ```csharp
 [Fact]
-public async Task MethodUnderTest_GivenSpecificCondition_ShouldReturnExpectedResult()
+public async Task MethodUnderTestGivenSpecificConditionShouldReturnExpectedResult()
 {
     // Arrange
     var fixture = new Fixture(); // AutoFixture instance if not a field
