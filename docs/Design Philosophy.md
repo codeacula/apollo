@@ -1,4 +1,4 @@
-# Design Phiolosophy
+ 
 
 - **Accent Color**: #3B5BA5
 - **Success Color**: #57F287

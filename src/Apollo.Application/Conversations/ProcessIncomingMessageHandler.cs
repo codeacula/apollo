@@ -1,5 +1,12 @@
 using Apollo.AI;
+using Apollo.AI.Config;
+using Apollo.AI.DTOs;
+using Apollo.AI.Enums;
+using Apollo.Core.Conversations;
+using Apollo.Core.Logging;
 using Apollo.Core.People;
+using Apollo.Domain.Common.ValueObjects;
+using Apollo.Domain.Conversations.Models;
 using Apollo.Domain.People.ValueObjects;
 
 using FluentResults;
@@ -7,21 +14,30 @@ using FluentResults;
 namespace Apollo.Application.Conversations;
 
 public sealed class ProcessIncomingMessageCommandHandler(
+  ApolloAIConfig aiConfig,
   IApolloAIAgent apolloAIAgent,
+  IConversationStore conversationStore,
+  ILogger<ProcessIncomingMessageCommandHandler> logger,
   IPersonService personService,
-  IPersonCache personCache
-) : IRequestHandler<ProcessIncomingMessageCommand, Result<string>>
+  IPersonCache personCache,
+  TimeProvider timeProvider
+) : IRequestHandler<ProcessIncomingMessageCommand, Result<Reply>>
 {
-  public async Task<Result<string>> Handle(ProcessIncomingMessageCommand request, CancellationToken cancellationToken)
+  public async Task<Result<Reply>> Handle(ProcessIncomingMessageCommand request, CancellationToken cancellationToken = default)
   {
     try
     {
+      if (string.IsNullOrEmpty(request.Message.Username))
+      {
+        return Result.Fail<Reply>("No username was provided.");
+      }
+
       var username = new Username(request.Message.Username, request.Message.Platform);
       var userResult = await personService.GetOrCreateAsync(username, cancellationToken);
 
       if (userResult.IsFailed)
       {
-        return Result.Fail<string>($"Failed to get or create user {request.Message.Username}: {string.Join(", ", userResult.Errors.Select(e => e.Message))}");
+        return Result.Fail<Reply>($"Failed to get or create user {request.Message.Username}: {string.Join(", ", userResult.Errors.Select(e => e.Message))}");
       }
 
       // Check user for access
@@ -31,21 +47,67 @@ public sealed class ProcessIncomingMessageCommandHandler(
 
       if (cacheResult.IsFailed)
       {
-        // TODO: Log cache set failure
+        CacheLogs.UnableToSetToCache(logger, [.. cacheResult.Errors.Select(e => e.Message)]);
       }
 
       if (!hasAccess)
       {
-        return Result.Fail<string>($"User {username.Value} does not have access.");
+        return Result.Fail<Reply>($"User {username.Value} does not have access.");
       }
 
+      var convoResult = await conversationStore.GetOrCreateConversationByPersonIdAsync(userResult.Value.Id, cancellationToken);
+
+      if (convoResult.IsFailed)
+      {
+        return Result.Fail<Reply>("Unable to fetch conversation.");
+      }
+
+      var conversation = convoResult.Value;
+
+      if (string.IsNullOrWhiteSpace(request.Message.Content))
+      {
+        return Result.Fail<Reply>("Message content is empty.");
+      }
+
+      _ = await conversationStore.AddMessageAsync(conversation.Id, new Content(request.Message.Content), cancellationToken);
+
+      conversation.Messages.Add(new Message
+      {
+        Id = new(Guid.NewGuid()),
+        ConversationId = conversation.Id,
+        PersonId = userResult.Value.Id,
+        Content = new(request.Message.Content),
+        CreatedOn = new(timeProvider.GetUtcNow().DateTime),
+        FromUser = new(true),
+      });
+
+      string systemPrompt = aiConfig.SystemPrompt;
+
+      var messages = conversation.Messages.Select(m => new ChatMessage(
+            m.FromUser.Value ? ChatRole.User : ChatRole.Assistant,
+            m.Content.Value,
+            m.CreatedOn.Value
+          )
+        ).ToList();
+
+      var completionRequest = new ChatCompletionRequest(systemPrompt, messages);
+
       // Hand message to AI here
-      var response = await apolloAIAgent.ChatAsync(username, request.Message.Content, cancellationToken);
-      return Result.Ok(response);
+      var response = await apolloAIAgent.ChatAsync(completionRequest, cancellationToken);
+
+      _ = await conversationStore.AddReplyAsync(conversation.Id, new Content(response), cancellationToken);
+
+      var currentTime = timeProvider.GetUtcNow().DateTime;
+      return Result.Ok(new Reply
+      {
+        Content = new(response),
+        CreatedOn = new(currentTime),
+        UpdatedOn = new(currentTime)
+      });
     }
     catch (Exception ex)
     {
-      return Result.Fail<string>(ex.Message);
+      return Result.Fail<Reply>(ex.Message);
     }
   }
 }

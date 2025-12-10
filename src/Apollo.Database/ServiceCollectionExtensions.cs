@@ -1,5 +1,8 @@
+using Apollo.Core.Conversations;
 using Apollo.Core.Data;
 using Apollo.Core.People;
+using Apollo.Database.Conversations;
+using Apollo.Database.Conversations.Events;
 using Apollo.Database.People;
 using Apollo.Database.People.Events;
 
@@ -9,7 +12,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-using Person = Apollo.Database.People.Person;
+using DbPerson = Apollo.Database.People.DbPerson;
 
 namespace Apollo.Database;
 
@@ -32,7 +35,7 @@ public static class ServiceCollectionExtensions
       {
         options.Connection(connectionString);
 
-        _ = options.Schema.For<Person>()
+        _ = options.Schema.For<DbPerson>()
           .Identity(x => x.Id)
           .UniqueIndex(x => x.Username);
 
@@ -40,10 +43,22 @@ public static class ServiceCollectionExtensions
         _ = options.Events.AddEventType<AccessGrantedEvent>();
         _ = options.Events.AddEventType<AccessRevokedEvent>();
         _ = options.Events.AddEventType<PersonUpdatedEvent>();
+
+        _ = options.Schema.For<DbConversation>()
+          .Identity(x => x.Id);
+
+        _ = options.Events.AddEventType<ConversationStartedEvent>();
+        _ = options.Events.AddEventType<UserSentMessageEvent>();
+        _ = options.Events.AddEventType<ApolloRepliedEvent>();
+
+        _ = options.Projections.Snapshot<DbPerson>(Marten.Events.Projections.SnapshotLifecycle.Inline);
+        _ = options.Projections.Snapshot<DbConversation>(Marten.Events.Projections.SnapshotLifecycle.Inline);
       })
       .UseLightweightSessions();
 
-    _ = services.AddScoped<IPersonStore, PersonStore>();
+    _ = services
+      .AddScoped<IConversationStore, ConversationStore>()
+      .AddScoped<IPersonStore, PersonStore>();
 
     return services;
   }

@@ -42,7 +42,7 @@ public class PersonServiceTests
       UpdatedOn = new UpdatedOn(DateTime.UtcNow)
     };
 
-    _mockPersonStore
+    _ = _mockPersonStore
       .Setup(x => x.GetByUsernameAsync(username, It.IsAny<CancellationToken>()))
       .ReturnsAsync(Result.Ok(expectedPerson));
 
@@ -70,11 +70,11 @@ public class PersonServiceTests
       UpdatedOn = new UpdatedOn(DateTime.UtcNow)
     };
 
-    _mockPersonStore
+    _ = _mockPersonStore
       .Setup(x => x.GetByUsernameAsync(username, It.IsAny<CancellationToken>()))
       .ReturnsAsync(Result.Fail<Person>("User not found"));
 
-    _mockPersonStore
+    _ = _mockPersonStore
       .Setup(x => x.CreateAsync(It.IsAny<PersonId>(), username, It.IsAny<CancellationToken>()))
       .ReturnsAsync(Result.Ok(createdPerson));
 
@@ -115,11 +115,11 @@ public class PersonServiceTests
       UpdatedOn = new UpdatedOn(DateTime.UtcNow)
     };
 
-    _mockPersonStore
+    _ = _mockPersonStore
       .Setup(x => x.GetByUsernameAsync(username, It.IsAny<CancellationToken>()))
       .ReturnsAsync(Result.Ok(person));
 
-    _mockPersonStore
+    _ = _mockPersonStore
       .Setup(x => x.GrantAccessAsync(person.Id, It.IsAny<CancellationToken>()))
       .ReturnsAsync(Result.Ok());
 
@@ -151,7 +151,7 @@ public class PersonServiceTests
     // Arrange
     var username = new Username("nonexistent", Platform.Discord);
 
-    _mockPersonStore
+    _ = _mockPersonStore
       .Setup(x => x.GetByUsernameAsync(username, It.IsAny<CancellationToken>()))
       .ReturnsAsync(Result.Fail<Person>("User not found"));
 
@@ -169,7 +169,7 @@ public class PersonServiceTests
     // Arrange
     var username = new Username("testuser", Platform.Discord);
 
-    _mockPersonCache
+    _ = _mockPersonCache
       .Setup(x => x.GetAccessAsync(username))
       .ReturnsAsync(Result.Ok<bool?>(true));
 
@@ -201,7 +201,7 @@ public class PersonServiceTests
     // Arrange
     var username = new Username("testuser", Platform.Discord);
 
-    _mockPersonCache
+    _ = _mockPersonCache
       .Setup(x => x.GetAccessAsync(username))
       .ReturnsAsync(Result.Fail<bool?>("Cache error"));
 
@@ -219,7 +219,7 @@ public class PersonServiceTests
     // Arrange
     var username = new Username("testuser", Platform.Discord);
 
-    _mockPersonCache
+    _ = _mockPersonCache
       .Setup(x => x.GetAccessAsync(username))
       .ReturnsAsync(Result.Ok<bool?>(null));
 
