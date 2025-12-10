@@ -54,12 +54,7 @@ public sealed class ProcessIncomingMessageCommandHandler(
         return Result.Fail<Reply>($"User {username.Value} does not have access.");
       }
 
-      if (string.IsNullOrWhiteSpace(request.Message.Content))
-      {
-        return Result.Fail<Reply>("Message content is empty.");
-      }
-
-      var convoResult = await conversationStore.GetOrCreateConversationByPersonIdAsync(userResult.Value.Id, new(request.Message.Content), cancellationToken);
+      var convoResult = await conversationStore.GetOrCreateConversationByPersonIdAsync(userResult.Value.Id, cancellationToken);
 
       if (convoResult.IsFailed)
       {
@@ -67,6 +62,11 @@ public sealed class ProcessIncomingMessageCommandHandler(
       }
 
       var conversation = convoResult.Value;
+
+      if (string.IsNullOrWhiteSpace(request.Message.Content))
+      {
+        return Result.Fail<Reply>("Message content is empty.");
+      }
 
       _ = await conversationStore.AddMessageAsync(conversation.Id, new Content(request.Message.Content), cancellationToken);
 

@@ -34,7 +34,7 @@ public sealed class ConversationStore(IDocumentSession session) : IConversationS
     }
   }
 
-  public async Task<Result<Conversation>> CreateAsync(PersonId id, Content message, CancellationToken cancellationToken = default)
+  public async Task<Result<Conversation>> CreateAsync(PersonId id, CancellationToken cancellationToken = default)
   {
     try
     {
@@ -43,7 +43,6 @@ public sealed class ConversationStore(IDocumentSession session) : IConversationS
       {
         Id = conversationId,
         PersonId = id.Value,
-        Message = message.Value,
         CreatedOn = DateTime.UtcNow
       };
 
@@ -86,13 +85,13 @@ public sealed class ConversationStore(IDocumentSession session) : IConversationS
     }
   }
 
-  public async Task<Result<Conversation>> GetOrCreateConversationByPersonIdAsync(PersonId personId, Content initialMessage, CancellationToken cancellationToken = default)
+  public async Task<Result<Conversation>> GetOrCreateConversationByPersonIdAsync(PersonId personId, CancellationToken cancellationToken = default)
   {
     try
     {
       var conversation = await session.Query<DbConversation>().FirstOrDefaultAsync(u => u.PersonId == personId.Value, cancellationToken);
 
-      return conversation is not null ? Result.Ok((Conversation)conversation) : await CreateAsync(personId, initialMessage, cancellationToken);
+      return conversation is not null ? Result.Ok((Conversation)conversation) : await CreateAsync(personId, cancellationToken);
     }
     catch (Exception ex)
     {
