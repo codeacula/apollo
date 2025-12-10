@@ -19,7 +19,8 @@ public sealed class ProcessIncomingMessageCommandHandler(
   IConversationStore conversationStore,
   ILogger<ProcessIncomingMessageCommandHandler> logger,
   IPersonService personService,
-  IPersonCache personCache
+  IPersonCache personCache,
+  TimeProvider timeProvider
 ) : IRequestHandler<ProcessIncomingMessageCommand, Result<Reply>>
 {
   public async Task<Result<Reply>> Handle(ProcessIncomingMessageCommand request, CancellationToken cancellationToken = default)
@@ -76,7 +77,7 @@ public sealed class ProcessIncomingMessageCommandHandler(
         ConversationId = conversation.Id,
         PersonId = userResult.Value.Id,
         Content = new(request.Message.Content),
-        CreatedOn = new(DateTime.UtcNow),
+        CreatedOn = new(timeProvider.GetUtcNow().DateTime),
         FromUser = new(true),
       });
 
@@ -96,11 +97,12 @@ public sealed class ProcessIncomingMessageCommandHandler(
 
       _ = await conversationStore.AddReplyAsync(conversation.Id, new Content(response), cancellationToken);
 
+      var currentTime = timeProvider.GetUtcNow().DateTime;
       return Result.Ok(new Reply
       {
         Content = new(response),
-        CreatedOn = new(DateTime.UtcNow),
-        UpdatedOn = new(DateTime.UtcNow)
+        CreatedOn = new(currentTime),
+        UpdatedOn = new(currentTime)
       });
     }
     catch (Exception ex)

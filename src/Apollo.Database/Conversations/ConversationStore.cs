@@ -11,7 +11,7 @@ using Marten;
 
 namespace Apollo.Database.Conversations;
 
-public sealed class ConversationStore(IDocumentSession session) : IConversationStore
+public sealed class ConversationStore(IDocumentSession session, TimeProvider timeProvider) : IConversationStore
 {
   public async Task<Result> AddMessageAsync(ConversationId conversationId, Content message, CancellationToken cancellationToken = default)
   {
@@ -21,7 +21,7 @@ public sealed class ConversationStore(IDocumentSession session) : IConversationS
       {
         Id = conversationId.Value,
         Message = message.Value,
-        CreatedOn = DateTime.UtcNow
+        CreatedOn = timeProvider.GetUtcNow().DateTime
       });
 
       await session.SaveChangesAsync(cancellationToken);
@@ -42,7 +42,7 @@ public sealed class ConversationStore(IDocumentSession session) : IConversationS
       {
         Id = conversationId.Value,
         Message = reply.Value,
-        CreatedOn = DateTime.UtcNow
+        CreatedOn = timeProvider.GetUtcNow().DateTime
       });
 
       await session.SaveChangesAsync(cancellationToken);
@@ -64,7 +64,7 @@ public sealed class ConversationStore(IDocumentSession session) : IConversationS
       {
         Id = conversationId,
         PersonId = id.Value,
-        CreatedOn = DateTime.UtcNow
+        CreatedOn = timeProvider.GetUtcNow().DateTime
       };
 
       _ = session.Events.StartStream<DbConversation>(conversationId, [ev]);
