@@ -49,6 +49,7 @@ public static class ServiceCollectionExtensions
 
         _ = options.Events.AddEventType<ConversationStartedEvent>();
         _ = options.Events.AddEventType<UserSentMessageEvent>();
+        _ = options.Events.AddEventType<ApolloRepliedEvent>();
 
         _ = options.Projections.Snapshot<DbPerson>(Marten.Events.Projections.SnapshotLifecycle.Inline);
         _ = options.Projections.Snapshot<DbConversation>(Marten.Events.Projections.SnapshotLifecycle.Inline);
