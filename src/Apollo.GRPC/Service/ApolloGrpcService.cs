@@ -47,8 +47,23 @@ public sealed class ApolloGrpcService(IMediator mediator) : IApolloGrpcService
 
   public async Task<GrpcResult<ToDoDto>> GetToDoAsync(Guid todoId)
   {
-    var query = new GetToDosByPersonIdQuery(new PersonId(Guid.Empty));
-    return new GrpcError("Not implemented - requires GetToDoQuery");
+    var query = new GetToDoByIdQuery(new ToDoId(todoId));
+    var result = await mediator.Send(query);
+
+    if (result.IsFailed)
+    {
+      return result.Errors.Select(e => new GrpcError(e.Message)).ToArray();
+    }
+
+    var todo = result.Value;
+    return new ToDoDto
+    {
+      Id = todo.Id.Value,
+      PersonId = todo.PersonId.Value,
+      Description = todo.Description.Value,
+      CreatedOn = todo.CreatedOn.Value,
+      UpdatedOn = todo.UpdatedOn.Value
+    };
   }
 
   public async Task<GrpcResult<ToDoDto[]>> GetPersonToDosAsync(Guid personId)

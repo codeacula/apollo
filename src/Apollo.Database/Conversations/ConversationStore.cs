@@ -13,7 +13,7 @@ namespace Apollo.Database.Conversations;
 
 public sealed class ConversationStore(IDocumentSession session, TimeProvider timeProvider) : IConversationStore
 {
-  public async Task<Result> AddMessageAsync(ConversationId conversationId, Content message, CancellationToken cancellationToken = default)
+  public async Task<Result<Conversation>> AddMessageAsync(ConversationId conversationId, Content message, CancellationToken cancellationToken = default)
   {
     try
     {
@@ -26,7 +26,9 @@ public sealed class ConversationStore(IDocumentSession session, TimeProvider tim
 
       await session.SaveChangesAsync(cancellationToken);
 
-      return Result.Ok();
+      var conversation = await GetAsync(conversationId, cancellationToken);
+
+      return Result.Ok(conversation.Value);
     }
     catch (Exception ex)
     {
@@ -34,7 +36,7 @@ public sealed class ConversationStore(IDocumentSession session, TimeProvider tim
     }
   }
 
-  public async Task<Result> AddReplyAsync(ConversationId conversationId, Content reply, CancellationToken cancellationToken = default)
+  public async Task<Result<Conversation>> AddReplyAsync(ConversationId conversationId, Content reply, CancellationToken cancellationToken = default)
   {
     try
     {
@@ -47,7 +49,9 @@ public sealed class ConversationStore(IDocumentSession session, TimeProvider tim
 
       await session.SaveChangesAsync(cancellationToken);
 
-      return Result.Ok();
+      var conversation = await GetAsync(conversationId, cancellationToken);
+
+      return Result.Ok(conversation.Value);
     }
     catch (Exception ex)
     {

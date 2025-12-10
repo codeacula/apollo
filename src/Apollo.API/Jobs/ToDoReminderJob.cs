@@ -7,7 +7,7 @@ using Quartz;
 namespace Apollo.API.Jobs;
 
 [DisallowConcurrentExecution]
-public class ToDoReminderJob(
+public partial class ToDoReminderJob(
   IToDoStore toDoStore,
   IPersonStore personStore,
   ILogger<ToDoReminderJob> logger,
@@ -17,19 +17,19 @@ public class ToDoReminderJob(
   {
     try
     {
-      logger.LogInformation("ToDoReminderJob started at {Time}", timeProvider.GetUtcNow());
+      LogJobStarted(timeProvider.GetUtcNow());
 
       var currentTime = timeProvider.GetUtcNow().DateTime;
       var dueTasksResult = await toDoStore.GetDueTasksAsync(currentTime, context.CancellationToken);
 
       if (dueTasksResult.IsFailed)
       {
-        logger.LogError("Failed to retrieve due todos: {Errors}", string.Join(", ", dueTasksResult.Errors.Select(e => e.Message)));
+        LogFailedToRetrieveToDos(string.Join(", ", dueTasksResult.Errors.Select(e => e.Message)));
         return;
       }
 
       var dueToDos = dueTasksResult.Value.ToList();
-      logger.LogInformation("Found {Count} todos with due reminders", dueToDos.Count);
+      LogFoundDueToDos(dueToDos.Count);
 
       foreach (var todo in dueToDos)
       {
@@ -38,7 +38,7 @@ public class ToDoReminderJob(
           var personResult = await personStore.GetAsync(todo.PersonId, context.CancellationToken);
           if (personResult.IsFailed)
           {
-            logger.LogWarning("Failed to get person {PersonId} for todo {ToDoId}", todo.PersonId.Value, todo.Id.Value);
+            LogFailedToGetPerson(todo.PersonId.Value, todo.Id.Value);
             continue;
           }
 
@@ -46,24 +46,48 @@ public class ToDoReminderJob(
 
           if (person.Username.Platform == Platform.Discord)
           {
-            logger.LogInformation("Sending reminder for todo {ToDoId} to user {Username}",
-              todo.Id.Value, person.Username.Value);
-
-            logger.LogInformation("REMINDER for {Username}: {Description}",
-              person.Username.Value, todo.Description.Value);
+            LogSendingReminder(todo.Id.Value, person.Username.Value);
+            LogReminder(person.Username.Value, todo.Description.Value);
           }
         }
         catch (Exception ex)
         {
-          logger.LogError(ex, "Error processing reminder for todo {ToDoId}", todo.Id.Value);
+          LogErrorProcessingReminder(ex, todo.Id.Value);
         }
       }
 
-      logger.LogInformation("ToDoReminderJob completed at {Time}", timeProvider.GetUtcNow());
+      LogJobCompleted(timeProvider.GetUtcNow());
     }
     catch (Exception ex)
     {
-      logger.LogError(ex, "ToDoReminderJob failed");
+      LogJobFailed(ex);
     }
   }
+
+  [LoggerMessage(Level = LogLevel.Information, Message = "ToDoReminderJob started at {Time}")]
+  private partial void LogJobStarted(DateTimeOffset time);
+
+  [LoggerMessage(Level = LogLevel.Error, Message = "Failed to retrieve due todos: {Errors}")]
+  private partial void LogFailedToRetrieveToDos(string errors);
+
+  [LoggerMessage(Level = LogLevel.Information, Message = "Found {Count} todos with due reminders")]
+  private partial void LogFoundDueToDos(int count);
+
+  [LoggerMessage(Level = LogLevel.Warning, Message = "Failed to get person {PersonId} for todo {ToDoId}")]
+  private partial void LogFailedToGetPerson(Guid personId, Guid toDoId);
+
+  [LoggerMessage(Level = LogLevel.Information, Message = "Sending reminder for todo {ToDoId} to user {Username}")]
+  private partial void LogSendingReminder(Guid toDoId, string username);
+
+  [LoggerMessage(Level = LogLevel.Information, Message = "REMINDER for {Username}: {Description}")]
+  private partial void LogReminder(string username, string description);
+
+  [LoggerMessage(Level = LogLevel.Error, Message = "Error processing reminder for todo {ToDoId}")]
+  private partial void LogErrorProcessingReminder(Exception ex, Guid toDoId);
+
+  [LoggerMessage(Level = LogLevel.Information, Message = "ToDoReminderJob completed at {Time}")]
+  private partial void LogJobCompleted(DateTimeOffset time);
+
+  [LoggerMessage(Level = LogLevel.Error, Message = "ToDoReminderJob failed")]
+  private partial void LogJobFailed(Exception ex);
 }

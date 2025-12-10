@@ -2,6 +2,7 @@ using Apollo.AI;
 using Apollo.AI.Config;
 using Apollo.AI.DTOs;
 using Apollo.AI.Enums;
+using Apollo.Application.ToDos;
 using Apollo.Core.Conversations;
 using Apollo.Core.Logging;
 using Apollo.Core.People;
@@ -18,9 +19,11 @@ public sealed class ProcessIncomingMessageCommandHandler(
   IApolloAIAgent apolloAIAgent,
   IConversationStore conversationStore,
   ILogger<ProcessIncomingMessageCommandHandler> logger,
+  IMediator mediator,
   IPersonService personService,
   IPersonCache personCache,
-  TimeProvider timeProvider
+  TimeProvider timeProvider,
+  IServiceProvider serviceProvider
 ) : IRequestHandler<ProcessIncomingMessageCommand, Result<Reply>>
 {
   public async Task<Result<Reply>> Handle(ProcessIncomingMessageCommand request, CancellationToken cancellationToken = default)
@@ -30,6 +33,11 @@ public sealed class ProcessIncomingMessageCommandHandler(
       if (string.IsNullOrEmpty(request.Message.Username))
       {
         return Result.Fail<Reply>("No username was provided.");
+      }
+
+      if (string.IsNullOrWhiteSpace(request.Message.Content))
+      {
+        return Result.Fail<Reply>("Message content is empty.");
       }
 
       var username = new Username(request.Message.Username, request.Message.Platform);
@@ -62,24 +70,14 @@ public sealed class ProcessIncomingMessageCommandHandler(
         return Result.Fail<Reply>("Unable to fetch conversation.");
       }
 
-      var conversation = convoResult.Value;
+      convoResult = await conversationStore.AddMessageAsync(convoResult.Value.Id, new Content(request.Message.Content), cancellationToken);
 
-      if (string.IsNullOrWhiteSpace(request.Message.Content))
+      if (convoResult.IsFailed)
       {
-        return Result.Fail<Reply>("Message content is empty.");
+        return Result.Fail<Reply>("Unable to add message to conversation.");
       }
 
-      _ = await conversationStore.AddMessageAsync(conversation.Id, new Content(request.Message.Content), cancellationToken);
-
-      conversation.Messages.Add(new Message
-      {
-        Id = new(Guid.NewGuid()),
-        ConversationId = conversation.Id,
-        PersonId = userResult.Value.Id,
-        Content = new(request.Message.Content),
-        CreatedOn = new(timeProvider.GetUtcNow().DateTime),
-        FromUser = new(true),
-      });
+      var conversation = convoResult.Value;
 
       string systemPrompt = aiConfig.SystemPrompt;
 
@@ -91,6 +89,10 @@ public sealed class ProcessIncomingMessageCommandHandler(
         ).ToList();
 
       var completionRequest = new ChatCompletionRequest(systemPrompt, messages);
+
+      // Register user-scoped ToDoPlugin
+      var toDoPlugin = new ToDoPlugin(mediator, userResult.Value.Id);
+      apolloAIAgent.AddPlugin(toDoPlugin, "ToDos");
 
       // Hand message to AI here
       var response = await apolloAIAgent.ChatAsync(completionRequest, cancellationToken);

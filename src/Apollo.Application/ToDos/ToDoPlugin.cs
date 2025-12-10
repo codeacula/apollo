@@ -8,22 +8,16 @@ using Microsoft.SemanticKernel;
 
 namespace Apollo.Application.ToDos;
 
-public class ToDoPlugin(IMediator mediator)
+public class ToDoPlugin(IMediator mediator, PersonId personId)
 {
   [KernelFunction("create_todo")]
-  [Description("Creates a new todo for a person with an optional reminder date")]
+  [Description("Creates a new todo with an optional reminder date")]
   public async Task<string> CreateToDoAsync(
-    [Description("The person's ID (GUID)")] string personId,
     [Description("The todo description")] string description,
     [Description("Optional reminder date in ISO 8601 format (e.g., 2025-12-31T10:00:00Z)")] string? reminderDate = null)
   {
     try
     {
-      if (!Guid.TryParse(personId, out var personGuid))
-      {
-        return JsonSerializer.Serialize(new { success = false, error = "Invalid person ID format" });
-      }
-
       DateTime? reminder = null;
       if (!string.IsNullOrEmpty(reminderDate))
       {
@@ -35,7 +29,7 @@ public class ToDoPlugin(IMediator mediator)
       }
 
       var command = new CreateToDoCommand(
-        new PersonId(personGuid),
+        personId,
         new Description(description),
         reminder
       );
@@ -150,19 +144,13 @@ public class ToDoPlugin(IMediator mediator)
     }
   }
 
-  [KernelFunction("list_todos_for_person")]
-  [Description("Lists all active todos for a specific person")]
-  public async Task<string> ListToDosForPersonAsync(
-    [Description("The person's ID (GUID)")] string personId)
+  [KernelFunction("list_todos")]
+  [Description("Lists all active todos for the current person")]
+  public async Task<string> ListToDosAsync()
   {
     try
     {
-      if (!Guid.TryParse(personId, out var personGuid))
-      {
-        return JsonSerializer.Serialize(new { success = false, error = "Invalid person ID format" });
-      }
-
-      var query = new GetToDosByPersonIdQuery(new PersonId(personGuid));
+      var query = new GetToDosByPersonIdQuery(personId);
       var result = await mediator.Send(query);
 
       if (result.IsFailed)

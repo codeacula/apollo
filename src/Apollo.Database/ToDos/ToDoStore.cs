@@ -1,18 +1,34 @@
 using Apollo.Core.ToDos;
 using Apollo.Database.ToDos.Events;
 using Apollo.Domain.People.ValueObjects;
+using Apollo.Domain.ToDos.Models;
 using Apollo.Domain.ToDos.ValueObjects;
 
 using FluentResults;
 
 using Marten;
 
-using ToDo = Apollo.Domain.ToDos.Models.ToDo;
-
 namespace Apollo.Database.ToDos;
 
 public sealed class ToDoStore(IDocumentSession session, TimeProvider timeProvider) : IToDoStore
 {
+  public async Task<Result> CompleteAsync(ToDoId id, CancellationToken cancellationToken = default)
+  {
+    try
+    {
+      var time = timeProvider.GetUtcNow().DateTime;
+      _ = session.Events.Append(id.Value, new ToDoCompletedEvent(id.Value, time));
+
+      await session.SaveChangesAsync(cancellationToken);
+
+      return Result.Ok();
+    }
+    catch (Exception ex)
+    {
+      return Result.Fail(ex.Message);
+    }
+  }
+
   public async Task<Result<ToDo>> CreateAsync(ToDoId id, PersonId personId, Description description, CancellationToken cancellationToken = default)
   {
     try
@@ -26,6 +42,23 @@ public sealed class ToDoStore(IDocumentSession session, TimeProvider timeProvide
       var newToDo = await session.Events.AggregateStreamAsync<DbToDo>(id.Value, token: cancellationToken);
 
       return newToDo is null ? Result.Fail<ToDo>("Failed to create new todo") : Result.Ok((ToDo)newToDo);
+    }
+    catch (Exception ex)
+    {
+      return Result.Fail(ex.Message);
+    }
+  }
+
+  public async Task<Result> DeleteAsync(ToDoId id, CancellationToken cancellationToken = default)
+  {
+    try
+    {
+      var time = timeProvider.GetUtcNow().DateTime;
+      _ = session.Events.Append(id.Value, new ToDoDeletedEvent(id.Value, time));
+
+      await session.SaveChangesAsync(cancellationToken);
+
+      return Result.Ok();
     }
     catch (Exception ex)
     {
@@ -63,50 +96,16 @@ public sealed class ToDoStore(IDocumentSession session, TimeProvider timeProvide
     }
   }
 
-  public async Task<Result> UpdateAsync(ToDoId id, Description description, CancellationToken cancellationToken = default)
+  public async Task<Result<IEnumerable<ToDo>>> GetDueTasksAsync(DateTime beforeTime, CancellationToken cancellationToken = default)
   {
     try
     {
-      var time = timeProvider.GetUtcNow().DateTime;
-      _ = session.Events.Append(id.Value, new ToDoUpdatedEvent(id.Value, description.Value, time));
+      var dbToDos = await session.Query<DbToDo>()
+        .Where(t => !t.IsDeleted && !t.IsCompleted && t.ReminderDate.HasValue && t.ReminderDate.Value <= beforeTime)
+        .ToListAsync(cancellationToken);
 
-      await session.SaveChangesAsync(cancellationToken);
-
-      return Result.Ok();
-    }
-    catch (Exception ex)
-    {
-      return Result.Fail(ex.Message);
-    }
-  }
-
-  public async Task<Result> CompleteAsync(ToDoId id, CancellationToken cancellationToken = default)
-  {
-    try
-    {
-      var time = timeProvider.GetUtcNow().DateTime;
-      _ = session.Events.Append(id.Value, new ToDoCompletedEvent(id.Value, time));
-
-      await session.SaveChangesAsync(cancellationToken);
-
-      return Result.Ok();
-    }
-    catch (Exception ex)
-    {
-      return Result.Fail(ex.Message);
-    }
-  }
-
-  public async Task<Result> DeleteAsync(ToDoId id, CancellationToken cancellationToken = default)
-  {
-    try
-    {
-      var time = timeProvider.GetUtcNow().DateTime;
-      _ = session.Events.Append(id.Value, new ToDoDeletedEvent(id.Value, time));
-
-      await session.SaveChangesAsync(cancellationToken);
-
-      return Result.Ok();
+      var tasks = dbToDos.Select(t => (ToDo)t);
+      return Result.Ok(tasks);
     }
     catch (Exception ex)
     {
@@ -131,16 +130,16 @@ public sealed class ToDoStore(IDocumentSession session, TimeProvider timeProvide
     }
   }
 
-  public async Task<Result<IEnumerable<ToDo>>> GetDueTasksAsync(DateTime beforeTime, CancellationToken cancellationToken = default)
+  public async Task<Result> UpdateAsync(ToDoId id, Description description, CancellationToken cancellationToken = default)
   {
     try
     {
-      var dbToDos = await session.Query<DbToDo>()
-        .Where(t => !t.IsDeleted && !t.IsCompleted && t.ReminderDate.HasValue && t.ReminderDate.Value <= beforeTime)
-        .ToListAsync(cancellationToken);
+      var time = timeProvider.GetUtcNow().DateTime;
+      _ = session.Events.Append(id.Value, new ToDoUpdatedEvent(id.Value, description.Value, time));
 
-      var tasks = dbToDos.Select(t => (ToDo)t);
-      return Result.Ok(tasks);
+      await session.SaveChangesAsync(cancellationToken);
+
+      return Result.Ok();
     }
     catch (Exception ex)
     {

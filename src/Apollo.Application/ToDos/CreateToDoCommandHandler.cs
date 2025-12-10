@@ -1,9 +1,8 @@
 using Apollo.Core.ToDos;
+using Apollo.Domain.ToDos.Models;
 using Apollo.Domain.ToDos.ValueObjects;
 
 using FluentResults;
-
-using ToDo = Apollo.Domain.ToDos.Models.ToDo;
 
 namespace Apollo.Application.ToDos;
 
