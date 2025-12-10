@@ -19,6 +19,9 @@ _ = webAppBuilder.Services
 
 WebApplication app = webAppBuilder.Build();
 
+// Configure AI plugins
+_ = app.Services.ConfigureAIPlugins();
+
 // Apply database migrations
 await app.Services.MigrateDatabaseAsync();
 

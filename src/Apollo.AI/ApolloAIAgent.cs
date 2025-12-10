@@ -25,6 +25,11 @@ public class ApolloAIAgent : IApolloAIAgent
     _ = _kernel.Plugins.AddFromType<TimePlugin>("Time");
   }
 
+  public void AddPlugin(object plugin, string pluginName)
+  {
+    _ = _kernel.Plugins.AddFromObject(plugin, pluginName);
+  }
+
   public async Task<string> ChatAsync(ChatCompletionRequest chatCompletionRequest, CancellationToken cancellationToken = default)
   {
     try
