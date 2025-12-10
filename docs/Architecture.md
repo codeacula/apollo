@@ -1,7 +1,5 @@
 # Architecture
 
-Apollo is a personal assistant bot designed to help neurodivergent individuals with daily routines, task management, and organization. The system follows Clean Architecture principles with clear layer separation and dependency inversion.
-
 Apollo was built to allow independent releases of the Discord bot and API server. This also allows the API to implement load-balancing if needed. I approached development with the concepts of Data- and Domain-Driven Design in mind, focusing on the core business domain and modeling the system around it. The architecture focuses on IoC (Inversion of Control) and DI (Dependency Injection) to achieve loose coupling between components, making the system more maintainable and testable.
 
 ## System Overview

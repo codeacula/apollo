@@ -1,6 +1,6 @@
 # 🐈 Apollo - A Personal Assistant for Neurodivergent Folks
 
-Apollo is a personal assistant that is meant to help neurodivergent people with their daily routines. I wrote Apollo specifically to help me manage my daily tasks, to check in on me and make sure I'm staying on track, and help me manage my time better. It is not meant to be a full-fledged AI assistant like Siri or Alexa, but rather a tool to help me stay organized and focused.
+Apollo is a personal assistant that is meant to help neurodivergent people with their daily routines. I wrote Apollo specifically to help me manage my daily tasks, to check in on me and make sure I'm staying on track, and help me manage my time better. It is not meant to be a full-fledged AI assistant, but rather a tool to help me stay organized and focused.
 
 I strongly believe in open source code provided freely to my peers. That's why I proudly license all of my software under the [MIT License](LICENSE) 😊.
 
@@ -24,4 +24,4 @@ If you'd like a starting place, [Index](docs/Index.md) has you covered.
 
 ## 🔮 About
 
-I'm Codeacula (Jack Timmons), a software engineer with a passion for helping others and creating tools to solve problems. You can find out more about me at my website, [Codeacula.com](https://codeacula.com).
+I'm Codeacula (Jack Timmons), a software engineer with a passion for helping others and creating tools to solve problems. You can find out more about me at my website, [Codeacula.com](https://codeacula.com). 🔮
