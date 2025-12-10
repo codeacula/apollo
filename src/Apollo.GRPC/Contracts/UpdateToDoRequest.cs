@@ -5,9 +5,9 @@ namespace Apollo.GRPC.Contracts;
 [DataContract]
 public sealed record UpdateToDoRequest
 {
-  [DataMember]
+  [DataMember(Order = 1)]
   public required Guid ToDoId { get; init; }
 
-  [DataMember]
+  [DataMember(Order = 2)]
   public required string Description { get; init; }
 }

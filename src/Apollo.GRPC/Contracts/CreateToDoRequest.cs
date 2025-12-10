@@ -5,12 +5,12 @@ namespace Apollo.GRPC.Contracts;
 [DataContract]
 public sealed record CreateToDoRequest
 {
-  [DataMember]
+  [DataMember(Order = 1)]
   public required Guid PersonId { get; init; }
 
-  [DataMember]
+  [DataMember(Order = 2)]
   public required string Description { get; init; }
 
-  [DataMember]
+  [DataMember(Order = 3)]
   public DateTime? ReminderDate { get; init; }
 }
