@@ -34,6 +34,27 @@ public sealed class ConversationStore(IDocumentSession session) : IConversationS
     }
   }
 
+  public async Task<Result> AddReplyAsync(ConversationId conversationId, Content reply, CancellationToken cancellationToken = default)
+  {
+    try
+    {
+      _ = session.Events.Append(conversationId.Value, new ApolloRepliedEvent
+      {
+        Id = conversationId.Value,
+        Message = reply.Value,
+        CreatedOn = DateTime.UtcNow
+      });
+
+      await session.SaveChangesAsync(cancellationToken);
+
+      return Result.Ok();
+    }
+    catch (Exception ex)
+    {
+      return Result.Fail(ex.Message);
+    }
+  }
+
   public async Task<Result<Conversation>> CreateAsync(PersonId id, CancellationToken cancellationToken = default)
   {
     try

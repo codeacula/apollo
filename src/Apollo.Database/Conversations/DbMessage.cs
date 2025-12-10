@@ -38,4 +38,18 @@ public sealed record DbMessage
       CreatedOn = eventData.CreatedOn
     };
   }
+
+  public static DbMessage Create(IEvent<ApolloRepliedEvent> ev)
+  {
+    var eventData = ev.Data;
+
+    return new()
+    {
+      Id = Guid.NewGuid(),
+      ConversationId = eventData.Id,
+      Content = eventData.Message,
+      FromUser = false,
+      CreatedOn = eventData.CreatedOn
+    };
+  }
 }

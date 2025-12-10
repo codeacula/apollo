@@ -47,4 +47,13 @@ public sealed record DbConversation
       UpdatedOn = ev.Data.CreatedOn
     };
   }
+
+  public static DbConversation Apply(IEvent<ApolloRepliedEvent> ev, DbConversation conversation)
+  {
+    return conversation with
+    {
+      Messages = [.. conversation.Messages, DbMessage.Create(ev)],
+      UpdatedOn = ev.Data.CreatedOn
+    };
+  }
 }

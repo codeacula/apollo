@@ -94,6 +94,8 @@ public sealed class ProcessIncomingMessageCommandHandler(
       // Hand message to AI here
       var response = await apolloAIAgent.ChatAsync(completionRequest, cancellationToken);
 
+      _ = await conversationStore.AddReplyAsync(conversation.Id, new Content(response), cancellationToken);
+
       return Result.Ok(new Reply
       {
         Content = new(response),
