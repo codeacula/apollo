@@ -7,7 +7,6 @@ using Apollo.Core.Conversations;
 using Apollo.Core.Logging;
 using Apollo.Core.People;
 using Apollo.Domain.Common.ValueObjects;
-using Apollo.Domain.Conversations.Models;
 using Apollo.Domain.People.ValueObjects;
 
 using FluentResults;
@@ -22,8 +21,7 @@ public sealed class ProcessIncomingMessageCommandHandler(
   IMediator mediator,
   IPersonService personService,
   IPersonCache personCache,
-  TimeProvider timeProvider,
-  IServiceProvider serviceProvider
+  TimeProvider timeProvider
 ) : IRequestHandler<ProcessIncomingMessageCommand, Result<Reply>>
 {
   public async Task<Result<Reply>> Handle(ProcessIncomingMessageCommand request, CancellationToken cancellationToken = default)
