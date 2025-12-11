@@ -11,10 +11,12 @@
             "id": "58a6ef92a696d3aa",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {},
-              "icon": "lucide-file",
-              "title": "New tab"
+              "type": "release-notes",
+              "state": {
+                "currentVersion": "1.11.0"
+              },
+              "icon": "lucide-book-up",
+              "title": "Release Notes 1.11.0"
             }
           }
         ]

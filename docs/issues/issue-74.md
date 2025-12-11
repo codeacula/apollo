@@ -1,31 +1,33 @@
-# Create Tasking System
+# Create ToDoing System
 
-We want to implement the ability for a user to create tasks, set reminders, and manage them through an AI interface. Update the project so that users can create tasks, set due dates, update tasks, delete tasks, and complete tasks. The AI should be able to interact with this tasking system to help users manage their tasks effectively.
+We want to implement the ability for a user to create toDos, set reminders, and manage them through an AI interface. Update the project so that users can create toDos, set due dates, update toDos, delete toDos, and complete toDos. The AI should be able to interact with this toDoing system to help users manage their toDos effectively.
 
 ## Acceptance Criteria
 
-- Basic CRUD of Tasks in Marten
-- Expose tools to AI to manage tasks
-- Be able to tell an AI to create a task with a reminder date
+- Basic CRUD of ToDos in Marten
+- Expose tools to AI to manage toDos
+- Be able to tell an AI to create a toDo with a reminder date
 
 ## Implementation Status: ✅ COMPLETED
 
-All acceptance criteria have been met. The task management system has been fully implemented following Apollo's Clean Architecture and event-sourcing patterns.
+All acceptance criteria have been met. The toDo management system has been fully implemented following Apollo's Clean Architecture and event-sourcing patterns.
 
 ## What Was Implemented
 
 ### Phase 1: Domain & Database Foundation ✅
 
-**1. Domain Events** (`src/Apollo.Database/Tasks/Events/`)
-- `TaskCreatedEvent` - Captures task creation with PersonId and Description
-- `TaskUpdatedEvent` - Tracks task description updates
-- `TaskCompletedEvent` - Marks task completion
-- `TaskDeletedEvent` - Soft-deletes tasks
-- `TaskReminderSetEvent` - Sets reminder dates on tasks
+**1. Domain Events** (`src/Apollo.Database/ToDos/Events/`)
 
-**2. Database Persistence** (`src/Apollo.Database/Tasks/`)
-- `DbTask` - Event-sourced aggregate with event handlers (`Create`, `Apply` methods)
-- `TaskStore : ITaskStore` - Marten-based repository using `IDocumentSession`
+- `ToDoCreatedEvent` - Captures toDo creation with PersonId and Description
+- `ToDoUpdatedEvent` - Tracks toDo description updates
+- `ToDoCompletedEvent` - Marks toDo completion
+- `ToDoDeletedEvent` - Soft-deletes toDos
+- `ToDoReminderSetEvent` - Sets reminder dates on toDos
+
+**2. Database Persistence** (`src/Apollo.Database/ToDos/`)
+
+- `DbToDo` - Event-sourced aggregate with event handlers (`Create`, `Apply` methods)
+- `ToDoStore : IToDoStore` - Marten-based repository using `IDocumentSession`
 - Registered in `ServiceCollectionExtensions.cs` with:
   - Schema configuration
   - Event type registration
@@ -33,55 +35,60 @@ All acceptance criteria have been met. The task management system has been fully
 
 ### Phase 2: Core Abstractions & Application Logic ✅
 
-**3. Core Interface** (`src/Apollo.Core/Tasks/`)
-- `ITaskStore` with methods:
-  - `CreateAsync` - Creates new task
-  - `GetAsync` - Retrieves single task by ID
-  - `GetByPersonIdAsync` - Lists all tasks for a person
-  - `UpdateAsync` - Updates task description
-  - `CompleteAsync` - Marks task complete
-  - `DeleteAsync` - Soft-deletes task
-  - `SetReminderAsync` - Sets reminder date
-  - `GetDueTasksAsync` - Queries tasks with due reminders
+**3. Core Interface** (`src/Apollo.Core/ToDos/`)
 
-**4. Application Commands** (`src/Apollo.Application/Tasks/`)
+- `IToDoStore` with methods:
+  - `CreateAsync` - Creates new toDo
+  - `GetAsync` - Retrieves single toDo by ID
+  - `GetByPersonIdAsync` - Lists all toDos for a person
+  - `UpdateAsync` - Updates toDo description
+  - `CompleteAsync` - Marks toDo complete
+  - `DeleteAsync` - Soft-deletes toDo
+  - `SetReminderAsync` - Sets reminder date
+  - `GetDueToDosAsync` - Queries toDos with due reminders
+
+**4. Application Commands** (`src/Apollo.Application/ToDos/`)
+
 - MediatR Commands & Handlers:
-  - `CreateTaskCommand` / `CreateTaskCommandHandler`
-  - `UpdateTaskCommand` / `UpdateTaskCommandHandler`
-  - `CompleteTaskCommand` / `CompleteTaskCommandHandler`
-  - `DeleteTaskCommand` / `DeleteTaskCommandHandler`
-  - `GetTasksByPersonIdQuery` / `GetTasksByPersonIdQueryHandler`
+  - `CreateToDoCommand` / `CreateToDoCommandHandler`
+  - `UpdateToDoCommand` / `UpdateToDoCommandHandler`
+  - `CompleteToDoCommand` / `CompleteToDoCommandHandler`
+  - `DeleteToDoCommand` / `DeleteToDoCommandHandler`
+  - `GetToDosByPersonIdQuery` / `GetToDosByPersonIdQueryHandler`
 
 ### Phase 3: AI & Data Exposure ✅
 
-**5. AI Tools** (`src/Apollo.Application/Tasks/`)
-- `TaskPlugin` with Semantic Kernel functions:
-  - `create_task` - Creates task with optional reminder
-  - `update_task` - Updates task description
-  - `complete_task` - Marks task complete
-  - `delete_task` - Deletes task
-  - `list_tasks_for_person` - Lists all active tasks for a person
+**5. AI Tools** (`src/Apollo.Application/ToDos/`)
+
+- `ToDoPlugin` with Semantic Kernel functions:
+  - `create_toDo` - Creates toDo with optional reminder
+  - `update_toDo` - Updates toDo description
+  - `complete_toDo` - Marks toDo complete
+  - `delete_toDo` - Deletes toDo
+  - `list_toDos_for_person` - Lists all active toDos for a person
 - Registered in `ApolloAIAgent` via `AddPlugin()` method
 - Dynamic plugin registration in `ServiceCollectionExtension.ConfigureAIPlugins()`
 
 **6. gRPC Endpoints** (`src/Apollo.GRPC/`)
+
 - `IApolloGrpcService` & `ApolloGrpcService` updated with:
-  - `CreateTaskAsync` - gRPC endpoint to create tasks
-  - `GetTaskAsync` - Retrieve single task (placeholder)
-  - `GetPersonTasksAsync` - List all tasks for a person
-  - `UpdateTaskAsync` - Update task
-  - `CompleteTaskAsync` - Complete task
-  - `DeleteTaskAsync` - Delete task
+  - `CreateToDoAsync` - gRPC endpoint to create toDos
+  - `GetToDoAsync` - Retrieve single toDo (placeholder)
+  - `GetPersonToDosAsync` - List all toDos for a person
+  - `UpdateToDoAsync` - Update toDo
+  - `CompleteToDoAsync` - Complete toDo
+  - `DeleteToDoAsync` - Delete toDo
 - DTOs created:
-  - `TaskDto` - Task data transfer object
-  - `CreateTaskRequest` - Request for creating tasks
-  - `UpdateTaskRequest` - Request for updating tasks
+  - `ToDoDto` - ToDo data transfer object
+  - `CreateToDoRequest` - Request for creating toDos
+  - `UpdateToDoRequest` - Request for updating toDos
 
 ### Phase 4: Reminder System ✅
 
 **7. Discord Reminder Job** (`src/Apollo.API/Jobs/`)
-- `TaskReminderJob : IJob` implementation
-  - Queries `ITaskStore.GetDueTasksAsync()` every 15 minutes
+
+- `ToDoReminderJob : IJob` implementation
+  - Queries `IToDoStore.GetDueToDosAsync()` every 15 minutes
   - Retrieves person information via `IPersonStore`
   - Logs reminder notifications (Discord DM integration placeholder)
 - Registered in `ServiceCollectionExtensions.cs` with Quartz scheduler
@@ -91,13 +98,13 @@ All acceptance criteria have been met. The task management system has been fully
 
 ## Architecture Decisions
 
-1. **Event Sourcing**: Tasks use Marten's event sourcing with inline snapshots for optimal read performance
-2. **Soft Deletes**: Tasks are marked deleted rather than removed, preserving history
-3. **Separation of Concerns**: 
+1. **Event Sourcing**: ToDos use Marten's event sourcing with inline snapshots for optimal read performance
+2. **Soft Deletes**: ToDos are marked deleted rather than removed, preserving history
+3. **Separation of Concerns**:
    - Domain models in `Apollo.Domain`
    - Database persistence in `Apollo.Database`
    - Business logic in `Apollo.Application`
-   - AI integration in `Apollo.Application` (TaskPlugin)
+   - AI integration in `Apollo.Application` (ToDoPlugin)
    - API/Jobs in `Apollo.API`
    - gRPC services in `Apollo.GRPC`
 4. **Dynamic Plugin Registration**: AI plugins are registered after service configuration to handle dependency injection properly
@@ -105,20 +112,20 @@ All acceptance criteria have been met. The task management system has been fully
 
 ## Testing Recommendations
 
-1. Create tasks via AI: "Create a task to review the quarterly report"
-2. Create tasks with reminders: "Remind me tomorrow at 3pm to call the dentist"
-3. List tasks: "What tasks do I have?"
-4. Update tasks: "Change my dentist task to call the doctor instead"
-5. Complete tasks: "Mark the quarterly report task as done"
-6. Delete tasks: "Delete the doctor appointment task"
+1. Create toDos via AI: "Create a toDo to review the quarterly report"
+2. Create toDos with reminders: "Remind me tomorrow at 3pm to call the dentist"
+3. List toDos: "What toDos do I have?"
+4. Update toDos: "Change my dentist toDo to call the doctor instead"
+5. Complete toDos: "Mark the quarterly report toDo as done"
+6. Delete toDos: "Delete the doctor appointment toDo"
 
 ## Future Enhancements
 
-1. **Discord DM Integration**: Wire the TaskReminderJob to actually send Discord DMs
-2. **Task Priorities & Energy Levels**: Currently using placeholder values (0)
-3. **Due Dates vs Reminder Dates**: Separate the concepts for better task management
-4. **Recurring Tasks**: Add support for tasks that repeat on a schedule
-5. **Task Categories/Tags**: Group related tasks
+1. **Discord DM Integration**: Wire the ToDoReminderJob to actually send Discord DMs
+2. **ToDo Priorities & Energy Levels**: Currently using placeholder values (0)
+3. **Due Dates vs Reminder Dates**: Separate the concepts for better toDo management
+4. **Recurring ToDos**: Add support for toDos that repeat on a schedule
+5. **ToDo Categories/Tags**: Group related toDos
 6. **Notifications**: Multi-channel notification system (Discord, Email, SMS)
 
 ## Files Modified
@@ -127,105 +134,110 @@ All acceptance criteria have been met. The task management system has been fully
 - `src/Apollo.AI/IApolloAIAgent.cs` - Interface update
 - `src/Apollo.API/Program.cs` - Plugin configuration call
 - `src/Apollo.API/ServiceCollectionExtensions.cs` - Quartz job registration
-- `src/Apollo.Application/ServiceCollectionExtension.cs` - TaskPlugin registration
+- `src/Apollo.Application/ServiceCollectionExtension.cs` - ToDoPlugin registration
 - `src/Apollo.Database/ServiceCollectionExtensions.cs` - Marten configuration
-- `src/Apollo.GRPC/Service/ApolloGrpcService.cs` - Task endpoints
+- `src/Apollo.GRPC/Service/ApolloGrpcService.cs` - ToDo endpoints
 - `src/Apollo.GRPC/Service/IApolloGrpcService.cs` - Interface additions
 
 ## Files Created
 
 ### Database Layer
-- `src/Apollo.Database/Tasks/DbTask.cs`
-- `src/Apollo.Database/Tasks/TaskStore.cs`
-- `src/Apollo.Database/Tasks/Events/TaskCreatedEvent.cs`
-- `src/Apollo.Database/Tasks/Events/TaskUpdatedEvent.cs`
-- `src/Apollo.Database/Tasks/Events/TaskCompletedEvent.cs`
-- `src/Apollo.Database/Tasks/Events/TaskDeletedEvent.cs`
-- `src/Apollo.Database/Tasks/Events/TaskReminderSetEvent.cs`
+
+- `src/Apollo.Database/ToDos/DbToDo.cs`
+- `src/Apollo.Database/ToDos/ToDoStore.cs`
+- `src/Apollo.Database/ToDos/Events/ToDoCreatedEvent.cs`
+- `src/Apollo.Database/ToDos/Events/ToDoUpdatedEvent.cs`
+- `src/Apollo.Database/ToDos/Events/ToDoCompletedEvent.cs`
+- `src/Apollo.Database/ToDos/Events/ToDoDeletedEvent.cs`
+- `src/Apollo.Database/ToDos/Events/ToDoReminderSetEvent.cs`
 
 ### Core Layer
-- `src/Apollo.Core/Tasks/ITaskStore.cs`
+
+- `src/Apollo.Core/ToDos/IToDoStore.cs`
 
 ### Application Layer
-- `src/Apollo.Application/Tasks/CreateTaskCommand.cs`
-- `src/Apollo.Application/Tasks/CreateTaskCommandHandler.cs`
-- `src/Apollo.Application/Tasks/UpdateTaskCommand.cs`
-- `src/Apollo.Application/Tasks/UpdateTaskCommandHandler.cs`
-- `src/Apollo.Application/Tasks/CompleteTaskCommand.cs`
-- `src/Apollo.Application/Tasks/CompleteTaskCommandHandler.cs`
-- `src/Apollo.Application/Tasks/DeleteTaskCommand.cs`
-- `src/Apollo.Application/Tasks/DeleteTaskCommandHandler.cs`
-- `src/Apollo.Application/Tasks/GetTasksByPersonIdQuery.cs`
-- `src/Apollo.Application/Tasks/GetTasksByPersonIdQueryHandler.cs`
-- `src/Apollo.Application/Tasks/TaskPlugin.cs`
+
+- `src/Apollo.Application/ToDos/CreateToDoCommand.cs`
+- `src/Apollo.Application/ToDos/CreateToDoCommandHandler.cs`
+- `src/Apollo.Application/ToDos/UpdateToDoCommand.cs`
+- `src/Apollo.Application/ToDos/UpdateToDoCommandHandler.cs`
+- `src/Apollo.Application/ToDos/CompleteToDoCommand.cs`
+- `src/Apollo.Application/ToDos/CompleteToDoCommandHandler.cs`
+- `src/Apollo.Application/ToDos/DeleteToDoCommand.cs`
+- `src/Apollo.Application/ToDos/DeleteToDoCommandHandler.cs`
+- `src/Apollo.Application/ToDos/GetToDosByPersonIdQuery.cs`
+- `src/Apollo.Application/ToDos/GetToDosByPersonIdQueryHandler.cs`
+- `src/Apollo.Application/ToDos/ToDoPlugin.cs`
 
 ### API Layer
-- `src/Apollo.API/Jobs/TaskReminderJob.cs`
+
+- `src/Apollo.API/Jobs/ToDoReminderJob.cs`
 
 ### gRPC Layer
-- `src/Apollo.GRPC/Contracts/TaskDto.cs`
-- `src/Apollo.GRPC/Contracts/CreateTaskRequest.cs`
-- `src/Apollo.GRPC/Contracts/UpdateTaskRequest.cs`
+
+- `src/Apollo.GRPC/Contracts/ToDoDto.cs`
+- `src/Apollo.GRPC/Contracts/CreateToDoRequest.cs`
+- `src/Apollo.GRPC/Contracts/UpdateToDoRequest.cs`
 
 ## Execution Plan
 
-Implement task management following Apollo's Clean Architecture and event-sourcing patterns, with AI tool exposure, gRPC data endpoints, and Discord DM reminders scoped to PersonId.
+Implement toDo management following Apollo's Clean Architecture and event-sourcing patterns, with AI tool exposure, gRPC data endpoints, and Discord DM reminders scoped to PersonId.
 
 ### Phase 1: Domain & Database Foundation
 
-1. **Define Domain Models & Events** in `src/Apollo.Domain/Tasks/`
-   - Create value objects: `TaskId`, `Title`, `Description`, `DueDate`, `IsCompleted`, `ReminderDate`
-   - Create `Task` aggregate record following [Person](src/Apollo.Domain/People/Models/Person.cs) pattern
-   - Define domain events: `TaskCreatedEvent`, `TaskUpdatedEvent`, `TaskCompletedEvent`, `TaskDeletedEvent`, `TaskReminderSetEvent`
+1. **Define Domain Models & Events** in `src/Apollo.Domain/ToDos/`
+   - Create value objects: `ToDoId`, `Title`, `Description`, `DueDate`, `IsCompleted`, `ReminderDate`
+   - Create `ToDo` aggregate record following [Person](src/Apollo.Domain/People/Models/Person.cs) pattern
+   - Define domain events: `ToDoCreatedEvent`, `ToDoUpdatedEvent`, `ToDoCompletedEvent`, `ToDoDeletedEvent`, `ToDoReminderSetEvent`
 
-2. **Implement Database Persistence** in `src/Apollo.Database/Tasks/`
-   - Create `DbTask` with event handlers (`Create`, `Apply`) matching [DbConversation](src/Apollo.Database/Conversations/Models/DbConversation.cs) pattern
-   - Implement `TaskStore : ITaskStore` using Marten's `IDocumentSession`
+2. **Implement Database Persistence** in `src/Apollo.Database/ToDos/`
+   - Create `DbToDo` with event handlers (`Create`, `Apply`) matching [DbConversation](src/Apollo.Database/Conversations/Models/DbConversation.cs) pattern
+   - Implement `ToDoStore : IToDoStore` using Marten's `IDocumentSession`
    - Register in [ApolloDbContextFactory.cs](src/Apollo.Database/ApolloDbContextFactory.cs): schema, events, inline snapshots
 
 ### Phase 2: Core Abstractions & Application Logic
 
-3. **Create Core Interfaces** in `src/Apollo.Core/Tasks/`
-   - `ITaskStore` with methods: `CreateAsync`, `GetAsync`, `GetByPersonIdAsync`, `UpdateAsync`, `CompleteAsync`, `DeleteAsync`, `GetDueTasksAsync` (for reminders) — all return `Result<T>`
+3. **Create Core Interfaces** in `src/Apollo.Core/ToDos/`
+   - `IToDoStore` with methods: `CreateAsync`, `GetAsync`, `GetByPersonIdAsync`, `UpdateAsync`, `CompleteAsync`, `DeleteAsync`, `GetDueToDosAsync` (for reminders) — all return `Result<T>`
 
-4. **Build Application Commands** in `src/Apollo.Application/Tasks/`
-   - Create MediatR commands: `CreateTaskCommand`, `UpdateTaskCommand`, `CompleteTaskCommand`, `DeleteTaskCommand`
-   - Implement handlers orchestrating `ITaskStore` operations, following [ProcessIncomingMessageCommandHandler](src/Apollo.Application/Conversations/ProcessIncomingMessageCommand.cs) pattern
+4. **Build Application Commands** in `src/Apollo.Application/ToDos/`
+   - Create MediatR commands: `CreateToDoCommand`, `UpdateToDoCommand`, `CompleteToDoCommand`, `DeleteToDoCommand`
+   - Implement handlers orchestrating `IToDoStore` operations, following [ProcessIncomingMessageCommandHandler](src/Apollo.Application/Conversations/ProcessIncomingMessageCommand.cs) pattern
 
 ### Phase 3: AI & Data Exposure
 
 5. **Expose AI Tools** in `src/Apollo.Core/API/`
-   - Create `TaskPlugin` with Semantic Kernel functions: `create_task`, `update_task`, `complete_task`, `list_tasks_for_person`, `delete_task`
-   - Register in [ApolloAIAgent.cs](src/Apollo.Core/API/ApolloAIAgent.cs): `_kernel.Plugins.AddFromType<TaskPlugin>("Tasks")`
+   - Create `ToDoPlugin` with Semantic Kernel functions: `create_toDo`, `update_toDo`, `complete_toDo`, `list_toDos_for_person`, `delete_toDo`
+   - Register in [ApolloAIAgent.cs](src/Apollo.Core/API/ApolloAIAgent.cs): `_kernel.Plugins.AddFromType<ToDoPlugin>("ToDos")`
 
 6. **Add gRPC Endpoints** in `src/Apollo.GRPC/`
-   - Create `TaskService.cs` gRPC service with methods: `CreateTask`, `GetTask`, `GetPersonTasks`, `UpdateTask`, `CompleteTask`, `DeleteTask`
-   - Update [task.proto](src/Apollo.GRPC/Contracts/task.proto) (or create if missing) with service definitions
-   - Register in [GrpcHostConfig.cs](src/Apollo.GRPC/GrpcHostConfig.cs): `endpoints.MapGrpcService<TaskService>()`
+   - Create `ToDoService.cs` gRPC service with methods: `CreateToDo`, `GetToDo`, `GetPersonToDos`, `UpdateToDo`, `CompleteToDo`, `DeleteToDo`
+   - Update [toDo.proto](src/Apollo.GRPC/Contracts/toDo.proto) (or create if missing) with service definitions
+   - Register in [GrpcHostConfig.cs](src/Apollo.GRPC/GrpcHostConfig.cs): `endpoints.MapGrpcService<ToDoService>()`
 
 ### Phase 4: Reminder System
 
 7. **Implement Discord Reminder Job** in `src/Apollo.API/`
-   - Create `TaskReminderJob : IJob` to query `ITaskStore.GetDueTasksAsync()`
-   - For each due task, send Discord DM via [Apollo.Discord](src/Apollo.Discord) client: `await discordClient.GetUser(personDiscordId).SendMessageAsync(reminderText)`
+   - Create `ToDoReminderJob : IJob` to query `IToDoStore.GetDueToDosAsync()`
+   - For each due toDo, send Discord DM via [Apollo.Discord](src/Apollo.Discord) client: `await discordClient.GetUser(personDiscordId).SendMessageAsync(reminderText)`
    - Register in [ServiceCollectionExtensions.cs](src/Apollo.API/ServiceCollectionExtensions.cs):
 
      ```csharp
-     q.ScheduleJob<TaskReminderJob>(trigger => trigger
-       .WithIdentity("TaskReminder")
+     q.ScheduleJob<ToDoReminderJob>(trigger => trigger
+       .WithIdentity("ToDoReminder")
        .WithSimpleSchedule(x => x.WithIntervalInMinutes(15).RepeatForever()));
      ```
 
-   - Inject `ITaskStore` and Discord client into job
+   - Inject `IToDoStore` and Discord client into job
 
 8. **Wire Discord User Mapping** in `src/Apollo.Discord/`
-   - Ensure `Person` domain model can map from Discord user ID to gRPC/task operations
+   - Ensure `Person` domain model can map from Discord user ID to gRPC/toDo operations
    - Add Discord ID storage to `Person` if not already present (check [DbPerson](src/Apollo.Database/People/Models/DbPerson.cs))
 
 ### Acceptance Criteria Mapping
 
-- ✅ Basic CRUD of Tasks in Marten — **Phases 1-2** (DbTask + TaskStore)
-- ✅ Expose tools to AI to manage tasks — **Phase 3** (TaskPlugin)
-- ✅ Tell AI to create task with reminder date — **Phases 3-4** (TaskPlugin + TaskReminderJob)
-- ✅ Send reminders via Discord DM — **Phase 4** (TaskReminderJob)
-- ✅ gRPC endpoints for task data — **Phase 3** (TaskService)
+- ✅ Basic CRUD of ToDos in Marten — **Phases 1-2** (DbToDo + ToDoStore)
+- ✅ Expose tools to AI to manage toDos — **Phase 3** (ToDoPlugin)
+- ✅ Tell AI to create toDo with reminder date — **Phases 3-4** (ToDoPlugin + ToDoReminderJob)
+- ✅ Send reminders via Discord DM — **Phase 4** (ToDoReminderJob)
+- ✅ gRPC endpoints for toDo data — **Phase 3** (ToDoService)

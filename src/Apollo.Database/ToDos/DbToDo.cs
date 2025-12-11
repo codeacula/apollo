@@ -29,7 +29,8 @@ public sealed record DbToDo
       Interest = new(0),
       DueDate = dbToDo.DueDate.HasValue ? new(dbToDo.DueDate.Value) : null,
       CreatedOn = new(dbToDo.CreatedOn),
-      UpdatedOn = new(dbToDo.UpdatedOn)
+      UpdatedOn = new(dbToDo.UpdatedOn),
+      Reminders = dbToDo.ReminderDate.HasValue ? [new()] : [],
     };
   }
 

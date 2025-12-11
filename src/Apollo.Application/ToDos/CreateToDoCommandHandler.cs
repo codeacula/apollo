@@ -25,11 +25,11 @@ public sealed class CreateToDoCommandHandler(IToDoStore toDoStore) : IRequestHan
         var reminderResult = await toDoStore.SetReminderAsync(toDoId, request.ReminderDate.Value, cancellationToken);
         if (reminderResult.IsFailed)
         {
-          return Result.Fail<ToDo>($"Todo created but failed to set reminder: {string.Join(", ", reminderResult.Errors.Select(e => e.Message))}");
+          return Result.Fail<ToDo>($"ToDo created but failed to set reminder: {string.Join(", ", reminderResult.Errors.Select(e => e.Message))}");
         }
       }
 
-      return await toDoStore.GetAsync(toDoId, cancellationToken);
+      return result.Value;
     }
     catch (Exception ex)
     {

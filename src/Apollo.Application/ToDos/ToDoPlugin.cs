@@ -80,7 +80,7 @@ public class ToDoPlugin(IMediator mediator, PersonId personId)
         return JsonSerializer.Serialize(new { success = false, error = string.Join(", ", result.Errors.Select(e => e.Message)) });
       }
 
-      return JsonSerializer.Serialize(new { success = true, message = "Todo updated successfully" });
+      return JsonSerializer.Serialize(new { success = true, message = "ToDo updated successfully" });
     }
     catch (Exception ex)
     {
@@ -108,7 +108,7 @@ public class ToDoPlugin(IMediator mediator, PersonId personId)
         return JsonSerializer.Serialize(new { success = false, error = string.Join(", ", result.Errors.Select(e => e.Message)) });
       }
 
-      return JsonSerializer.Serialize(new { success = true, message = "Todo completed successfully" });
+      return JsonSerializer.Serialize(new { success = true, message = "ToDo completed successfully" });
     }
     catch (Exception ex)
     {
@@ -136,7 +136,7 @@ public class ToDoPlugin(IMediator mediator, PersonId personId)
         return JsonSerializer.Serialize(new { success = false, error = string.Join(", ", result.Errors.Select(e => e.Message)) });
       }
 
-      return JsonSerializer.Serialize(new { success = true, message = "Todo deleted successfully" });
+      return JsonSerializer.Serialize(new { success = true, message = "ToDo deleted successfully" });
     }
     catch (Exception ex)
     {

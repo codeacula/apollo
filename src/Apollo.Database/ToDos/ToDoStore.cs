@@ -41,7 +41,7 @@ public sealed class ToDoStore(IDocumentSession session, TimeProvider timeProvide
 
       var newToDo = await session.Events.AggregateStreamAsync<DbToDo>(id.Value, token: cancellationToken);
 
-      return newToDo is null ? Result.Fail<ToDo>("Failed to create new todo") : Result.Ok((ToDo)newToDo);
+      return newToDo is null ? Result.Fail<ToDo>("Failed to create new toDo") : Result.Ok((ToDo)newToDo);
     }
     catch (Exception ex)
     {
@@ -71,7 +71,7 @@ public sealed class ToDoStore(IDocumentSession session, TimeProvider timeProvide
     try
     {
       var dbToDo = await session.Query<DbToDo>().FirstOrDefaultAsync(t => t.Id == id.Value && !t.IsDeleted, cancellationToken);
-      return dbToDo is null ? Result.Fail<ToDo>($"Todo with ID {id.Value} not found") : Result.Ok((ToDo)dbToDo);
+      return dbToDo is null ? Result.Fail<ToDo>($"ToDo with ID {id.Value} not found") : Result.Ok((ToDo)dbToDo);
     }
     catch (Exception ex)
     {
@@ -87,8 +87,8 @@ public sealed class ToDoStore(IDocumentSession session, TimeProvider timeProvide
         .Where(t => t.PersonId == personId.Value && !t.IsDeleted && !t.IsCompleted)
         .ToListAsync(cancellationToken);
 
-      var tasks = dbToDos.Select(t => (ToDo)t);
-      return Result.Ok(tasks);
+      var toDos = dbToDos.Select(t => (ToDo)t);
+      return Result.Ok(toDos);
     }
     catch (Exception ex)
     {
@@ -104,8 +104,8 @@ public sealed class ToDoStore(IDocumentSession session, TimeProvider timeProvide
         .Where(t => !t.IsDeleted && !t.IsCompleted && t.ReminderDate.HasValue && t.ReminderDate.Value <= beforeTime)
         .ToListAsync(cancellationToken);
 
-      var tasks = dbToDos.Select(t => (ToDo)t);
-      return Result.Ok(tasks);
+      var todos = dbToDos.Select(t => (ToDo)t);
+      return Result.Ok(todos);
     }
     catch (Exception ex)
     {
