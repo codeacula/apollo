@@ -35,17 +35,8 @@ public static class ServiceCollectionExtensions
               s.UseSystemTextJsonSerializer();
             });
 
-          // Register the SingleToDoReminderJob for dynamic scheduling
-          _ = q.AddJob<SingleToDoReminderJob>(opts => opts.StoreDurably());
-
-          // Old polling job - kept for backwards compatibility but can be removed
-          // _ = q.AddJob<ToDoReminderJob>(opts => opts.WithIdentity("ToDoReminderJob"));
-          // _ = q.AddTrigger(opts => opts
-          //   .ForJob("ToDoReminderJob")
-          //   .WithIdentity("ToDoReminderJob-trigger")
-          //   .WithSimpleSchedule(x => x
-          //     .WithIntervalInMinutes(15)
-          //     .RepeatForever()));
+          // Register ToDoReminderJob for dynamic scheduling (shared by multiple ToDos at the same time)
+          _ = q.AddJob<ToDoReminderJob>(opts => opts.StoreDurably());
         })
         .AddQuartzHostedService(opt => opt.WaitForJobsToComplete = true);
     return services;
