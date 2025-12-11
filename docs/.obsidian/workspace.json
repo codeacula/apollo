@@ -4,21 +4,19 @@
     "type": "split",
     "children": [
       {
-        "id": "306dc3bbd470db37",
+        "id": "3796f28ada64bc83",
         "type": "tabs",
         "children": [
           {
-            "id": "db30908a4adaec64",
+            "id": "58a6ef92a696d3aa",
             "type": "leaf",
             "state": {
-              "type": "markdown",
+              "type": "release-notes",
               "state": {
-                "file": "Architecture.md",
-                "mode": "source",
-                "source": false
+                "currentVersion": "1.11.0"
               },
-              "icon": "lucide-file",
-              "title": "Architecture"
+              "icon": "lucide-book-up",
+              "title": "Release Notes 1.11.0"
             }
           }
         ]
@@ -183,8 +181,11 @@
       "bases:Create new base": false
     }
   },
-  "active": "db30908a4adaec64",
+  "active": "58a6ef92a696d3aa",
   "lastOpenFiles": [
+    "Apollo Prompt.md",
+    "Architecture.md",
+    "issues/issue-74.md",
     "Design Philosophy.md",
     "Index.md",
     "Pull Requests.md"

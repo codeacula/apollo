@@ -1,12 +1,12 @@
 using Apollo.Domain.Common.ValueObjects;
 using Apollo.Domain.People.ValueObjects;
-using Apollo.Domain.Tasks.ValueObjects;
+using Apollo.Domain.ToDos.ValueObjects;
 
-namespace Apollo.Domain.Tasks.Models;
+namespace Apollo.Domain.ToDos.Models;
 
-public record Task()
+public record ToDo
 {
-  public required TaskId Id { get; init; }
+  public required ToDoId Id { get; init; }
   public required PersonId PersonId { get; init; }
   public required Description Description { get; init; }
   public required Priority Priority { get; init; }

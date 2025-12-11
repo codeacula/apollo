@@ -25,6 +25,18 @@ public class ApolloAIAgent : IApolloAIAgent
     _ = _kernel.Plugins.AddFromType<TimePlugin>("Time");
   }
 
+  public void AddPlugin(object plugin, string pluginName)
+  {
+    // Remove existing plugin with the same name if it exists
+    var existingPlugin = _kernel.Plugins.FirstOrDefault(p => p.Name == pluginName);
+    if (existingPlugin != null)
+    {
+      _ = _kernel.Plugins.Remove(existingPlugin);
+    }
+
+    _ = _kernel.Plugins.AddFromObject(plugin, pluginName);
+  }
+
   public async Task<string> ChatAsync(ChatCompletionRequest chatCompletionRequest, CancellationToken cancellationToken = default)
   {
     try

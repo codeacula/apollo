@@ -1,7 +1,7 @@
 using Apollo.Domain.Common.ValueObjects;
-using Apollo.Domain.Tasks.ValueObjects;
+using Apollo.Domain.ToDos.ValueObjects;
 
-namespace Apollo.Domain.Tasks.Models;
+namespace Apollo.Domain.ToDos.Models;
 
 public record Reminder
 {
