@@ -45,9 +45,9 @@ public sealed class ApolloGrpcService(IMediator mediator) : IApolloGrpcService
     };
   }
 
-  public async Task<GrpcResult<ToDoDto>> GetToDoAsync(Guid todoId)
+  public async Task<GrpcResult<ToDoDto>> GetToDoAsync(GetToDoRequest request)
   {
-    var query = new GetToDoByIdQuery(new ToDoId(todoId));
+    var query = new GetToDoByIdQuery(new ToDoId(request.ToDoId));
     var result = await mediator.Send(query);
 
     if (result.IsFailed)
@@ -66,9 +66,9 @@ public sealed class ApolloGrpcService(IMediator mediator) : IApolloGrpcService
     };
   }
 
-  public async Task<GrpcResult<ToDoDto[]>> GetPersonToDosAsync(Guid personId)
+  public async Task<GrpcResult<ToDoDto[]>> GetPersonToDosAsync(GetPersonToDosRequest request)
   {
-    var query = new GetToDosByPersonIdQuery(new PersonId(personId));
+    var query = new GetToDosByPersonIdQuery(new PersonId(request.PersonId));
     var result = await mediator.Send(query);
 
     return result.IsFailed
@@ -95,17 +95,17 @@ public sealed class ApolloGrpcService(IMediator mediator) : IApolloGrpcService
     return result.IsFailed ? (GrpcResult<string>)result.Errors.Select(e => new GrpcError(e.Message)).ToArray() : (GrpcResult<string>)"Todo updated successfully";
   }
 
-  public async Task<GrpcResult<string>> CompleteToDoAsync(Guid todoId)
+  public async Task<GrpcResult<string>> CompleteToDoAsync(CompleteToDoRequest request)
   {
-    var command = new CompleteToDoCommand(new ToDoId(todoId));
+    var command = new CompleteToDoCommand(new ToDoId(request.ToDoId));
     var result = await mediator.Send(command);
 
     return result.IsFailed ? (GrpcResult<string>)result.Errors.Select(e => new GrpcError(e.Message)).ToArray() : (GrpcResult<string>)"Todo completed successfully";
   }
 
-  public async Task<GrpcResult<string>> DeleteToDoAsync(Guid todoId)
+  public async Task<GrpcResult<string>> DeleteToDoAsync(DeleteToDoRequest request)
   {
-    var command = new DeleteToDoCommand(new ToDoId(todoId));
+    var command = new DeleteToDoCommand(new ToDoId(request.ToDoId));
     var result = await mediator.Send(command);
 
     return result.IsFailed ? (GrpcResult<string>)result.Errors.Select(e => new GrpcError(e.Message)).ToArray() : (GrpcResult<string>)"Todo deleted successfully";

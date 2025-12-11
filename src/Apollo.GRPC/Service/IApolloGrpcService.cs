@@ -15,17 +15,17 @@ public interface IApolloGrpcService
   Task<GrpcResult<ToDoDto>> CreateToDoAsync(CreateToDoRequest request);
 
   [OperationContract]
-  Task<GrpcResult<ToDoDto>> GetToDoAsync(Guid todoId);
+  Task<GrpcResult<ToDoDto>> GetToDoAsync(GetToDoRequest request);
 
   [OperationContract]
-  Task<GrpcResult<ToDoDto[]>> GetPersonToDosAsync(Guid personId);
+  Task<GrpcResult<ToDoDto[]>> GetPersonToDosAsync(GetPersonToDosRequest request);
 
   [OperationContract]
   Task<GrpcResult<string>> UpdateToDoAsync(UpdateToDoRequest request);
 
   [OperationContract]
-  Task<GrpcResult<string>> CompleteToDoAsync(Guid todoId);
+  Task<GrpcResult<string>> CompleteToDoAsync(CompleteToDoRequest request);
 
   [OperationContract]
-  Task<GrpcResult<string>> DeleteToDoAsync(Guid todoId);
+  Task<GrpcResult<string>> DeleteToDoAsync(DeleteToDoRequest request);
 }
