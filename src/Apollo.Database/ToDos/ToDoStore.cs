@@ -96,7 +96,7 @@ public sealed class ToDoStore(IDocumentSession session, TimeProvider timeProvide
     }
   }
 
-  public async Task<Result<IEnumerable<ToDo>>> GetDueTasksAsync(DateTime beforeTime, CancellationToken cancellationToken = default)
+  public async Task<Result<IEnumerable<ToDo>>> GetDueToDosAsync(DateTime beforeTime, CancellationToken cancellationToken = default)
   {
     try
     {

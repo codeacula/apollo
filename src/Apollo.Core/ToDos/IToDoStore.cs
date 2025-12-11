@@ -12,7 +12,7 @@ public interface IToDoStore
   Task<Result<ToDo>> CreateAsync(ToDoId id, PersonId personId, Description description, CancellationToken cancellationToken = default);
   Task<Result> DeleteAsync(ToDoId id, CancellationToken cancellationToken = default);
   Task<Result<ToDo>> GetAsync(ToDoId id, CancellationToken cancellationToken = default);
-  Task<Result<IEnumerable<ToDo>>> GetDueTasksAsync(DateTime beforeTime, CancellationToken cancellationToken = default);
+  Task<Result<IEnumerable<ToDo>>> GetDueToDosAsync(DateTime beforeTime, CancellationToken cancellationToken = default);
   Task<Result<IEnumerable<ToDo>>> GetByPersonIdAsync(PersonId personId, CancellationToken cancellationToken = default);
   Task<Result> SetReminderAsync(ToDoId id, DateTime reminderDate, CancellationToken cancellationToken = default);
   Task<Result> UpdateAsync(ToDoId id, Description description, CancellationToken cancellationToken = default);
