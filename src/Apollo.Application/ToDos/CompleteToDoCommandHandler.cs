@@ -17,10 +17,9 @@ public sealed class CompleteToDoCommandHandler(
       if (toDoResult.IsSuccess)
       {
         var toDo = toDoResult.Value;
-        // Cancel scheduled reminder if it exists
-        if (toDo.Reminders.Any(r => r.QuartzJobId.HasValue))
+        // Cancel all scheduled reminders
+        foreach (var reminder in toDo.Reminders.Where(r => r.QuartzJobId.HasValue))
         {
-          var reminder = toDo.Reminders.First(r => r.QuartzJobId.HasValue);
           _ = await reminderScheduler.CancelReminderAsync(reminder.QuartzJobId!.Value, cancellationToken);
         }
       }
