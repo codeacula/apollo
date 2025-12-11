@@ -1,4 +1,3 @@
-using Apollo.AI;
 using Apollo.Application.People;
 using Apollo.Core.People;
 
