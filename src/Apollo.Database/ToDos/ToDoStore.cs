@@ -12,6 +12,23 @@ namespace Apollo.Database.ToDos;
 
 public sealed class ToDoStore(IDocumentSession session, TimeProvider timeProvider) : IToDoStore
 {
+  public async Task<Result> CancelReminderAsync(ToDoId id, CancellationToken cancellationToken = default)
+  {
+    try
+    {
+      var time = timeProvider.GetUtcNow().DateTime;
+      _ = session.Events.Append(id.Value, new ToDoReminderCancelledEvent(id.Value, time));
+
+      await session.SaveChangesAsync(cancellationToken);
+
+      return Result.Ok();
+    }
+    catch (Exception ex)
+    {
+      return Result.Fail(ex.Message);
+    }
+  }
+
   public async Task<Result> CompleteAsync(ToDoId id, CancellationToken cancellationToken = default)
   {
     try
@@ -118,7 +135,24 @@ public sealed class ToDoStore(IDocumentSession session, TimeProvider timeProvide
     try
     {
       var time = timeProvider.GetUtcNow().DateTime;
-      _ = session.Events.Append(id.Value, new ToDoReminderSetEvent(id.Value, reminderDate, time));
+      _ = session.Events.Append(id.Value, new ToDoReminderSetEvent(id.Value, reminderDate, null, time));
+
+      await session.SaveChangesAsync(cancellationToken);
+
+      return Result.Ok();
+    }
+    catch (Exception ex)
+    {
+      return Result.Fail(ex.Message);
+    }
+  }
+
+  public async Task<Result> SetReminderAsync(ToDoId id, DateTime reminderDate, QuartzJobId quartzJobId, CancellationToken cancellationToken = default)
+  {
+    try
+    {
+      var time = timeProvider.GetUtcNow().DateTime;
+      _ = session.Events.Append(id.Value, new ToDoReminderSetEvent(id.Value, reminderDate, quartzJobId.Value, time));
 
       await session.SaveChangesAsync(cancellationToken);
 

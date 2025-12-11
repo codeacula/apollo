@@ -6,7 +6,9 @@ using FluentResults;
 
 namespace Apollo.Application.ToDos;
 
-public sealed class CreateToDoCommandHandler(IToDoStore toDoStore) : IRequestHandler<CreateToDoCommand, Result<ToDo>>
+public sealed class CreateToDoCommandHandler(
+  IToDoStore toDoStore,
+  IToDoReminderScheduler reminderScheduler) : IRequestHandler<CreateToDoCommand, Result<ToDo>>
 {
   public async Task<Result<ToDo>> Handle(CreateToDoCommand request, CancellationToken cancellationToken)
   {
@@ -22,9 +24,17 @@ public sealed class CreateToDoCommandHandler(IToDoStore toDoStore) : IRequestHan
 
       if (request.ReminderDate.HasValue)
       {
-        var reminderResult = await toDoStore.SetReminderAsync(toDoId, request.ReminderDate.Value, cancellationToken);
+        var scheduleResult = await reminderScheduler.ScheduleReminderAsync(toDoId, request.ReminderDate.Value, cancellationToken);
+        if (scheduleResult.IsFailed)
+        {
+          return Result.Fail<ToDo>($"ToDo created but failed to schedule reminder: {string.Join(", ", scheduleResult.Errors.Select(e => e.Message))}");
+        }
+
+        var reminderResult = await toDoStore.SetReminderAsync(toDoId, request.ReminderDate.Value, scheduleResult.Value, cancellationToken);
         if (reminderResult.IsFailed)
         {
+          // Try to cancel the scheduled job since we couldn't update the database
+          _ = await reminderScheduler.CancelReminderAsync(scheduleResult.Value, cancellationToken);
           return Result.Fail<ToDo>($"ToDo created but failed to set reminder: {string.Join(", ", reminderResult.Errors.Select(e => e.Message))}");
         }
       }

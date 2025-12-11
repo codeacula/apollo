@@ -1,5 +1,7 @@
 using Apollo.API.Jobs;
+using Apollo.API.Services;
 using Apollo.Core.Data;
+using Apollo.Core.ToDos;
 
 using Quartz;
 
@@ -14,6 +16,9 @@ public static class ServiceCollectionExtensions
 
     _ = services.AddSingleton<StackExchange.Redis.IConnectionMultiplexer>(_ =>
         StackExchange.Redis.ConnectionMultiplexer.Connect(redisConnectionString));
+
+    // Register ToDoReminderScheduler
+    _ = services.AddScoped<IToDoReminderScheduler, ToDoReminderScheduler>();
 
     string quartzConnectionString = configuration.GetConnectionString("Quartz") ?? throw new MissingDatabaseStringException("Quartz");
     _ = services
@@ -30,13 +35,17 @@ public static class ServiceCollectionExtensions
               s.UseSystemTextJsonSerializer();
             });
 
-          _ = q.AddJob<ToDoReminderJob>(opts => opts.WithIdentity("ToDoReminderJob"));
-          _ = q.AddTrigger(opts => opts
-            .ForJob("ToDoReminderJob")
-            .WithIdentity("ToDoReminderJob-trigger")
-            .WithSimpleSchedule(x => x
-              .WithIntervalInMinutes(15)
-              .RepeatForever()));
+          // Register the SingleToDoReminderJob for dynamic scheduling
+          _ = q.AddJob<SingleToDoReminderJob>(opts => opts.StoreDurably());
+
+          // Old polling job - kept for backwards compatibility but can be removed
+          // _ = q.AddJob<ToDoReminderJob>(opts => opts.WithIdentity("ToDoReminderJob"));
+          // _ = q.AddTrigger(opts => opts
+          //   .ForJob("ToDoReminderJob")
+          //   .WithIdentity("ToDoReminderJob-trigger")
+          //   .WithSimpleSchedule(x => x
+          //     .WithIntervalInMinutes(15)
+          //     .RepeatForever()));
         })
         .AddQuartzHostedService(opt => opt.WaitForJobsToComplete = true);
     return services;

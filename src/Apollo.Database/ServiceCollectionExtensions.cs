@@ -62,6 +62,7 @@ public static class ServiceCollectionExtensions
         _ = options.Events.AddEventType<ToDoCompletedEvent>();
         _ = options.Events.AddEventType<ToDoDeletedEvent>();
         _ = options.Events.AddEventType<ToDoReminderSetEvent>();
+        _ = options.Events.AddEventType<ToDoReminderCancelledEvent>();
 
         _ = options.Projections.Snapshot<DbPerson>(Marten.Events.Projections.SnapshotLifecycle.Inline);
         _ = options.Projections.Snapshot<DbConversation>(Marten.Events.Projections.SnapshotLifecycle.Inline);

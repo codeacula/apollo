@@ -11,6 +11,7 @@ public sealed record DbToDo
   public required Guid PersonId { get; init; }
   public required string Description { get; init; }
   public DateTime? ReminderDate { get; init; }
+  public Guid? QuartzJobId { get; init; }
   public DateTime? DueDate { get; init; }
   public bool IsCompleted { get; init; }
   public bool IsDeleted { get; init; }
@@ -84,7 +85,18 @@ public sealed record DbToDo
     return toDo with
     {
       ReminderDate = ev.Data.ReminderDate,
+      QuartzJobId = ev.Data.QuartzJobId,
       UpdatedOn = ev.Data.SetOn
+    };
+  }
+
+  public static DbToDo Apply(IEvent<ToDoReminderCancelledEvent> ev, DbToDo toDo)
+  {
+    return toDo with
+    {
+      ReminderDate = null,
+      QuartzJobId = null,
+      UpdatedOn = ev.Data.CancelledOn
     };
   }
 }
