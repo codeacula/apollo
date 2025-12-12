@@ -18,7 +18,6 @@ public static class ServiceCollectionExtensions
 
     _ = services
       .AddSingleton(apolloAiConfig ?? new ApolloAIConfig())
-      .AddScoped(_ => TimeProvider.System)
       .AddScoped<IApolloAIAgent, ApolloAIAgent>();
 
     return services;
