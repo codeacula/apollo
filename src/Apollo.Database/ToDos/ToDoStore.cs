@@ -113,12 +113,29 @@ public sealed class ToDoStore(IDocumentSession session, TimeProvider timeProvide
     }
   }
 
-  public async Task<Result> SetReminderAsync(ToDoId id, DateTime reminderDate, CancellationToken cancellationToken = default)
+  public async Task<Result<IEnumerable<ToDo>>> GetToDosByQuartzJobIdAsync(QuartzJobId quartzJobId, CancellationToken cancellationToken = default)
+  {
+    try
+    {
+      var dbToDos = await session.Query<DbToDo>()
+        .Where(t => !t.IsDeleted && !t.IsCompleted && t.QuartzJobId.HasValue && t.QuartzJobId.Value == quartzJobId.Value)
+        .ToListAsync(cancellationToken);
+
+      var todos = dbToDos.Select(t => (ToDo)t);
+      return Result.Ok(todos);
+    }
+    catch (Exception ex)
+    {
+      return Result.Fail(ex.Message);
+    }
+  }
+
+  public async Task<Result> SetReminderAsync(ToDoId id, DateTime reminderDate, QuartzJobId quartzJobId, CancellationToken cancellationToken = default)
   {
     try
     {
       var time = timeProvider.GetUtcNow().DateTime;
-      _ = session.Events.Append(id.Value, new ToDoReminderSetEvent(id.Value, reminderDate, time));
+      _ = session.Events.Append(id.Value, new ToDoReminderScheduledEvent(id.Value, quartzJobId.Value, reminderDate, time));
 
       await session.SaveChangesAsync(cancellationToken);
 

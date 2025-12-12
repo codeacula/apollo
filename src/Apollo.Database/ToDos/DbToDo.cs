@@ -11,6 +11,7 @@ public sealed record DbToDo
   public required Guid PersonId { get; init; }
   public required string Description { get; init; }
   public DateTime? ReminderDate { get; init; }
+  public Guid? QuartzJobId { get; init; }
   public DateTime? DueDate { get; init; }
   public bool IsCompleted { get; init; }
   public bool IsDeleted { get; init; }
@@ -30,7 +31,21 @@ public sealed record DbToDo
       DueDate = dbToDo.DueDate.HasValue ? new(dbToDo.DueDate.Value) : null,
       CreatedOn = new(dbToDo.CreatedOn),
       UpdatedOn = new(dbToDo.UpdatedOn),
-      Reminders = dbToDo.ReminderDate.HasValue ? [new()] : [],
+      Reminders = dbToDo.ReminderDate.HasValue
+        ?
+        [
+          new Reminder
+          {
+            AcknowledgedOn = null,
+            CreatedOn = new(dbToDo.CreatedOn),
+            Details = new(string.Empty),
+            Id = new(Guid.Empty),
+            QuartzJobId = dbToDo.QuartzJobId.HasValue ? new(dbToDo.QuartzJobId.Value) : null,
+            ReminderTime = new(dbToDo.ReminderDate.Value),
+            UpdatedOn = new(dbToDo.UpdatedOn)
+          }
+        ]
+        : [],
     };
   }
 
@@ -45,6 +60,7 @@ public sealed record DbToDo
       Description = eventData.Description,
       IsCompleted = false,
       IsDeleted = false,
+      QuartzJobId = null,
       ReminderDate = null,
       DueDate = null,
       CreatedOn = eventData.CreatedOn,
@@ -79,10 +95,21 @@ public sealed record DbToDo
     };
   }
 
+  public static DbToDo Apply(IEvent<ToDoReminderScheduledEvent> ev, DbToDo toDo)
+  {
+    return toDo with
+    {
+      QuartzJobId = ev.Data.QuartzJobId,
+      ReminderDate = ev.Data.ReminderDate,
+      UpdatedOn = ev.Data.ScheduledOn
+    };
+  }
+
   public static DbToDo Apply(IEvent<ToDoReminderSetEvent> ev, DbToDo toDo)
   {
     return toDo with
     {
+      QuartzJobId = null,
       ReminderDate = ev.Data.ReminderDate,
       UpdatedOn = ev.Data.SetOn
     };

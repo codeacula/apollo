@@ -22,6 +22,7 @@
 - Prefer file-scoped namespaces in C#; sort `using` directives with `System` first.
 - C# naming: PascalCase for public types/members, camelCase for locals/parameters, suffix async methods with `Async`, suffix DTOs with `DTO`. Sort members: constants, fields, constructors, properties, methods, then by name alphabetically.
 - Keep modules thin: Domain for rules, Application for orchestration, API/GRPC/Discord for transport concerns only.
+- Assign unused variables to `_` to indicate intentional disregard.
 
 ## Testing Guidelines
 

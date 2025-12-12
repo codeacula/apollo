@@ -6,7 +6,7 @@ using FluentResults;
 
 namespace Apollo.Application.ToDos;
 
-public sealed class CreateToDoCommandHandler(IToDoStore toDoStore) : IRequestHandler<CreateToDoCommand, Result<ToDo>>
+public sealed class CreateToDoCommandHandler(IToDoStore toDoStore, IToDoReminderScheduler toDoReminderScheduler) : IRequestHandler<CreateToDoCommand, Result<ToDo>>
 {
   public async Task<Result<ToDo>> Handle(CreateToDoCommand request, CancellationToken cancellationToken)
   {
@@ -22,7 +22,13 @@ public sealed class CreateToDoCommandHandler(IToDoStore toDoStore) : IRequestHan
 
       if (request.ReminderDate.HasValue)
       {
-        var reminderResult = await toDoStore.SetReminderAsync(toDoId, request.ReminderDate.Value, cancellationToken);
+        var jobResult = await toDoReminderScheduler.GetOrCreateJobAsync(request.ReminderDate.Value, cancellationToken);
+        if (jobResult.IsFailed)
+        {
+          return Result.Fail<ToDo>($"ToDo created but failed to schedule reminder job: {string.Join(", ", jobResult.Errors.Select(e => e.Message))}");
+        }
+
+        var reminderResult = await toDoStore.SetReminderAsync(toDoId, request.ReminderDate.Value, jobResult.Value, cancellationToken);
         if (reminderResult.IsFailed)
         {
           return Result.Fail<ToDo>($"ToDo created but failed to set reminder: {string.Join(", ", reminderResult.Errors.Select(e => e.Message))}");

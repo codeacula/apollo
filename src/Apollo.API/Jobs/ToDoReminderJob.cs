@@ -2,6 +2,7 @@ using Apollo.Core.Logging;
 using Apollo.Core.People;
 using Apollo.Core.ToDos;
 using Apollo.Domain.Common.Enums;
+using Apollo.Domain.ToDos.ValueObjects;
 
 using Quartz;
 
@@ -20,8 +21,14 @@ public class ToDoReminderJob(
     {
       ToDoLogs.LogJobStarted(logger, timeProvider.GetUtcNow());
 
-      var currentTime = timeProvider.GetUtcNow().DateTime;
-      var dueToDosResult = await toDoStore.GetDueToDosAsync(currentTime, context.CancellationToken);
+      if (!Guid.TryParse(context.JobDetail.Key.Name, out var jobGuid))
+      {
+        ToDoLogs.LogFailedToRetrieveToDos(logger, $"Invalid Quartz job id: {context.JobDetail.Key.Name}");
+        return;
+      }
+
+      var jobId = new QuartzJobId(jobGuid);
+      var dueToDosResult = await toDoStore.GetToDosByQuartzJobIdAsync(jobId, context.CancellationToken);
 
       if (dueToDosResult.IsFailed)
       {
@@ -32,14 +39,16 @@ public class ToDoReminderJob(
       var dueToDos = dueToDosResult.Value.ToList();
       ToDoLogs.LogFoundDueToDos(logger, dueToDos.Count);
 
-      foreach (var todo in dueToDos)
+      foreach (var group in dueToDos.GroupBy(t => t.PersonId))
       {
+        var firstToDo = group.First();
+
         try
         {
-          var personResult = await personStore.GetAsync(todo.PersonId, context.CancellationToken);
+          var personResult = await personStore.GetAsync(firstToDo.PersonId, context.CancellationToken);
           if (personResult.IsFailed)
           {
-            ToDoLogs.LogFailedToGetPerson(logger, todo.PersonId.Value, todo.Id.Value);
+            ToDoLogs.LogFailedToGetPerson(logger, firstToDo.PersonId.Value, firstToDo.Id.Value);
             continue;
           }
 
@@ -47,15 +56,17 @@ public class ToDoReminderJob(
 
           if (person.Username.Platform == Platform.Discord)
           {
-            ToDoLogs.LogSendingReminder(logger, todo.Id.Value, person.Username.Value);
-            ToDoLogs.LogReminder(logger, person.Username.Value, todo.Description.Value);
+            ToDoLogs.LogSendingGroupedReminder(logger, group.Count(), person.Username.Value);
+            ToDoLogs.LogReminder(logger, person.Username.Value, string.Join("\n", group.Select(t => t.Description.Value)));
           }
         }
         catch (Exception ex)
         {
-          ToDoLogs.LogErrorProcessingReminder(logger, ex, todo.Id.Value);
+          ToDoLogs.LogErrorProcessingReminder(logger, ex, firstToDo.Id.Value);
         }
       }
+
+      _ = await context.Scheduler.DeleteJob(context.JobDetail.Key, context.CancellationToken);
 
       ToDoLogs.LogJobCompleted(logger, timeProvider.GetUtcNow());
     }
