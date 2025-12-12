@@ -8,7 +8,7 @@ namespace Apollo.AI.Plugins;
 
 public partial class TimePlugin(TimeProvider timeProvider)
 {
-  private static readonly Regex _regex = MyRegex();
+  private static readonly Regex _fuzzyTimeRegex = FuzzyDatePatternRegex();
 
   private const string _dateFormat = "yyyy-MM-dd";
   private const string _fullDateTimeFormat = "s";
@@ -16,7 +16,8 @@ public partial class TimePlugin(TimeProvider timeProvider)
 
   [KernelFunction("convert_timezone")]
   [Description("Converts provided timestamp to the specified time zone")]
-  public static string ConvertToTimeZone([Description("The timestamp to convert")] string timestamp, [Description("The target time zone ID")] string timeZoneId)
+  [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Needs to be an instance method for Semantic Kernel")]
+  public string ConvertToTimeZone([Description("The timestamp to convert")] string timestamp, [Description("The target time zone ID")] string timeZoneId)
   {
     return !DateTimeOffset.TryParse(timestamp, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var parsedTimestamp)
       ? throw new ArgumentException("Invalid timestamp format.", nameof(timestamp))
@@ -106,7 +107,7 @@ public partial class TimePlugin(TimeProvider timeProvider)
       return true;
     }
 
-    var match = _regex.Match(description);
+    var match = _fuzzyTimeRegex.Match(description);
     if (!match.Success)
     {
       result = default;
@@ -122,7 +123,7 @@ public partial class TimePlugin(TimeProvider timeProvider)
       "minute" or "minutes" => now.AddMinutes(quantity),
       "hour" or "hours" => now.AddHours(quantity),
       "day" or "days" => now.AddDays(quantity),
-      "week" or "weeks" => now.AddDays(quantity * 7),
+      "week" or "weeks" => now.AddDays((double)quantity * 7),
       "month" or "months" => now.AddMonths(quantity),
       "year" or "years" => now.AddYears(quantity),
       _ => now
@@ -132,5 +133,5 @@ public partial class TimePlugin(TimeProvider timeProvider)
   }
 
   [GeneratedRegex(@"^(?:in\s+)?(\d+)\s+(second|seconds|minute|minutes|hour|hours|day|days|week|weeks|month|months|year|years)(?:\s+from\s+now)?$")]
-  private static partial Regex MyRegex();
+  private static partial Regex FuzzyDatePatternRegex();
 }
