@@ -79,7 +79,7 @@ public sealed class ProcessIncomingMessageCommandHandler(
 
       string systemPrompt = aiConfig.SystemPrompt;
 
-      var messages = conversation.Messages.Select(m => new ChatMessageDTOs(
+      var messages = conversation.Messages.Select(m => new ChatMessageDTO(
             m.FromUser.Value ? ChatRole.User : ChatRole.Assistant,
             m.Content.Value,
             m.CreatedOn.Value
