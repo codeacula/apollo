@@ -23,6 +23,16 @@ public sealed class CompleteToDoCommandHandler(IToDoStore toDoStore, IToDoRemind
       if (remainingResult.IsSuccess && !remainingResult.Value.Any())
       {
         _ = await toDoReminderScheduler.DeleteJobAsync(quartzJobId.Value, cancellationToken);
+
+        var afterDeleteRemainingResult = await toDoStore.GetToDosByQuartzJobIdAsync(quartzJobId.Value, cancellationToken);
+        var reminderDate = afterDeleteRemainingResult.IsSuccess
+          ? afterDeleteRemainingResult.Value.SelectMany(t => t.Reminders).FirstOrDefault()?.ReminderTime.Value
+          : null;
+
+        if (reminderDate.HasValue)
+        {
+          _ = await toDoReminderScheduler.GetOrCreateJobAsync(reminderDate.Value, cancellationToken);
+        }
       }
 
       return result;
