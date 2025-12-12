@@ -19,4 +19,10 @@ public static partial class DataAccessLogs
     Level = LogLevel.Debug,
     Message = "Mock user access checked for {Username}: {HasAccess}")]
   public static partial void UserAccessChecked(ILogger logger, string username, bool hasAccess);
+
+  [LoggerMessage(
+    EventId = 3202,
+    Level = LogLevel.Error,
+    Message = "Unable to save message to conversation {ConversationId}: {Message}")]
+  public static partial void UnableToSaveMessageToConversation(ILogger logger, Guid conversationId, string message);
 }
