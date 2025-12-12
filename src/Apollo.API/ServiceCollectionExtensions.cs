@@ -20,7 +20,6 @@ public static class ServiceCollectionExtensions
     _ = services
         .AddQuartz(q =>
         {
-          _ = q.AddJob<ToDoReminderJob>(job => job.WithIdentity(nameof(ToDoReminderJob)));
           q.UsePersistentStore(s =>
             {
               s.UseProperties = true;
