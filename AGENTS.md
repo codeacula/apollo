@@ -13,7 +13,7 @@
 - Run API locally: `dotnet run --project src/Apollo.API/Apollo.API.csproj`
 - Run Discord bot: `dotnet run --project src/Apollo.Discord/Apollo.Discord.csproj`
 - Front-end: `npm install --prefix src/Client && npm run dev --prefix src/Client`
-- Tests: `dotnet test Apollo.sln --logger "trx;LogFileName=test-results.trx"`
+- Tests: `dotnet test`
 - Full stack with deps: `docker-compose up --build` (brings up Postgres + Redis; uses `.env` for secrets)
 
 ## Coding Style & Naming Conventions
