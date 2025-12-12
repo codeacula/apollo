@@ -62,7 +62,9 @@ public class ApolloAIAgent : IApolloAIAgent
           kernel: _kernel,
           cancellationToken: cancellationToken);
 
-      return response.Content ?? string.Empty;
+      return response == null || response.Content == null
+        ? throw new InvalidOperationException("Received null response from chat completion service.")
+        : response.Content;
     }
     catch (Exception ex)
     {
