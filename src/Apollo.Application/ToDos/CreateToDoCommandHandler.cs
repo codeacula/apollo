@@ -25,13 +25,14 @@ public sealed class CreateToDoCommandHandler(IToDoStore toDoStore, IToDoReminder
         var jobResult = await toDoReminderScheduler.GetOrCreateJobAsync(request.ReminderDate.Value, cancellationToken);
         if (jobResult.IsFailed)
         {
-          return Result.Fail<ToDo>($"ToDo created but failed to schedule reminder job: {string.Join(", ", jobResult.Errors.Select(e => e.Message))}");
+          return Result.Fail<ToDo>($"To-Do created but failed to schedule reminder job: {string.Join(", ", jobResult.Errors.Select(e => e.Message))}");
         }
 
         var reminderResult = await toDoStore.SetReminderAsync(toDoId, request.ReminderDate.Value, jobResult.Value, cancellationToken);
         if (reminderResult.IsFailed)
         {
-          return Result.Fail<ToDo>($"ToDo created but failed to set reminder: {string.Join(", ", reminderResult.Errors.Select(e => e.Message))}");
+          return Result.Ok(result.Value)
+          .WithError($"To-Do created but failed to set reminder: {string.Join(", ", reminderResult.Errors.Select(e => e.Message))}");
         }
       }
 

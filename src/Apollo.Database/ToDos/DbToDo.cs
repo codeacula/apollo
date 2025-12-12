@@ -38,8 +38,8 @@ public sealed record DbToDo
           {
             AcknowledgedOn = null,
             CreatedOn = new(dbToDo.CreatedOn),
-            Details = new(string.Empty),
-            Id = new(Guid.Empty),
+            Details = new(dbToDo.Description),
+            Id = new(Guid.NewGuid()),
             QuartzJobId = dbToDo.QuartzJobId.HasValue ? new(dbToDo.QuartzJobId.Value) : null,
             ReminderTime = new(dbToDo.ReminderDate.Value),
             UpdatedOn = new(dbToDo.UpdatedOn)
@@ -109,7 +109,6 @@ public sealed record DbToDo
   {
     return toDo with
     {
-      QuartzJobId = null,
       ReminderDate = ev.Data.ReminderDate,
       UpdatedOn = ev.Data.SetOn
     };

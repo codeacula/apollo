@@ -24,6 +24,7 @@
 - Keep modules thin: Domain for rules, Application for orchestration, API/GRPC/Discord for transport concerns only.
 - Assign unused variables to `_` to indicate intentional disregard.
 - Do not use regions in C#; prefer partial classes if splitting is needed.
+- Use primary constructors unless more complex initialization is required.
 
 ## Testing Guidelines
 

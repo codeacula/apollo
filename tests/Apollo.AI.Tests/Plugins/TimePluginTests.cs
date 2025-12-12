@@ -1,5 +1,3 @@
-using System.Globalization;
-
 using Apollo.AI.Plugins;
 
 namespace Apollo.AI.Tests.Plugins;
@@ -16,18 +14,12 @@ public class TimePluginTests
     _plugin = new TimePlugin(_mockTimeProvider);
   }
 
-  #region GetDate Tests
-
   [Fact]
   public void GetDateReturnsCurrentDateInIsoFormat()
   {
     var result = _plugin.GetDate();
     Assert.Equal("2025-12-12", result);
   }
-
-  #endregion
-
-  #region GetTime Tests
 
   [Fact]
   public void GetTimeReturnsCurrentTimeInIsoFormat()
@@ -36,20 +28,12 @@ public class TimePluginTests
     Assert.Equal("14:30:00", result);
   }
 
-  #endregion
-
-  #region GetDateTime Tests
-
   [Fact]
   public void GetDateTimeReturnsCurrentDateTimeInIsoFormat()
   {
     var result = _plugin.GetDateTime();
     Assert.Equal("2025-12-12T14:30:00", result);
   }
-
-  #endregion
-
-  #region ConvertToTimeZone Tests
 
   [Fact]
   public void ConvertToTimeZoneWithValidTimestampAndTimeZoneReturnsConvertedTime()
@@ -70,13 +54,9 @@ public class TimePluginTests
   [Fact]
   public void ConvertToTimeZoneWithInvalidTimeZoneIdThrowsTimeZoneNotFoundException()
   {
-    Assert.Throws<TimeZoneNotFoundException>(() =>
+    _ = Assert.Throws<TimeZoneNotFoundException>(() =>
       _plugin.ConvertToTimeZone("2025-12-12T14:30:00Z", "Invalid/TimeZone"));
   }
-
-  #endregion
-
-  #region GetFuzzyDate Tests
 
   [Fact]
   public void GetFuzzyDateWithNullOrWhitespaceThrowsArgumentException()
@@ -248,20 +228,9 @@ public class TimePluginTests
     var result = _plugin.GetFuzzyDate("in 2 hours");
     Assert.Equal("2025-12-12T16:30:00", result);
   }
-
-  #endregion
-
-  /// <summary>
-  /// Mock TimeProvider that returns a fixed point in time for testing
-  /// </summary>
-  private sealed class FixedTimeProvider : TimeProvider
+  private sealed class FixedTimeProvider(DateTimeOffset fixedTime) : TimeProvider
   {
-    private readonly DateTimeOffset _fixedTime;
-
-    public FixedTimeProvider(DateTimeOffset fixedTime)
-    {
-      _fixedTime = fixedTime;
-    }
+    private readonly DateTimeOffset _fixedTime = fixedTime;
 
     public override DateTimeOffset GetUtcNow() => _fixedTime;
   }

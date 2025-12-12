@@ -10,7 +10,6 @@ public readonly record struct UtcDateTime
     {
       DateTimeKind.Utc => value,
       DateTimeKind.Unspecified => DateTime.SpecifyKind(value, DateTimeKind.Utc),
-      DateTimeKind.Local => value.ToUniversalTime(),
       _ => value.ToUniversalTime()
     };
   }
