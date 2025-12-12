@@ -21,15 +21,15 @@ public class ToDoReminderJob(
       ToDoLogs.LogJobStarted(logger, timeProvider.GetUtcNow());
 
       var currentTime = timeProvider.GetUtcNow().DateTime;
-      var dueTasksResult = await toDoStore.GetDueTasksAsync(currentTime, context.CancellationToken);
+      var dueToDosResult = await toDoStore.GetDueToDosAsync(currentTime, context.CancellationToken);
 
-      if (dueTasksResult.IsFailed)
+      if (dueToDosResult.IsFailed)
       {
-        ToDoLogs.LogFailedToRetrieveToDos(logger, string.Join(", ", dueTasksResult.Errors.Select(e => e.Message)));
+        ToDoLogs.LogFailedToRetrieveToDos(logger, string.Join(", ", dueToDosResult.Errors.Select(e => e.Message)));
         return;
       }
 
-      var dueToDos = dueTasksResult.Value.ToList();
+      var dueToDos = dueToDosResult.Value.ToList();
       ToDoLogs.LogFoundDueToDos(logger, dueToDos.Count);
 
       foreach (var todo in dueToDos)
