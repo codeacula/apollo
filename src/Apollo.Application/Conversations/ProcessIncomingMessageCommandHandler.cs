@@ -79,14 +79,14 @@ public sealed class ProcessIncomingMessageCommandHandler(
 
       string systemPrompt = aiConfig.SystemPrompt;
 
-      var messages = conversation.Messages.Select(m => new ChatMessage(
+      var messages = conversation.Messages.Select(m => new ChatMessageDTO(
             m.FromUser.Value ? ChatRole.User : ChatRole.Assistant,
             m.Content.Value,
             m.CreatedOn.Value
           )
         ).ToList();
 
-      var completionRequest = new ChatCompletionRequest(systemPrompt, messages);
+      var completionRequest = new ChatCompletionRequestDTO(systemPrompt, messages);
 
       // Register user-scoped ToDoPlugin
       var toDoPlugin = new ToDoPlugin(mediator, userResult.Value.Id);
@@ -95,7 +95,13 @@ public sealed class ProcessIncomingMessageCommandHandler(
       // Hand message to AI here
       var response = await apolloAIAgent.ChatAsync(completionRequest, cancellationToken);
 
-      _ = await conversationStore.AddReplyAsync(conversation.Id, new Content(response), cancellationToken);
+      var addReplyResult = await conversationStore.AddReplyAsync(conversation.Id, new Content(response), cancellationToken);
+
+      if (addReplyResult.IsFailed)
+      {
+        // Log the error but still return the AI response
+        DataAccessLogs.UnableToSaveMessageToConversation(logger, conversation.Id.Value, response);
+      }
 
       var currentTime = timeProvider.GetUtcNow().DateTime;
       return Result.Ok(new Reply
