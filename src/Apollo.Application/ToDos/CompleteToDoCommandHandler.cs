@@ -16,7 +16,7 @@ public sealed class CompleteToDoCommandHandler(IToDoStore toDoStore, IToDoRemind
       var result = await toDoStore.CompleteAsync(request.ToDoId, cancellationToken);
       if (result.IsFailed || quartzJobId is null)
       {
-        return Result.Fail("Failed to complete To-Do or no associated Quartz job ID found.");
+        return result;
       }
 
       var remainingResult = await toDoStore.GetToDosByQuartzJobIdAsync(quartzJobId.Value, cancellationToken);
