@@ -1,5 +1,6 @@
 using Apollo.API.Jobs;
 using Apollo.Core.Data;
+using Apollo.Core.ToDos;
 
 using Quartz;
 
@@ -30,15 +31,11 @@ public static class ServiceCollectionExtensions
               s.UseSystemTextJsonSerializer();
             });
 
-          _ = q.AddJob<ToDoReminderJob>(opts => opts.WithIdentity("ToDoReminderJob"));
-          _ = q.AddTrigger(opts => opts
-            .ForJob("ToDoReminderJob")
-            .WithIdentity("ToDoReminderJob-trigger")
-            .WithSimpleSchedule(x => x
-              .WithIntervalInMinutes(15)
-              .RepeatForever()));
         })
         .AddQuartzHostedService(opt => opt.WaitForJobsToComplete = true);
+
+    _ = services.AddScoped<IToDoReminderScheduler, QuartzToDoReminderScheduler>();
+
     return services;
   }
 }

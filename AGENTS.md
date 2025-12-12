@@ -22,10 +22,14 @@
 - Prefer file-scoped namespaces in C#; sort `using` directives with `System` first.
 - C# naming: PascalCase for public types/members, camelCase for locals/parameters, suffix async methods with `Async`, suffix DTOs with `DTO`. Sort members: constants, fields, constructors, properties, methods, then by name alphabetically.
 - Keep modules thin: Domain for rules, Application for orchestration, API/GRPC/Discord for transport concerns only.
+- Assign unused variables to `_` to indicate intentional disregard.
+- Do not use regions in C#; prefer partial classes if splitting is needed.
+- Use primary constructors unless more complex initialization is required.
 
 ## Testing Guidelines
 
 - Framework: xUnit across `tests/` projects; name files `*Tests.cs` and classes `*Tests`.
+- Name test methods using `MethodNameStateUnderTestExpectedBehavior` pattern.
 - Co-locate fixtures/builders under the relevant test project; stub external services instead of hitting real APIs.
 - Add regression tests for every bug fix and cover edge cases (null/empty payloads, invalid IDs, permission checks).
 - Run `dotnet test Apollo.sln` before pushing; include the TRX when CI expects artifacts.

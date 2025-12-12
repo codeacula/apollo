@@ -22,7 +22,7 @@ public class ApolloAIAgent : IApolloAIAgent
     var builder = Kernel.CreateBuilder();
     _ = builder.Services.AddOpenAIChatCompletion(apolloAIConfig.ModelId, new Uri(apolloAIConfig.Endpoint));
     _kernel = builder.Build();
-    AddPlugin<TimePlugin>("Time");
+    AddPlugin(new TimePlugin(TimeProvider.System), "Time");
   }
 
   public void AddPlugin(object plugin, string pluginName)

@@ -4,13 +4,28 @@ using FluentResults;
 
 namespace Apollo.Application.ToDos;
 
-public sealed class DeleteToDoCommandHandler(IToDoStore toDoStore) : IRequestHandler<DeleteToDoCommand, Result>
+public sealed class DeleteToDoCommandHandler(IToDoStore toDoStore, IToDoReminderScheduler toDoReminderScheduler) : IRequestHandler<DeleteToDoCommand, Result>
 {
   public async Task<Result> Handle(DeleteToDoCommand request, CancellationToken cancellationToken)
   {
     try
     {
-      return await toDoStore.DeleteAsync(request.ToDoId, cancellationToken);
+      var toDoResult = await toDoStore.GetAsync(request.ToDoId, cancellationToken);
+      var quartzJobId = toDoResult.IsSuccess ? toDoResult.Value.Reminders.FirstOrDefault()?.QuartzJobId : null;
+
+      var result = await toDoStore.DeleteAsync(request.ToDoId, cancellationToken);
+      if (result.IsFailed || quartzJobId is null)
+      {
+        return result;
+      }
+
+      var remainingResult = await toDoStore.GetToDosByQuartzJobIdAsync(quartzJobId.Value, cancellationToken);
+      if (remainingResult.IsSuccess && !remainingResult.Value.Any())
+      {
+        _ = await toDoReminderScheduler.DeleteJobAsync(quartzJobId.Value, cancellationToken);
+      }
+
+      return result;
     }
     catch (Exception ex)
     {

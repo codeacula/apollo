@@ -41,6 +41,12 @@ public static partial class ToDoLogs
   public static partial void LogReminder(ILogger logger, string username, string description);
 
   [LoggerMessage(
+      EventId = 5009,
+      Level = LogLevel.Information,
+      Message = "Sending reminder for {Count} To-Do items to user {Username}.")]
+  public static partial void LogSendingGroupedReminder(ILogger logger, int count, string username);
+
+  [LoggerMessage(
       EventId = 5006,
       Level = LogLevel.Error,
       Message = "Error processing reminder for To-Do {ToDoId}")]
