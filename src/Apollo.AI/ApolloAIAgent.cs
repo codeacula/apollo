@@ -22,12 +22,17 @@ public class ApolloAIAgent : IApolloAIAgent
     var builder = Kernel.CreateBuilder();
     _ = builder.Services.AddOpenAIChatCompletion(apolloAIConfig.ModelId, new Uri(apolloAIConfig.Endpoint));
     _kernel = builder.Build();
-    _ = _kernel.Plugins.AddFromType<TimePlugin>("Time");
+    AddPlugin<TimePlugin>("Time");
   }
 
   public void AddPlugin(object plugin, string pluginName)
   {
     _ = _kernel.Plugins.AddFromObject(plugin, pluginName);
+  }
+
+  public void AddPlugin<TPluginType>(string pluginName)
+  {
+    _ = _kernel.Plugins.AddFromType<TPluginType>(pluginName);
   }
 
   public async Task<string> ChatAsync(ChatCompletionRequestDTO chatCompletionRequest, CancellationToken cancellationToken = default)
