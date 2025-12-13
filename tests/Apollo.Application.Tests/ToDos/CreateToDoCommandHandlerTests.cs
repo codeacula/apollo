@@ -25,7 +25,10 @@ public class CreateToDoCommandHandlerTests
     var reminderDate = DateTime.UtcNow.AddMinutes(5);
     var quartzJobId = new QuartzJobId(Guid.NewGuid());
 
+    var sequence = new MockSequence();
+
     _ = store
+      .InSequence(sequence)
       .Setup(x => x.CreateAsync(It.IsAny<ToDoId>(), personId, description, It.IsAny<CancellationToken>()))
       .ReturnsAsync((ToDoId id, PersonId pId, Description desc, CancellationToken _) => Result.Ok(new ToDo
       {
@@ -40,17 +43,24 @@ public class CreateToDoCommandHandlerTests
       }));
 
     _ = scheduler
+      .InSequence(sequence)
       .Setup(x => x.GetOrCreateJobAsync(reminderDate, It.IsAny<CancellationToken>()))
       .ReturnsAsync(Result.Ok(quartzJobId));
 
     _ = store
+      .InSequence(sequence)
       .Setup(x => x.SetReminderAsync(It.IsAny<ToDoId>(), reminderDate, quartzJobId, It.IsAny<CancellationToken>()))
       .ReturnsAsync(Result.Ok());
+
+    _ = scheduler
+      .InSequence(sequence)
+      .Setup(x => x.GetOrCreateJobAsync(reminderDate, It.IsAny<CancellationToken>()))
+      .ReturnsAsync(Result.Ok(quartzJobId));
 
     var result = await handler.Handle(new CreateToDoCommand(personId, description, reminderDate), CancellationToken.None);
 
     Assert.True(result.IsSuccess);
-    scheduler.Verify(x => x.GetOrCreateJobAsync(reminderDate, It.IsAny<CancellationToken>()), Times.Once);
+    scheduler.Verify(x => x.GetOrCreateJobAsync(reminderDate, It.IsAny<CancellationToken>()), Times.Exactly(2));
     store.Verify(x => x.SetReminderAsync(It.IsAny<ToDoId>(), reminderDate, quartzJobId, It.IsAny<CancellationToken>()), Times.Once);
   }
 }
