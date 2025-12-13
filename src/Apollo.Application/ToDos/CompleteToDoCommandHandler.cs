@@ -36,7 +36,11 @@ public sealed class CompleteToDoCommandHandler(IToDoStore toDoStore, IToDoRemind
 
         if (reminderDate.HasValue)
         {
-          _ = await toDoReminderScheduler.GetOrCreateJobAsync(reminderDate.Value, cancellationToken);
+          var jobResult = await toDoReminderScheduler.GetOrCreateJobAsync(reminderDate.Value, cancellationToken);
+          if (jobResult.IsFailed)
+          {
+            return Result.Fail("Failed to get or create reminder job.");
+          }
         }
       }
 
