@@ -31,7 +31,11 @@ public sealed class DeleteToDoCommandHandler(IToDoStore toDoStore, IToDoReminder
 
         if (reminderDate.HasValue)
         {
-          _ = await toDoReminderScheduler.GetOrCreateJobAsync(reminderDate.Value, cancellationToken);
+          var getOrCreateJobResult = await toDoReminderScheduler.GetOrCreateJobAsync(reminderDate.Value, cancellationToken);
+          if (getOrCreateJobResult.IsFailed)
+          {
+            return Result.Fail(getOrCreateJobResult.Errors.Select(e => e.Message).FirstOrDefault() ?? "Failed to get or create reminder job.");
+          }
         }
       }
 
