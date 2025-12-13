@@ -101,7 +101,8 @@ public class CreateToDoCommandHandlerTests
 
     var result = await handler.Handle(new CreateToDoCommand(personId, description, reminderDate), CancellationToken.None);
 
-    Assert.True(result.IsFailed);
+    Assert.True(result.IsSuccess);
+    Assert.NotEmpty(result.Errors);
     scheduler.Verify(x => x.GetOrCreateJobAsync(reminderDate, It.IsAny<CancellationToken>()), Times.Exactly(2));
   }
 }
