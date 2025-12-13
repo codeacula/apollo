@@ -26,7 +26,10 @@ public sealed class CompleteToDoCommandHandler(IToDoStore toDoStore, IToDoRemind
 
         var afterDeleteRemainingResult = await toDoStore.GetToDosByQuartzJobIdAsync(quartzJobId.Value, cancellationToken);
         var reminderDate = afterDeleteRemainingResult.IsSuccess
-          ? afterDeleteRemainingResult.Value.SelectMany(t => t.Reminders).FirstOrDefault()?.ReminderTime.Value
+          ? afterDeleteRemainingResult.Value
+              .SelectMany(t => t.Reminders)
+              .OrderBy(r => r.ReminderTime.Value)
+              .FirstOrDefault()?.ReminderTime.Value
           : null;
 
         if (reminderDate.HasValue)
