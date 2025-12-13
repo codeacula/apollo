@@ -32,8 +32,7 @@ public sealed class CreateToDoCommandHandler(IToDoStore toDoStore, IToDoReminder
         if (reminderResult.IsFailed)
         {
           return Result.Ok(result.Value)
-          .WithError($"To-Do created but failed to set reminder: {string.Join(", ", reminderResult.Errors.Select(e => e.Message))}");
-          return Result.Fail<ToDo>($"To-Do created but failed to set reminder: {string.Join(", ", reminderResult.Errors.Select(e => e.Message))}");
+            .WithError($"To-Do created but failed to set reminder: {string.Join(", ", reminderResult.Errors.Select(e => e.Message))}");
         }
 
         // Ensure the job exists *after* the reminder is persisted to avoid a delete/create race.
