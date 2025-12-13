@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 using Apollo.Core.API;
 using Apollo.GRPC.Client;
 using Apollo.GRPC.Interceptors;
@@ -13,6 +15,7 @@ using ProtoBuf.Grpc.Server;
 
 namespace Apollo.GRPC;
 
+[ExcludeFromCodeCoverage]
 public static class ServiceCollectionExtension
 {
   public static IServiceCollection AddGrpcClientServices(this IServiceCollection services)
