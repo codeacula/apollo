@@ -33,16 +33,14 @@ public sealed class CreateToDoCommandHandler(IToDoStore toDoStore, IToDoReminder
         {
           return Result.Ok(result.Value)
           .WithError($"To-Do created but failed to set reminder: {string.Join(", ", reminderResult.Errors.Select(e => e.Message))}");
+          return Result.Fail<ToDo>($"To-Do created but failed to set reminder: {string.Join(", ", reminderResult.Errors.Select(e => e.Message))}");
         }
 
-        // After persisting the reminder, ensure the job still exists. This second call addresses a nuanced race condition:
-        // another thread could have deleted the job (thinking no reminders existed) or created a ToDo with the same QuartzJobId
-        // after this thread created the job but before the reminder was persisted.
+        // Ensure the job exists *after* the reminder is persisted to avoid a delete/create race.
         var ensureJobResult = await toDoReminderScheduler.GetOrCreateJobAsync(request.ReminderDate.Value, cancellationToken);
         if (ensureJobResult.IsFailed)
         {
-          return Result.Ok(result.Value)
-            .WithError($"To-Do created but failed to ensure reminder job exists: {string.Join(", ", ensureJobResult.Errors.Select(e => e.Message))}");
+          return Result.Fail<ToDo>($"To-Do created but failed to ensure reminder job exists: {string.Join(", ", ensureJobResult.Errors.Select(e => e.Message))}");
         }
       }
 
