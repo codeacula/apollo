@@ -4,8 +4,6 @@ namespace Apollo.Domain.Tests.ToDos.ValueObjects;
 
 public class ToDoIdTests
 {
-
-
   [Fact]
   public void ToDoIdEqualityWorksCorrectly()
   {

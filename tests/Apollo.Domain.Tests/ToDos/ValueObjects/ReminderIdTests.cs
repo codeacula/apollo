@@ -4,8 +4,6 @@ namespace Apollo.Domain.Tests.ToDos.ValueObjects;
 
 public class ReminderIdTests
 {
-
-
   [Fact]
   public void ReminderIdEqualityWorksCorrectly()
   {

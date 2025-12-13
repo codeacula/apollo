@@ -103,8 +103,6 @@ public class PersonCacheTests
     Assert.True(result.IsSuccess);
   }
 
-
-
   [Fact]
   public async Task InvalidateAccessAsyncDeletesKeySuccessfully()
   {

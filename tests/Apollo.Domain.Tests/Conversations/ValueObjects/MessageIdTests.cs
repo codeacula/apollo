@@ -4,8 +4,6 @@ namespace Apollo.Domain.Tests.Conversations.ValueObjects;
 
 public class MessageIdTests
 {
-
-
   [Fact]
   public void MessageIdEqualityWorksCorrectly()
   {
