@@ -56,7 +56,7 @@ public class DeleteToDoCommandHandlerTests
 
     var toDoId = new ToDoId(Guid.NewGuid());
     var quartzJobId = new QuartzJobId(Guid.NewGuid());
-    var reminderDate = new DateTime(2030, 01, 01, 12, 00, 00, DateTimeKind.Utc);
+    var reminderDate = DateTime.UtcNow.AddYears(5);
 
     var remainingToDo = CreateToDo(new ToDoId(Guid.NewGuid()), quartzJobId) with
     {
