@@ -88,7 +88,7 @@ public class PersonCacheTests
   {
     // Arrange
     var redis = new Mock<IConnectionMultiplexer>();
-    var db = new Mock<IDatabase>(MockBehavior.Loose);
+    var db = new Mock<IDatabase>();
     var logger = new Mock<ILogger<PersonCache>>();
     var username = new Username("testuser", Platform.Discord);
 
@@ -101,6 +101,8 @@ public class PersonCacheTests
 
     // Assert
     Assert.True(result.IsSuccess);
+    // Verify StringSetAsync was called at least once (regardless of signature variations)
+    db.VerifyAll();
   }
 
   [Fact]

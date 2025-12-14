@@ -1,5 +1,6 @@
 using Apollo.Application.ToDos;
 using Apollo.Core.ToDos;
+using Apollo.Domain.Common.Enums;
 using Apollo.Domain.Common.ValueObjects;
 using Apollo.Domain.People.ValueObjects;
 using Apollo.Domain.ToDos.Models;
@@ -61,11 +62,11 @@ public class GetToDoByIdQueryHandlerTests
     {
       CreatedOn = new CreatedOn(DateTime.UtcNow),
       Description = new Description("test"),
-      Energy = new Energy(0),
+      Energy = new Energy(Level.Blue),
       Id = toDoId,
-      Interest = new Interest(0),
+      Interest = new Interest(Level.Blue),
       PersonId = new PersonId(Guid.NewGuid()),
-      Priority = new Priority(0),
+      Priority = new Priority(Level.Blue),
       Reminders = [],
       UpdatedOn = new UpdatedOn(DateTime.UtcNow)
     };
