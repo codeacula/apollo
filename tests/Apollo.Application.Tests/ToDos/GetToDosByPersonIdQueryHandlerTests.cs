@@ -81,11 +81,11 @@ public class GetToDosByPersonIdQueryHandlerTests
     {
       CreatedOn = new CreatedOn(DateTime.UtcNow),
       Description = new Description("test"),
-      Energy = new Energy(0),
+      Energy = new Energy(Level.Blue),
       Id = new ToDoId(Guid.NewGuid()),
-      Interest = new Interest(0),
+      Interest = new Interest(Level.Blue),
       PersonId = personId,
-      Priority = new Priority(0),
+      Priority = new Priority(Level.Blue),
       Reminders = [],
       UpdatedOn = new UpdatedOn(DateTime.UtcNow)
     };
