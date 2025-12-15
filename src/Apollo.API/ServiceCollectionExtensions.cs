@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 using Apollo.API.Jobs;
 using Apollo.Core.Data;
 using Apollo.Core.ToDos;
@@ -6,6 +8,7 @@ using Quartz;
 
 namespace Apollo.API;
 
+[ExcludeFromCodeCoverage]
 public static class ServiceCollectionExtensions
 {
   public static IServiceCollection AddAPIServices(this IServiceCollection services, IConfiguration configuration)

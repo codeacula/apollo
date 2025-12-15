@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 using Apollo.Core.Conversations;
 using Apollo.Core.Data;
 using Apollo.Core.People;
@@ -19,6 +21,7 @@ using DbPerson = Apollo.Database.People.DbPerson;
 
 namespace Apollo.Database;
 
+[ExcludeFromCodeCoverage]
 public static class ServiceCollectionExtensions
 {
   public static IServiceCollection AddDatabaseServices(this IServiceCollection services, IConfiguration configuration)

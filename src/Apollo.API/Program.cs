@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 using Apollo.AI;
 using Apollo.API;
 using Apollo.Application;
@@ -5,35 +7,42 @@ using Apollo.Cache;
 using Apollo.Database;
 using Apollo.GRPC;
 
-WebApplicationBuilder webAppBuilder = WebApplication.CreateBuilder(args);
-var configuration = webAppBuilder.Configuration;
-
-_ = webAppBuilder.Services.AddControllers();
-_ = webAppBuilder.Services
-  .AddDatabaseServices(configuration)
-  .AddCacheServices(configuration.GetConnectionString("Redis")!)
-  .AddAPIServices(configuration)
-  .AddAiServices(configuration)
-  .AddApplicationServices()
-  .AddGrpcServerServices();
-
-WebApplication app = webAppBuilder.Build();
-
-// Apply database migrations
-await app.Services.MigrateDatabaseAsync();
-
-_ = app.UseRequestLocalization();
-
-if (app.Environment.IsDevelopment())
+[ExcludeFromCodeCoverage]
+internal static class Program
 {
-  _ = app.MapOpenApi();
+  private static async Task Main(string[] args)
+  {
+    WebApplicationBuilder webAppBuilder = WebApplication.CreateBuilder(args);
+    var configuration = webAppBuilder.Configuration;
+
+    _ = webAppBuilder.Services.AddControllers();
+    _ = webAppBuilder.Services
+      .AddDatabaseServices(configuration)
+      .AddCacheServices(configuration.GetConnectionString("Redis")!)
+      .AddAPIServices(configuration)
+      .AddAiServices(configuration)
+      .AddApplicationServices()
+      .AddGrpcServerServices();
+
+    WebApplication app = webAppBuilder.Build();
+
+    // Apply database migrations
+    await app.Services.MigrateDatabaseAsync();
+
+    _ = app.UseRequestLocalization();
+
+    if (app.Environment.IsDevelopment())
+    {
+      _ = app.MapOpenApi();
+    }
+
+    _ = app.MapControllers();
+    _ = app.UseHttpsRedirection();
+    _ = app.UseDefaultFiles();
+    _ = app.UseStaticFiles();
+
+    _ = app.AddGrpcServerServices();
+
+    await app.RunAsync();
+  }
 }
-
-_ = app.MapControllers();
-_ = app.UseHttpsRedirection();
-_ = app.UseDefaultFiles();
-_ = app.UseStaticFiles();
-
-_ = app.AddGrpcServerServices();
-
-await app.RunAsync();

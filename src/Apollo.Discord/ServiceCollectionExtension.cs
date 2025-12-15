@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 using Apollo.Discord.Config;
 
 using NetCord;
@@ -10,6 +12,7 @@ using NetCord.Services.ComponentInteractions;
 
 namespace Apollo.Discord;
 
+[ExcludeFromCodeCoverage]
 public static class ServiceCollectionExtensions
 {
   public static IServiceCollection AddDiscordServices(this IServiceCollection services)
