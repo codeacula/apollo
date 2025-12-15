@@ -1,11 +1,12 @@
 using System.Diagnostics.CodeAnalysis;
 
 using Apollo.AI;
-using Apollo.API;
 using Apollo.Application;
 using Apollo.Cache;
 using Apollo.Database;
 using Apollo.GRPC;
+
+namespace Apollo.API;
 
 [ExcludeFromCodeCoverage]
 internal static class Program

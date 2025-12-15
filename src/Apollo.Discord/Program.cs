@@ -2,11 +2,12 @@ using System.Diagnostics.CodeAnalysis;
 
 using Apollo.Application;
 using Apollo.Cache;
-using Apollo.Discord;
 using Apollo.GRPC;
 
 using NetCord.Hosting.AspNetCore;
 using NetCord.Hosting.Services;
+
+namespace Apollo.Discord;
 
 [ExcludeFromCodeCoverage]
 internal static class Program
@@ -15,14 +16,14 @@ internal static class Program
   {
     var builder = WebApplication.CreateBuilder(args);
 
-    builder.Configuration.AddEnvironmentVariables()
+    _ = builder.Configuration.AddEnvironmentVariables()
       .AddUserSecrets<IApolloDiscord>();
 
     var redisConnection = builder.Configuration.GetConnectionString("Redis")
       ?? throw new InvalidOperationException("Redis connection string not found");
 
     // Add services to the container.
-    builder.Services
+    _ = builder.Services
       .AddCacheServices(redisConnection)
       .AddApplicationServices()
       .AddGrpcClientServices()
@@ -30,9 +31,9 @@ internal static class Program
 
     var app = builder.Build();
 
-    app.AddModules(typeof(IApolloDiscord).Assembly);
-    app.UseHttpInteractions("/interactions");
-    app.UseRequestLocalization();
+    _ = app.AddModules(typeof(IApolloDiscord).Assembly);
+    _ = app.UseHttpInteractions("/interactions");
+    _ = app.UseRequestLocalization();
 
     await app.RunAsync();
   }

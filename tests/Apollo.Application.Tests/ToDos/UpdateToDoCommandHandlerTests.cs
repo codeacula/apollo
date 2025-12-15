@@ -42,7 +42,7 @@ public class UpdateToDoCommandHandlerTests
 
     _ = toDoStore
       .Setup(x => x.UpdateAsync(toDoId, description, It.IsAny<CancellationToken>()))
-      .ThrowsAsync(new Exception("boom"));
+      .ThrowsAsync(new InvalidOperationException("boom"));
 
     // Act
     var result = await handler.Handle(new UpdateToDoCommand(toDoId, description), CancellationToken.None);

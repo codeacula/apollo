@@ -46,7 +46,7 @@ public class GetToDosByPersonIdQueryHandlerTests
 
     _ = toDoStore
       .Setup(x => x.GetByPersonIdAsync(personId, It.IsAny<CancellationToken>()))
-      .ReturnsAsync(Result.Ok<IEnumerable<ToDo>>(Array.Empty<ToDo>()));
+      .ReturnsAsync(Result.Ok<IEnumerable<ToDo>>([]));
 
     // Act
     var result = await handler.Handle(new GetToDosByPersonIdQuery(personId), CancellationToken.None);
@@ -66,7 +66,7 @@ public class GetToDosByPersonIdQueryHandlerTests
 
     _ = toDoStore
       .Setup(x => x.GetByPersonIdAsync(personId, It.IsAny<CancellationToken>()))
-      .ThrowsAsync(new Exception("boom"));
+      .ThrowsAsync(new InvalidOperationException("boom"));
 
     // Act
     var result = await handler.Handle(new GetToDosByPersonIdQuery(personId), CancellationToken.None);

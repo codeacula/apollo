@@ -91,10 +91,10 @@ public class QuartzToDoReminderSchedulerTests
     Assert.True(result.IsSuccess);
     Assert.NotNull(capturedJobKey);
     Assert.NotNull(capturedTrigger);
-    Assert.Equal(ToDoReminderGroup, capturedJobKey!.Group);
+    Assert.Equal(ToDoReminderGroup, capturedJobKey.Group);
     Assert.Equal(typeof(ToDoReminderJob), capturedJobType);
 
-    Assert.Equal(ToDoReminderGroup, capturedTrigger!.Key.Group);
+    Assert.Equal(ToDoReminderGroup, capturedTrigger.Key.Group);
     Assert.Equal($"{capturedJobKey.Name}-trigger", capturedTrigger.Key.Name);
 
     var reminderUtc = new UtcDateTime(reminderDate);
@@ -125,7 +125,7 @@ public class QuartzToDoReminderSchedulerTests
 
     Assert.True(result.IsSuccess);
     Assert.NotNull(capturedJobKey);
-    Assert.Equal(ToDoReminderGroup, capturedJobKey!.Group);
+    Assert.Equal(ToDoReminderGroup, capturedJobKey.Group);
 
     scheduler.Verify(
       x => x.ScheduleJob(It.IsAny<IJobDetail>(), It.IsAny<ITrigger>(), It.IsAny<CancellationToken>()),
