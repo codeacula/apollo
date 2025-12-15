@@ -46,7 +46,7 @@ public class GetToDoByIdQueryHandlerTests
 
     _ = toDoStore
       .Setup(x => x.GetAsync(toDoId, It.IsAny<CancellationToken>()))
-      .ThrowsAsync(new Exception("boom"));
+      .ThrowsAsync(new InvalidOperationException("boom"));
 
     // Act
     var result = await handler.Handle(new GetToDoByIdQuery(toDoId), CancellationToken.None);

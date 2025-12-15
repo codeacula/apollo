@@ -33,8 +33,8 @@ public class DeleteToDoCommandHandlerTests
 
     _ = toDoStore
       .SetupSequence(x => x.GetToDosByQuartzJobIdAsync(quartzJobId, It.IsAny<CancellationToken>()))
-      .ReturnsAsync(Result.Ok<IEnumerable<ToDo>>(Array.Empty<ToDo>()))
-      .ReturnsAsync(Result.Ok<IEnumerable<ToDo>>(Array.Empty<ToDo>()));
+      .ReturnsAsync(Result.Ok<IEnumerable<ToDo>>([]))
+      .ReturnsAsync(Result.Ok<IEnumerable<ToDo>>([]));
 
     _ = toDoReminderScheduler
       .Setup(x => x.DeleteJobAsync(quartzJobId, It.IsAny<CancellationToken>()))
@@ -90,7 +90,7 @@ public class DeleteToDoCommandHandlerTests
     _ = toDoStore
       .InSequence(sequence)
       .Setup(x => x.GetToDosByQuartzJobIdAsync(quartzJobId, It.IsAny<CancellationToken>()))
-      .ReturnsAsync(Result.Ok<IEnumerable<ToDo>>(Array.Empty<ToDo>()));
+      .ReturnsAsync(Result.Ok<IEnumerable<ToDo>>([]));
 
     _ = toDoReminderScheduler
       .InSequence(sequence)
@@ -100,7 +100,7 @@ public class DeleteToDoCommandHandlerTests
     _ = toDoStore
       .InSequence(sequence)
       .Setup(x => x.GetToDosByQuartzJobIdAsync(quartzJobId, It.IsAny<CancellationToken>()))
-      .ReturnsAsync(Result.Ok<IEnumerable<ToDo>>(new[] { remainingToDo }));
+      .ReturnsAsync(Result.Ok<IEnumerable<ToDo>>([remainingToDo]));
 
     _ = toDoReminderScheduler
       .InSequence(sequence)

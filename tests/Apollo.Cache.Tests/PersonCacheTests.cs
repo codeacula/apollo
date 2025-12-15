@@ -1,5 +1,3 @@
-using Apollo.Cache;
-using Apollo.Core.Logging;
 using Apollo.Domain.Common.Enums;
 using Apollo.Domain.People.ValueObjects;
 
@@ -56,7 +54,7 @@ public class PersonCacheTests
 
     // Assert
     Assert.True(result.IsSuccess);
-    Assert.NotNull(result.Value);
+    _ = Assert.NotNull(result.Value);
     Assert.True(result.Value);
   }
 
