@@ -41,6 +41,7 @@ public partial class TimePlugin(TimeProvider timeProvider)
 
   [KernelFunction("get_fuzzy_date")]
   [Description("Gets a date and time relative to now from a natural language description, returning a UTC timestamp")]
+  [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0046:Convert to conditional expression", Justification = "Improves readability")]
   public string GetFuzzyDate(string description)
   {
     if (string.IsNullOrWhiteSpace(description))

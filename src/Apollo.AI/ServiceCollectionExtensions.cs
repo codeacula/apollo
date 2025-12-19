@@ -21,7 +21,7 @@ public static class ServiceCollectionExtensions
 
     _ = services
       .AddSingleton(apolloAiConfig ?? new ApolloAIConfig())
-      .AddScoped<IApolloAIAgent, ApolloAIAgent>();
+      .AddTransient<IApolloAIAgent, ApolloAIAgent>();
 
     return services;
   }
