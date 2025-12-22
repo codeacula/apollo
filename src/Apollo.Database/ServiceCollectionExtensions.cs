@@ -26,10 +26,12 @@ public static class ServiceCollectionExtensions
     const string connectionKey = "Apollo";
     var connectionString = configuration.GetConnectionString(connectionKey) ?? throw new MissingDatabaseStringException(connectionKey);
     var superAdminConfig = configuration.GetSection(nameof(SuperAdminConfig)).Get<SuperAdminConfig>() ?? new SuperAdminConfig();
+    var personConfig = configuration.GetSection(nameof(PersonConfig)).Get<PersonConfig>() ?? new PersonConfig();
 
     _ = services.AddDbContextPool<ApolloDbContext>(options => options.UseNpgsql(connectionString));
     _ = services.AddSingleton(new ApolloConnectionString(connectionString));
     _ = services.AddSingleton(superAdminConfig);
+    _ = services.AddSingleton(personConfig);
     _ = services.AddScoped<IApolloDbContext, ApolloDbContext>();
 
 
@@ -46,6 +48,7 @@ public static class ServiceCollectionExtensions
         _ = options.Events.AddEventType<AccessGrantedEvent>();
         _ = options.Events.AddEventType<AccessRevokedEvent>();
         _ = options.Events.AddEventType<PersonUpdatedEvent>();
+        _ = options.Events.AddEventType<PersonTimeZoneUpdatedEvent>();
 
         _ = options.Schema.For<DbConversation>()
           .Identity(x => x.Id);

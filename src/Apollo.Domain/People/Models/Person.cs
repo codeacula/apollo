@@ -8,6 +8,7 @@ public sealed record Person
   public PersonId Id { get; init; }
   public Username Username { get; init; }
   public HasAccess HasAccess { get; init; }
+  public PersonTimeZoneId? TimeZoneId { get; init; }
   public CreatedOn CreatedOn { get; init; }
   public UpdatedOn UpdatedOn { get; init; }
 }

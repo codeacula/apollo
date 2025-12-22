@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Text.Json;
 
+using Apollo.Core.People;
 using Apollo.Domain.People.ValueObjects;
 using Apollo.Domain.ToDos.ValueObjects;
 
@@ -8,13 +9,13 @@ using Microsoft.SemanticKernel;
 
 namespace Apollo.Application.ToDos;
 
-public class ToDoPlugin(IMediator mediator, PersonId personId)
+public class ToDoPlugin(IMediator mediator, IPersonStore personStore, PersonConfig personConfig, PersonId personId)
 {
   [KernelFunction("create_todo")]
-  [Description("Creates a new todo with an optional reminder date")]
+  [Description("Creates a new todo with an optional reminder date. Reminder times are interpreted in the user's timezone.")]
   public async Task<string> CreateToDoAsync(
     [Description("The todo description")] string description,
-    [Description("Optional reminder date in ISO 8601 format (e.g., 2025-12-31T10:00:00Z)")] string? reminderDate = null)
+    [Description("Optional reminder date in ISO 8601 format (e.g., 2025-12-31T10:00:00). Time is interpreted in your local timezone.")] string? reminderDate = null)
   {
     try
     {
@@ -25,7 +26,30 @@ public class ToDoPlugin(IMediator mediator, PersonId personId)
         {
           return JsonSerializer.Serialize(new { success = false, error = "Invalid reminder date format" });
         }
-        reminder = parsedDate;
+
+        // Get user's timezone or use default
+        var personResult = await personStore.GetAsync(personId);
+        var timeZoneId = personResult.IsSuccess && personResult.Value.TimeZoneId.HasValue
+          ? personResult.Value.TimeZoneId.Value.Value
+          : personConfig.DefaultTimeZoneId;
+
+        var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+
+        // Convert from user's local time to UTC
+        if (parsedDate.Kind == DateTimeKind.Unspecified)
+        {
+          reminder = TimeZoneInfo.ConvertTimeToUtc(parsedDate, timeZoneInfo);
+        }
+        else if (parsedDate.Kind == DateTimeKind.Local)
+        {
+          // If it's already specified as local, treat it as system local time and convert directly to UTC
+          reminder = parsedDate.ToUniversalTime();
+        }
+        else
+        {
+          // Already UTC
+          reminder = parsedDate;
+        }
       }
 
       var command = new CreateToDoCommand(
