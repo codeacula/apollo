@@ -48,7 +48,7 @@ public static class ServiceCollectionExtensions
         _ = options.Events.AddEventType<AccessGrantedEvent>();
         _ = options.Events.AddEventType<AccessRevokedEvent>();
         _ = options.Events.AddEventType<PersonUpdatedEvent>();
-        _ = options.Events.AddEventType<PersonTimezoneUpdatedEvent>();
+        _ = options.Events.AddEventType<PersonTimeZoneUpdatedEvent>();
 
         _ = options.Schema.For<DbConversation>()
           .Identity(x => x.Id);

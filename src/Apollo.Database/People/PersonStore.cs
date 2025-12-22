@@ -108,7 +108,7 @@ public sealed class PersonStore(SuperAdminConfig SuperAdminConfig, IDocumentSess
     try
     {
       var time = timeProvider.GetUtcNow().DateTime;
-      _ = session.Events.Append(id.Value, new PersonTimezoneUpdatedEvent(id.Value, timeZoneId.Value, time));
+      _ = session.Events.Append(id.Value, new PersonTimeZoneUpdatedEvent(id.Value, timeZoneId.Value, time));
 
       await session.SaveChangesAsync(cancellationToken);
 

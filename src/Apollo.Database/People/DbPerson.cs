@@ -77,7 +77,7 @@ public sealed record DbPerson
     };
   }
 
-  public static DbPerson Apply(IEvent<PersonTimezoneUpdatedEvent> ev, DbPerson person)
+  public static DbPerson Apply(IEvent<PersonTimeZoneUpdatedEvent> ev, DbPerson person)
   {
     return person with
     {
