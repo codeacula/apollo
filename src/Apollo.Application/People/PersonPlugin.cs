@@ -12,7 +12,7 @@ public class PersonPlugin(IPersonStore personStore, PersonConfig personConfig, P
 {
   [KernelFunction("set_timezone")]
   [Description("Sets the user's timezone for interpreting reminder times. Accepts IANA timezone IDs (e.g., 'America/New_York', 'Europe/London') or common abbreviations (EST, CST, MST, PST, GMT, BST, CET, JST, AEST). US timezones are preferred for ambiguous abbreviations.")]
-  public async Task<string> SetTimezoneAsync(
+  public async Task<string> SetTimeZoneAsync(
     [Description("The timezone ID or common abbreviation (e.g., 'America/Chicago', 'EST', 'CST', 'Pacific')")] string timezone)
   {
     try
@@ -22,7 +22,7 @@ public class PersonPlugin(IPersonStore personStore, PersonConfig personConfig, P
         return JsonSerializer.Serialize(new { success = false, error });
       }
 
-      var result = await personStore.SetTimezoneAsync(personId, timeZoneId);
+      var result = await personStore.SetTimeZoneAsync(personId, timeZoneId);
 
       if (result.IsFailed)
       {
@@ -46,7 +46,7 @@ public class PersonPlugin(IPersonStore personStore, PersonConfig personConfig, P
 
   [KernelFunction("get_timezone")]
   [Description("Gets the user's current timezone setting")]
-  public async Task<string> GetTimezoneAsync()
+  public async Task<string> GetTimeZoneAsync()
   {
     try
     {
