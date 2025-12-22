@@ -14,7 +14,7 @@ namespace Apollo.Application.Tests.ToDos;
 public class DeleteToDoCommandHandlerTests
 {
   [Fact]
-  public async Task HandleWhenReminderAndNoRemainingToDosDeletesJob()
+  public async Task HandleWhenReminderAndNoRemainingToDosDeletesJobAsync()
   {
     var toDoStore = new Mock<IToDoStore>();
     var toDoReminderScheduler = new Mock<IToDoReminderScheduler>();
@@ -48,7 +48,7 @@ public class DeleteToDoCommandHandlerTests
   }
 
   [Fact]
-  public async Task HandleWhenReminderAndNoRemainingThenRemainingAppearsRecreatesJob()
+  public async Task HandleWhenReminderAndNoRemainingThenRemainingAppearsRecreatesJobAsync()
   {
     var toDoStore = new Mock<IToDoStore>();
     var toDoReminderScheduler = new Mock<IToDoReminderScheduler>();

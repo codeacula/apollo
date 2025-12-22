@@ -14,7 +14,7 @@ namespace Apollo.Application.Tests.ToDos;
 public class CreateToDoCommandHandlerTests
 {
   [Fact]
-  public async Task HandleWithReminderDateSchedulesJobAndPersistsJobId()
+  public async Task HandleWithReminderDateSchedulesJobAndPersistsJobIdAsync()
   {
     var store = new Mock<IToDoStore>();
     var scheduler = new Mock<IToDoReminderScheduler>();

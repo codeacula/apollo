@@ -24,6 +24,4 @@ _ = app.UseHttpsRedirection();
 _ = app.UseDefaultFiles();
 _ = app.UseStaticFiles();
 
-_ = app.AddGrpcServerServices();
-
 await app.RunAsync();
