@@ -15,7 +15,7 @@ namespace Apollo.Application.Tests.ToDos;
 public class GetToDosByPersonIdQueryHandlerTests
 {
   [Fact]
-  public async Task HandleReturnsAllToDosForPerson()
+  public async Task HandleReturnsAllToDosForPersonAsync()
   {
     // Arrange
     var toDoStore = new Mock<IToDoStore>();
@@ -37,7 +37,7 @@ public class GetToDosByPersonIdQueryHandlerTests
   }
 
   [Fact]
-  public async Task HandleReturnsEmptyWhenNoToDosFound()
+  public async Task HandleReturnsEmptyWhenNoToDosFoundAsync()
   {
     // Arrange
     var toDoStore = new Mock<IToDoStore>();
@@ -57,7 +57,7 @@ public class GetToDosByPersonIdQueryHandlerTests
   }
 
   [Fact]
-  public async Task HandleReturnsFailureWhenStoreThrowsException()
+  public async Task HandleReturnsFailureWhenStoreThrowsExceptionAsync()
   {
     // Arrange
     var toDoStore = new Mock<IToDoStore>();

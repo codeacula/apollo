@@ -1,5 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
-
 using Apollo.AI.Config;
 
 using Microsoft.Extensions.Configuration;
@@ -7,7 +5,6 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Apollo.AI;
 
-[ExcludeFromCodeCoverage]
 public static class ServiceCollectionExtensions
 {
   public static IServiceCollection AddAiServices(this IServiceCollection services, IConfiguration configuration)
@@ -21,7 +18,7 @@ public static class ServiceCollectionExtensions
 
     _ = services
       .AddSingleton(apolloAiConfig ?? new ApolloAIConfig())
-      .AddScoped<IApolloAIAgent, ApolloAIAgent>();
+      .AddTransient<IApolloAIAgent, ApolloAIAgent>();
 
     return services;
   }

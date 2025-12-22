@@ -1,1 +1,0 @@
-- Use DTOs for records exchanged between services to ensure clear contracts and separation of concerns.

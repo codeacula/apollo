@@ -12,7 +12,7 @@ namespace Apollo.Cache.Tests;
 public class PersonCacheTests
 {
   [Fact]
-  public async Task GetAccessAsyncReturnsNullWhenKeyNotFound()
+  public async Task GetAccessAsyncReturnsNullWhenKeyNotFoundAsync()
   {
     // Arrange
     var redis = new Mock<IConnectionMultiplexer>();
@@ -35,7 +35,7 @@ public class PersonCacheTests
   }
 
   [Fact]
-  public async Task GetAccessAsyncReturnsValueWhenKeyExists()
+  public async Task GetAccessAsyncReturnsValueWhenKeyExistsAsync()
   {
     // Arrange
     var redis = new Mock<IConnectionMultiplexer>();
@@ -59,7 +59,7 @@ public class PersonCacheTests
   }
 
   [Fact]
-  public async Task GetAccessAsyncReturnsFailureWhenExceptionThrown()
+  public async Task GetAccessAsyncReturnsFailureWhenExceptionThrownAsync()
   {
     // Arrange
     var redis = new Mock<IConnectionMultiplexer>();
@@ -82,7 +82,7 @@ public class PersonCacheTests
   }
 
   [Fact]
-  public async Task SetAccessAsyncStoresValueSuccessfully()
+  public async Task SetAccessAsyncStoresValueSuccessfullyAsync()
   {
     // Arrange
     var redis = new Mock<IConnectionMultiplexer>();
@@ -104,7 +104,7 @@ public class PersonCacheTests
   }
 
   [Fact]
-  public async Task InvalidateAccessAsyncDeletesKeySuccessfully()
+  public async Task InvalidateAccessAsyncDeletesKeySuccessfullyAsync()
   {
     // Arrange
     var redis = new Mock<IConnectionMultiplexer>();
@@ -127,7 +127,7 @@ public class PersonCacheTests
   }
 
   [Fact]
-  public async Task InvalidateAccessAsyncReturnsFailureWhenExceptionThrown()
+  public async Task InvalidateAccessAsyncReturnsFailureWhenExceptionThrownAsync()
   {
     // Arrange
     var redis = new Mock<IConnectionMultiplexer>();

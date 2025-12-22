@@ -1,5 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
-
 using Apollo.Application.People;
 using Apollo.Application.ToDos;
 using Apollo.Core.People;
@@ -10,7 +8,6 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Apollo.Application;
 
-[ExcludeFromCodeCoverage]
 public static class ServiceCollectionExtension
 {
   public static IServiceCollection AddApplicationServices(this IServiceCollection services)

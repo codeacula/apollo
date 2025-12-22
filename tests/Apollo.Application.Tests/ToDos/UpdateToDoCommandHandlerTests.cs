@@ -11,7 +11,7 @@ namespace Apollo.Application.Tests.ToDos;
 public class UpdateToDoCommandHandlerTests
 {
   [Fact]
-  public async Task HandleUpdatesToDoSuccessfully()
+  public async Task HandleUpdatesToDoSuccessfullyAsync()
   {
     // Arrange
     var toDoStore = new Mock<IToDoStore>();
@@ -32,7 +32,7 @@ public class UpdateToDoCommandHandlerTests
   }
 
   [Fact]
-  public async Task HandleReturnsFailureWhenStoreThrowsException()
+  public async Task HandleReturnsFailureWhenStoreThrowsExceptionAsync()
   {
     // Arrange
     var toDoStore = new Mock<IToDoStore>();

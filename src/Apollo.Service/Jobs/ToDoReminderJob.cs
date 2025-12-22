@@ -6,7 +6,7 @@ using Apollo.Domain.ToDos.ValueObjects;
 
 using Quartz;
 
-namespace Apollo.API.Jobs;
+namespace Apollo.Service.Jobs;
 
 [DisallowConcurrentExecution]
 public class ToDoReminderJob(

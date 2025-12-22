@@ -14,7 +14,7 @@ namespace Apollo.Application.Tests.ToDos;
 public class CompleteToDoCommandHandlerTests
 {
   [Fact]
-  public async Task HandleWhenCompleteFailsReturnsFailAndDoesNotDeleteJob()
+  public async Task HandleWhenCompleteFailsReturnsFailAndDoesNotDeleteJobAsync()
   {
     var toDoStore = new Mock<IToDoStore>();
     var toDoReminderScheduler = new Mock<IToDoReminderScheduler>();
@@ -41,7 +41,7 @@ public class CompleteToDoCommandHandlerTests
   }
 
   [Fact]
-  public async Task HandleWhenGetFailsStillCompletesAndDoesNotDeleteJob()
+  public async Task HandleWhenGetFailsStillCompletesAndDoesNotDeleteJobAsync()
   {
     var toDoStore = new Mock<IToDoStore>();
     var toDoReminderScheduler = new Mock<IToDoReminderScheduler>();
@@ -66,7 +66,7 @@ public class CompleteToDoCommandHandlerTests
   }
 
   [Fact]
-  public async Task HandleWhenNoReminderDoesNotDeleteJob()
+  public async Task HandleWhenNoReminderDoesNotDeleteJobAsync()
   {
     var toDoStore = new Mock<IToDoStore>();
     var toDoReminderScheduler = new Mock<IToDoReminderScheduler>();
@@ -90,7 +90,7 @@ public class CompleteToDoCommandHandlerTests
   }
 
   [Fact]
-  public async Task HandleWhenReminderAndNoRemainingToDosDeletesJob()
+  public async Task HandleWhenReminderAndNoRemainingToDosDeletesJobAsync()
   {
     var toDoStore = new Mock<IToDoStore>();
     var toDoReminderScheduler = new Mock<IToDoReminderScheduler>();
@@ -124,7 +124,7 @@ public class CompleteToDoCommandHandlerTests
   }
 
   [Fact]
-  public async Task HandleWhenReminderAndNoRemainingThenRemainingAppearsRecreatesJob()
+  public async Task HandleWhenReminderAndNoRemainingThenRemainingAppearsRecreatesJobAsync()
   {
     var toDoStore = new Mock<IToDoStore>();
     var toDoReminderScheduler = new Mock<IToDoReminderScheduler>();
@@ -191,7 +191,7 @@ public class CompleteToDoCommandHandlerTests
   }
 
   [Fact]
-  public async Task HandleWhenReminderAndRemainingToDosExistDoesNotDeleteJob()
+  public async Task HandleWhenReminderAndRemainingToDosExistDoesNotDeleteJobAsync()
   {
     var toDoStore = new Mock<IToDoStore>();
     var toDoReminderScheduler = new Mock<IToDoReminderScheduler>();
@@ -219,7 +219,7 @@ public class CompleteToDoCommandHandlerTests
   }
 
   [Fact]
-  public async Task HandleWhenExceptionThrownReturnsFail()
+  public async Task HandleWhenExceptionThrownReturnsFailAsync()
   {
     var toDoStore = new Mock<IToDoStore>();
     var toDoReminderScheduler = new Mock<IToDoReminderScheduler>();
