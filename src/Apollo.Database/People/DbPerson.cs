@@ -1,6 +1,7 @@
 using Apollo.Database.People.Events;
 using Apollo.Domain.Common.Enums;
 using Apollo.Domain.People.Models;
+using Apollo.Domain.People.ValueObjects;
 
 using JasperFx.Events;
 
@@ -12,16 +13,24 @@ public sealed record DbPerson
   public required string Username { get; init; }
   public Platform Platform { get; init; }
   public bool HasAccess { get; init; }
+  public string? TimeZoneId { get; init; }
   public DateTime CreatedOn { get; init; }
   public DateTime UpdatedOn { get; init; }
 
   public static explicit operator Person(DbPerson person)
   {
+    PersonTimeZoneId? timeZoneId = null;
+    if (person.TimeZoneId is not null && PersonTimeZoneId.TryParse(person.TimeZoneId, out var parsedTimeZone, out _))
+    {
+      timeZoneId = parsedTimeZone;
+    }
+
     return new()
     {
       Id = new(person.Id),
       Username = new(person.Username, person.Platform),
       HasAccess = new(person.HasAccess),
+      TimeZoneId = timeZoneId,
       CreatedOn = new(person.CreatedOn),
       UpdatedOn = new(person.UpdatedOn)
     };
@@ -64,6 +73,15 @@ public sealed record DbPerson
   {
     return person with
     {
+      UpdatedOn = ev.Data.UpdatedOn
+    };
+  }
+
+  public static DbPerson Apply(IEvent<PersonTimezoneUpdatedEvent> ev, DbPerson person)
+  {
+    return person with
+    {
+      TimeZoneId = ev.Data.TimeZoneId,
       UpdatedOn = ev.Data.UpdatedOn
     };
   }

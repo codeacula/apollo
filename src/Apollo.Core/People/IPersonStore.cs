@@ -12,4 +12,5 @@ public interface IPersonStore
   Task<Result<Person>> GetAsync(PersonId id, CancellationToken cancellationToken = default);
   Task<Result<Person>> GetByUsernameAsync(Username username, CancellationToken cancellationToken = default);
   Task<Result> GrantAccessAsync(PersonId id, CancellationToken cancellationToken = default);
+  Task<Result> SetTimezoneAsync(PersonId id, PersonTimeZoneId timeZoneId, CancellationToken cancellationToken = default);
 }

@@ -102,4 +102,21 @@ public sealed class PersonStore(SuperAdminConfig SuperAdminConfig, IDocumentSess
       return Result.Fail(ex.Message);
     }
   }
+
+  public async Task<Result> SetTimezoneAsync(PersonId id, PersonTimeZoneId timeZoneId, CancellationToken cancellationToken = default)
+  {
+    try
+    {
+      var time = timeProvider.GetUtcNow().DateTime;
+      _ = session.Events.Append(id.Value, new PersonTimezoneUpdatedEvent(id.Value, timeZoneId.Value, time));
+
+      await session.SaveChangesAsync(cancellationToken);
+
+      return Result.Ok();
+    }
+    catch (Exception ex)
+    {
+      return Result.Fail(ex.Message);
+    }
+  }
 }

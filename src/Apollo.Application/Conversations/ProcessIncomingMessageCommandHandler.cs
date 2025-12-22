@@ -2,6 +2,7 @@ using Apollo.AI;
 using Apollo.AI.Config;
 using Apollo.AI.DTOs;
 using Apollo.AI.Enums;
+using Apollo.Application.People;
 using Apollo.Application.ToDos;
 using Apollo.Core.Conversations;
 using Apollo.Core.Logging;
@@ -21,6 +22,8 @@ public sealed class ProcessIncomingMessageCommandHandler(
   IMediator mediator,
   IPersonService personService,
   IPersonCache personCache,
+  IPersonStore personStore,
+  PersonConfig personConfig,
   TimeProvider timeProvider
 ) : IRequestHandler<ProcessIncomingMessageCommand, Result<Reply>>
 {
@@ -88,9 +91,12 @@ public sealed class ProcessIncomingMessageCommandHandler(
 
       var completionRequest = new ChatCompletionRequestDTO(systemPrompt, messages);
 
-      // Register user-scoped ToDoPlugin
-      var toDoPlugin = new ToDoPlugin(mediator, userResult.Value.Id);
+      // Register user-scoped plugins
+      var toDoPlugin = new ToDoPlugin(mediator, personStore, personConfig, userResult.Value.Id);
       apolloAIAgent.AddPlugin(toDoPlugin, "ToDos");
+
+      var personPlugin = new PersonPlugin(personStore, personConfig, userResult.Value.Id);
+      apolloAIAgent.AddPlugin(personPlugin, "Person");
 
       // Hand message to AI here
       var response = await apolloAIAgent.ChatAsync(completionRequest, cancellationToken);
