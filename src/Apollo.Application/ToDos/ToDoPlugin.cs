@@ -42,10 +42,8 @@ public class ToDoPlugin(IMediator mediator, IPersonStore personStore, PersonConf
         }
         else if (parsedDate.Kind == DateTimeKind.Local)
         {
-          // If it's already specified as local, convert to user's timezone first, then to UTC
-          var utcFromLocal = parsedDate.ToUniversalTime();
-          var localInUserTz = TimeZoneInfo.ConvertTimeFromUtc(utcFromLocal, timeZoneInfo);
-          reminder = TimeZoneInfo.ConvertTimeToUtc(localInUserTz, timeZoneInfo);
+          // If it's already specified as local, treat it as system local time and convert directly to UTC
+          reminder = parsedDate.ToUniversalTime();
         }
         else
         {
