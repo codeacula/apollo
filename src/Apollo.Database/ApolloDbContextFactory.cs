@@ -1,5 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
-
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
@@ -9,7 +7,6 @@ namespace Apollo.Database;
 /// Factory for creating ApolloDbContext instances at design time (for migrations)
 /// Do not delete this file, as it is referenced during migration running from the CLI
 /// </summary>
-[ExcludeFromCodeCoverage]
 public class ApolloDbContextFactory : IDesignTimeDbContextFactory<ApolloDbContext>
 {
   public ApolloDbContext CreateDbContext(string[] args)

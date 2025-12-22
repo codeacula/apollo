@@ -9,7 +9,7 @@ using FluentResults;
 
 using Quartz;
 
-namespace Apollo.API.Jobs;
+namespace Apollo.Service.Jobs;
 
 public sealed class QuartzToDoReminderScheduler(ISchedulerFactory schedulerFactory) : IToDoReminderScheduler
 {
