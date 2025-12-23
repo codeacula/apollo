@@ -175,14 +175,23 @@ public sealed class PersonStore(SuperAdminConfig SuperAdminConfig, IDocumentSess
   {
     try
     {
-      // Check if person already has this channel type
-      var hasChannel = person.NotificationChannels.Any(c => c.Type == channel.Type);
-      if (hasChannel)
+      // Check if person already has a channel of this type
+      NotificationChannel? existingChannel = person.NotificationChannels.FirstOrDefault(c => c.Type == channel.Type);
+      if (existingChannel is not null)
       {
-        return Result.Ok();
+
+        var ch = (NotificationChannel)existingChannel;
+        // If the identifier is the same, nothing to do
+        if (ch.Identifier == channel.Identifier)
+        {
+          return Result.Ok();
+        }
+
+        var removeResult = await RemoveNotificationChannelAsync(person, ch, cancellationToken);
+        return removeResult.IsFailed ? removeResult : await AddNotificationChannelAsync(person, channel, cancellationToken);
       }
 
-      // Add the channel
+      // No channel of this type exists yet: add the channel
       return await AddNotificationChannelAsync(person, channel, cancellationToken);
     }
     catch (Exception ex)

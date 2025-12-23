@@ -63,7 +63,11 @@ public sealed class ProcessIncomingMessageCommandHandler(
         if (channelType.HasValue)
         {
           var channel = new NotificationChannel(channelType.Value, request.Message.PlatformIdentifier, isEnabled: true);
-          _ = await personStore.EnsureNotificationChannelAsync(userResult.Value, channel, cancellationToken);
+          var channelResult = await personStore.EnsureNotificationChannelAsync(userResult.Value, channel, cancellationToken);
+          if (channelResult.IsFailed)
+          {
+            DataAccessLogs.FailedToAddNotificationChannel(logger, username.Value, channelResult.GetErrorMessages());
+          }
         }
       }
 

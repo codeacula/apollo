@@ -25,4 +25,10 @@ public static partial class DataAccessLogs
     Level = LogLevel.Error,
     Message = "Unable to save message to conversation {ConversationId}: {Message}")]
   public static partial void UnableToSaveMessageToConversation(ILogger logger, Guid conversationId, string message);
+
+  [LoggerMessage(
+    EventId = 3203,
+    Level = LogLevel.Warning,
+    Message = "Failed to add notification channel for user {Username}: {ErrorMessage}")]
+  public static partial void FailedToAddNotificationChannel(ILogger logger, string username, string errorMessage);
 }
