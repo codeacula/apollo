@@ -1,5 +1,6 @@
 using Apollo.Core;
 using Apollo.Core.Logging;
+using Apollo.Core.Notifications;
 using Apollo.Core.People;
 using Apollo.Core.ToDos;
 using Apollo.Domain.Common.Enums;
@@ -13,6 +14,7 @@ namespace Apollo.Service.Jobs;
 public class ToDoReminderJob(
   IToDoStore toDoStore,
   IPersonStore personStore,
+  IPersonNotificationClient notificationClient,
   ILogger<ToDoReminderJob> logger,
   TimeProvider timeProvider) : IJob
 {
@@ -57,8 +59,24 @@ public class ToDoReminderJob(
 
           if (person.Username.Platform == Platform.Discord)
           {
+            var reminderMessage = string.Join("\n", group.Select(t => $"• {t.Description.Value}"));
+            var notification = new Notification
+            {
+              Content = $"**Reminder: You have {group.Count()} ToDo(s) due:**\n{reminderMessage}"
+            };
+
             ToDoLogs.LogSendingGroupedReminder(logger, group.Count(), person.Username.Value);
-            ToDoLogs.LogReminder(logger, person.Username.Value, string.Join("\n", group.Select(t => t.Description.Value)));
+
+            var sendResult = await notificationClient.SendNotificationAsync(person, notification, context.CancellationToken);
+
+            if (sendResult.IsFailed)
+            {
+              ToDoLogs.LogErrorProcessingReminder(logger, new InvalidOperationException(sendResult.GetErrorMessages()), firstToDo.Id.Value);
+            }
+            else
+            {
+              ToDoLogs.LogReminder(logger, person.Username.Value, reminderMessage);
+            }
           }
         }
         catch (Exception ex)

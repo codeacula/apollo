@@ -15,4 +15,7 @@ public sealed record NewMessage
 
   [DataMember(Order = 3)]
   public required Platform Platform { get; init; }
+
+  [DataMember(Order = 4)]
+  public string? PlatformIdentifier { get; init; }
 }

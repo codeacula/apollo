@@ -14,6 +14,7 @@ public sealed record DbPerson
   public Platform Platform { get; init; }
   public bool HasAccess { get; init; }
   public string? TimeZoneId { get; init; }
+  public ICollection<DbNotificationChannel> NotificationChannels { get; init; } = [];
   public DateTime CreatedOn { get; init; }
   public DateTime UpdatedOn { get; init; }
 
@@ -25,12 +26,17 @@ public sealed record DbPerson
       timeZoneId = parsedTimeZone;
     }
 
+    var notificationChannels = person.NotificationChannels
+      .Select(c => new NotificationChannel(c.Type, c.Identifier, c.IsEnabled))
+      .ToList();
+
     return new()
     {
       Id = new(person.Id),
       Username = new(person.Username, person.Platform),
       HasAccess = new(person.HasAccess),
       TimeZoneId = timeZoneId,
+      NotificationChannels = notificationChannels,
       CreatedOn = new(person.CreatedOn),
       UpdatedOn = new(person.UpdatedOn)
     };
@@ -83,6 +89,57 @@ public sealed record DbPerson
     {
       TimeZoneId = ev.Data.TimeZoneId,
       UpdatedOn = ev.Data.UpdatedOn
+    };
+  }
+
+  public static DbPerson Apply(IEvent<NotificationChannelAddedEvent> ev, DbPerson person)
+  {
+    var newChannel = new DbNotificationChannel
+    {
+      PersonId = ev.Data.PersonId,
+      Type = ev.Data.ChannelType,
+      Identifier = ev.Data.Identifier,
+      IsEnabled = true,
+      CreatedOn = ev.Data.AddedOn,
+      UpdatedOn = ev.Data.AddedOn
+    };
+
+    var channels = person.NotificationChannels.ToList();
+    channels.Add(newChannel);
+
+    return person with
+    {
+      NotificationChannels = channels,
+      UpdatedOn = ev.Data.AddedOn
+    };
+  }
+
+  public static DbPerson Apply(IEvent<NotificationChannelRemovedEvent> ev, DbPerson person)
+  {
+    var channels = person.NotificationChannels
+      .Where(c => !(c.Type == ev.Data.ChannelType && c.Identifier == ev.Data.Identifier))
+      .ToList();
+
+    return person with
+    {
+      NotificationChannels = channels,
+      UpdatedOn = ev.Data.RemovedOn
+    };
+  }
+
+  public static DbPerson Apply(IEvent<NotificationChannelToggledEvent> ev, DbPerson person)
+  {
+    var channels = person.NotificationChannels.Select(c =>
+    {
+      return c.Type == ev.Data.ChannelType && c.Identifier == ev.Data.Identifier
+        ? (c with { IsEnabled = ev.Data.IsEnabled, UpdatedOn = ev.Data.ToggledOn })
+        : c;
+    }).ToList();
+
+    return person with
+    {
+      NotificationChannels = channels,
+      UpdatedOn = ev.Data.ToggledOn
     };
   }
 }

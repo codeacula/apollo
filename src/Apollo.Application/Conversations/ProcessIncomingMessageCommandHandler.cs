@@ -8,6 +8,7 @@ using Apollo.Core;
 using Apollo.Core.Conversations;
 using Apollo.Core.Logging;
 using Apollo.Core.People;
+using Apollo.Domain.Common.Enums;
 using Apollo.Domain.Common.ValueObjects;
 using Apollo.Domain.People.ValueObjects;
 
@@ -48,6 +49,26 @@ public sealed class ProcessIncomingMessageCommandHandler(
       if (userResult.IsFailed)
       {
         return Result.Fail<Reply>($"Failed to get or create user {request.Message.Username}: {userResult.GetErrorMessages()}");
+      }
+
+      // Capture platform notification channel on first interaction
+      if (!string.IsNullOrWhiteSpace(request.Message.PlatformIdentifier))
+      {
+        var channelType = request.Message.Platform switch
+        {
+          Platform.Discord => NotificationChannelType.Discord,
+          _ => (NotificationChannelType?)null
+        };
+
+        if (channelType.HasValue)
+        {
+          var channel = new NotificationChannel(channelType.Value, request.Message.PlatformIdentifier, isEnabled: true);
+          var channelResult = await personStore.EnsureNotificationChannelAsync(userResult.Value, channel, cancellationToken);
+          if (channelResult.IsFailed)
+          {
+            DataAccessLogs.FailedToAddNotificationChannel(logger, username.Value, channelResult.GetErrorMessages());
+          }
+        }
       }
 
       // Check user for access

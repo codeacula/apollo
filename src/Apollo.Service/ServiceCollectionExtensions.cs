@@ -1,6 +1,10 @@
 using Apollo.Core.Data;
 using Apollo.Core.ToDos;
+using Apollo.Notifications;
 using Apollo.Service.Jobs;
+
+using NetCord;
+using NetCord.Rest;
 
 using Quartz;
 
@@ -35,6 +39,18 @@ public static class ServiceCollectionExtensions
         .AddQuartzHostedService(opt => opt.WaitForJobsToComplete = true);
 
     _ = services.AddScoped<IToDoReminderScheduler, QuartzToDoReminderScheduler>();
+
+    // Register Discord REST client for notifications
+    var discordToken = configuration["Discord:Token"];
+    if (!string.IsNullOrWhiteSpace(discordToken))
+    {
+      _ = services.AddSingleton(new RestClient(new BotToken(discordToken)));
+      _ = services.AddNotificationsWithChannels();
+    }
+    else
+    {
+      _ = services.AddNotifications();
+    }
 
     return services;
   }

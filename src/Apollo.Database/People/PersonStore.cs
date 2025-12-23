@@ -119,4 +119,84 @@ public sealed class PersonStore(SuperAdminConfig SuperAdminConfig, IDocumentSess
       return Result.Fail(ex.Message);
     }
   }
+
+  public async Task<Result> AddNotificationChannelAsync(Person person, NotificationChannel channel, CancellationToken cancellationToken = default)
+  {
+    try
+    {
+      var time = timeProvider.GetUtcNow().DateTime;
+      _ = session.Events.Append(person.Id.Value, new NotificationChannelAddedEvent(person.Id.Value, channel.Type, channel.Identifier, time));
+
+      await session.SaveChangesAsync(cancellationToken);
+
+      return Result.Ok();
+    }
+    catch (Exception ex)
+    {
+      return Result.Fail(ex.Message);
+    }
+  }
+
+  public async Task<Result> RemoveNotificationChannelAsync(Person person, NotificationChannel channel, CancellationToken cancellationToken = default)
+  {
+    try
+    {
+      var time = timeProvider.GetUtcNow().DateTime;
+      _ = session.Events.Append(person.Id.Value, new NotificationChannelRemovedEvent(person.Id.Value, channel.Type, channel.Identifier, time));
+
+      await session.SaveChangesAsync(cancellationToken);
+
+      return Result.Ok();
+    }
+    catch (Exception ex)
+    {
+      return Result.Fail(ex.Message);
+    }
+  }
+
+  public async Task<Result> ToggleNotificationChannelAsync(Person person, NotificationChannel channel, CancellationToken cancellationToken = default)
+  {
+    try
+    {
+      var time = timeProvider.GetUtcNow().DateTime;
+      _ = session.Events.Append(person.Id.Value, new NotificationChannelToggledEvent(person.Id.Value, channel.Type, channel.Identifier, channel.IsEnabled, time));
+
+      await session.SaveChangesAsync(cancellationToken);
+
+      return Result.Ok();
+    }
+    catch (Exception ex)
+    {
+      return Result.Fail(ex.Message);
+    }
+  }
+
+  public async Task<Result> EnsureNotificationChannelAsync(Person person, NotificationChannel channel, CancellationToken cancellationToken = default)
+  {
+    try
+    {
+      // Check if person already has a channel of this type
+      NotificationChannel? existingChannel = person.NotificationChannels.FirstOrDefault(c => c.Type == channel.Type);
+      if (existingChannel is not null)
+      {
+
+        var ch = (NotificationChannel)existingChannel;
+        // If the identifier is the same, nothing to do
+        if (ch.Identifier == channel.Identifier)
+        {
+          return Result.Ok();
+        }
+
+        var removeResult = await RemoveNotificationChannelAsync(person, ch, cancellationToken);
+        return removeResult.IsFailed ? removeResult : await AddNotificationChannelAsync(person, channel, cancellationToken);
+      }
+
+      // No channel of this type exists yet: add the channel
+      return await AddNotificationChannelAsync(person, channel, cancellationToken);
+    }
+    catch (Exception ex)
+    {
+      return Result.Fail(ex.Message);
+    }
+  }
 }

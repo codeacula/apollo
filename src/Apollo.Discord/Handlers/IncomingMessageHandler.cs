@@ -47,11 +47,13 @@ public class IncomingMessageHandler(
     // Send request to API
     try
     {
+      var discordUserId = arg.Author.Id.ToString(System.Globalization.CultureInfo.InvariantCulture);
       var newMessage = new NewMessage
       {
         Username = username,
         Content = arg.Content,
-        Platform = ApolloPlatform.Discord
+        Platform = ApolloPlatform.Discord,
+        PlatformIdentifier = discordUserId
       };
 
       var response = await apolloAPIClient.SendMessageAsync(newMessage);
