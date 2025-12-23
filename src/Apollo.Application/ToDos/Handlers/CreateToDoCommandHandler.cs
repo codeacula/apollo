@@ -1,4 +1,5 @@
 using Apollo.Application.ToDos.Commands;
+using Apollo.Core;
 using Apollo.Core.ToDos;
 using Apollo.Domain.ToDos.Models;
 using Apollo.Domain.ToDos.ValueObjects;
@@ -25,21 +26,21 @@ public sealed class CreateToDoCommandHandler(IToDoStore toDoStore, IToDoReminder
         var jobResult = await toDoReminderScheduler.GetOrCreateJobAsync(request.ReminderDate.Value, cancellationToken);
         if (jobResult.IsFailed)
         {
-          return Result.Fail<ToDo>($"To-Do created but failed to schedule reminder job: {string.Join(", ", jobResult.Errors.Select(e => e.Message))}");
+          return Result.Fail<ToDo>($"To-Do created but failed to schedule reminder job: {jobResult.GetErrorMessages()}");
         }
 
         var reminderResult = await toDoStore.SetReminderAsync(toDoId, request.ReminderDate.Value, jobResult.Value, cancellationToken);
         if (reminderResult.IsFailed)
         {
           return Result.Ok(result.Value)
-            .WithError($"To-Do created but failed to set reminder: {string.Join(", ", reminderResult.Errors.Select(e => e.Message))}");
+            .WithError($"To-Do created but failed to set reminder: {reminderResult.GetErrorMessages()}");
         }
 
         // Ensure the job exists *after* the reminder is persisted to avoid a delete/create race.
         var ensureJobResult = await toDoReminderScheduler.GetOrCreateJobAsync(request.ReminderDate.Value, cancellationToken);
         if (ensureJobResult.IsFailed)
         {
-          return Result.Fail<ToDo>($"To-Do created but failed to ensure reminder job exists: {string.Join(", ", ensureJobResult.Errors.Select(e => e.Message))}");
+          return Result.Fail<ToDo>($"To-Do created but failed to ensure reminder job exists: {ensureJobResult.GetErrorMessages()}");
         }
       }
 

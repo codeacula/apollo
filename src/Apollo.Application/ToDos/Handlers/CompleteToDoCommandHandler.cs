@@ -1,4 +1,5 @@
 using Apollo.Application.ToDos.Commands;
+using Apollo.Core;
 using Apollo.Core.ToDos;
 using FluentResults;
 
@@ -25,7 +26,8 @@ public sealed class CompleteToDoCommandHandler(IToDoStore toDoStore, IToDoRemind
 
       if (afterDeleteRemainingResult.IsFailed)
       {
-        return Result.Fail(afterDeleteRemainingResult.Errors.Select(e => e.Message).FirstOrDefault() ?? "Failed to get ToDos by QuartzJobId after deleting job.");
+        var errorMessage = afterDeleteRemainingResult.GetErrorMessages();
+        return Result.Fail(string.IsNullOrEmpty(errorMessage) ? "Failed to get ToDos by QuartzJobId after deleting job." : errorMessage);
       }
 
       var reminderDate = afterDeleteRemainingResult.Value.SelectMany(t => t.Reminders).FirstOrDefault()?.ReminderTime.Value;

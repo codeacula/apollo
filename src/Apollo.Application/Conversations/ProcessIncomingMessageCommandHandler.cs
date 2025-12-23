@@ -4,6 +4,7 @@ using Apollo.AI.DTOs;
 using Apollo.AI.Enums;
 using Apollo.Application.People;
 using Apollo.Application.ToDos;
+using Apollo.Core;
 using Apollo.Core.Conversations;
 using Apollo.Core.Logging;
 using Apollo.Core.People;
@@ -46,7 +47,7 @@ public sealed class ProcessIncomingMessageCommandHandler(
 
       if (userResult.IsFailed)
       {
-        return Result.Fail<Reply>($"Failed to get or create user {request.Message.Username}: {string.Join(", ", userResult.Errors.Select(e => e.Message))}");
+        return Result.Fail<Reply>($"Failed to get or create user {request.Message.Username}: {userResult.GetErrorMessages()}");
       }
 
       // Check user for access

@@ -1,4 +1,5 @@
 using Apollo.Application.ToDos.Commands;
+using Apollo.Core;
 using Apollo.Core.ToDos;
 using FluentResults;
 
@@ -31,7 +32,8 @@ public sealed class DeleteToDoCommandHandler(IToDoStore toDoStore, IToDoReminder
         var getOrCreateJobResult = await toDoReminderScheduler.GetOrCreateJobAsync(reminderDate.Value, cancellationToken);
         if (getOrCreateJobResult.IsFailed)
         {
-          return Result.Fail(getOrCreateJobResult.Errors.Select(e => e.Message).FirstOrDefault() ?? "Failed to get or create reminder job.");
+          var errorMessage = getOrCreateJobResult.GetErrorMessages();
+          return Result.Fail(string.IsNullOrEmpty(errorMessage) ? "Failed to get or create reminder job." : errorMessage);
         }
       }
 

@@ -1,3 +1,4 @@
+using Apollo.Core;
 using Apollo.Core.Logging;
 using Apollo.Core.People;
 using Apollo.Core.ToDos;
@@ -32,7 +33,7 @@ public class ToDoReminderJob(
 
       if (dueToDosResult.IsFailed)
       {
-        ToDoLogs.LogFailedToRetrieveToDos(logger, string.Join(", ", dueToDosResult.Errors.Select(e => e.Message)));
+        ToDoLogs.LogFailedToRetrieveToDos(logger, dueToDosResult.GetErrorMessages());
         return;
       }
 
