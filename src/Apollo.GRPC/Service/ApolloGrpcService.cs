@@ -1,5 +1,6 @@
 using Apollo.Application.Conversations;
-using Apollo.Application.ToDos;
+using Apollo.Application.ToDos.Commands;
+using Apollo.Application.ToDos.Queries;
 using Apollo.Core.Conversations;
 using Apollo.Domain.People.ValueObjects;
 using Apollo.Domain.ToDos.ValueObjects;
