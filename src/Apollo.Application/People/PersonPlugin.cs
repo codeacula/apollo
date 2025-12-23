@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using System.Text.Json;
 
 using Apollo.Core.People;
 using Apollo.Domain.People.ValueObjects;
@@ -19,28 +18,23 @@ public class PersonPlugin(IPersonStore personStore, PersonConfig personConfig, P
     {
       if (!PersonTimeZoneId.TryParse(timezone, out var timeZoneId, out var error))
       {
-        return JsonSerializer.Serialize(new { success = false, error });
+        return $"Failed to set timezone: {error}";
       }
 
       var result = await personStore.SetTimeZoneAsync(personId, timeZoneId);
 
       if (result.IsFailed)
       {
-        return JsonSerializer.Serialize(new { success = false, error = string.Join(", ", result.Errors.Select(e => e.Message)) });
+        var errors = string.Join(", ", result.Errors.Select(e => e.Message));
+        return $"Failed to set timezone: {errors}";
       }
 
       var displayName = timeZoneId.GetDisplayName();
-      return JsonSerializer.Serialize(new
-      {
-        success = true,
-        message = $"Timezone set to {displayName} ({timeZoneId.Value})",
-        timeZoneId = timeZoneId.Value,
-        displayName
-      });
+      return $"Successfully set your timezone to {displayName} ({timeZoneId.Value}).";
     }
     catch (Exception ex)
     {
-      return JsonSerializer.Serialize(new { success = false, error = ex.Message });
+      return $"Error setting timezone: {ex.Message}";
     }
   }
 
@@ -54,32 +48,23 @@ public class PersonPlugin(IPersonStore personStore, PersonConfig personConfig, P
 
       if (personResult.IsFailed)
       {
-        return JsonSerializer.Serialize(new { success = false, error = string.Join(", ", personResult.Errors.Select(e => e.Message)) });
+        var errors = string.Join(", ", personResult.Errors.Select(e => e.Message));
+        return $"Failed to retrieve timezone: {errors}";
       }
 
       var person = personResult.Value;
       if (person.TimeZoneId is null)
       {
-        return JsonSerializer.Serialize(new
-        {
-          success = true,
-          timeZoneId = personConfig.DefaultTimeZoneId,
-          displayName = TimeZoneInfo.FindSystemTimeZoneById(personConfig.DefaultTimeZoneId).DisplayName,
-          isDefault = true
-        });
+        var defaultDisplayName = TimeZoneInfo.FindSystemTimeZoneById(personConfig.DefaultTimeZoneId).DisplayName;
+        return $"You are currently using the default timezone: {defaultDisplayName} ({personConfig.DefaultTimeZoneId}).";
       }
 
-      return JsonSerializer.Serialize(new
-      {
-        success = true,
-        timeZoneId = person.TimeZoneId.Value.Value,
-        displayName = person.TimeZoneId.Value.GetDisplayName(),
-        isDefault = false
-      });
+      var displayName = person.TimeZoneId.Value.GetDisplayName();
+      return $"Your timezone is set to: {displayName} ({person.TimeZoneId.Value.Value}).";
     }
     catch (Exception ex)
     {
-      return JsonSerializer.Serialize(new { success = false, error = ex.Message });
+      return $"Error retrieving timezone: {ex.Message}";
     }
   }
 }
