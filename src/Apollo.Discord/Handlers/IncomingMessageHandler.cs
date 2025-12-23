@@ -4,7 +4,6 @@ using Apollo.Core.Conversations;
 using Apollo.Core.Logging;
 using Apollo.Core.People;
 using Apollo.Discord.Config;
-using Apollo.Domain.Common.Enums;
 using Apollo.Domain.People.ValueObjects;
 
 using NetCord.Gateway;
@@ -17,7 +16,6 @@ namespace Apollo.Discord.Handlers;
 public class IncomingMessageHandler(
   IApolloAPIClient apolloAPIClient,
   IPersonCache personCache,
-  IPersonStore personStore,
   DiscordConfig discordConfig,
   ILogger<IncomingMessageHandler> logger) : IMessageCreateGatewayHandler
 {
@@ -46,31 +44,16 @@ public class IncomingMessageHandler(
       return;
     }
 
-    // Capture Discord user ID as notification channel on first interaction
-    var personResult = await personStore.GetByUsernameAsync(username);
-    if (personResult.IsSuccess)
-    {
-      var person = personResult.Value;
-
-      // Check if Discord notification channel already exists
-      var hasDiscordChannel = person.NotificationChannels.Any(c => c.Type == NotificationChannelType.Discord);
-
-      if (!hasDiscordChannel)
-      {
-        var discordUserId = arg.Author.Id.ToString(System.Globalization.CultureInfo.InvariantCulture);
-        var channel = new NotificationChannel(NotificationChannelType.Discord, discordUserId, isEnabled: true);
-        _ = await personStore.AddNotificationChannelAsync(person, channel);
-      }
-    }
-
     // Send request to API
     try
     {
+      var discordUserId = arg.Author.Id.ToString(System.Globalization.CultureInfo.InvariantCulture);
       var newMessage = new NewMessage
       {
         Username = username,
         Content = arg.Content,
-        Platform = ApolloPlatform.Discord
+        Platform = ApolloPlatform.Discord,
+        PlatformIdentifier = discordUserId
       };
 
       var response = await apolloAPIClient.SendMessageAsync(newMessage);

@@ -170,4 +170,24 @@ public sealed class PersonStore(SuperAdminConfig SuperAdminConfig, IDocumentSess
       return Result.Fail(ex.Message);
     }
   }
+
+  public async Task<Result> EnsureNotificationChannelAsync(Person person, NotificationChannel channel, CancellationToken cancellationToken = default)
+  {
+    try
+    {
+      // Check if person already has this channel type
+      var hasChannel = person.NotificationChannels.Any(c => c.Type == channel.Type);
+      if (hasChannel)
+      {
+        return Result.Ok();
+      }
+
+      // Add the channel
+      return await AddNotificationChannelAsync(person, channel, cancellationToken);
+    }
+    catch (Exception ex)
+    {
+      return Result.Fail(ex.Message);
+    }
+  }
 }

@@ -1,6 +1,7 @@
 using Apollo.Application.ToDos.Queries;
 using Apollo.Core.ToDos;
 using Apollo.Domain.ToDos.Models;
+
 using FluentResults;
 
 namespace Apollo.Application.ToDos.Handlers;
