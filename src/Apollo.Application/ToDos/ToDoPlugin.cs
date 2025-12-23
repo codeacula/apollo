@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using System.Text.Json;
 
 using Apollo.Application.ToDos.Commands;
 using Apollo.Application.ToDos.Queries;
@@ -26,7 +25,7 @@ public class ToDoPlugin(IMediator mediator, IPersonStore personStore, PersonConf
       {
         if (!DateTime.TryParse(reminderDate, out var parsedDate))
         {
-          return JsonSerializer.Serialize(new { success = false, error = "Invalid reminder date format" });
+          return "Failed to create todo: Invalid reminder date format. Please use ISO 8601 format like 2025-12-31T10:00:00.";
         }
 
         // Get user's timezone or use default
@@ -64,20 +63,20 @@ public class ToDoPlugin(IMediator mediator, IPersonStore personStore, PersonConf
 
       if (result.IsFailed)
       {
-        return JsonSerializer.Serialize(new { success = false, error = string.Join(", ", result.Errors.Select(e => e.Message)) });
+        var errors = string.Join(", ", result.Errors.Select(e => e.Message));
+        return $"Failed to create todo: {errors}";
       }
 
-      return JsonSerializer.Serialize(new
+      if (reminder.HasValue)
       {
-        success = true,
-        todoId = result.Value.Id.Value,
-        description = result.Value.Description.Value,
-        createdOn = result.Value.CreatedOn.Value
-      });
+        return $"Successfully created todo '{result.Value.Description.Value}' with a reminder set for {reminder.Value:yyyy-MM-dd HH:mm:ss} UTC.";
+      }
+
+      return $"Successfully created todo '{result.Value.Description.Value}'.";
     }
     catch (Exception ex)
     {
-      return JsonSerializer.Serialize(new { success = false, error = ex.Message });
+      return $"Error creating todo: {ex.Message}";
     }
   }
 
@@ -91,7 +90,7 @@ public class ToDoPlugin(IMediator mediator, IPersonStore personStore, PersonConf
     {
       if (!Guid.TryParse(todoId, out var todoGuid))
       {
-        return JsonSerializer.Serialize(new { success = false, error = "Invalid todo ID format" });
+        return "Failed to update todo: Invalid todo ID format. The ID must be a valid GUID.";
       }
 
       var command = new UpdateToDoCommand(
@@ -103,14 +102,15 @@ public class ToDoPlugin(IMediator mediator, IPersonStore personStore, PersonConf
 
       if (result.IsFailed)
       {
-        return JsonSerializer.Serialize(new { success = false, error = string.Join(", ", result.Errors.Select(e => e.Message)) });
+        var errors = string.Join(", ", result.Errors.Select(e => e.Message));
+        return $"Failed to update todo: {errors}";
       }
 
-      return JsonSerializer.Serialize(new { success = true, message = "ToDo updated successfully" });
+      return $"Successfully updated the todo to '{description}'.";
     }
     catch (Exception ex)
     {
-      return JsonSerializer.Serialize(new { success = false, error = ex.Message });
+      return $"Error updating todo: {ex.Message}";
     }
   }
 
@@ -123,7 +123,7 @@ public class ToDoPlugin(IMediator mediator, IPersonStore personStore, PersonConf
     {
       if (!Guid.TryParse(todoId, out var todoGuid))
       {
-        return JsonSerializer.Serialize(new { success = false, error = "Invalid todo ID format" });
+        return "Failed to complete todo: Invalid todo ID format. The ID must be a valid GUID.";
       }
 
       var command = new CompleteToDoCommand(new ToDoId(todoGuid));
@@ -131,14 +131,15 @@ public class ToDoPlugin(IMediator mediator, IPersonStore personStore, PersonConf
 
       if (result.IsFailed)
       {
-        return JsonSerializer.Serialize(new { success = false, error = string.Join(", ", result.Errors.Select(e => e.Message)) });
+        var errors = string.Join(", ", result.Errors.Select(e => e.Message));
+        return $"Failed to complete todo: {errors}";
       }
 
-      return JsonSerializer.Serialize(new { success = true, message = "ToDo completed successfully" });
+      return "Successfully marked the todo as completed.";
     }
     catch (Exception ex)
     {
-      return JsonSerializer.Serialize(new { success = false, error = ex.Message });
+      return $"Error completing todo: {ex.Message}";
     }
   }
 
@@ -151,7 +152,7 @@ public class ToDoPlugin(IMediator mediator, IPersonStore personStore, PersonConf
     {
       if (!Guid.TryParse(todoId, out var todoGuid))
       {
-        return JsonSerializer.Serialize(new { success = false, error = "Invalid todo ID format" });
+        return "Failed to delete todo: Invalid todo ID format. The ID must be a valid GUID.";
       }
 
       var command = new DeleteToDoCommand(new ToDoId(todoGuid));
@@ -159,14 +160,15 @@ public class ToDoPlugin(IMediator mediator, IPersonStore personStore, PersonConf
 
       if (result.IsFailed)
       {
-        return JsonSerializer.Serialize(new { success = false, error = string.Join(", ", result.Errors.Select(e => e.Message)) });
+        var errors = string.Join(", ", result.Errors.Select(e => e.Message));
+        return $"Failed to delete todo: {errors}";
       }
 
-      return JsonSerializer.Serialize(new { success = true, message = "ToDo deleted successfully" });
+      return "Successfully deleted the todo.";
     }
     catch (Exception ex)
     {
-      return JsonSerializer.Serialize(new { success = false, error = ex.Message });
+      return $"Error deleting todo: {ex.Message}";
     }
   }
 
@@ -181,22 +183,24 @@ public class ToDoPlugin(IMediator mediator, IPersonStore personStore, PersonConf
 
       if (result.IsFailed)
       {
-        return JsonSerializer.Serialize(new { success = false, error = string.Join(", ", result.Errors.Select(e => e.Message)) });
+        var errors = string.Join(", ", result.Errors.Select(e => e.Message));
+        return $"Failed to retrieve todos: {errors}";
       }
 
-      var todos = result.Value.Select(t => new
+      if (!result.Value.Any())
       {
-        todoId = t.Id.Value,
-        description = t.Description.Value,
-        createdOn = t.CreatedOn.Value,
-        updatedOn = t.UpdatedOn.Value
-      });
+        return "You currently have no active todos.";
+      }
 
-      return JsonSerializer.Serialize(new { success = true, todos });
+      var todoList = result.Value.Select((t, index) =>
+        $"{index + 1}. {t.Description.Value} (ID: {t.Id.Value}, Created: {t.CreatedOn.Value:yyyy-MM-dd})"
+      );
+
+      return $"Here are your active todos:\n{string.Join("\n", todoList)}";
     }
     catch (Exception ex)
     {
-      return JsonSerializer.Serialize(new { success = false, error = ex.Message });
+      return $"Error retrieving todos: {ex.Message}";
     }
   }
 }
