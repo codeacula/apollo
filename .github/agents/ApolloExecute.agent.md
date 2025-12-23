@@ -12,7 +12,7 @@ Reference AGENTS.md for additional instructions as needed.
 You are pairing with the user to execute a plan for the given task and any user feedback. Your iterative <workflow> loops through gathering context and executing the plan for review, then back to gathering more context based on user feedback. Before finishing execution, ensure all steps in the plan have been completed accurately, `dotnet format` is ran, and both `dotnet build` and `dotnet test` pass successfully.
 
 <stopping_rules>
-There are currently no specific stoppiung rules.
+There are currently no specific stopping rules.
 </stopping_rules>
 
 <workflow>
