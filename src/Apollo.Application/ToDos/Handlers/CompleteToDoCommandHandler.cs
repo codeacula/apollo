@@ -19,27 +19,23 @@ public sealed class CompleteToDoCommandHandler(IToDoStore toDoStore, IToDoRemind
         return result;
       }
 
-      var remainingResult = await toDoStore.GetToDosByQuartzJobIdAsync(quartzJobId.Value, cancellationToken);
-      if (remainingResult.IsSuccess && !remainingResult.Value.Any())
+      _ = await toDoReminderScheduler.DeleteJobAsync(quartzJobId.Value, cancellationToken);
+
+      var afterDeleteRemainingResult = await toDoStore.GetToDosByQuartzJobIdAsync(quartzJobId.Value, cancellationToken);
+
+      if (afterDeleteRemainingResult.IsFailed)
       {
-        _ = await toDoReminderScheduler.DeleteJobAsync(quartzJobId.Value, cancellationToken);
+        return Result.Fail(afterDeleteRemainingResult.Errors.Select(e => e.Message).FirstOrDefault() ?? "Failed to get ToDos by QuartzJobId after deleting job.");
+      }
 
-        var afterDeleteRemainingResult = await toDoStore.GetToDosByQuartzJobIdAsync(quartzJobId.Value, cancellationToken);
+      var reminderDate = afterDeleteRemainingResult.Value.SelectMany(t => t.Reminders).FirstOrDefault()?.ReminderTime.Value;
 
-        if (afterDeleteRemainingResult.IsFailed)
+      if (reminderDate.HasValue)
+      {
+        var jobResult = await toDoReminderScheduler.GetOrCreateJobAsync(reminderDate.Value, cancellationToken);
+        if (jobResult.IsFailed)
         {
-          return Result.Fail(afterDeleteRemainingResult.Errors.Select(e => e.Message).FirstOrDefault() ?? "Failed to get ToDos by QuartzJobId after deleting job.");
-        }
-
-        var reminderDate = afterDeleteRemainingResult.Value.SelectMany(t => t.Reminders).FirstOrDefault()?.ReminderTime.Value;
-
-        if (reminderDate.HasValue)
-        {
-          var jobResult = await toDoReminderScheduler.GetOrCreateJobAsync(reminderDate.Value, cancellationToken);
-          if (jobResult.IsFailed)
-          {
-            return Result.Fail("Failed to get or create reminder job.");
-          }
+          return Result.Fail("Failed to get or create reminder job.");
         }
       }
 
