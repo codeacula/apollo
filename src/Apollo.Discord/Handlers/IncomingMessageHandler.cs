@@ -66,7 +66,8 @@ public class IncomingMessageHandler(
     }
     catch (Exception ex)
     {
-      _ = await arg.SendAsync($"Exception occurred while processing your message. {ex.Message}");
+      DiscordLogs.MessageProcessingFailed(logger, username.Value, ex.Message, ex);
+      _ = await arg.SendAsync("Sorry, an unexpected error occurred while processing your message. Please try again later.");
       return;
     }
   }
