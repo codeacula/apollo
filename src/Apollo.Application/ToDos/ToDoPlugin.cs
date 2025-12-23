@@ -2,6 +2,7 @@ using System.ComponentModel;
 
 using Apollo.Application.ToDos.Commands;
 using Apollo.Application.ToDos.Queries;
+using Apollo.Core;
 using Apollo.Core.People;
 using Apollo.Domain.People.ValueObjects;
 using Apollo.Domain.ToDos.ValueObjects;
@@ -63,8 +64,7 @@ public class ToDoPlugin(IMediator mediator, IPersonStore personStore, PersonConf
 
       if (result.IsFailed)
       {
-        var errors = string.Join(", ", result.Errors.Select(e => e.Message));
-        return $"Failed to create todo: {errors}";
+        return $"Failed to create todo: {result.GetErrorMessages()}";
       }
 
       if (reminder.HasValue)
@@ -102,8 +102,7 @@ public class ToDoPlugin(IMediator mediator, IPersonStore personStore, PersonConf
 
       if (result.IsFailed)
       {
-        var errors = string.Join(", ", result.Errors.Select(e => e.Message));
-        return $"Failed to update todo: {errors}";
+        return $"Failed to update todo: {result.GetErrorMessages()}";
       }
 
       return $"Successfully updated the todo to '{description}'.";
@@ -131,8 +130,7 @@ public class ToDoPlugin(IMediator mediator, IPersonStore personStore, PersonConf
 
       if (result.IsFailed)
       {
-        var errors = string.Join(", ", result.Errors.Select(e => e.Message));
-        return $"Failed to complete todo: {errors}";
+        return $"Failed to complete todo: {result.GetErrorMessages()}";
       }
 
       return "Successfully marked the todo as completed.";
@@ -160,8 +158,7 @@ public class ToDoPlugin(IMediator mediator, IPersonStore personStore, PersonConf
 
       if (result.IsFailed)
       {
-        var errors = string.Join(", ", result.Errors.Select(e => e.Message));
-        return $"Failed to delete todo: {errors}";
+        return $"Failed to delete todo: {result.GetErrorMessages()}";
       }
 
       return "Successfully deleted the todo.";
@@ -183,8 +180,7 @@ public class ToDoPlugin(IMediator mediator, IPersonStore personStore, PersonConf
 
       if (result.IsFailed)
       {
-        var errors = string.Join(", ", result.Errors.Select(e => e.Message));
-        return $"Failed to retrieve todos: {errors}";
+        return $"Failed to retrieve todos: {result.GetErrorMessages()}";
       }
 
       if (!result.Value.Any())

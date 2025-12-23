@@ -1,3 +1,4 @@
+using Apollo.Core;
 using Apollo.Core.Logging;
 using Apollo.Core.People;
 using Apollo.Domain.People.Models;
@@ -58,7 +59,7 @@ public sealed class PersonService(
     var cacheResult = await personCache.GetAccessAsync(username);
     if (cacheResult.IsFailed)
     {
-      ValidationLogs.CacheCheckFailed(logger, username, string.Join(", ", cacheResult.Errors.Select(e => e.Message)));
+      ValidationLogs.CacheCheckFailed(logger, username, cacheResult.GetErrorMessages());
       return Result.Fail<HasAccess>($"Cache error for user {username}: fail-closed policy denies access");
     }
 

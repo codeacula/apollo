@@ -1,5 +1,6 @@
 using System.ComponentModel;
 
+using Apollo.Core;
 using Apollo.Core.People;
 using Apollo.Domain.People.ValueObjects;
 
@@ -25,8 +26,7 @@ public class PersonPlugin(IPersonStore personStore, PersonConfig personConfig, P
 
       if (result.IsFailed)
       {
-        var errors = string.Join(", ", result.Errors.Select(e => e.Message));
-        return $"Failed to set timezone: {errors}";
+        return $"Failed to set timezone: {result.GetErrorMessages()}";
       }
 
       var displayName = timeZoneId.GetDisplayName();
@@ -48,8 +48,7 @@ public class PersonPlugin(IPersonStore personStore, PersonConfig personConfig, P
 
       if (personResult.IsFailed)
       {
-        var errors = string.Join(", ", personResult.Errors.Select(e => e.Message));
-        return $"Failed to retrieve timezone: {errors}";
+        return $"Failed to retrieve timezone: {personResult.GetErrorMessages()}";
       }
 
       var person = personResult.Value;
