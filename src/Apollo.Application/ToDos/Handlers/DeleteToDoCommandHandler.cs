@@ -19,9 +19,6 @@ public sealed class DeleteToDoCommandHandler(IToDoStore toDoStore, IToDoReminder
         return result;
       }
 
-      // Delete the job first, then check if any ToDos remain that need it recreated.
-      // This eliminates the race condition where a ToDo could be created between
-      // checking for remaining ToDos and deleting the job.
       _ = await toDoReminderScheduler.DeleteJobAsync(quartzJobId.Value, cancellationToken);
 
       var afterDeleteRemainingResult = await toDoStore.GetToDosByQuartzJobIdAsync(quartzJobId.Value, cancellationToken);
