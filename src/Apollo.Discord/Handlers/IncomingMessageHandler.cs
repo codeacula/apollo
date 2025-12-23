@@ -1,3 +1,4 @@
+using Apollo.Core;
 using Apollo.Core.API;
 using Apollo.Core.Conversations;
 using Apollo.Core.Logging;
@@ -31,7 +32,7 @@ public class IncomingMessageHandler(
     var validationResult = await personCache.GetAccessAsync(username);
     if (validationResult.IsFailed)
     {
-      ValidationLogs.ValidationFailed(logger, username, string.Join(", ", validationResult.Errors.Select(e => e.Message)));
+      ValidationLogs.ValidationFailed(logger, username, validationResult.GetErrorMessages());
       _ = await arg.SendAsync("Sorry, unable to verify your access at this time.");
       return;
     }
@@ -57,7 +58,7 @@ public class IncomingMessageHandler(
 
       if (response.IsFailed)
       {
-        _ = await arg.SendAsync($"An error occurred:\n{string.Join("\n", response.Errors.Select(e => e.Message))}");
+        _ = await arg.SendAsync($"An error occurred:\n{response.GetErrorMessages("\n")}");
         return;
       }
 
