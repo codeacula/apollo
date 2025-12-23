@@ -43,4 +43,10 @@ public static partial class DiscordLogs
       Level = LogLevel.Error,
       Message = "Failed to create forum post in channel {ChannelId}: {Error}")]
   public static partial void ForumPostCreateFailed(ILogger logger, ulong channelId, string error);
+
+  [LoggerMessage(
+      EventId = 2006,
+      Level = LogLevel.Error,
+      Message = "Exception occurred while processing incoming message from user {Username}: {ExceptionMessage}")]
+  public static partial void MessageProcessingFailed(ILogger logger, string username, string exceptionMessage, Exception exception);
 }
