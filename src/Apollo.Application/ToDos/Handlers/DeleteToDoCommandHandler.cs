@@ -19,23 +19,22 @@ public sealed class DeleteToDoCommandHandler(IToDoStore toDoStore, IToDoReminder
         return result;
       }
 
-      var remainingResult = await toDoStore.GetToDosByQuartzJobIdAsync(quartzJobId.Value, cancellationToken);
-      if (remainingResult.IsSuccess && !remainingResult.Value.Any())
+      // Delete the job first, then check if any ToDos remain that need it recreated.
+      // This eliminates the race condition where a ToDo could be created between
+      // checking for remaining ToDos and deleting the job.
+      _ = await toDoReminderScheduler.DeleteJobAsync(quartzJobId.Value, cancellationToken);
+
+      var afterDeleteRemainingResult = await toDoStore.GetToDosByQuartzJobIdAsync(quartzJobId.Value, cancellationToken);
+      var reminderDate = afterDeleteRemainingResult.IsSuccess
+        ? afterDeleteRemainingResult.Value.SelectMany(t => t.Reminders).FirstOrDefault()?.ReminderTime.Value
+        : null;
+
+      if (reminderDate.HasValue)
       {
-        _ = await toDoReminderScheduler.DeleteJobAsync(quartzJobId.Value, cancellationToken);
-
-        var afterDeleteRemainingResult = await toDoStore.GetToDosByQuartzJobIdAsync(quartzJobId.Value, cancellationToken);
-        var reminderDate = afterDeleteRemainingResult.IsSuccess
-          ? afterDeleteRemainingResult.Value.SelectMany(t => t.Reminders).FirstOrDefault()?.ReminderTime.Value
-          : null;
-
-        if (reminderDate.HasValue)
+        var getOrCreateJobResult = await toDoReminderScheduler.GetOrCreateJobAsync(reminderDate.Value, cancellationToken);
+        if (getOrCreateJobResult.IsFailed)
         {
-          var getOrCreateJobResult = await toDoReminderScheduler.GetOrCreateJobAsync(reminderDate.Value, cancellationToken);
-          if (getOrCreateJobResult.IsFailed)
-          {
-            return Result.Fail(getOrCreateJobResult.Errors.Select(e => e.Message).FirstOrDefault() ?? "Failed to get or create reminder job.");
-          }
+          return Result.Fail(getOrCreateJobResult.Errors.Select(e => e.Message).FirstOrDefault() ?? "Failed to get or create reminder job.");
         }
       }
 

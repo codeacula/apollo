@@ -109,8 +109,7 @@ public class CompleteToDoCommandHandlerTests
       .ReturnsAsync(Result.Ok());
 
     _ = toDoStore
-      .SetupSequence(x => x.GetToDosByQuartzJobIdAsync(quartzJobId, It.IsAny<CancellationToken>()))
-      .ReturnsAsync(Result.Ok<IEnumerable<ToDo>>([]))
+      .Setup(x => x.GetToDosByQuartzJobIdAsync(quartzJobId, It.IsAny<CancellationToken>()))
       .ReturnsAsync(Result.Ok<IEnumerable<ToDo>>([]));
 
     _ = toDoReminderScheduler
@@ -164,11 +163,6 @@ public class CompleteToDoCommandHandlerTests
       .Setup(x => x.CompleteAsync(toDoId, It.IsAny<CancellationToken>()))
       .ReturnsAsync(Result.Ok());
 
-    _ = toDoStore
-      .InSequence(sequence)
-      .Setup(x => x.GetToDosByQuartzJobIdAsync(quartzJobId, It.IsAny<CancellationToken>()))
-      .ReturnsAsync(Result.Ok<IEnumerable<ToDo>>([]));
-
     _ = toDoReminderScheduler
       .InSequence(sequence)
       .Setup(x => x.DeleteJobAsync(quartzJobId, It.IsAny<CancellationToken>()))
@@ -192,7 +186,7 @@ public class CompleteToDoCommandHandlerTests
   }
 
   [Fact]
-  public async Task HandleWhenReminderAndRemainingToDosExistDoesNotDeleteJobAsync()
+  public async Task HandleWhenReminderAndRemainingToDosExistDeletesThenRecreatesJobAsync()
   {
     var toDoStore = new Mock<IToDoStore>();
     var toDoReminderScheduler = new Mock<IToDoReminderScheduler>();
@@ -200,6 +194,24 @@ public class CompleteToDoCommandHandlerTests
 
     var toDoId = new ToDoId(Guid.NewGuid());
     var quartzJobId = new QuartzJobId(Guid.NewGuid());
+    var reminderDate = DateTime.UtcNow.AddDays(1);
+
+    var remainingToDo = CreateToDo(new ToDoId(Guid.NewGuid()), quartzJobId) with
+    {
+      Reminders =
+      [
+        new Reminder
+        {
+          AcknowledgedOn = null,
+          CreatedOn = new CreatedOn(DateTime.UtcNow),
+          Details = new Details("test"),
+          Id = new ReminderId(Guid.NewGuid()),
+          QuartzJobId = quartzJobId,
+          ReminderTime = new ReminderTime(reminderDate),
+          UpdatedOn = new UpdatedOn(DateTime.UtcNow)
+        }
+      ]
+    };
 
     _ = toDoStore
       .Setup(x => x.GetAsync(toDoId, It.IsAny<CancellationToken>()))
@@ -211,12 +223,21 @@ public class CompleteToDoCommandHandlerTests
 
     _ = toDoStore
       .Setup(x => x.GetToDosByQuartzJobIdAsync(quartzJobId, It.IsAny<CancellationToken>()))
-      .ReturnsAsync(Result.Ok<IEnumerable<ToDo>>([CreateToDo(new ToDoId(Guid.NewGuid()), quartzJobId)]));
+      .ReturnsAsync(Result.Ok<IEnumerable<ToDo>>([remainingToDo]));
+
+    _ = toDoReminderScheduler
+      .Setup(x => x.DeleteJobAsync(quartzJobId, It.IsAny<CancellationToken>()))
+      .ReturnsAsync(Result.Ok());
+
+    _ = toDoReminderScheduler
+      .Setup(x => x.GetOrCreateJobAsync(reminderDate, It.IsAny<CancellationToken>()))
+      .ReturnsAsync(Result.Ok(quartzJobId));
 
     var result = await handler.Handle(new CompleteToDoCommand(toDoId), CancellationToken.None);
 
     Assert.True(result.IsSuccess);
-    toDoReminderScheduler.Verify(x => x.DeleteJobAsync(It.IsAny<QuartzJobId>(), It.IsAny<CancellationToken>()), Times.Never);
+    toDoReminderScheduler.Verify(x => x.DeleteJobAsync(quartzJobId, It.IsAny<CancellationToken>()), Times.Once);
+    toDoReminderScheduler.Verify(x => x.GetOrCreateJobAsync(reminderDate, It.IsAny<CancellationToken>()), Times.Once);
   }
 
   [Fact]
