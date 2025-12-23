@@ -26,8 +26,7 @@ public sealed class CompleteToDoCommandHandler(IToDoStore toDoStore, IToDoRemind
 
       if (afterDeleteRemainingResult.IsFailed)
       {
-        var errorMessage = afterDeleteRemainingResult.GetErrorMessages();
-        return Result.Fail(string.IsNullOrEmpty(errorMessage) ? "Failed to get ToDos by QuartzJobId after deleting job." : errorMessage);
+        return Result.Fail(afterDeleteRemainingResult.GetErrorMessages());
       }
 
       var reminderDate = afterDeleteRemainingResult.Value.SelectMany(t => t.Reminders).FirstOrDefault()?.ReminderTime.Value;
