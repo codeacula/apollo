@@ -1,8 +1,8 @@
+using Apollo.Application.ToDos.Commands;
 using Apollo.Core.ToDos;
-
 using FluentResults;
 
-namespace Apollo.Application.ToDos;
+namespace Apollo.Application.ToDos.Handlers;
 
 public sealed class UpdateToDoCommandHandler(IToDoStore toDoStore) : IRequestHandler<UpdateToDoCommand, Result>
 {

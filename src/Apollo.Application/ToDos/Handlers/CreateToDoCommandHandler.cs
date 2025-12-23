@@ -1,10 +1,10 @@
+using Apollo.Application.ToDos.Commands;
 using Apollo.Core.ToDos;
 using Apollo.Domain.ToDos.Models;
 using Apollo.Domain.ToDos.ValueObjects;
-
 using FluentResults;
 
-namespace Apollo.Application.ToDos;
+namespace Apollo.Application.ToDos.Handlers;
 
 public sealed class CreateToDoCommandHandler(IToDoStore toDoStore, IToDoReminderScheduler toDoReminderScheduler) : IRequestHandler<CreateToDoCommand, Result<ToDo>>
 {

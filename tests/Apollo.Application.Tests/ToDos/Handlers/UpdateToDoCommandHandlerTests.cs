@@ -1,4 +1,5 @@
-using Apollo.Application.ToDos;
+using Apollo.Application.ToDos.Commands;
+using Apollo.Application.ToDos.Handlers;
 using Apollo.Core.ToDos;
 using Apollo.Domain.ToDos.ValueObjects;
 

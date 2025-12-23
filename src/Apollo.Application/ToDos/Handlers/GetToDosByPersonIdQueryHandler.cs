@@ -1,9 +1,9 @@
+using Apollo.Application.ToDos.Queries;
 using Apollo.Core.ToDos;
 using Apollo.Domain.ToDos.Models;
-
 using FluentResults;
 
-namespace Apollo.Application.ToDos;
+namespace Apollo.Application.ToDos.Handlers;
 
 public sealed class GetToDosByPersonIdQueryHandler(IToDoStore toDoStore) : IRequestHandler<GetToDosByPersonIdQuery, Result<IEnumerable<ToDo>>>
 {

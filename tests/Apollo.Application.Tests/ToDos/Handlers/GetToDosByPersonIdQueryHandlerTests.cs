@@ -1,13 +1,12 @@
-using Apollo.Application.ToDos;
+using Apollo.Application.ToDos.Handlers;
+using Apollo.Application.ToDos.Queries;
 using Apollo.Core.ToDos;
 using Apollo.Domain.Common.Enums;
 using Apollo.Domain.Common.ValueObjects;
 using Apollo.Domain.People.ValueObjects;
 using Apollo.Domain.ToDos.Models;
 using Apollo.Domain.ToDos.ValueObjects;
-
 using FluentResults;
-
 using Moq;
 
 namespace Apollo.Application.Tests.ToDos;
