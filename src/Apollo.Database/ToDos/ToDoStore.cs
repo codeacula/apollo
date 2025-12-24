@@ -1,3 +1,4 @@
+using Apollo.Core;
 using Apollo.Core.ToDos;
 using Apollo.Database.ToDos.Events;
 using Apollo.Domain.People.ValueObjects;
@@ -16,7 +17,7 @@ public sealed class ToDoStore(IDocumentSession session, TimeProvider timeProvide
   {
     try
     {
-      var time = timeProvider.GetUtcNow().DateTime;
+      var time = timeProvider.GetUtcDateTime();
       _ = session.Events.Append(id.Value, new ToDoCompletedEvent(id.Value, time));
 
       await session.SaveChangesAsync(cancellationToken);
@@ -33,7 +34,7 @@ public sealed class ToDoStore(IDocumentSession session, TimeProvider timeProvide
   {
     try
     {
-      var time = timeProvider.GetUtcNow().DateTime;
+      var time = timeProvider.GetUtcDateTime();
       var ev = new ToDoCreatedEvent(id.Value, personId.Value, description.Value, time);
 
       _ = session.Events.StartStream<DbToDo>(id.Value, [ev]);
@@ -53,7 +54,7 @@ public sealed class ToDoStore(IDocumentSession session, TimeProvider timeProvide
   {
     try
     {
-      var time = timeProvider.GetUtcNow().DateTime;
+      var time = timeProvider.GetUtcDateTime();
       _ = session.Events.Append(id.Value, new ToDoDeletedEvent(id.Value, time));
 
       await session.SaveChangesAsync(cancellationToken);
@@ -134,7 +135,7 @@ public sealed class ToDoStore(IDocumentSession session, TimeProvider timeProvide
   {
     try
     {
-      var time = timeProvider.GetUtcNow().DateTime;
+      var time = timeProvider.GetUtcDateTime();
       _ = session.Events.Append(id.Value, new ToDoReminderScheduledEvent(id.Value, quartzJobId.Value, reminderDate, time));
 
       await session.SaveChangesAsync(cancellationToken);
@@ -151,7 +152,7 @@ public sealed class ToDoStore(IDocumentSession session, TimeProvider timeProvide
   {
     try
     {
-      var time = timeProvider.GetUtcNow().DateTime;
+      var time = timeProvider.GetUtcDateTime();
       _ = session.Events.Append(id.Value, new ToDoUpdatedEvent(id.Value, description.Value, time));
 
       await session.SaveChangesAsync(cancellationToken);

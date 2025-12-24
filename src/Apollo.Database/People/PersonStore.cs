@@ -1,3 +1,4 @@
+using Apollo.Core;
 using Apollo.Core.People;
 using Apollo.Database.People.Events;
 using Apollo.Domain.Common.Enums;
@@ -30,7 +31,7 @@ public sealed class PersonStore(SuperAdminConfig SuperAdminConfig, IDocumentSess
   {
     try
     {
-      var time = timeProvider.GetUtcNow().DateTime;
+      var time = timeProvider.GetUtcDateTime();
       var pce = new PersonCreatedEvent(id, username.Value, username.Platform, time);
 
       var events = new List<object> { pce };
@@ -91,7 +92,7 @@ public sealed class PersonStore(SuperAdminConfig SuperAdminConfig, IDocumentSess
   {
     try
     {
-      _ = session.Events.Append(id.Value, new AccessGrantedEvent(id.Value, timeProvider.GetUtcNow().DateTime));
+      _ = session.Events.Append(id.Value, new AccessGrantedEvent(id.Value, timeProvider.GetUtcDateTime()));
 
       await session.SaveChangesAsync(cancellationToken);
 
@@ -107,7 +108,7 @@ public sealed class PersonStore(SuperAdminConfig SuperAdminConfig, IDocumentSess
   {
     try
     {
-      var time = timeProvider.GetUtcNow().DateTime;
+      var time = timeProvider.GetUtcDateTime();
       _ = session.Events.Append(id.Value, new PersonTimeZoneUpdatedEvent(id.Value, timeZoneId.Value, time));
 
       await session.SaveChangesAsync(cancellationToken);
@@ -124,7 +125,7 @@ public sealed class PersonStore(SuperAdminConfig SuperAdminConfig, IDocumentSess
   {
     try
     {
-      var time = timeProvider.GetUtcNow().DateTime;
+      var time = timeProvider.GetUtcDateTime();
       _ = session.Events.Append(person.Id.Value, new NotificationChannelAddedEvent(person.Id.Value, channel.Type, channel.Identifier, time));
 
       await session.SaveChangesAsync(cancellationToken);
@@ -141,7 +142,7 @@ public sealed class PersonStore(SuperAdminConfig SuperAdminConfig, IDocumentSess
   {
     try
     {
-      var time = timeProvider.GetUtcNow().DateTime;
+      var time = timeProvider.GetUtcDateTime();
       _ = session.Events.Append(person.Id.Value, new NotificationChannelRemovedEvent(person.Id.Value, channel.Type, channel.Identifier, time));
 
       await session.SaveChangesAsync(cancellationToken);
@@ -158,7 +159,7 @@ public sealed class PersonStore(SuperAdminConfig SuperAdminConfig, IDocumentSess
   {
     try
     {
-      var time = timeProvider.GetUtcNow().DateTime;
+      var time = timeProvider.GetUtcDateTime();
       _ = session.Events.Append(person.Id.Value, new NotificationChannelToggledEvent(person.Id.Value, channel.Type, channel.Identifier, channel.IsEnabled, time));
 
       await session.SaveChangesAsync(cancellationToken);
