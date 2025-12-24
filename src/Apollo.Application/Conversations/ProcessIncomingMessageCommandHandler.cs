@@ -131,7 +131,7 @@ public sealed class ProcessIncomingMessageCommandHandler(
         DataAccessLogs.UnableToSaveMessageToConversation(logger, conversation.Id.Value, response);
       }
 
-      var currentTime = timeProvider.GetUtcNow().DateTime;
+      var currentTime = timeProvider.GetUtcDateTime();
       return Result.Ok(new Reply
       {
         Content = new(response),

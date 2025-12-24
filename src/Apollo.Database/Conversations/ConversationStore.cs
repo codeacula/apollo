@@ -1,3 +1,4 @@
+using Apollo.Core;
 using Apollo.Core.Conversations;
 using Apollo.Database.Conversations.Events;
 using Apollo.Domain.Common.ValueObjects;
@@ -21,7 +22,7 @@ public sealed class ConversationStore(IDocumentSession session, TimeProvider tim
       {
         Id = conversationId.Value,
         Message = message.Value,
-        CreatedOn = timeProvider.GetUtcNow().DateTime
+        CreatedOn = timeProvider.GetUtcDateTime()
       });
 
       await session.SaveChangesAsync(cancellationToken);
@@ -44,7 +45,7 @@ public sealed class ConversationStore(IDocumentSession session, TimeProvider tim
       {
         Id = conversationId.Value,
         Message = reply.Value,
-        CreatedOn = timeProvider.GetUtcNow().DateTime
+        CreatedOn = timeProvider.GetUtcDateTime()
       });
 
       await session.SaveChangesAsync(cancellationToken);
@@ -68,7 +69,7 @@ public sealed class ConversationStore(IDocumentSession session, TimeProvider tim
       {
         Id = conversationId,
         PersonId = id.Value,
-        CreatedOn = timeProvider.GetUtcNow().DateTime
+        CreatedOn = timeProvider.GetUtcDateTime()
       };
 
       _ = session.Events.StartStream<DbConversation>(conversationId, [ev]);
