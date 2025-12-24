@@ -6,10 +6,12 @@ using Apollo.Domain.Common.ValueObjects;
 using Apollo.Domain.People.ValueObjects;
 using Apollo.Domain.ToDos.Models;
 using Apollo.Domain.ToDos.ValueObjects;
+
 using FluentResults;
+
 using Moq;
 
-namespace Apollo.Application.Tests.ToDos;
+namespace Apollo.Application.Tests.ToDos.Handlers;
 
 public class GetToDosByPersonIdQueryHandlerTests
 {

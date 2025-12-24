@@ -1,4 +1,3 @@
-using Apollo.Core;
 using FluentResults;
 
 namespace Apollo.Core.Tests;
@@ -94,7 +93,7 @@ public class ResultExtensionsTests
   public void GetErrorMessagesWorksWithEmptyTypedResult()
   {
     // Arrange
-    var result = Result.Ok<string>("Success");
+    var result = Result.Ok("Success");
 
     // Act
     var errorMessages = result.GetErrorMessages();

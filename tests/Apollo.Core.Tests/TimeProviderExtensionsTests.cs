@@ -1,5 +1,3 @@
-using Apollo.Core;
-
 using Microsoft.Extensions.Time.Testing;
 
 namespace Apollo.Core.Tests;

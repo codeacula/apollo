@@ -1,4 +1,3 @@
-using Apollo.Domain.Common.Enums;
 using Apollo.Domain.People.Models;
 using Apollo.Domain.People.ValueObjects;
 
