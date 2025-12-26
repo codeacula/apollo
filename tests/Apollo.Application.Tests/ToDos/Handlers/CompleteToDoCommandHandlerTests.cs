@@ -10,7 +10,7 @@ using FluentResults;
 
 using Moq;
 
-namespace Apollo.Application.Tests.ToDos;
+namespace Apollo.Application.Tests.ToDos.Handlers;
 
 public class CompleteToDoCommandHandlerTests
 {

@@ -15,6 +15,7 @@ public class ToDoPlugin(IMediator mediator, IPersonStore personStore, PersonConf
 {
   [KernelFunction("create_todo")]
   [Description("Creates a new todo with an optional reminder date. Reminder times are interpreted in the user's timezone.")]
+  [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0046:Convert to conditional expression", Justification = "Maintains better code readability")]
   public async Task<string> CreateToDoAsync(
     [Description("The todo description")] string description,
     [Description("Optional reminder date in ISO 8601 format (e.g., 2025-12-31T10:00:00). Time is interpreted in your local timezone.")] string? reminderDate = null)
@@ -67,12 +68,9 @@ public class ToDoPlugin(IMediator mediator, IPersonStore personStore, PersonConf
         return $"Failed to create todo: {result.GetErrorMessages()}";
       }
 
-      if (reminder.HasValue)
-      {
-        return $"Successfully created todo '{result.Value.Description.Value}' with a reminder set for {reminder.Value:yyyy-MM-dd HH:mm:ss} UTC.";
-      }
-
-      return $"Successfully created todo '{result.Value.Description.Value}'.";
+      return reminder.HasValue
+        ? $"Successfully created todo '{result.Value.Description.Value}' with a reminder set for {reminder.Value:yyyy-MM-dd HH:mm:ss} UTC."
+        : $"Successfully created todo '{result.Value.Description.Value}'.";
     }
     catch (Exception ex)
     {
@@ -100,12 +98,7 @@ public class ToDoPlugin(IMediator mediator, IPersonStore personStore, PersonConf
 
       var result = await mediator.Send(command);
 
-      if (result.IsFailed)
-      {
-        return $"Failed to update todo: {result.GetErrorMessages()}";
-      }
-
-      return $"Successfully updated the todo to '{description}'.";
+      return result.IsFailed ? $"Failed to update todo: {result.GetErrorMessages()}" : $"Successfully updated the todo to '{description}'.";
     }
     catch (Exception ex)
     {
@@ -128,12 +121,7 @@ public class ToDoPlugin(IMediator mediator, IPersonStore personStore, PersonConf
       var command = new CompleteToDoCommand(new ToDoId(todoGuid));
       var result = await mediator.Send(command);
 
-      if (result.IsFailed)
-      {
-        return $"Failed to complete todo: {result.GetErrorMessages()}";
-      }
-
-      return "Successfully marked the todo as completed.";
+      return result.IsFailed ? $"Failed to complete todo: {result.GetErrorMessages()}" : "Successfully marked the todo as completed.";
     }
     catch (Exception ex)
     {
@@ -156,12 +144,7 @@ public class ToDoPlugin(IMediator mediator, IPersonStore personStore, PersonConf
       var command = new DeleteToDoCommand(new ToDoId(todoGuid));
       var result = await mediator.Send(command);
 
-      if (result.IsFailed)
-      {
-        return $"Failed to delete todo: {result.GetErrorMessages()}";
-      }
-
-      return "Successfully deleted the todo.";
+      return result.IsFailed ? $"Failed to delete todo: {result.GetErrorMessages()}" : "Successfully deleted the todo.";
     }
     catch (Exception ex)
     {
