@@ -4,7 +4,7 @@ I wrote Apollo as a SaaS-based microservice with a focus on modularity, scalabil
 
 - **gRPC**: The API and Discord bot communicate with the microservice using gRPC calls.
 - **CQRS**: Apollo uses Command Query Responsibility Segregation to separate read and write operations, improving scalability and maintainability. We use **MediatR** and **FluentResults** to implement this pattern.
-- **Event Sourcing**: The way the user will interact with the system lends itself to using Event Sourcingb as the source-of-truth. We accomplish this using **PostgreSQL** with **Marten**.
+- **Event Sourcing**: The way the user will interact with the system lends itself to using Event Sourcing as the source-of-truth. We accomplish this using **PostgreSQL** with **Marten**.
 - **Dependency Injection**: Apollo uses dependency injection to manage dependencies between components, making the system more modular and easier to test.
 - **Semantic Kernel**: We use Microsoft's Semantic Kernel to set up tooling and work with LLM providers.
 
