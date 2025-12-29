@@ -12,13 +12,13 @@ public interface IApolloGrpcService
   Task<GrpcResult<string>> SendApolloMessageAsync(NewMessage message);
 
   [OperationContract]
-  Task<GrpcResult<ToDoDto>> CreateToDoAsync(CreateToDoRequest request);
+  Task<GrpcResult<ToDoDTO>> CreateToDoAsync(CreateToDoRequest request);
 
   [OperationContract]
-  Task<GrpcResult<ToDoDto>> GetToDoAsync(GetToDoRequest request);
+  Task<GrpcResult<ToDoDTO>> GetToDoAsync(GetToDoRequest request);
 
   [OperationContract]
-  Task<GrpcResult<ToDoDto[]>> GetPersonToDosAsync(GetPersonToDosRequest request);
+  Task<GrpcResult<ToDoDTO[]>> GetPersonToDosAsync(GetPersonToDosRequest request);
 
   [OperationContract]
   Task<GrpcResult<string>> UpdateToDoAsync(UpdateToDoRequest request);

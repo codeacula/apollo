@@ -20,7 +20,7 @@ public sealed class ApolloGrpcService(IMediator mediator) : IApolloGrpcService
       requestResult.Errors.Select(e => new GrpcError(e.Message)).ToArray();
   }
 
-  public async Task<GrpcResult<ToDoDto>> CreateToDoAsync(CreateToDoRequest request)
+  public async Task<GrpcResult<ToDoDTO>> CreateToDoAsync(CreateToDoRequest request)
   {
     var command = new CreateToDoCommand(
       new PersonId(request.PersonId),
@@ -36,7 +36,7 @@ public sealed class ApolloGrpcService(IMediator mediator) : IApolloGrpcService
     }
 
     var todo = result.Value;
-    return new ToDoDto
+    return new ToDoDTO
     {
       Id = todo.Id.Value,
       PersonId = todo.PersonId.Value,
@@ -46,7 +46,7 @@ public sealed class ApolloGrpcService(IMediator mediator) : IApolloGrpcService
     };
   }
 
-  public async Task<GrpcResult<ToDoDto>> GetToDoAsync(GetToDoRequest request)
+  public async Task<GrpcResult<ToDoDTO>> GetToDoAsync(GetToDoRequest request)
   {
     var query = new GetToDoByIdQuery(new ToDoId(request.ToDoId));
     var result = await mediator.Send(query);
@@ -57,7 +57,7 @@ public sealed class ApolloGrpcService(IMediator mediator) : IApolloGrpcService
     }
 
     var todo = result.Value;
-    return new ToDoDto
+    return new ToDoDTO
     {
       Id = todo.Id.Value,
       PersonId = todo.PersonId.Value,
@@ -67,14 +67,14 @@ public sealed class ApolloGrpcService(IMediator mediator) : IApolloGrpcService
     };
   }
 
-  public async Task<GrpcResult<ToDoDto[]>> GetPersonToDosAsync(GetPersonToDosRequest request)
+  public async Task<GrpcResult<ToDoDTO[]>> GetPersonToDosAsync(GetPersonToDosRequest request)
   {
     var query = new GetToDosByPersonIdQuery(new PersonId(request.PersonId));
     var result = await mediator.Send(query);
 
     return result.IsFailed
-      ? (GrpcResult<ToDoDto[]>)result.Errors.Select(e => new GrpcError(e.Message)).ToArray()
-      : (GrpcResult<ToDoDto[]>)result.Value.Select(t => new ToDoDto
+      ? (GrpcResult<ToDoDTO[]>)result.Errors.Select(e => new GrpcError(e.Message)).ToArray()
+      : (GrpcResult<ToDoDTO[]>)result.Value.Select(t => new ToDoDTO
       {
         Id = t.Id.Value,
         PersonId = t.PersonId.Value,
