@@ -150,3 +150,80 @@ The `Client` project is a Vue 3 single-page application (SPA) built with Vite an
 ### General
 
 - Use DTOs for records exchanged between services to ensure clear contracts and separation of concerns.
+- Follow `.editorconfig` settings: 2-space indentation, UTF-8, max 120 character line length, trim trailing whitespace.
+- Prefer file-scoped namespaces (`namespace X;`) over block-scoped namespaces.
+- Sort `using` directives with `System` namespaces first, then separate import groups.
+
+### Naming Conventions
+
+- **Classes/Records**: PascalCase (e.g., `ToDoStore`, `PersonNotificationClient`)
+- **Interfaces**: Prefix with `I` (e.g., `IToDoStore`, `IApolloAIAgent`)
+- **Value Objects**: Named after the concept they represent (e.g., `ToDoId`, `Description`, `Priority`)
+- **DTOs**: Suffix with `DTO` (e.g., `ToDoDTO`, `ChatCompletionRequestDTO`)
+- **Commands/Queries**: Suffix with `Command` or `Query` (e.g., `CreateToDoCommand`, `GetToDoByIdQuery`)
+- **Handlers**: Suffix with `Handler` matching the command/query (e.g., `CreateToDoCommandHandler`)
+- **Events**: Suffix with `Event` (e.g., `ToDoCreatedEvent`, `AccessGrantedEvent`)
+
+### Type Design
+
+- Use `sealed` on classes and records that are not intended for inheritance.
+- Use `readonly record struct` for simple value objects wrapping a single value (e.g., `ToDoId`, `PersonId`).
+- Use `record` for domain models with multiple properties.
+- Use primary constructors for dependency injection in classes and handlers.
+- Mark all nullable reference types explicitly with `?`.
+
+### CQRS Pattern
+
+- Commands represent actions that change state (e.g., `CreateToDoCommand`, `DeleteToDoCommand`).
+- Queries represent read operations (e.g., `GetToDoByIdQuery`, `GetToDosByPersonIdQuery`).
+- Both commands and queries implement `IRequest<Result<T>>` or `IRequest<Result>` from MediatR.
+- Handlers implement `IRequestHandler<TRequest, TResult>` and are named to match their request.
+
+### Error Handling
+
+- Use FluentResults `Result<T>` and `Result` types instead of throwing exceptions for expected failures.
+- Return `Result.Ok(value)` for success and `Result.Fail(message)` for failures.
+- Wrap unexpected exceptions in try/catch blocks and return `Result.Fail(ex.Message)`.
+- Use `result.IsFailed` and `result.IsSuccess` for control flow.
+- Use extension methods like `GetErrorMessages()` for formatting error output.
+
+### Async Patterns
+
+- All async methods should accept an optional `CancellationToken` parameter with a default value.
+- Suffix async methods with `Async` (e.g., `CreateAsync`, `GetByPersonIdAsync`).
+- Use `Task<Result<T>>` as return types for async operations that can fail.
+
+### Logging
+
+- Use source-generated logging with `[LoggerMessage]` attribute for high-performance structured logging.
+- Group related log messages in static partial classes (e.g., `ToDoLogs`).
+- Include Event IDs for each log message for easier filtering and monitoring.
+
+### Dependency Injection
+
+- Register services in `ServiceCollectionExtension` classes within each project.
+- Use extension methods on `IServiceCollection` for modular service registration.
+- Use `TryAdd*` methods when providing default implementations that can be overridden.
+- Prefer `AddScoped` for request-scoped services, `AddSingleton` for configuration, and `AddTransient` for stateless utilities.
+
+### Testing
+
+- Use xUnit as the testing framework.
+- Name test classes with `Tests` suffix matching the class under test (e.g., `CreateToDoCommandHandlerTests`).
+- Name test methods descriptively: `MethodName` + `Scenario` + `ExpectedResult` + `Async` suffix (e.g., `HandleWithReminderDateSchedulesJobAndPersistsJobIdAsync`).
+- Use Moq for mocking dependencies.
+- Use `MockSequence` when verifying ordered interactions.
+- Organize tests with Arrange/Act/Assert pattern.
+
+### gRPC Contracts
+
+- Use `[DataContract]` and `[DataMember]` attributes for protobuf-net serialization.
+- Use `required` properties with `init` setters for required fields.
+- Order `[DataMember]` attributes explicitly with `Order` parameter.
+
+### Event Sourcing
+
+- Events are immutable records representing facts that occurred.
+- Event streams are keyed by aggregate ID (e.g., `ToDoId.Value`).
+- Use Marten's `StartStream` for new aggregates and `Append` for existing ones.
+- Configure inline snapshot projections for read model updates.
