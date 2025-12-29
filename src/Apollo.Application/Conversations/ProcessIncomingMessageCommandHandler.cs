@@ -5,11 +5,13 @@ using Apollo.AI.Enums;
 using Apollo.Application.People;
 using Apollo.Application.ToDos;
 using Apollo.Core;
+using Apollo.Core.Configuration;
 using Apollo.Core.Conversations;
 using Apollo.Core.Logging;
 using Apollo.Core.People;
 using Apollo.Domain.Common.Enums;
 using Apollo.Domain.Common.ValueObjects;
+using Apollo.Domain.Configuration.ValueObjects;
 using Apollo.Domain.People.ValueObjects;
 
 using FluentResults;
@@ -19,6 +21,7 @@ namespace Apollo.Application.Conversations;
 public sealed class ProcessIncomingMessageCommandHandler(
   ApolloAIConfig aiConfig,
   IApolloAIAgent apolloAIAgent,
+  IApolloConfigurationStore configurationStore,
   IConversationStore conversationStore,
   ILogger<ProcessIncomingMessageCommandHandler> logger,
   IMediator mediator,
@@ -102,7 +105,17 @@ public sealed class ProcessIncomingMessageCommandHandler(
 
       var conversation = convoResult.Value;
 
-      string systemPrompt = aiConfig.SystemPrompt;
+      // Get system prompt from database, fallback to config if not found
+      string systemPrompt;
+      var configResult = await configurationStore.GetAsync(new ConfigurationKey("apollo_main"), cancellationToken);
+      if (configResult.IsSuccess)
+      {
+        systemPrompt = configResult.Value.SystemPrompt.Value;
+      }
+      else
+      {
+        systemPrompt = aiConfig.SystemPrompt;
+      }
 
       var messages = conversation.Messages.Select(m => new ChatMessageDTO(
             m.FromUser.Value ? ChatRole.User : ChatRole.Assistant,
