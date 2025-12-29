@@ -1,7 +1,10 @@
+using Apollo.Core.Configuration;
 using Apollo.Core.Conversations;
 using Apollo.Core.Data;
 using Apollo.Core.People;
 using Apollo.Core.ToDos;
+using Apollo.Database.Configuration;
+using Apollo.Database.Configuration.Events;
 using Apollo.Database.Conversations;
 using Apollo.Database.Conversations.Events;
 using Apollo.Database.People;
@@ -40,6 +43,12 @@ public static class ServiceCollectionExtensions
       {
         options.Connection(connectionString);
 
+        _ = options.Schema.For<DbApolloConfiguration>()
+          .Identity(x => x.Key);
+
+        _ = options.Events.AddEventType<ConfigurationCreatedEvent>();
+        _ = options.Events.AddEventType<SystemPromptUpdatedEvent>();
+
         _ = options.Schema.For<DbPerson>()
           .Identity(x => x.Id)
           .UniqueIndex(x => x.Username);
@@ -67,6 +76,7 @@ public static class ServiceCollectionExtensions
         _ = options.Events.AddEventType<ToDoReminderScheduledEvent>();
         _ = options.Events.AddEventType<ToDoReminderSetEvent>();
 
+        _ = options.Projections.Snapshot<DbApolloConfiguration>(Marten.Events.Projections.SnapshotLifecycle.Inline);
         _ = options.Projections.Snapshot<DbPerson>(Marten.Events.Projections.SnapshotLifecycle.Inline);
         _ = options.Projections.Snapshot<DbConversation>(Marten.Events.Projections.SnapshotLifecycle.Inline);
         _ = options.Projections.Snapshot<DbToDo>(Marten.Events.Projections.SnapshotLifecycle.Inline);
@@ -74,6 +84,7 @@ public static class ServiceCollectionExtensions
       .UseLightweightSessions();
 
     _ = services
+      .AddScoped<IApolloConfigurationStore, ApolloConfigurationStore>()
       .AddScoped<IConversationStore, ConversationStore>()
       .AddScoped<IPersonStore, PersonStore>()
       .AddScoped<IToDoStore, ToDoStore>();
