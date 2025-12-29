@@ -12,6 +12,7 @@ public partial class AddApolloConfigurationTable : Migration
   {
     migrationBuilder.Sql(@"
       -- Initialize Apollo configuration with default system prompt
+      -- Note: Configuration key 'apollo_main' matches ConfigurationKeys.ApolloMain constant
       DO $$
       DECLARE
         v_stream_id TEXT := 'apollo_main';

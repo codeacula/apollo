@@ -107,7 +107,7 @@ public sealed class ProcessIncomingMessageCommandHandler(
 
       // Get system prompt from database, fallback to config if not found
       string systemPrompt;
-      var configResult = await configurationStore.GetAsync(new ConfigurationKey("apollo_main"), cancellationToken);
+      var configResult = await configurationStore.GetAsync(new ConfigurationKey(ConfigurationKeys.ApolloMain), cancellationToken);
       if (configResult.IsSuccess)
       {
         systemPrompt = configResult.Value.SystemPrompt.Value;
