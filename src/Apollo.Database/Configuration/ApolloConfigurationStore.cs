@@ -17,7 +17,7 @@ public sealed class ApolloConfigurationStore(IDocumentSession session, TimeProvi
     try
     {
       var dbConfig = await session.Query<DbApolloConfiguration>().FirstOrDefaultAsync(c => c.Key == key.Value, cancellationToken);
-      return dbConfig is not null ? Result.Ok((ApolloConfiguration)dbConfig) : Result.Fail<ApolloConfiguration>($"Configuration with key {key.Value} not found");
+      return dbConfig is not null ? Result.Ok((ApolloConfiguration)dbConfig) : Result.Fail<ApolloConfiguration>($"Configuration with key '{key.Value}' not found in database. Application will use fallback configuration from environment variables.");
     }
     catch (Exception ex)
     {
@@ -46,7 +46,7 @@ public sealed class ApolloConfigurationStore(IDocumentSession session, TimeProvi
       await session.SaveChangesAsync(cancellationToken);
 
       var updatedConfig = await session.Events.AggregateStreamAsync<DbApolloConfiguration>(key.Value, token: cancellationToken);
-      return updatedConfig is null ? Result.Fail<ApolloConfiguration>("Failed to update configuration") : Result.Ok((ApolloConfiguration)updatedConfig);
+      return updatedConfig is null ? Result.Fail<ApolloConfiguration>($"Failed to retrieve updated configuration for key '{key.Value}' after save operation. The configuration may have been saved but could not be read back.") : Result.Ok((ApolloConfiguration)updatedConfig);
     }
     catch (Exception ex)
     {
