@@ -20,6 +20,8 @@ public static class ServiceCollectionExtension
 
     _ = services.AddTransient(_ => TimeProvider.System);
 
+    _ = services.AddSingleton<IFuzzyTimeParser, FuzzyTimeParser>();
+
     return services;
   }
 }

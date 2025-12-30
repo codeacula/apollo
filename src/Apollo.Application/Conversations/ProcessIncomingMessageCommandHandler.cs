@@ -8,6 +8,7 @@ using Apollo.Core;
 using Apollo.Core.Conversations;
 using Apollo.Core.Logging;
 using Apollo.Core.People;
+using Apollo.Core.ToDos;
 using Apollo.Domain.Common.Enums;
 using Apollo.Domain.Common.ValueObjects;
 using Apollo.Domain.People.ValueObjects;
@@ -20,6 +21,7 @@ public sealed class ProcessIncomingMessageCommandHandler(
   ApolloAIConfig aiConfig,
   IApolloAIAgent apolloAIAgent,
   IConversationStore conversationStore,
+  IFuzzyTimeParser fuzzyTimeParser,
   ILogger<ProcessIncomingMessageCommandHandler> logger,
   IMediator mediator,
   IPersonService personService,
@@ -114,7 +116,7 @@ public sealed class ProcessIncomingMessageCommandHandler(
       var completionRequest = new ChatCompletionRequestDTO(systemPrompt, messages);
 
       // Register user-scoped plugins
-      var toDoPlugin = new ToDoPlugin(mediator, personStore, personConfig, userResult.Value.Id);
+      var toDoPlugin = new ToDoPlugin(mediator, personStore, fuzzyTimeParser, timeProvider, personConfig, userResult.Value.Id);
       apolloAIAgent.AddPlugin(toDoPlugin, "ToDos");
 
       var personPlugin = new PersonPlugin(personStore, personConfig, userResult.Value.Id);

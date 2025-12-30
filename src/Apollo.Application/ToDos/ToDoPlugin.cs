@@ -4,6 +4,7 @@ using Apollo.Application.ToDos.Commands;
 using Apollo.Application.ToDos.Queries;
 using Apollo.Core;
 using Apollo.Core.People;
+using Apollo.Core.ToDos;
 using Apollo.Domain.People.ValueObjects;
 using Apollo.Domain.ToDos.ValueObjects;
 
@@ -11,47 +12,63 @@ using Microsoft.SemanticKernel;
 
 namespace Apollo.Application.ToDos;
 
-public class ToDoPlugin(IMediator mediator, IPersonStore personStore, PersonConfig personConfig, PersonId personId)
+public class ToDoPlugin(
+  IMediator mediator,
+  IPersonStore personStore,
+  IFuzzyTimeParser fuzzyTimeParser,
+  TimeProvider timeProvider,
+  PersonConfig personConfig,
+  PersonId personId)
 {
   [KernelFunction("create_todo")]
-  [Description("Creates a new todo with an optional reminder date. Reminder times are interpreted in the user's timezone.")]
+  [Description("Creates a new todo with an optional reminder. Supports fuzzy times like 'in 10 minutes', 'in 2 hours', 'tomorrow', or ISO 8601 format.")]
   [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0046:Convert to conditional expression", Justification = "Maintains better code readability")]
   public async Task<string> CreateToDoAsync(
     [Description("The todo description")] string description,
-    [Description("Optional reminder date in ISO 8601 format (e.g., 2025-12-31T10:00:00). Time is interpreted in your local timezone.")] string? reminderDate = null)
+    [Description("Optional reminder time. Supports fuzzy formats like 'in 10 minutes', 'in 2 hours', 'tomorrow', 'next week', or ISO 8601 format (e.g., 2025-12-31T10:00:00).")] string? reminderDate = null)
   {
     try
     {
       DateTime? reminder = null;
       if (!string.IsNullOrEmpty(reminderDate))
       {
-        if (!DateTime.TryParse(reminderDate, out var parsedDate))
+        // First, try to parse as fuzzy time (e.g., "in 10 minutes")
+        var fuzzyResult = fuzzyTimeParser.TryParseFuzzyTime(reminderDate, timeProvider.GetUtcNow().UtcDateTime);
+        if (fuzzyResult.IsSuccess)
         {
-          return "Failed to create todo: Invalid reminder date format. Please use ISO 8601 format like 2025-12-31T10:00:00.";
-        }
-
-        // Get user's timezone or use default
-        var personResult = await personStore.GetAsync(personId);
-        var timeZoneId = personResult.IsSuccess && personResult.Value.TimeZoneId.HasValue
-          ? personResult.Value.TimeZoneId.Value.Value
-          : personConfig.DefaultTimeZoneId;
-
-        var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
-
-        // Convert from user's local time to UTC
-        if (parsedDate.Kind == DateTimeKind.Unspecified)
-        {
-          reminder = TimeZoneInfo.ConvertTimeToUtc(parsedDate, timeZoneInfo);
-        }
-        else if (parsedDate.Kind == DateTimeKind.Local)
-        {
-          // If it's already specified as local, treat it as system local time and convert directly to UTC
-          reminder = parsedDate.ToUniversalTime();
+          reminder = fuzzyResult.Value;
         }
         else
         {
-          // Already UTC
-          reminder = parsedDate;
+          // Fall back to ISO 8601 parsing
+          if (!DateTime.TryParse(reminderDate, out var parsedDate))
+          {
+            return "Failed to create todo: Invalid reminder format. Use fuzzy time like 'in 10 minutes' or ISO 8601 format like 2025-12-31T10:00:00.";
+          }
+
+          // Get user's timezone or use default
+          var personResult = await personStore.GetAsync(personId);
+          var timeZoneId = personResult.IsSuccess && personResult.Value.TimeZoneId.HasValue
+            ? personResult.Value.TimeZoneId.Value.Value
+            : personConfig.DefaultTimeZoneId;
+
+          var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+
+          // Convert from user's local time to UTC
+          if (parsedDate.Kind == DateTimeKind.Unspecified)
+          {
+            reminder = TimeZoneInfo.ConvertTimeToUtc(parsedDate, timeZoneInfo);
+          }
+          else if (parsedDate.Kind == DateTimeKind.Local)
+          {
+            // If it's already specified as local, treat it as system local time and convert directly to UTC
+            reminder = parsedDate.ToUniversalTime();
+          }
+          else
+          {
+            // Already UTC
+            reminder = parsedDate;
+          }
         }
       }
 
