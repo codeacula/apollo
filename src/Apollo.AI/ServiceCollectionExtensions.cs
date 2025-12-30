@@ -1,4 +1,5 @@
 using Apollo.AI.Config;
+using Apollo.Core.ToDos;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,7 +19,8 @@ public static class ServiceCollectionExtensions
 
     _ = services
       .AddSingleton(apolloAiConfig ?? new ApolloAIConfig())
-      .AddTransient<IApolloAIAgent, ApolloAIAgent>();
+      .AddTransient<IApolloAIAgent, ApolloAIAgent>()
+      .AddTransient<IReminderMessageGenerator, ApolloReminderMessageGenerator>();
 
     return services;
   }

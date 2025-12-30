@@ -16,6 +16,7 @@ public class ToDoReminderJob(
   IReminderStore reminderStore,
   IPersonStore personStore,
   IPersonNotificationClient notificationClient,
+  IReminderMessageGenerator reminderMessageGenerator,
   ILogger<ToDoReminderJob> logger,
   TimeProvider timeProvider) : IJob
 {
@@ -95,10 +96,30 @@ public class ToDoReminderJob(
 
           if (person.Username.Platform == Platform.Discord)
           {
-            var reminderMessage = string.Join("\n", todoReminderPairs.Select(p => $"• {p.ToDo.Description.Value}"));
+            var toDoDescriptions = todoReminderPairs.Select(p => p.ToDo.Description.Value);
+
+            // Use AI to generate a personalized reminder message
+            var messageResult = await reminderMessageGenerator.GenerateReminderMessageAsync(
+              person.Username.Value,
+              toDoDescriptions,
+              context.CancellationToken);
+
+            string reminderContent;
+            if (messageResult.IsSuccess)
+            {
+              reminderContent = messageResult.Value;
+            }
+            else
+            {
+              // Fallback to static message if AI generation fails
+              ToDoLogs.LogErrorProcessingReminder(logger, new InvalidOperationException($"AI message generation failed: {messageResult.GetErrorMessages()}"), firstToDo.Id.Value);
+              var reminderMessage = string.Join("\n", toDoDescriptions.Select(d => $"• {d}"));
+              reminderContent = $"**Reminder: You have {todoReminderPairs.Count} ToDo(s) due:**\n{reminderMessage}";
+            }
+
             var notification = new Notification
             {
-              Content = $"**Reminder: You have {todoReminderPairs.Count} ToDo(s) due:**\n{reminderMessage}"
+              Content = reminderContent
             };
 
             ToDoLogs.LogSendingGroupedReminder(logger, todoReminderPairs.Count, person.Username.Value);
@@ -111,7 +132,7 @@ public class ToDoReminderJob(
             }
             else
             {
-              ToDoLogs.LogReminder(logger, person.Username.Value, reminderMessage);
+              ToDoLogs.LogReminder(logger, person.Username.Value, reminderContent);
 
               // Mark reminders as sent
               foreach (var (_, reminder) in todoReminderPairs)

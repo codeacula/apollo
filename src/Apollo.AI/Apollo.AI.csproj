@@ -13,4 +13,8 @@
     <PackageReference Include="Microsoft.SemanticKernel" Version="1.66.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Apollo.Core\Apollo.Core.csproj" />
+  </ItemGroup>
+
 </Project>
