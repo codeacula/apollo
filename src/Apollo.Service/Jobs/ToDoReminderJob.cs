@@ -13,6 +13,7 @@ namespace Apollo.Service.Jobs;
 [DisallowConcurrentExecution]
 public class ToDoReminderJob(
   IToDoStore toDoStore,
+  IReminderStore reminderStore,
   IPersonStore personStore,
   IPersonNotificationClient notificationClient,
   ILogger<ToDoReminderJob> logger,
@@ -31,20 +32,55 @@ public class ToDoReminderJob(
       }
 
       var jobId = new QuartzJobId(jobGuid);
-      var dueToDosResult = await toDoStore.GetToDosByQuartzJobIdAsync(jobId, context.CancellationToken);
 
-      if (dueToDosResult.IsFailed)
+      // Get reminders by QuartzJobId
+      var remindersResult = await reminderStore.GetByQuartzJobIdAsync(jobId, context.CancellationToken);
+
+      if (remindersResult.IsFailed)
       {
-        ToDoLogs.LogFailedToRetrieveToDos(logger, dueToDosResult.GetErrorMessages());
+        ToDoLogs.LogFailedToRetrieveToDos(logger, remindersResult.GetErrorMessages());
         return;
       }
 
-      var dueToDos = dueToDosResult.Value.ToList();
-      ToDoLogs.LogFoundDueToDos(logger, dueToDos.Count);
+      var reminders = remindersResult.Value.ToList();
+      ToDoLogs.LogFoundDueToDos(logger, reminders.Count);
 
-      foreach (var group in dueToDos.GroupBy(t => t.PersonId))
+      // Collect all ToDos linked to these reminders, grouped by PersonId
+      var toDosByPerson = new Dictionary<Guid, List<(Domain.ToDos.Models.ToDo ToDo, Domain.ToDos.Models.Reminder Reminder)>>();
+
+      foreach (var reminder in reminders)
       {
-        var firstToDo = group.First();
+        var linkedToDoIdsResult = await reminderStore.GetLinkedToDoIdsAsync(reminder.Id, context.CancellationToken);
+        if (linkedToDoIdsResult.IsFailed)
+        {
+          continue;
+        }
+
+        foreach (var toDoId in linkedToDoIdsResult.Value)
+        {
+          var toDoResult = await toDoStore.GetAsync(toDoId, context.CancellationToken);
+          if (toDoResult.IsFailed)
+          {
+            continue;
+          }
+
+          var toDo = toDoResult.Value;
+          var personId = toDo.PersonId.Value;
+
+          if (!toDosByPerson.TryGetValue(personId, out var todoList))
+          {
+            todoList = [];
+            toDosByPerson[personId] = todoList;
+          }
+
+          todoList.Add((toDo, reminder));
+        }
+      }
+
+      // Send notifications grouped by person
+      foreach (var (personId, todoReminderPairs) in toDosByPerson)
+      {
+        var firstToDo = todoReminderPairs[0].ToDo;
 
         try
         {
@@ -59,13 +95,13 @@ public class ToDoReminderJob(
 
           if (person.Username.Platform == Platform.Discord)
           {
-            var reminderMessage = string.Join("\n", group.Select(t => $"• {t.Description.Value}"));
+            var reminderMessage = string.Join("\n", todoReminderPairs.Select(p => $"• {p.ToDo.Description.Value}"));
             var notification = new Notification
             {
-              Content = $"**Reminder: You have {group.Count()} ToDo(s) due:**\n{reminderMessage}"
+              Content = $"**Reminder: You have {todoReminderPairs.Count} ToDo(s) due:**\n{reminderMessage}"
             };
 
-            ToDoLogs.LogSendingGroupedReminder(logger, group.Count(), person.Username.Value);
+            ToDoLogs.LogSendingGroupedReminder(logger, todoReminderPairs.Count, person.Username.Value);
 
             var sendResult = await notificationClient.SendNotificationAsync(person, notification, context.CancellationToken);
 
@@ -76,6 +112,12 @@ public class ToDoReminderJob(
             else
             {
               ToDoLogs.LogReminder(logger, person.Username.Value, reminderMessage);
+
+              // Mark reminders as sent
+              foreach (var (_, reminder) in todoReminderPairs)
+              {
+                _ = await reminderStore.MarkAsSentAsync(reminder.Id, context.CancellationToken);
+              }
             }
           }
         }

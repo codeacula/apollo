@@ -14,7 +14,7 @@ namespace Apollo.Notifications.Tests;
 public class PersonNotificationClientTests
 {
   [Fact]
-  public async Task SendNotificationAsyncNoEnabledChannelsReturnsFailure()
+  public async Task SendNotificationAsyncNoEnabledChannelsReturnsFailureAsync()
   {
     // Arrange
     var channels = Enumerable.Empty<INotificationChannel>();
@@ -41,7 +41,7 @@ public class PersonNotificationClientTests
   }
 
   [Fact]
-  public async Task SendNotificationAsyncSucceedsWithEnabledChannel()
+  public async Task SendNotificationAsyncSucceedsWithEnabledChannelAsync()
   {
     // Arrange
     var mockChannel = Substitute.For<INotificationChannel>();

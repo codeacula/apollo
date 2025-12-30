@@ -9,7 +9,7 @@ namespace Apollo.Notifications.Tests;
 public class NoOpPersonNotificationClientTests
 {
   [Fact]
-  public async Task SendNotificationAsyncReturnsSuccess()
+  public async Task SendNotificationAsyncReturnsSuccessAsync()
   {
     // Arrange
     var client = new NoOpPersonNotificationClient();

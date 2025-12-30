@@ -6,34 +6,54 @@ using FluentResults;
 
 namespace Apollo.Application.ToDos.Handlers;
 
-public sealed class DeleteToDoCommandHandler(IToDoStore toDoStore, IToDoReminderScheduler toDoReminderScheduler) : IRequestHandler<DeleteToDoCommand, Result>
+public sealed class DeleteToDoCommandHandler(
+  IToDoStore toDoStore,
+  IReminderStore reminderStore,
+  IToDoReminderScheduler toDoReminderScheduler) : IRequestHandler<DeleteToDoCommand, Result>
 {
   public async Task<Result> Handle(DeleteToDoCommand request, CancellationToken cancellationToken)
   {
     try
     {
-      var toDoResult = await toDoStore.GetAsync(request.ToDoId, cancellationToken);
-      var quartzJobId = toDoResult.IsSuccess ? toDoResult.Value.Reminders.FirstOrDefault()?.QuartzJobId : null;
+      // Get linked reminders before deleting the ToDo
+      var linkedRemindersResult = await reminderStore.GetByToDoIdAsync(request.ToDoId, cancellationToken);
+      var linkedReminders = linkedRemindersResult.IsSuccess ? linkedRemindersResult.Value.ToList() : [];
 
       var result = await toDoStore.DeleteAsync(request.ToDoId, cancellationToken);
-      if (result.IsFailed || quartzJobId is null)
+      if (result.IsFailed)
       {
         return result;
       }
 
-      _ = await toDoReminderScheduler.DeleteJobAsync(quartzJobId.Value, cancellationToken);
-
-      var afterDeleteRemainingResult = await toDoStore.GetToDosByQuartzJobIdAsync(quartzJobId.Value, cancellationToken);
-      var reminderDate = afterDeleteRemainingResult.IsSuccess
-        ? afterDeleteRemainingResult.Value.SelectMany(t => t.Reminders).FirstOrDefault()?.ReminderTime.Value
-        : null;
-
-      if (reminderDate.HasValue)
+      // Unlink reminders from the deleted ToDo and clean up if no other ToDos are linked
+      foreach (var reminder in linkedReminders)
       {
-        var getOrCreateJobResult = await toDoReminderScheduler.GetOrCreateJobAsync(reminderDate.Value, cancellationToken);
-        if (getOrCreateJobResult.IsFailed)
+        if (reminder.QuartzJobId is null)
         {
-          return Result.Fail(getOrCreateJobResult.GetErrorMessages());
+          continue;
+        }
+
+        // Unlink the reminder from this ToDo
+        _ = await reminderStore.UnlinkFromToDoAsync(reminder.Id, request.ToDoId, cancellationToken);
+
+        // Check if other ToDos are still linked to this reminder
+        var remainingLinksResult = await reminderStore.GetLinkedToDoIdsAsync(reminder.Id, cancellationToken);
+        var remainingLinks = remainingLinksResult.IsSuccess ? remainingLinksResult.Value.ToList() : [];
+
+        if (remainingLinks.Count == 0)
+        {
+          // No other ToDos linked, delete the reminder and its job
+          _ = await toDoReminderScheduler.DeleteJobAsync(reminder.QuartzJobId.Value, cancellationToken);
+          _ = await reminderStore.DeleteAsync(reminder.Id, cancellationToken);
+        }
+        else
+        {
+          // Other ToDos still linked - check if we need to recreate the job
+          var jobResult = await toDoReminderScheduler.GetOrCreateJobAsync(reminder.ReminderTime.Value, cancellationToken);
+          if (jobResult.IsFailed)
+          {
+            return Result.Fail(jobResult.GetErrorMessages());
+          }
         }
       }
 
