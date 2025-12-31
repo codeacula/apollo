@@ -44,7 +44,7 @@ public class ApolloAIAgent : IApolloAIAgent
 
       chatHistory.AddSystemMessage(chatCompletionRequest.SystemMessage);
 
-      chatCompletionRequest.Messages.ForEach(msg =>
+      chatCompletionRequest.Messages.OrderBy(msg => msg.CreatedOn).ToList().ForEach(msg =>
       {
         if (msg.Role == ChatRole.User)
         {
