@@ -1,4 +1,6 @@
 using Apollo.Application.ToDos.Commands;
+using Apollo.Core;
+using Apollo.Core.Logging;
 using Apollo.Core.ToDos;
 
 using FluentResults;
@@ -8,7 +10,8 @@ namespace Apollo.Application.ToDos.Handlers;
 public sealed class CompleteToDoCommandHandler(
   IToDoStore toDoStore,
   IReminderStore reminderStore,
-  IToDoReminderScheduler toDoReminderScheduler) : IRequestHandler<CompleteToDoCommand, Result>
+  IToDoReminderScheduler toDoReminderScheduler,
+  ILogger<CompleteToDoCommandHandler> logger) : IRequestHandler<CompleteToDoCommand, Result>
 {
   public async Task<Result> Handle(CompleteToDoCommand request, CancellationToken cancellationToken)
   {
@@ -33,7 +36,11 @@ public sealed class CompleteToDoCommandHandler(
         }
 
         // Unlink the reminder from this ToDo
-        _ = await reminderStore.UnlinkFromToDoAsync(reminder.Id, request.ToDoId, cancellationToken);
+        var unlinkResult = await reminderStore.UnlinkFromToDoAsync(reminder.Id, request.ToDoId, cancellationToken);
+        if (unlinkResult.IsFailed)
+        {
+          ToDoLogs.LogFailedToUnlinkReminder(logger, reminder.Id.Value, request.ToDoId.Value, string.Join(", ", unlinkResult.GetErrorMessages()));
+        }
 
         // Check if other ToDos are still linked to this reminder
         var remainingLinksResult = await reminderStore.GetLinkedToDoIdsAsync(reminder.Id, cancellationToken);
@@ -42,8 +49,17 @@ public sealed class CompleteToDoCommandHandler(
         if (remainingLinks.Count == 0)
         {
           // No other ToDos linked, delete the reminder and its job
-          _ = await toDoReminderScheduler.DeleteJobAsync(reminder.QuartzJobId.Value, cancellationToken);
-          _ = await reminderStore.DeleteAsync(reminder.Id, cancellationToken);
+          var deleteJobResult = await toDoReminderScheduler.DeleteJobAsync(reminder.QuartzJobId.Value, cancellationToken);
+          if (deleteJobResult.IsFailed)
+          {
+            ToDoLogs.LogFailedToDeleteReminderJob(logger, reminder.QuartzJobId.Value.Value, string.Join(", ", deleteJobResult.GetErrorMessages()));
+          }
+
+          var deleteReminderResult = await reminderStore.DeleteAsync(reminder.Id, cancellationToken);
+          if (deleteReminderResult.IsFailed)
+          {
+            ToDoLogs.LogFailedToDeleteReminder(logger, reminder.Id.Value, string.Join(", ", deleteReminderResult.GetErrorMessages()));
+          }
         }
         else
         {
