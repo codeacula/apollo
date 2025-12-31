@@ -137,7 +137,11 @@ public class ToDoReminderJob(
               // Mark reminders as sent
               foreach (var (_, reminder) in todoReminderPairs)
               {
-                _ = await reminderStore.MarkAsSentAsync(reminder.Id, context.CancellationToken);
+                var markAsSentResult = await reminderStore.MarkAsSentAsync(reminder.Id, context.CancellationToken);
+                if (markAsSentResult.IsFailed)
+                {
+                  ToDoLogs.LogFailedToMarkReminderAsSent(logger, reminder.Id.Value, markAsSentResult.GetErrorMessages());
+                }
               }
             }
           }

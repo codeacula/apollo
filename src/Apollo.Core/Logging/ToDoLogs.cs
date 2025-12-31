@@ -63,4 +63,10 @@ public static partial class ToDoLogs
       Level = LogLevel.Error,
       Message = "To-Do Reminder Job failed with exception:")]
   public static partial void LogJobFailed(ILogger logger, Exception ex);
+
+  [LoggerMessage(
+      EventId = 5010,
+      Level = LogLevel.Error,
+      Message = "Failed to mark reminder {ReminderId} as sent: {ErrorMessage}")]
+  public static partial void LogFailedToMarkReminderAsSent(ILogger logger, Guid reminderId, string errorMessage);
 }
