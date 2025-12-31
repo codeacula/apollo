@@ -67,16 +67,35 @@ public static class ServiceCollectionExtensions
         _ = options.Events.AddEventType<ToDoReminderScheduledEvent>();
         _ = options.Events.AddEventType<ToDoReminderSetEvent>();
 
+        _ = options.Schema.For<DbReminder>()
+          .Identity(x => x.Id);
+
+        _ = options.Events.AddEventType<ReminderCreatedEvent>();
+        _ = options.Events.AddEventType<ReminderSentEvent>();
+        _ = options.Events.AddEventType<ReminderAcknowledgedEvent>();
+        _ = options.Events.AddEventType<ReminderDeletedEvent>();
+
+        _ = options.Schema.For<DbToDoReminder>()
+          .Identity(x => x.Id)
+          .Index(x => x.ToDoId)
+          .Index(x => x.ReminderId);
+
+        _ = options.Events.AddEventType<ToDoReminderLinkedEvent>();
+        _ = options.Events.AddEventType<ToDoReminderUnlinkedEvent>();
+
         _ = options.Projections.Snapshot<DbPerson>(Marten.Events.Projections.SnapshotLifecycle.Inline);
         _ = options.Projections.Snapshot<DbConversation>(Marten.Events.Projections.SnapshotLifecycle.Inline);
         _ = options.Projections.Snapshot<DbToDo>(Marten.Events.Projections.SnapshotLifecycle.Inline);
+        _ = options.Projections.Snapshot<DbReminder>(Marten.Events.Projections.SnapshotLifecycle.Inline);
+        _ = options.Projections.Snapshot<DbToDoReminder>(Marten.Events.Projections.SnapshotLifecycle.Inline);
       })
       .UseLightweightSessions();
 
     _ = services
       .AddScoped<IConversationStore, ConversationStore>()
       .AddScoped<IPersonStore, PersonStore>()
-      .AddScoped<IToDoStore, ToDoStore>();
+      .AddScoped<IToDoStore, ToDoStore>()
+      .AddScoped<IReminderStore, ReminderStore>();
 
     return services;
   }
