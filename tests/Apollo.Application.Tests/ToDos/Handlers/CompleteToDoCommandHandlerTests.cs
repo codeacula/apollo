@@ -1,6 +1,5 @@
 using Apollo.Application.ToDos.Commands;
 using Apollo.Application.ToDos.Handlers;
-using Apollo.Core.Logging;
 using Apollo.Core.ToDos;
 using Apollo.Domain.Common.ValueObjects;
 using Apollo.Domain.ToDos.Models;

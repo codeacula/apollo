@@ -31,4 +31,10 @@ public static partial class DataAccessLogs
     Level = LogLevel.Warning,
     Message = "Failed to add notification channel for user {Username}: {ErrorMessage}")]
   public static partial void FailedToAddNotificationChannel(ILogger logger, string username, string errorMessage);
+
+  [LoggerMessage(
+    EventId = 3204,
+    Level = LogLevel.Error,
+    Message = "Unhandled exception processing message for user {Username}")]
+  public static partial void UnhandledMessageProcessingError(ILogger logger, Exception exception, string username);
 }

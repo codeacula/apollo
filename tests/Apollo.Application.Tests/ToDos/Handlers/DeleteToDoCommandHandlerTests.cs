@@ -1,6 +1,5 @@
 using Apollo.Application.ToDos.Commands;
 using Apollo.Application.ToDos.Handlers;
-using Apollo.Core.Logging;
 using Apollo.Core.ToDos;
 using Apollo.Domain.Common.ValueObjects;
 using Apollo.Domain.ToDos.Models;
@@ -167,7 +166,7 @@ public class DeleteToDoCommandHandlerTests
     var reminderStore = new Mock<IReminderStore>();
     var toDoReminderScheduler = new Mock<IToDoReminderScheduler>();
     var logger = new Mock<ILogger<DeleteToDoCommandHandler>>();
-    logger.Setup(x => x.IsEnabled(LogLevel.Warning)).Returns(true);
+    _ = logger.Setup(x => x.IsEnabled(LogLevel.Warning)).Returns(true);
     var handler = new DeleteToDoCommandHandler(toDoStore.Object, reminderStore.Object, toDoReminderScheduler.Object, logger.Object);
 
     var toDoId = new ToDoId(Guid.NewGuid());
@@ -218,7 +217,7 @@ public class DeleteToDoCommandHandlerTests
     var reminderStore = new Mock<IReminderStore>();
     var toDoReminderScheduler = new Mock<IToDoReminderScheduler>();
     var logger = new Mock<ILogger<DeleteToDoCommandHandler>>();
-    logger.Setup(x => x.IsEnabled(LogLevel.Warning)).Returns(true);
+    _ = logger.Setup(x => x.IsEnabled(LogLevel.Warning)).Returns(true);
     var handler = new DeleteToDoCommandHandler(toDoStore.Object, reminderStore.Object, toDoReminderScheduler.Object, logger.Object);
 
     var toDoId = new ToDoId(Guid.NewGuid());
@@ -269,7 +268,7 @@ public class DeleteToDoCommandHandlerTests
     var reminderStore = new Mock<IReminderStore>();
     var toDoReminderScheduler = new Mock<IToDoReminderScheduler>();
     var logger = new Mock<ILogger<DeleteToDoCommandHandler>>();
-    logger.Setup(x => x.IsEnabled(LogLevel.Warning)).Returns(true);
+    _ = logger.Setup(x => x.IsEnabled(LogLevel.Warning)).Returns(true);
     var handler = new DeleteToDoCommandHandler(toDoStore.Object, reminderStore.Object, toDoReminderScheduler.Object, logger.Object);
 
     var toDoId = new ToDoId(Guid.NewGuid());

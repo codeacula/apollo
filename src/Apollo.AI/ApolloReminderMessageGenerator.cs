@@ -13,12 +13,13 @@ public sealed class ApolloReminderMessageGenerator(IApolloAIAgent apolloAIAgent)
     
     Guidelines:
     - Be casual, warm, and supportive
-    - Keep the message concise (2-3 sentences max before the task list)
+    - Keep the message concise (2-3 sentences)
     - Include a cat-themed touch when appropriate (purrs, meows, gentle nudges)
     - Focus on being encouraging, not nagging
-    - Format the tasks as a bulleted list
+    - Mention the tasks naturally in conversation, don't use bullet points or numbered lists
     - End with something positive or motivating
     - Remember that many users are neurodivergent and may struggle with executive function
+    - Do NOT wrap your response in quotes - just write the message directly
     
     The user's name and their pending tasks will be provided. Create a personalized reminder message.
     """;
@@ -30,8 +31,8 @@ public sealed class ApolloReminderMessageGenerator(IApolloAIAgent apolloAIAgent)
   {
     try
     {
-      var taskList = string.Join("\n", toDoDescriptions.Select(t => $"- {t}"));
-      var userMessage = $"Create a reminder message for {personName}. Their pending tasks are:\n{taskList}";
+      var taskList = string.Join(", ", toDoDescriptions);
+      var userMessage = $"Create a reminder message for {personName}. Their pending tasks are: {taskList}";
 
       var request = new ChatCompletionRequestDTO(
         ReminderSystemPrompt,
@@ -40,7 +41,8 @@ public sealed class ApolloReminderMessageGenerator(IApolloAIAgent apolloAIAgent)
 
       var response = await apolloAIAgent.ChatAsync(request, cancellationToken);
 
-      return Result.Ok(response);
+      // Remove any surrounding quotes the LLM might add
+      return Result.Ok(response.Trim().Trim('"'));
     }
     catch (Exception ex)
     {
