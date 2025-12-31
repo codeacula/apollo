@@ -69,4 +69,22 @@ public static partial class ToDoLogs
       Level = LogLevel.Error,
       Message = "Failed to mark reminder {ReminderId} as sent: {ErrorMessage}")]
   public static partial void LogFailedToMarkReminderAsSent(ILogger logger, Guid reminderId, string errorMessage);
+
+  [LoggerMessage(
+      EventId = 5011,
+      Level = LogLevel.Warning,
+      Message = "Failed to unlink reminder {ReminderId} from To-Do {ToDoId}: {ErrorMessage}")]
+  public static partial void LogFailedToUnlinkReminder(ILogger logger, Guid reminderId, Guid toDoId, string errorMessage);
+
+  [LoggerMessage(
+      EventId = 5012,
+      Level = LogLevel.Warning,
+      Message = "Failed to delete reminder job {QuartzJobId}: {ErrorMessage}")]
+  public static partial void LogFailedToDeleteReminderJob(ILogger logger, Guid quartzJobId, string errorMessage);
+
+  [LoggerMessage(
+      EventId = 5013,
+      Level = LogLevel.Warning,
+      Message = "Failed to delete reminder {ReminderId}: {ErrorMessage}")]
+  public static partial void LogFailedToDeleteReminder(ILogger logger, Guid reminderId, string errorMessage);
 }

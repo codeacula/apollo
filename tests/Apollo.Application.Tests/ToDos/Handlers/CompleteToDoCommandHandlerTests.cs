@@ -1,11 +1,14 @@
 using Apollo.Application.ToDos.Commands;
 using Apollo.Application.ToDos.Handlers;
+using Apollo.Core.Logging;
 using Apollo.Core.ToDos;
 using Apollo.Domain.Common.ValueObjects;
 using Apollo.Domain.ToDos.Models;
 using Apollo.Domain.ToDos.ValueObjects;
 
 using FluentResults;
+
+using Microsoft.Extensions.Logging;
 
 using Moq;
 
@@ -19,7 +22,8 @@ public class CompleteToDoCommandHandlerTests
     var toDoStore = new Mock<IToDoStore>();
     var reminderStore = new Mock<IReminderStore>();
     var toDoReminderScheduler = new Mock<IToDoReminderScheduler>();
-    var handler = new CompleteToDoCommandHandler(toDoStore.Object, reminderStore.Object, toDoReminderScheduler.Object);
+    var logger = new Mock<ILogger<CompleteToDoCommandHandler>>();
+    var handler = new CompleteToDoCommandHandler(toDoStore.Object, reminderStore.Object, toDoReminderScheduler.Object, logger.Object);
 
     var toDoId = new ToDoId(Guid.NewGuid());
     var quartzJobId = new QuartzJobId(Guid.NewGuid());
@@ -48,7 +52,8 @@ public class CompleteToDoCommandHandlerTests
     var toDoStore = new Mock<IToDoStore>();
     var reminderStore = new Mock<IReminderStore>();
     var toDoReminderScheduler = new Mock<IToDoReminderScheduler>();
-    var handler = new CompleteToDoCommandHandler(toDoStore.Object, reminderStore.Object, toDoReminderScheduler.Object);
+    var logger = new Mock<ILogger<CompleteToDoCommandHandler>>();
+    var handler = new CompleteToDoCommandHandler(toDoStore.Object, reminderStore.Object, toDoReminderScheduler.Object, logger.Object);
 
     var toDoId = new ToDoId(Guid.NewGuid());
 
@@ -73,7 +78,8 @@ public class CompleteToDoCommandHandlerTests
     var toDoStore = new Mock<IToDoStore>();
     var reminderStore = new Mock<IReminderStore>();
     var toDoReminderScheduler = new Mock<IToDoReminderScheduler>();
-    var handler = new CompleteToDoCommandHandler(toDoStore.Object, reminderStore.Object, toDoReminderScheduler.Object);
+    var logger = new Mock<ILogger<CompleteToDoCommandHandler>>();
+    var handler = new CompleteToDoCommandHandler(toDoStore.Object, reminderStore.Object, toDoReminderScheduler.Object, logger.Object);
 
     var toDoId = new ToDoId(Guid.NewGuid());
     var quartzJobId = new QuartzJobId(Guid.NewGuid());
@@ -117,7 +123,8 @@ public class CompleteToDoCommandHandlerTests
     var toDoStore = new Mock<IToDoStore>();
     var reminderStore = new Mock<IReminderStore>();
     var toDoReminderScheduler = new Mock<IToDoReminderScheduler>();
-    var handler = new CompleteToDoCommandHandler(toDoStore.Object, reminderStore.Object, toDoReminderScheduler.Object);
+    var logger = new Mock<ILogger<CompleteToDoCommandHandler>>();
+    var handler = new CompleteToDoCommandHandler(toDoStore.Object, reminderStore.Object, toDoReminderScheduler.Object, logger.Object);
 
     var toDoId = new ToDoId(Guid.NewGuid());
     var otherToDoId = new ToDoId(Guid.NewGuid());
@@ -159,7 +166,8 @@ public class CompleteToDoCommandHandlerTests
     var toDoStore = new Mock<IToDoStore>();
     var reminderStore = new Mock<IReminderStore>();
     var toDoReminderScheduler = new Mock<IToDoReminderScheduler>();
-    var handler = new CompleteToDoCommandHandler(toDoStore.Object, reminderStore.Object, toDoReminderScheduler.Object);
+    var logger = new Mock<ILogger<CompleteToDoCommandHandler>>();
+    var handler = new CompleteToDoCommandHandler(toDoStore.Object, reminderStore.Object, toDoReminderScheduler.Object, logger.Object);
 
     var toDoId = new ToDoId(Guid.NewGuid());
 
