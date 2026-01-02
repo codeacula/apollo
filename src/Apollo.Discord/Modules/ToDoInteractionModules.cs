@@ -30,20 +30,18 @@ public class ToDoReminderInteractionModule : ComponentInteractionModule<ButtonIn
 
 public class ToDoEditInteractionModule : ComponentInteractionModule<ButtonInteractionContext>
 {
-  [ComponentInteraction("todo_edit_*")]
+  [ComponentInteraction(ToDoListComponent.EditButtonCustomId)]
   public string HandleEditButton()
   {
-    var toDoId = Context.Interaction.Data.CustomId.Replace("todo_edit_", string.Empty);
-    return $"Edit interface for todo `{toDoId}` is coming soon!";
+    return "Select which todo you'd like to edit via a select menu (coming soon!)";
   }
 }
 
 public class ToDoDeleteInteractionModule : ComponentInteractionModule<ButtonInteractionContext>
 {
-  [ComponentInteraction("todo_delete_*")]
+  [ComponentInteraction(ToDoListComponent.DeleteButtonCustomId)]
   public string HandleDeleteButton()
   {
-    var toDoId = Context.Interaction.Data.CustomId.Replace("todo_delete_", string.Empty);
-    return $"Delete confirmation for todo `{toDoId}` is coming soon!";
+    return "Select which todo you'd like to delete via a select menu (coming soon!)";
   }
 }
