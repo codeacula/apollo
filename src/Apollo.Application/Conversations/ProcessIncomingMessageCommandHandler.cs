@@ -117,11 +117,6 @@ public sealed class ProcessIncomingMessageCommandHandler(
 
   private async Task CaptureNotificationChannelAsync(ProcessIncomingMessageCommand request, Username username, Person person, CancellationToken cancellationToken)
   {
-    if (string.IsNullOrWhiteSpace(request.Message.PlatformIdentifier))
-    {
-      return;
-    }
-
     var channelType = request.Message.Platform switch
     {
       Platform.Discord => NotificationChannelType.Discord,
@@ -133,7 +128,7 @@ public sealed class ProcessIncomingMessageCommandHandler(
       return;
     }
 
-    var channel = new NotificationChannel(channelType.Value, request.Message.PlatformIdentifier, isEnabled: true);
+    var channel = new NotificationChannel(channelType.Value, channelType.Value.ToString(), isEnabled: true);
     var channelResult = await personStore.EnsureNotificationChannelAsync(person, channel, cancellationToken);
 
     if (channelResult.IsFailed)

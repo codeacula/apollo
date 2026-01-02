@@ -9,7 +9,7 @@ namespace Apollo.GRPC.Service;
 public interface IApolloGrpcService
 {
   [OperationContract]
-  Task<GrpcResult<string>> SendApolloMessageAsync(NewMessage message);
+  Task<GrpcResult<string>> SendApolloMessageAsync(NewMessageRequest message);
 
   [OperationContract]
   Task<GrpcResult<ToDoDTO>> CreateToDoAsync(CreateToDoRequest request);

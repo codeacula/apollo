@@ -1,5 +1,7 @@
 using Apollo.Core.API;
 using Apollo.Core.Conversations;
+using Apollo.Core.ToDos.Requests;
+using Apollo.Domain.ToDos.Models;
 using Apollo.GRPC.Interceptors;
 using Apollo.GRPC.Service;
 
@@ -35,9 +37,18 @@ public class ApolloGrpcClient : IApolloGrpcClient, IApolloAPIClient, IDisposable
     GC.SuppressFinalize(this);
   }
 
-  public async Task<Result<string>> SendMessageAsync(NewMessage message)
+  public async Task<Result<ToDo>> CreateToDoAsync(CreateToDoRequest request)
   {
-    var grpcResult = await ApolloGrpcService.SendApolloMessageAsync(message);
+    var grpcResult = await ApolloGrpcService.CreateToDoAsync(request);
+
+    return grpcResult.IsSuccess ?
+      Result.Ok(grpcResult.Data ?? string.Empty) :
+      Result.Fail(string.Join("; ", grpcResult.Errors.Select(e => e.Message)));
+  }
+
+  public async Task<Result<string>> SendMessageAsync(NewMessageRequest request)
+  {
+    var grpcResult = await ApolloGrpcService.SendApolloMessageAsync(request);
 
     return grpcResult.IsSuccess ?
       Result.Ok(grpcResult.Data ?? string.Empty) :

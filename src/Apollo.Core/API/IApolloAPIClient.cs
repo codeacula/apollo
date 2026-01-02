@@ -1,4 +1,6 @@
 using Apollo.Core.Conversations;
+using Apollo.Core.ToDos.Requests;
+using Apollo.Domain.ToDos.Models;
 
 using FluentResults;
 
@@ -6,5 +8,6 @@ namespace Apollo.Core.API;
 
 public interface IApolloAPIClient
 {
-  Task<Result<string>> SendMessageAsync(NewMessage message);
+  Task<Result<ToDo>> CreateToDoAsync(CreateToDoRequest request);
+  Task<Result<string>> SendMessageAsync(NewMessageRequest request);
 }

@@ -12,7 +12,7 @@ namespace Apollo.GRPC.Service;
 
 public sealed class ApolloGrpcService(IMediator mediator) : IApolloGrpcService
 {
-  public async Task<GrpcResult<string>> SendApolloMessageAsync(NewMessage message)
+  public async Task<GrpcResult<string>> SendApolloMessageAsync(NewMessageRequest message)
   {
     var requestResult = await mediator.Send(new ProcessIncomingMessageCommand(message));
     return requestResult.IsSuccess ?
