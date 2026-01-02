@@ -7,6 +7,9 @@ namespace Apollo.Discord.Components;
 
 public class ToDoListComponent : ComponentContainerProperties
 {
+  public const string EditButtonCustomId = "todo_list_edit";
+  public const string DeleteButtonCustomId = "todo_list_delete";
+
   public ToDoListComponent(IEnumerable<ToDoSummary> todos, bool includeCompleted)
   {
     AccentColor = Constants.Colors.ApolloGreen;
@@ -34,17 +37,17 @@ public class ToDoListComponent : ComponentContainerProperties
         : string.Empty;
 
       components.Add(new TextDisplayProperties($"**{todo.Description}**{reminderText}"));
-
-      // Add edit and delete buttons for this todo
-      components.Add(new ActionRowProperties
-      {
-        Components =
-        [
-          new ButtonProperties($"todo_edit_{todo.Id}", "Edit", ButtonStyle.Secondary),
-          new ButtonProperties($"todo_delete_{todo.Id}", "Delete", ButtonStyle.Danger),
-        ]
-      });
     }
+
+    // Add action buttons at the bottom
+    components.Add(new ActionRowProperties
+    {
+      Components =
+      [
+        new ButtonProperties(EditButtonCustomId, "Edit Todo", ButtonStyle.Secondary),
+        new ButtonProperties(DeleteButtonCustomId, "Delete Todo", ButtonStyle.Danger),
+      ]
+    });
 
     Components = components;
   }
