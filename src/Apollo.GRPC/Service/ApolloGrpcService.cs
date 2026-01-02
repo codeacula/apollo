@@ -1,8 +1,9 @@
 using Apollo.Application.Conversations;
+using Apollo.Application.People.Queries;
 using Apollo.Application.ToDos.Commands;
 using Apollo.Application.ToDos.Queries;
 using Apollo.Core.Conversations;
-using Apollo.Core.People;
+using Apollo.Core.ToDos;
 using Apollo.Domain.People.ValueObjects;
 using Apollo.Domain.ToDos.ValueObjects;
 using Apollo.GRPC.Contracts;
@@ -11,7 +12,10 @@ using MediatR;
 
 namespace Apollo.GRPC.Service;
 
-public sealed class ApolloGrpcService(IMediator mediator, IPersonService personService) : IApolloGrpcService
+public sealed class ApolloGrpcService(
+  IMediator mediator,
+  IReminderStore reminderStore
+) : IApolloGrpcService
 {
   public async Task<GrpcResult<string>> SendApolloMessageAsync(NewMessageRequest message)
   {
@@ -24,7 +28,7 @@ public sealed class ApolloGrpcService(IMediator mediator, IPersonService personS
   public async Task<GrpcResult<ToDoDTO>> CreateToDoAsync(CreateToDoRequest request)
   {
     var username = new Username(request.Username, request.Platform);
-    var personResult = await personService.GetOrCreateAsync(username);
+    var personResult = await mediator.Send(new GetOrCreatePersonByUsernameQuery(username));
 
     if (personResult.IsFailed)
     {
@@ -79,19 +83,52 @@ public sealed class ApolloGrpcService(IMediator mediator, IPersonService personS
 
   public async Task<GrpcResult<ToDoDTO[]>> GetPersonToDosAsync(GetPersonToDosRequest request)
   {
-    var query = new GetToDosByPersonIdQuery(new PersonId(request.PersonId));
+    var username = new Username(request.Username, request.Platform);
+    var personResult = await mediator.Send(new GetOrCreatePersonByUsernameQuery(username));
+
+    if (personResult.IsFailed)
+    {
+      return personResult.Errors.Select(e => new GrpcError(e.Message)).ToArray();
+    }
+
+    var query = new GetToDosByPersonIdQuery(personResult.Value.Id);
     var result = await mediator.Send(query);
 
-    return result.IsFailed
-      ? (GrpcResult<ToDoDTO[]>)result.Errors.Select(e => new GrpcError(e.Message)).ToArray()
-      : (GrpcResult<ToDoDTO[]>)result.Value.Select(t => new ToDoDTO
+    if (result.IsFailed)
+    {
+      return result.Errors.Select(e => new GrpcError(e.Message)).ToArray();
+    }
+
+    var toDos = result.Value;
+    var dtoTasks = toDos.Select(async t =>
+    {
+      DateTime? reminderDate = null;
+      var remindersResult = await reminderStore.GetByToDoIdAsync(t.Id);
+
+      if (remindersResult.IsSuccess)
+      {
+        var reminderTimes = remindersResult.Value
+          .Select(r => r.ReminderTime.Value)
+          .OrderBy(d => d)
+          .ToList();
+
+        var upcoming = reminderTimes.FirstOrDefault(d => d >= DateTime.UtcNow);
+        reminderDate = upcoming != default ? upcoming : reminderTimes.FirstOrDefault();
+      }
+
+      return new ToDoDTO
       {
         Id = t.Id.Value,
         PersonId = t.PersonId.Value,
         Description = t.Description.Value,
+        ReminderDate = reminderDate,
         CreatedOn = t.CreatedOn.Value,
         UpdatedOn = t.UpdatedOn.Value
-      }).ToArray();
+      };
+    });
+
+    var dtoArray = await Task.WhenAll(dtoTasks);
+    return dtoArray;
   }
 
   public async Task<GrpcResult<string>> UpdateToDoAsync(UpdateToDoRequest request)

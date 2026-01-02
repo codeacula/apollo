@@ -72,4 +72,50 @@ public class SlashCommandModule(IApolloAPIClient apolloAPIClient) : ApplicationC
       message.Flags = MessageFlags.IsComponentsV2;
     });
   }
+
+  [SlashCommand("todos", "List your current To Dos")]
+  public async Task ListToDosAsync()
+  {
+    _ = await RespondAsync(InteractionCallback.DeferredMessage());
+
+    var result = await apolloAPIClient.GetToDosAsync(Context.User.Username, ApolloPlatform.Discord);
+
+    if (result.IsFailed)
+    {
+      _ = await ModifyResponseAsync(message =>
+      {
+        message.Content = $"⚠️ Unable to fetch your to-dos: {result.GetErrorMessages(", ")}";
+        message.Components = [];
+      });
+      return;
+    }
+
+    var todos = result.Value.ToList();
+
+    if (todos.Count == 0)
+    {
+      _ = await ModifyResponseAsync(message =>
+      {
+        message.Content = "You have no active to-dos. 🎉";
+        message.Components = [];
+      });
+      return;
+    }
+
+    var lines = todos.Select(t =>
+    {
+      var reminderText = t.ReminderDate is DateTime when
+        ? $" | 🔔 <t:{new DateTimeOffset(when).ToUnixTimeSeconds()}:R>"
+        : string.Empty;
+      return $"• {t.Description}{reminderText}";
+    });
+
+    var content = $"You have {todos.Count} to-do(s):\n" + string.Join("\n", lines);
+
+    _ = await ModifyResponseAsync(message =>
+    {
+      message.Content = content;
+      message.Components = [];
+    });
+  }
 }

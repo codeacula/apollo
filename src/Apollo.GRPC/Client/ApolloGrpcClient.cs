@@ -5,6 +5,7 @@ using Apollo.Domain.Common.ValueObjects;
 using Apollo.Domain.People.ValueObjects;
 using Apollo.Domain.ToDos.Models;
 using Apollo.Domain.ToDos.ValueObjects;
+using Apollo.Core.ToDos.Responses;
 using Apollo.GRPC.Interceptors;
 using Apollo.GRPC.Service;
 
@@ -17,6 +18,7 @@ using ProtoBuf.Grpc.Client;
 
 using CoreCreateToDoRequest = Apollo.Core.ToDos.Requests.CreateToDoRequest;
 using GrpcCreateToDoRequest = Apollo.GRPC.Contracts.CreateToDoRequest;
+using GrpcGetPersonToDosRequest = Apollo.GRPC.Contracts.GetPersonToDosRequest;
 using GrpcToDoDTO = Apollo.GRPC.Contracts.ToDoDTO;
 
 namespace Apollo.GRPC.Client;
@@ -66,6 +68,33 @@ public class ApolloGrpcClient : IApolloGrpcClient, IApolloAPIClient, IDisposable
     return grpcResult.IsSuccess ?
       Result.Ok(grpcResult.Data ?? string.Empty) :
       Result.Fail(string.Join("; ", grpcResult.Errors.Select(e => e.Message)));
+  }
+
+  public async Task<Result<IEnumerable<ToDoSummary>>> GetToDosAsync(string username, Platform platform)
+  {
+    var grpcRequest = new GrpcGetPersonToDosRequest
+    {
+      Username = username,
+      Platform = platform
+    };
+
+    Result<GrpcToDoDTO[]> grpcResponse = await ApolloGrpcService.GetPersonToDosAsync(grpcRequest);
+
+    if (grpcResponse.IsFailed)
+    {
+      return Result.Fail<IEnumerable<ToDoSummary>>(grpcResponse.Errors);
+    }
+
+    var summaries = grpcResponse.Value.Select(dto => new ToDoSummary
+    {
+      Id = dto.Id,
+      Description = dto.Description,
+      ReminderDate = dto.ReminderDate,
+      CreatedOn = dto.CreatedOn,
+      UpdatedOn = dto.UpdatedOn
+    }).ToArray();
+
+    return Result.Ok<IEnumerable<ToDoSummary>>(summaries);
   }
 
   private static ToDo MapToDomain(GrpcToDoDTO dto)
