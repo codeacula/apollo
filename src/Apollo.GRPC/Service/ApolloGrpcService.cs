@@ -91,7 +91,7 @@ public sealed class ApolloGrpcService(
       return personResult.Errors.Select(e => new GrpcError(e.Message)).ToArray();
     }
 
-    var query = new GetToDosByPersonIdQuery(personResult.Value.Id);
+    var query = new GetToDosByPersonIdQuery(personResult.Value.Id, request.IncludeCompleted);
     var result = await mediator.Send(query);
 
     if (result.IsFailed)

@@ -25,7 +25,7 @@ public class GetToDosByPersonIdQueryHandlerTests
     var toDos = new[] { CreateToDo(personId), CreateToDo(personId) };
 
     _ = toDoStore
-      .Setup(x => x.GetByPersonIdAsync(personId, It.IsAny<CancellationToken>()))
+      .Setup(x => x.GetByPersonIdAsync(personId, false, It.IsAny<CancellationToken>()))
       .ReturnsAsync(Result.Ok<IEnumerable<ToDo>>(toDos));
 
     // Act
@@ -34,7 +34,7 @@ public class GetToDosByPersonIdQueryHandlerTests
     // Assert
     Assert.True(result.IsSuccess);
     Assert.Equal(2, result.Value.Count());
-    toDoStore.Verify(x => x.GetByPersonIdAsync(personId, It.IsAny<CancellationToken>()), Times.Once);
+    toDoStore.Verify(x => x.GetByPersonIdAsync(personId, false, It.IsAny<CancellationToken>()), Times.Once);
   }
 
   [Fact]
@@ -46,7 +46,7 @@ public class GetToDosByPersonIdQueryHandlerTests
     var personId = new PersonId(Guid.NewGuid());
 
     _ = toDoStore
-      .Setup(x => x.GetByPersonIdAsync(personId, It.IsAny<CancellationToken>()))
+      .Setup(x => x.GetByPersonIdAsync(personId, false, It.IsAny<CancellationToken>()))
       .ReturnsAsync(Result.Ok<IEnumerable<ToDo>>([]));
 
     // Act
@@ -66,7 +66,7 @@ public class GetToDosByPersonIdQueryHandlerTests
     var personId = new PersonId(Guid.NewGuid());
 
     _ = toDoStore
-      .Setup(x => x.GetByPersonIdAsync(personId, It.IsAny<CancellationToken>()))
+      .Setup(x => x.GetByPersonIdAsync(personId, false, It.IsAny<CancellationToken>()))
       .ThrowsAsync(new InvalidOperationException("boom"));
 
     // Act

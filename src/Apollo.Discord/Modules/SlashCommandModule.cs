@@ -74,11 +74,12 @@ public class SlashCommandModule(IApolloAPIClient apolloAPIClient) : ApplicationC
   }
 
   [SlashCommand("todos", "List your current To Dos")]
-  public async Task ListToDosAsync()
+  public async Task ListToDosAsync(
+    [SlashCommandParameter(Name = "include-completed", Description = "Include completed to-dos in the list")] bool includeCompleted = false)
   {
     _ = await RespondAsync(InteractionCallback.DeferredMessage());
 
-    var result = await apolloAPIClient.GetToDosAsync(Context.User.Username, ApolloPlatform.Discord);
+    var result = await apolloAPIClient.GetToDosAsync(Context.User.Username, ApolloPlatform.Discord, includeCompleted);
 
     if (result.IsFailed)
     {
@@ -94,9 +95,12 @@ public class SlashCommandModule(IApolloAPIClient apolloAPIClient) : ApplicationC
 
     if (todos.Count == 0)
     {
+      var emptyMessage = includeCompleted 
+        ? "You have no to-dos at all. 🎉" 
+        : "You have no active to-dos. 🎉";
       _ = await ModifyResponseAsync(message =>
       {
-        message.Content = "You have no active to-dos. 🎉";
+        message.Content = emptyMessage;
         message.Components = [];
       });
       return;
@@ -110,7 +114,8 @@ public class SlashCommandModule(IApolloAPIClient apolloAPIClient) : ApplicationC
       return $"• {t.Description}{reminderText}";
     });
 
-    var content = $"You have {todos.Count} to-do(s):\n" + string.Join("\n", lines);
+    var listType = includeCompleted ? "to-do(s)" : "active to-do(s)";
+    var content = $"You have {todos.Count} {listType}:\n" + string.Join("\n", lines);
 
     _ = await ModifyResponseAsync(message =>
     {

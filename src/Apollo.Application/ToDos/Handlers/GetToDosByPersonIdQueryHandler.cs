@@ -12,7 +12,7 @@ public sealed class GetToDosByPersonIdQueryHandler(IToDoStore toDoStore) : IRequ
   {
     try
     {
-      return await toDoStore.GetByPersonIdAsync(request.PersonId, cancellationToken);
+      return await toDoStore.GetByPersonIdAsync(request.PersonId, request.IncludeCompleted, cancellationToken);
     }
     catch (Exception ex)
     {

@@ -70,12 +70,13 @@ public class ApolloGrpcClient : IApolloGrpcClient, IApolloAPIClient, IDisposable
       Result.Fail(string.Join("; ", grpcResult.Errors.Select(e => e.Message)));
   }
 
-  public async Task<Result<IEnumerable<ToDoSummary>>> GetToDosAsync(string username, Platform platform)
+  public async Task<Result<IEnumerable<ToDoSummary>>> GetToDosAsync(string username, Platform platform, bool includeCompleted = false)
   {
     var grpcRequest = new GrpcGetPersonToDosRequest
     {
       Username = username,
-      Platform = platform
+      Platform = platform,
+      IncludeCompleted = includeCompleted
     };
 
     Result<GrpcToDoDTO[]> grpcResponse = await ApolloGrpcService.GetPersonToDosAsync(grpcRequest);
