@@ -91,36 +91,14 @@ public class SlashCommandModule(IApolloAPIClient apolloAPIClient) : ApplicationC
       return;
     }
 
-    var todos = result.Value.ToList();
-
-    if (todos.Count == 0)
-    {
-      var emptyMessage = includeCompleted 
-        ? "You have no to-dos at all. 🎉" 
-        : "You have no active to-dos. 🎉";
-      _ = await ModifyResponseAsync(message =>
-      {
-        message.Content = emptyMessage;
-        message.Components = [];
-      });
-      return;
-    }
-
-    var lines = todos.Select(t =>
-    {
-      var reminderText = t.ReminderDate is DateTime when
-        ? $" | 🔔 <t:{new DateTimeOffset(when).ToUnixTimeSeconds()}:R>"
-        : string.Empty;
-      return $"• {t.Description}{reminderText}";
-    });
-
-    var listType = includeCompleted ? "to-do(s)" : "active to-do(s)";
-    var content = $"You have {todos.Count} {listType}:\n" + string.Join("\n", lines);
+    var todos = result.Value;
+    var container = new ToDoListComponent(todos, includeCompleted);
 
     _ = await ModifyResponseAsync(message =>
     {
-      message.Content = content;
-      message.Components = [];
+      message.Components = [container];
+      message.Content = string.Empty;
+      message.Flags = MessageFlags.IsComponentsV2;
     });
   }
 }

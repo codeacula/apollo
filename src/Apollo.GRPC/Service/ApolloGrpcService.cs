@@ -109,7 +109,7 @@ public sealed class ApolloGrpcService(
       {
         var reminderTimes = remindersResult.Value
           .Select(r => r.ReminderTime.Value)
-          .OrderBy(d => d)
+          .Order()
           .ToList();
 
         var upcoming = reminderTimes.FirstOrDefault(d => d >= DateTime.UtcNow);
@@ -127,8 +127,7 @@ public sealed class ApolloGrpcService(
       };
     });
 
-    var dtoArray = await Task.WhenAll(dtoTasks);
-    return dtoArray;
+    return await Task.WhenAll(dtoTasks);
   }
 
   public async Task<GrpcResult<string>> UpdateToDoAsync(UpdateToDoRequest request)

@@ -27,3 +27,23 @@ public class ToDoReminderInteractionModule : ComponentInteractionModule<ButtonIn
   [ComponentInteraction(ToDoQuickCreateComponent.ReminderButtonCustomId)]
   public string HandleReminderButton() => "Reminder editing is coming soon. For now, reply with a time and I'll log it!";
 }
+
+public class ToDoEditInteractionModule : ComponentInteractionModule<ButtonInteractionContext>
+{
+  [ComponentInteraction("todo_edit_*")]
+  public string HandleEditButton()
+  {
+    var toDoId = Context.Interaction.Data.CustomId.Replace("todo_edit_", string.Empty);
+    return $"Edit interface for todo `{toDoId}` is coming soon!";
+  }
+}
+
+public class ToDoDeleteInteractionModule : ComponentInteractionModule<ButtonInteractionContext>
+{
+  [ComponentInteraction("todo_delete_*")]
+  public string HandleDeleteButton()
+  {
+    var toDoId = Context.Interaction.Data.CustomId.Replace("todo_delete_", string.Empty);
+    return $"Delete confirmation for todo `{toDoId}` is coming soon!";
+  }
+}

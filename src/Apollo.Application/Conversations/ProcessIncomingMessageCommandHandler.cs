@@ -89,8 +89,14 @@ public sealed class ProcessIncomingMessageCommandHandler(
     {
       return Result.Fail<Reply>("No username was provided.");
     }
-
-    return string.IsNullOrWhiteSpace(request.Message.Content) ? Result.Fail<Reply>("Message content is empty.") : (Result<Reply>)Result.Ok();
+    else if (string.IsNullOrWhiteSpace(request.Message.Content))
+    {
+      return Result.Fail<Reply>("Message content is empty.");
+    }
+    else
+    {
+      return (Result<Reply>)Result.Ok();
+    }
   }
 
   private async Task<Result<Person>> GetOrCreateUserAsync(Username username, string rawUsername, CancellationToken cancellationToken)

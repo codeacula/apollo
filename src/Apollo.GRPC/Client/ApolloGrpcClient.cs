@@ -1,11 +1,11 @@
 using Apollo.Core.API;
 using Apollo.Core.Conversations;
+using Apollo.Core.ToDos.Responses;
 using Apollo.Domain.Common.Enums;
 using Apollo.Domain.Common.ValueObjects;
 using Apollo.Domain.People.ValueObjects;
 using Apollo.Domain.ToDos.Models;
 using Apollo.Domain.ToDos.ValueObjects;
-using Apollo.Core.ToDos.Responses;
 using Apollo.GRPC.Interceptors;
 using Apollo.GRPC.Service;
 
