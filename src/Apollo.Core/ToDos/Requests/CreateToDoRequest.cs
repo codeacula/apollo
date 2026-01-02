@@ -11,8 +11,11 @@ public sealed record CreateToDoRequest
   public required string Username { get; init; }
 
   [DataMember(Order = 2)]
-  public required string Content { get; init; }
+  public required Platform Platform { get; init; }
 
   [DataMember(Order = 3)]
-  public required Platform Platform { get; init; }
+  public required string Description { get; init; }
+
+  [DataMember(Order = 4)]
+  public DateTime? ReminderDate { get; init; }
 }

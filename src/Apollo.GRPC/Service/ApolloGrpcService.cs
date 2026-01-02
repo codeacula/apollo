@@ -2,6 +2,7 @@ using Apollo.Application.Conversations;
 using Apollo.Application.ToDos.Commands;
 using Apollo.Application.ToDos.Queries;
 using Apollo.Core.Conversations;
+using Apollo.Core.People;
 using Apollo.Domain.People.ValueObjects;
 using Apollo.Domain.ToDos.ValueObjects;
 using Apollo.GRPC.Contracts;
@@ -10,7 +11,7 @@ using MediatR;
 
 namespace Apollo.GRPC.Service;
 
-public sealed class ApolloGrpcService(IMediator mediator) : IApolloGrpcService
+public sealed class ApolloGrpcService(IMediator mediator, IPersonService personService) : IApolloGrpcService
 {
   public async Task<GrpcResult<string>> SendApolloMessageAsync(NewMessageRequest message)
   {
@@ -22,8 +23,16 @@ public sealed class ApolloGrpcService(IMediator mediator) : IApolloGrpcService
 
   public async Task<GrpcResult<ToDoDTO>> CreateToDoAsync(CreateToDoRequest request)
   {
+    var username = new Username(request.Username, request.Platform);
+    var personResult = await personService.GetOrCreateAsync(username);
+
+    if (personResult.IsFailed)
+    {
+      return personResult.Errors.Select(e => new GrpcError(e.Message)).ToArray();
+    }
+
     var command = new CreateToDoCommand(
-      new PersonId(request.PersonId),
+      personResult.Value.Id,
       new Description(request.Description),
       request.ReminderDate
     );
@@ -41,6 +50,7 @@ public sealed class ApolloGrpcService(IMediator mediator) : IApolloGrpcService
       Id = todo.Id.Value,
       PersonId = todo.PersonId.Value,
       Description = todo.Description.Value,
+      ReminderDate = request.ReminderDate,
       CreatedOn = todo.CreatedOn.Value,
       UpdatedOn = todo.UpdatedOn.Value
     };

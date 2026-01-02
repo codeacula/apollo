@@ -1,16 +1,21 @@
 using System.Runtime.Serialization;
 
+using Apollo.Domain.Common.Enums;
+
 namespace Apollo.GRPC.Contracts;
 
 [DataContract]
 public sealed record CreateToDoRequest
 {
   [DataMember(Order = 1)]
-  public required Guid PersonId { get; init; }
+  public required string Username { get; init; }
 
   [DataMember(Order = 2)]
-  public required string Description { get; init; }
+  public required Platform Platform { get; init; }
 
   [DataMember(Order = 3)]
+  public required string Description { get; init; }
+
+  [DataMember(Order = 4)]
   public DateTime? ReminderDate { get; init; }
 }
