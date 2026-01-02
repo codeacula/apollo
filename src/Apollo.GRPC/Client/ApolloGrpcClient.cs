@@ -56,12 +56,7 @@ public class ApolloGrpcClient : IApolloGrpcClient, IApolloAPIClient, IDisposable
 
     Result<GrpcToDoDTO> grpcResponse = await ApolloGrpcService.CreateToDoAsync(grpcRequest);
 
-    if (grpcResponse.IsFailed)
-    {
-      return Result.Fail<ToDo>(grpcResponse.Errors);
-    }
-
-    return Result.Ok(MapToDomain(grpcResponse.Value));
+    return grpcResponse.IsFailed ? Result.Fail<ToDo>(grpcResponse.Errors) : Result.Ok(MapToDomain(grpcResponse.Value));
   }
 
   public async Task<Result<string>> SendMessageAsync(NewMessageRequest request)
