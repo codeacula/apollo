@@ -114,10 +114,11 @@ public class ApolloReminderMessageGeneratorTests
       x => x.ChatAsync(
         It.Is<ChatCompletionRequestDTO>(req =>
           req.Messages.Any(m =>
-            m.Content.Contains("- Task 1") &&
-            m.Content.Contains("- Task 2") &&
-            m.Content.Contains("- Task 3") &&
-            m.Content.Contains("- Task 4"))),
+            m.Content.Contains("Task 1") &&
+            m.Content.Contains("Task 2") &&
+            m.Content.Contains("Task 3") &&
+            m.Content.Contains("Task 4") &&
+            m.Content.Contains(", "))),
         It.IsAny<CancellationToken>()),
       Times.Once);
   }
@@ -162,5 +163,27 @@ public class ApolloReminderMessageGeneratorTests
           req.Messages.Any(m => m.Content.Contains("SpecialUser123"))),
         It.IsAny<CancellationToken>()),
       Times.Once);
+  }
+
+  [Fact]
+  public async Task GenerateReminderMessageAsyncTrimsQuotesFromResponseAsync()
+  {
+    // Arrange
+    const string personName = "TestUser";
+    var toDoDescriptions = new List<string> { "Buy groceries" };
+    const string quotedResponse = "\"Hey there! Don't forget your tasks!\"";
+
+    _ = _mockApolloAIAgent
+      .Setup(x => x.ChatAsync(It.IsAny<ChatCompletionRequestDTO>(), It.IsAny<CancellationToken>()))
+      .ReturnsAsync(quotedResponse);
+
+    // Act
+    var result = await _generator.GenerateReminderMessageAsync(personName, toDoDescriptions, CancellationToken.None);
+
+    // Assert
+    Assert.True(result.IsSuccess);
+    Assert.Equal("Hey there! Don't forget your tasks!", result.Value);
+    Assert.False(result.Value.StartsWith('"'));
+    Assert.False(result.Value.EndsWith('"'));
   }
 }

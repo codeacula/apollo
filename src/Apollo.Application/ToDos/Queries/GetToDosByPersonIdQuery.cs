@@ -5,4 +5,4 @@ using FluentResults;
 
 namespace Apollo.Application.ToDos.Queries;
 
-public sealed record GetToDosByPersonIdQuery(PersonId PersonId) : IRequest<Result<IEnumerable<ToDo>>>;
+public sealed record GetToDosByPersonIdQuery(PersonId PersonId, bool IncludeCompleted = false) : IRequest<Result<IEnumerable<ToDo>>>;

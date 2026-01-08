@@ -11,6 +11,8 @@ using Apollo.Core.People;
 using Apollo.Core.ToDos;
 using Apollo.Domain.Common.Enums;
 using Apollo.Domain.Common.ValueObjects;
+using Apollo.Domain.Conversations.Models;
+using Apollo.Domain.People.Models;
 using Apollo.Domain.People.ValueObjects;
 
 using FluentResults;
@@ -33,117 +35,168 @@ public sealed class ProcessIncomingMessageCommandHandler(
 {
   public async Task<Result<Reply>> Handle(ProcessIncomingMessageCommand request, CancellationToken cancellationToken = default)
   {
+    string? usernameForLogging = null;
+
     try
     {
-      if (string.IsNullOrEmpty(request.Message.Username))
+      var validationResult = ValidateRequest(request);
+      if (validationResult.IsFailed)
       {
-        return Result.Fail<Reply>("No username was provided.");
-      }
-
-      if (string.IsNullOrWhiteSpace(request.Message.Content))
-      {
-        return Result.Fail<Reply>("Message content is empty.");
+        return validationResult;
       }
 
       var username = new Username(request.Message.Username, request.Message.Platform);
-      var userResult = await personService.GetOrCreateAsync(username, cancellationToken);
+      usernameForLogging = username.Value;
 
+      var userResult = await GetOrCreateUserAsync(username, request.Message.Username, cancellationToken);
       if (userResult.IsFailed)
       {
-        return Result.Fail<Reply>($"Failed to get or create user {request.Message.Username}: {userResult.GetErrorMessages()}");
+        return userResult.ToResult<Reply>();
       }
 
-      // Capture platform notification channel on first interaction
-      if (!string.IsNullOrWhiteSpace(request.Message.PlatformIdentifier))
-      {
-        var channelType = request.Message.Platform switch
-        {
-          Platform.Discord => NotificationChannelType.Discord,
-          _ => (NotificationChannelType?)null
-        };
+      var person = userResult.Value;
 
-        if (channelType.HasValue)
-        {
-          var channel = new NotificationChannel(channelType.Value, request.Message.PlatformIdentifier, isEnabled: true);
-          var channelResult = await personStore.EnsureNotificationChannelAsync(userResult.Value, channel, cancellationToken);
-          if (channelResult.IsFailed)
-          {
-            DataAccessLogs.FailedToAddNotificationChannel(logger, username.Value, channelResult.GetErrorMessages());
-          }
-        }
+      var accessResult = await CheckAndCacheAccessAsync(username, person);
+      if (accessResult.IsFailed)
+      {
+        return accessResult;
       }
 
-      // Check user for access
-      var hasAccess = userResult.Value.HasAccess.Value;
+      await CaptureNotificationChannelAsync(request, username, person, cancellationToken);
 
-      var cacheResult = await personCache.SetAccessAsync(username, hasAccess);
-
-      if (cacheResult.IsFailed)
+      var conversationResult = await GetOrCreateConversationAsync(person, request.Message.Content, cancellationToken);
+      if (conversationResult.IsFailed)
       {
-        CacheLogs.UnableToSetToCache(logger, [.. cacheResult.Errors.Select(e => e.Message)]);
+        return conversationResult.ToResult<Reply>();
       }
 
-      if (!hasAccess)
-      {
-        return Result.Fail<Reply>($"User {username.Value} does not have access.");
-      }
+      var response = await SendToAIAsync(conversationResult.Value, person, cancellationToken);
 
-      var convoResult = await conversationStore.GetOrCreateConversationByPersonIdAsync(userResult.Value.Id, cancellationToken);
+      await SaveReplyAsync(conversationResult.Value, response);
 
-      if (convoResult.IsFailed)
-      {
-        return Result.Fail<Reply>("Unable to fetch conversation.");
-      }
-
-      convoResult = await conversationStore.AddMessageAsync(convoResult.Value.Id, new Content(request.Message.Content), cancellationToken);
-
-      if (convoResult.IsFailed)
-      {
-        return Result.Fail<Reply>("Unable to add message to conversation.");
-      }
-
-      var conversation = convoResult.Value;
-
-      string systemPrompt = aiConfig.SystemPrompt;
-
-      var messages = conversation.Messages.Select(m => new ChatMessageDTO(
-            m.FromUser.Value ? ChatRole.User : ChatRole.Assistant,
-            m.Content.Value,
-            m.CreatedOn.Value
-          )
-        ).ToList();
-
-      var completionRequest = new ChatCompletionRequestDTO(systemPrompt, messages);
-
-      // Register user-scoped plugins
-      var toDoPlugin = new ToDoPlugin(mediator, personStore, fuzzyTimeParser, timeProvider, personConfig, userResult.Value.Id);
-      apolloAIAgent.AddPlugin(toDoPlugin, "ToDos");
-
-      var personPlugin = new PersonPlugin(personStore, personConfig, userResult.Value.Id);
-      apolloAIAgent.AddPlugin(personPlugin, "Person");
-
-      // Hand message to AI here
-      var response = await apolloAIAgent.ChatAsync(completionRequest, cancellationToken);
-
-      var addReplyResult = await conversationStore.AddReplyAsync(conversation.Id, new Content(response), cancellationToken);
-
-      if (addReplyResult.IsFailed)
-      {
-        // Log the error but still return the AI response
-        DataAccessLogs.UnableToSaveMessageToConversation(logger, conversation.Id.Value, response);
-      }
-
-      var currentTime = timeProvider.GetUtcDateTime();
-      return Result.Ok(new Reply
-      {
-        Content = new(response),
-        CreatedOn = new(currentTime),
-        UpdatedOn = new(currentTime)
-      });
+      return CreateReply(response);
     }
     catch (Exception ex)
     {
+      DataAccessLogs.UnhandledMessageProcessingError(logger, ex, usernameForLogging ?? "unknown");
       return Result.Fail<Reply>(ex.Message);
     }
+  }
+
+  private static Result<Reply> ValidateRequest(ProcessIncomingMessageCommand request)
+  {
+    if (string.IsNullOrWhiteSpace(request.Message.Username))
+    {
+      return Result.Fail<Reply>("No username was provided.");
+    }
+    else if (string.IsNullOrWhiteSpace(request.Message.Content))
+    {
+      return Result.Fail<Reply>("Message content is empty.");
+    }
+    else
+    {
+      return (Result<Reply>)Result.Ok();
+    }
+  }
+
+  private async Task<Result<Person>> GetOrCreateUserAsync(Username username, string rawUsername, CancellationToken cancellationToken)
+  {
+    var userResult = await personService.GetOrCreateAsync(username, cancellationToken);
+
+    return userResult.IsFailed
+      ? Result.Fail<Person>($"Failed to get or create user {rawUsername}: {userResult.GetErrorMessages()}")
+      : userResult;
+  }
+
+  private async Task<Result<Reply>> CheckAndCacheAccessAsync(Username username, Person person)
+  {
+    var hasAccess = person.HasAccess.Value;
+
+    var cacheResult = await personCache.SetAccessAsync(username, hasAccess);
+    if (cacheResult.IsFailed)
+    {
+      CacheLogs.UnableToSetToCache(logger, [.. cacheResult.Errors.Select(e => e.Message)]);
+    }
+
+    return !hasAccess ? Result.Fail<Reply>($"User {username.Value} does not have access.") : (Result<Reply>)Result.Ok();
+  }
+
+  private async Task CaptureNotificationChannelAsync(ProcessIncomingMessageCommand request, Username username, Person person, CancellationToken cancellationToken)
+  {
+    var channelType = request.Message.Platform switch
+    {
+      Platform.Discord => NotificationChannelType.Discord,
+      _ => (NotificationChannelType?)null
+    };
+
+    if (!channelType.HasValue)
+    {
+      return;
+    }
+
+    var channel = new NotificationChannel(channelType.Value, channelType.Value.ToString(), isEnabled: true);
+    var channelResult = await personStore.EnsureNotificationChannelAsync(person, channel, cancellationToken);
+
+    if (channelResult.IsFailed)
+    {
+      DataAccessLogs.FailedToAddNotificationChannel(logger, username.Value, channelResult.GetErrorMessages());
+    }
+  }
+
+  private async Task<Result<Conversation>> GetOrCreateConversationAsync(Person person, string messageContent, CancellationToken cancellationToken)
+  {
+    var convoResult = await conversationStore.GetOrCreateConversationByPersonIdAsync(person.Id, cancellationToken);
+
+    if (convoResult.IsFailed)
+    {
+      return Result.Fail<Conversation>("Unable to fetch conversation.");
+    }
+
+    convoResult = await conversationStore.AddMessageAsync(convoResult.Value.Id, new Content(messageContent), cancellationToken);
+
+    return convoResult.IsFailed ? Result.Fail<Conversation>("Unable to add message to conversation.") : convoResult;
+  }
+
+  private async Task<string> SendToAIAsync(Conversation conversation, Person person, CancellationToken cancellationToken)
+  {
+    var messages = conversation.Messages
+      .OrderBy(m => m.CreatedOn.Value)
+      .Select(m => new ChatMessageDTO(
+          m.FromUser.Value ? ChatRole.User : ChatRole.Assistant,
+          m.Content.Value,
+          m.CreatedOn.Value
+        )
+      ).ToList();
+
+    var completionRequest = new ChatCompletionRequestDTO(aiConfig.SystemPrompt, messages);
+
+    var toDoPlugin = new ToDoPlugin(mediator, personStore, fuzzyTimeParser, timeProvider, personConfig, person.Id);
+    apolloAIAgent.AddPlugin(toDoPlugin, ToDoPlugin.PluginName);
+
+    var personPlugin = new PersonPlugin(personStore, personConfig, person.Id);
+    apolloAIAgent.AddPlugin(personPlugin, PersonPlugin.PluginName);
+
+    return await apolloAIAgent.ChatAsync(completionRequest, cancellationToken);
+  }
+
+  private async Task SaveReplyAsync(Conversation conversation, string response)
+  {
+    var addReplyResult = await conversationStore.AddReplyAsync(conversation.Id, new Content(response), CancellationToken.None);
+
+    if (addReplyResult.IsFailed)
+    {
+      DataAccessLogs.UnableToSaveMessageToConversation(logger, conversation.Id.Value, response);
+    }
+  }
+
+  private Result<Reply> CreateReply(string response)
+  {
+    var currentTime = timeProvider.GetUtcDateTime();
+    return Result.Ok(new Reply
+    {
+      Content = new(response),
+      CreatedOn = new(currentTime),
+      UpdatedOn = new(currentTime)
+    });
   }
 }

@@ -20,6 +20,7 @@ public class ToDoPlugin(
   PersonConfig personConfig,
   PersonId personId)
 {
+  public const string PluginName = "ToDos";
   [KernelFunction("create_todo")]
   [Description("Creates a new todo with an optional reminder. Supports fuzzy times like 'in 10 minutes', 'in 2 hours', 'tomorrow', or ISO 8601 format.")]
   [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0046:Convert to conditional expression", Justification = "Maintains better code readability")]

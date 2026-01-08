@@ -5,7 +5,7 @@ using Apollo.Domain.Common.Enums;
 namespace Apollo.Core.Conversations;
 
 [DataContract]
-public sealed record NewMessage
+public sealed record NewMessageRequest
 {
   [DataMember(Order = 1)]
   public required string Username { get; init; }
@@ -15,7 +15,4 @@ public sealed record NewMessage
 
   [DataMember(Order = 3)]
   public required Platform Platform { get; init; }
-
-  [DataMember(Order = 4)]
-  public string? PlatformIdentifier { get; init; }
 }

@@ -80,13 +80,19 @@ public sealed class ToDoStore(IDocumentSession session, TimeProvider timeProvide
     }
   }
 
-  public async Task<Result<IEnumerable<ToDo>>> GetByPersonIdAsync(PersonId personId, CancellationToken cancellationToken = default)
+  public async Task<Result<IEnumerable<ToDo>>> GetByPersonIdAsync(PersonId personId, bool includeCompleted = false, CancellationToken cancellationToken = default)
   {
     try
     {
-      var dbToDos = await session.Query<DbToDo>()
-        .Where(t => t.PersonId == personId.Value && !t.IsDeleted && !t.IsCompleted)
-        .ToListAsync(cancellationToken);
+      var query = session.Query<DbToDo>()
+        .Where(t => t.PersonId == personId.Value && !t.IsDeleted);
+
+      if (!includeCompleted)
+      {
+        query = query.Where(t => !t.IsCompleted);
+      }
+
+      var dbToDos = await query.ToListAsync(cancellationToken);
 
       var toDos = dbToDos.Select(t => (ToDo)t);
       return Result.Ok(toDos);
