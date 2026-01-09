@@ -29,7 +29,7 @@ public class IncomingMessageHandler(
     var personId = new PersonId(ApolloPlatform.Discord, arg.Author.Id.ToString(CultureInfo.InvariantCulture));
     var validationResult = await personCache.GetAccessAsync(personId);
 
-    if (validationResult.IsFailed || (!validationResult.Value ?? false))
+    if (validationResult.IsFailed || !(validationResult.Value ?? false))
     {
       ValidationLogs.ValidationFailed(logger, personId.Value, validationResult.GetErrorMessages());
       _ = await arg.SendAsync("Sorry, unable to verify your access at this time.");
