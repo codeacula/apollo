@@ -1,7 +1,10 @@
+using Apollo.Domain.Common.Enums;
+
 namespace Apollo.Database.ToDos.Events;
 
 public sealed record ToDoCreatedEvent(
   Guid Id,
-  Guid PersonId,
+  Platform PersonPlatform,
+  string PersonProviderId,
   string Description,
   DateTime CreatedOn);

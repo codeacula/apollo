@@ -9,9 +9,10 @@ namespace Apollo.Database.People;
 
 public sealed record DbPerson
 {
-  public Guid Id { get; init; }
+  public required string Id { get; init; }
   public required string Username { get; init; }
   public Platform Platform { get; init; }
+  public required string ProviderId { get; init; }
   public bool HasAccess { get; init; }
   public string? TimeZoneId { get; init; }
   public ICollection<DbNotificationChannel> NotificationChannels { get; init; } = [];
@@ -32,8 +33,8 @@ public sealed record DbPerson
 
     return new()
     {
-      Id = new(person.Id),
-      Username = new(person.Username, person.Platform),
+      Id = new(person.Platform, person.ProviderId),
+      Username = new(person.Username),
       HasAccess = new(person.HasAccess),
       TimeZoneId = timeZoneId,
       NotificationChannels = notificationChannels,
@@ -52,6 +53,7 @@ public sealed record DbPerson
       Username = eventData.Username,
       HasAccess = false,
       Platform = eventData.Platform,
+      ProviderId = eventData.ProviderId,
       CreatedOn = eventData.CreatedOn,
       UpdatedOn = eventData.CreatedOn
     };
@@ -96,7 +98,8 @@ public sealed record DbPerson
   {
     var newChannel = new DbNotificationChannel
     {
-      PersonId = ev.Data.PersonId,
+      PersonPlatform = ev.Data.PersonPlatform,
+      PersonProviderId = ev.Data.PersonProviderId,
       Type = ev.Data.ChannelType,
       Identifier = ev.Data.Identifier,
       IsEnabled = true,

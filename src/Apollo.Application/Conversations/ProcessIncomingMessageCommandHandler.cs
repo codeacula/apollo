@@ -45,10 +45,11 @@ public sealed class ProcessIncomingMessageCommandHandler(
         return validationResult;
       }
 
-      var username = new Username(request.Message.Username, request.Message.Platform);
+      var personId = new PersonId(request.Message.Platform, request.Message.ProviderId);
+      var username = new Username(request.Message.Username);
       usernameForLogging = username.Value;
 
-      var userResult = await GetOrCreateUserAsync(username, request.Message.Username, cancellationToken);
+      var userResult = await GetOrCreateUserAsync(personId, username, cancellationToken);
       if (userResult.IsFailed)
       {
         return userResult.ToResult<Reply>();
@@ -56,7 +57,7 @@ public sealed class ProcessIncomingMessageCommandHandler(
 
       var person = userResult.Value;
 
-      var accessResult = await CheckAndCacheAccessAsync(username, person);
+      var accessResult = await CheckAndCacheAccessAsync(personId, person);
       if (accessResult.IsFailed)
       {
         return accessResult;
@@ -89,6 +90,10 @@ public sealed class ProcessIncomingMessageCommandHandler(
     {
       return Result.Fail<Reply>("No username was provided.");
     }
+    else if (string.IsNullOrWhiteSpace(request.Message.ProviderId))
+    {
+      return Result.Fail<Reply>("No provider id was provided.");
+    }
     else if (string.IsNullOrWhiteSpace(request.Message.Content))
     {
       return Result.Fail<Reply>("Message content is empty.");
@@ -99,26 +104,26 @@ public sealed class ProcessIncomingMessageCommandHandler(
     }
   }
 
-  private async Task<Result<Person>> GetOrCreateUserAsync(Username username, string rawUsername, CancellationToken cancellationToken)
+  private async Task<Result<Person>> GetOrCreateUserAsync(PersonId personId, Username username, CancellationToken cancellationToken)
   {
-    var userResult = await personService.GetOrCreateAsync(username, cancellationToken);
+    var userResult = await personService.GetOrCreateAsync(personId, username, cancellationToken);
 
     return userResult.IsFailed
-      ? Result.Fail<Person>($"Failed to get or create user {rawUsername}: {userResult.GetErrorMessages()}")
+      ? Result.Fail<Person>($"Failed to get or create user {username.Value}: {userResult.GetErrorMessages()}")
       : userResult;
   }
 
-  private async Task<Result<Reply>> CheckAndCacheAccessAsync(Username username, Person person)
+  private async Task<Result<Reply>> CheckAndCacheAccessAsync(PersonId personId, Person person)
   {
     var hasAccess = person.HasAccess.Value;
 
-    var cacheResult = await personCache.SetAccessAsync(username, hasAccess);
+    var cacheResult = await personCache.SetAccessAsync(personId, hasAccess);
     if (cacheResult.IsFailed)
     {
       CacheLogs.UnableToSetToCache(logger, [.. cacheResult.Errors.Select(e => e.Message)]);
     }
 
-    return !hasAccess ? Result.Fail<Reply>($"User {username.Value} does not have access.") : (Result<Reply>)Result.Ok();
+    return !hasAccess ? Result.Fail<Reply>($"User {personId.Value} does not have access.") : (Result<Reply>)Result.Ok();
   }
 
   private async Task CaptureNotificationChannelAsync(ProcessIncomingMessageCommand request, Username username, Person person, CancellationToken cancellationToken)

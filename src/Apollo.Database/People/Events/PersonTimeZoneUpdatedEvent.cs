@@ -1,3 +1,3 @@
 namespace Apollo.Database.People.Events;
 
-public sealed record PersonTimeZoneUpdatedEvent(Guid PersonId, string TimeZoneId, DateTime UpdatedOn);
+public sealed record PersonTimeZoneUpdatedEvent(string PersonId, string TimeZoneId, DateTime UpdatedOn);

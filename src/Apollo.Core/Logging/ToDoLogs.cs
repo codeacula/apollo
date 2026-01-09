@@ -26,7 +26,7 @@ public static partial class ToDoLogs
       EventId = 5003,
       Level = LogLevel.Error,
       Message = "Failed to get person {PersonId} for To-Do {ToDoId}.")]
-  public static partial void LogFailedToGetPerson(ILogger logger, Guid personId, Guid toDoId);
+  public static partial void LogFailedToGetPerson(ILogger logger, string personId, Guid toDoId);
 
   [LoggerMessage(
       EventId = 5004,

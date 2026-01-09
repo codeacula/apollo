@@ -15,56 +15,62 @@ public static partial class ValidationLogs
   public static partial void InvalidUsername(ILogger logger);
 
   [LoggerMessage(
+    EventId = 3110,
+    Level = LogLevel.Warning,
+    Message = "Invalid person id provided for validation")]
+  public static partial void InvalidPersonId(ILogger logger);
+
+  [LoggerMessage(
     EventId = 3101,
     Level = LogLevel.Debug,
-    Message = "Cache hit for user {Username}: {HasAccess}")]
-  public static partial void CacheHit(ILogger logger, string username, bool hasAccess);
+    Message = "Cache hit for person id {PersonId}: {HasAccess}")]
+  public static partial void CacheHit(ILogger logger, string personId, bool hasAccess);
 
   [LoggerMessage(
     EventId = 3102,
     Level = LogLevel.Debug,
-    Message = "Cache miss for user: {Username}")]
-  public static partial void CacheMiss(ILogger logger, string username);
+    Message = "Cache miss for person id: {PersonId}")]
+  public static partial void CacheMiss(ILogger logger, string personId);
 
   [LoggerMessage(
     EventId = 3103,
     Level = LogLevel.Error,
-    Message = "Cache check failed for user {Username}: {Errors}")]
-  public static partial void CacheCheckFailed(ILogger logger, string username, string errors);
+    Message = "Cache check failed for person id {PersonId}: {Errors}")]
+  public static partial void CacheCheckFailed(ILogger logger, string personId, string errors);
 
   [LoggerMessage(
     EventId = 3104,
     Level = LogLevel.Error,
-    Message = "Data access failed for user {Username}: {Errors}")]
-  public static partial void DataAccessFailed(ILogger logger, string username, string errors);
+    Message = "Data access failed for person id {PersonId}: {Errors}")]
+  public static partial void DataAccessFailed(ILogger logger, string personId, string errors);
 
   [LoggerMessage(
     EventId = 3105,
     Level = LogLevel.Warning,
-    Message = "Cache update failed for user {Username}: {Errors}")]
-  public static partial void CacheUpdateFailed(ILogger logger, string username, string errors);
+    Message = "Cache update failed for person id {PersonId}: {Errors}")]
+  public static partial void CacheUpdateFailed(ILogger logger, string personId, string errors);
 
   [LoggerMessage(
     EventId = 3106,
     Level = LogLevel.Debug,
-    Message = "Cache updated for user {Username}: {HasAccess}")]
-  public static partial void CacheUpdated(ILogger logger, string username, bool hasAccess);
+    Message = "Cache updated for person id {PersonId}: {HasAccess}")]
+  public static partial void CacheUpdated(ILogger logger, string personId, bool hasAccess);
 
   [LoggerMessage(
     EventId = 3107,
     Level = LogLevel.Information,
-    Message = "User {Username} validated: {HasAccess}")]
-  public static partial void UserValidated(ILogger logger, string username, bool hasAccess);
+    Message = "Person {PersonId} validated: {HasAccess}")]
+  public static partial void UserValidated(ILogger logger, string personId, bool hasAccess);
 
   [LoggerMessage(
     EventId = 3108,
     Level = LogLevel.Warning,
-    Message = "User validation failed for {Username}: {Errors}")]
-  public static partial void ValidationFailed(ILogger logger, string username, string errors);
+    Message = "Person validation failed for {PersonId}: {Errors}")]
+  public static partial void ValidationFailed(ILogger logger, string personId, string errors);
 
   [LoggerMessage(
     EventId = 3109,
     Level = LogLevel.Information,
-    Message = "Access denied for user: {Username}")]
-  public static partial void AccessDenied(ILogger logger, string username);
+    Message = "Access denied for person id: {PersonId}")]
+  public static partial void AccessDenied(ILogger logger, string personId);
 }

@@ -18,7 +18,7 @@ public class PersonCacheTests
     var redis = new Mock<IConnectionMultiplexer>();
     var db = new Mock<IDatabase>();
     var logger = new Mock<ILogger<PersonCache>>();
-    var username = new Username("testuser", Platform.Discord);
+    var personId = new PersonId(Platform.Discord, "123");
 
     _ = redis.Setup(x => x.GetDatabase(It.IsAny<int>(), It.IsAny<object>())).Returns(db.Object);
     _ = db.Setup(x => x.StringGetAsync(It.IsAny<RedisKey>(), It.IsAny<CommandFlags>()))
@@ -27,7 +27,7 @@ public class PersonCacheTests
     var cache = new PersonCache(redis.Object, logger.Object);
 
     // Act
-    var result = await cache.GetAccessAsync(username);
+    var result = await cache.GetAccessAsync(personId);
 
     // Assert
     Assert.True(result.IsSuccess);
@@ -41,7 +41,7 @@ public class PersonCacheTests
     var redis = new Mock<IConnectionMultiplexer>();
     var db = new Mock<IDatabase>();
     var logger = new Mock<ILogger<PersonCache>>();
-    var username = new Username("testuser", Platform.Discord);
+    var personId = new PersonId(Platform.Discord, "123");
 
     _ = redis.Setup(x => x.GetDatabase(It.IsAny<int>(), It.IsAny<object>())).Returns(db.Object);
     _ = db.Setup(x => x.StringGetAsync(It.IsAny<RedisKey>(), It.IsAny<CommandFlags>()))
@@ -50,7 +50,7 @@ public class PersonCacheTests
     var cache = new PersonCache(redis.Object, logger.Object);
 
     // Act
-    var result = await cache.GetAccessAsync(username);
+    var result = await cache.GetAccessAsync(personId);
 
     // Assert
     Assert.True(result.IsSuccess);
@@ -65,7 +65,7 @@ public class PersonCacheTests
     var redis = new Mock<IConnectionMultiplexer>();
     var db = new Mock<IDatabase>();
     var logger = new Mock<ILogger<PersonCache>>();
-    var username = new Username("testuser", Platform.Discord);
+    var personId = new PersonId(Platform.Discord, "123");
 
     _ = redis.Setup(x => x.GetDatabase(It.IsAny<int>(), It.IsAny<object>())).Returns(db.Object);
     _ = db.Setup(x => x.StringGetAsync(It.IsAny<RedisKey>(), It.IsAny<CommandFlags>()))
@@ -74,7 +74,7 @@ public class PersonCacheTests
     var cache = new PersonCache(redis.Object, logger.Object);
 
     // Act
-    var result = await cache.GetAccessAsync(username);
+    var result = await cache.GetAccessAsync(personId);
 
     // Assert
     Assert.True(result.IsFailed);
@@ -88,14 +88,14 @@ public class PersonCacheTests
     var redis = new Mock<IConnectionMultiplexer>();
     var db = new Mock<IDatabase>();
     var logger = new Mock<ILogger<PersonCache>>();
-    var username = new Username("testuser", Platform.Discord);
+    var personId = new PersonId(Platform.Discord, "123");
 
     _ = redis.Setup(x => x.GetDatabase(It.IsAny<int>(), It.IsAny<object>())).Returns(db.Object);
 
     var cache = new PersonCache(redis.Object, logger.Object);
 
     // Act
-    var result = await cache.SetAccessAsync(username, true);
+    var result = await cache.SetAccessAsync(personId, true);
 
     // Assert
     Assert.True(result.IsSuccess);
@@ -110,7 +110,7 @@ public class PersonCacheTests
     var redis = new Mock<IConnectionMultiplexer>();
     var db = new Mock<IDatabase>();
     var logger = new Mock<ILogger<PersonCache>>();
-    var username = new Username("testuser", Platform.Discord);
+    var personId = new PersonId(Platform.Discord, "123");
 
     _ = redis.Setup(x => x.GetDatabase(It.IsAny<int>(), It.IsAny<object>())).Returns(db.Object);
     _ = db.Setup(x => x.KeyDeleteAsync(It.IsAny<RedisKey>(), It.IsAny<CommandFlags>()))
@@ -119,7 +119,7 @@ public class PersonCacheTests
     var cache = new PersonCache(redis.Object, logger.Object);
 
     // Act
-    var result = await cache.InvalidateAccessAsync(username);
+    var result = await cache.InvalidateAccessAsync(personId);
 
     // Assert
     Assert.True(result.IsSuccess);
@@ -133,7 +133,7 @@ public class PersonCacheTests
     var redis = new Mock<IConnectionMultiplexer>();
     var db = new Mock<IDatabase>();
     var logger = new Mock<ILogger<PersonCache>>();
-    var username = new Username("testuser", Platform.Discord);
+    var personId = new PersonId(Platform.Discord, "123");
 
     _ = redis.Setup(x => x.GetDatabase(It.IsAny<int>(), It.IsAny<object>())).Returns(db.Object);
     _ = db.Setup(x => x.KeyDeleteAsync(It.IsAny<RedisKey>(), It.IsAny<CommandFlags>()))
@@ -142,7 +142,7 @@ public class PersonCacheTests
     var cache = new PersonCache(redis.Object, logger.Object);
 
     // Act
-    var result = await cache.InvalidateAccessAsync(username);
+    var result = await cache.InvalidateAccessAsync(personId);
 
     // Assert
     Assert.True(result.IsFailed);

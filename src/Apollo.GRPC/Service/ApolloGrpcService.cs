@@ -27,8 +27,9 @@ public sealed class ApolloGrpcService(
 
   public async Task<GrpcResult<ToDoDTO>> CreateToDoAsync(CreateToDoRequest request)
   {
-    var username = new Username(request.Username, request.Platform);
-    var personResult = await mediator.Send(new GetOrCreatePersonByUsernameQuery(username));
+    var username = new Username(request.Username);
+    var personId = new PersonId(request.Platform, request.ProviderId);
+    var personResult = await mediator.Send(new GetOrCreatePersonByIdQuery(personId, username));
 
     if (personResult.IsFailed)
     {
@@ -52,7 +53,8 @@ public sealed class ApolloGrpcService(
     return new ToDoDTO
     {
       Id = todo.Id.Value,
-      PersonId = todo.PersonId.Value,
+      PersonPlatform = todo.PersonId.Platform,
+      PersonProviderId = todo.PersonId.ProviderId,
       Description = todo.Description.Value,
       ReminderDate = request.ReminderDate,
       CreatedOn = todo.CreatedOn.Value,
@@ -74,7 +76,8 @@ public sealed class ApolloGrpcService(
     return new ToDoDTO
     {
       Id = todo.Id.Value,
-      PersonId = todo.PersonId.Value,
+      PersonPlatform = todo.PersonId.Platform,
+      PersonProviderId = todo.PersonId.ProviderId,
       Description = todo.Description.Value,
       CreatedOn = todo.CreatedOn.Value,
       UpdatedOn = todo.UpdatedOn.Value
@@ -83,15 +86,8 @@ public sealed class ApolloGrpcService(
 
   public async Task<GrpcResult<ToDoDTO[]>> GetPersonToDosAsync(GetPersonToDosRequest request)
   {
-    var username = new Username(request.Username, request.Platform);
-    var personResult = await mediator.Send(new GetOrCreatePersonByUsernameQuery(username));
-
-    if (personResult.IsFailed)
-    {
-      return personResult.Errors.Select(e => new GrpcError(e.Message)).ToArray();
-    }
-
-    var query = new GetToDosByPersonIdQuery(personResult.Value.Id, request.IncludeCompleted);
+    var personId = new PersonId(request.Platform, request.ProviderId);
+    var query = new GetToDosByPersonIdQuery(personId, request.IncludeCompleted);
     var result = await mediator.Send(query);
 
     if (result.IsFailed)
@@ -119,7 +115,8 @@ public sealed class ApolloGrpcService(
       return new ToDoDTO
       {
         Id = t.Id.Value,
-        PersonId = t.PersonId.Value,
+        PersonPlatform = t.PersonId.Platform,
+        PersonProviderId = t.PersonId.ProviderId,
         Description = t.Description.Value,
         ReminderDate = reminderDate,
         CreatedOn = t.CreatedOn.Value,
