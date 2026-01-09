@@ -146,7 +146,7 @@ public class PersonServiceTests
 
     // Assert
     Assert.True(result.IsFailed);
-    Assert.Contains("Invalid username", result.Errors[0].Message);
+    Assert.Contains("Invalid person id", result.Errors[0].Message);
   }
 
   [Fact]
@@ -196,7 +196,7 @@ public class PersonServiceTests
 
     // Assert
     Assert.True(result.IsFailed);
-    Assert.Contains("Invalid username", result.Errors[0].Message);
+    Assert.Contains("Invalid person id", result.Errors[0].Message);
   }
 
   [Fact]

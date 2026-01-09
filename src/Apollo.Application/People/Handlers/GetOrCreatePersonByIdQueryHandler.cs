@@ -13,7 +13,7 @@ public sealed class GetOrCreatePersonByIdQueryHandler(IPersonStore personStore)
   {
     if (!request.Username.IsValid || !request.PersonId.IsValid)
     {
-      return Result.Fail<Person>("Invalid username");
+      return Result.Fail<Person>("Invalid username or person id");
     }
 
     var userResult = await personStore.GetAsync(request.PersonId, cancellationToken);
