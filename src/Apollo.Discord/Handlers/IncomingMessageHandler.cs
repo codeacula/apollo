@@ -12,7 +12,7 @@ using ApolloPlatform = Apollo.Domain.Common.Enums.Platform;
 namespace Apollo.Discord.Handlers;
 
 public class IncomingMessageHandler(
-  IApolloServiceClient apolloAPIClient,
+  IApolloServiceClient apolloServiceClient,
   IPersonCache personCache,
   DiscordConfig discordConfig,
   ILogger<IncomingMessageHandler> logger) : IMessageCreateGatewayHandler
@@ -26,20 +26,13 @@ public class IncomingMessageHandler(
     }
 
     // Validate user access
-    var username = new Username(arg.Author.Username);
     var personId = new PersonId(ApolloPlatform.Discord, arg.Author.Id.ToString(CultureInfo.InvariantCulture));
     var validationResult = await personCache.GetAccessAsync(personId);
-    if (validationResult.IsFailed)
+
+    if (validationResult.IsFailed || !(validationResult.Value ?? false))
     {
       ValidationLogs.ValidationFailed(logger, personId.Value, validationResult.GetErrorMessages());
       _ = await arg.SendAsync("Sorry, unable to verify your access at this time.");
-      return;
-    }
-
-    if (!validationResult.Value ?? false)
-    {
-      ValidationLogs.AccessDenied(logger, personId.Value);
-      _ = await arg.SendAsync("Sorry, you do not have access to use this bot.");
       return;
     }
 
@@ -48,13 +41,13 @@ public class IncomingMessageHandler(
     {
       var newMessage = new NewMessageRequest
       {
-        Username = username,
+        Username = arg.Author.Username,
         Content = arg.Content,
         Platform = ApolloPlatform.Discord,
         ProviderId = personId.ProviderId
       };
 
-      var response = await apolloAPIClient.SendMessageAsync(newMessage);
+      var response = await apolloServiceClient.SendMessageAsync(newMessage);
 
       if (response.IsFailed)
       {
@@ -66,7 +59,7 @@ public class IncomingMessageHandler(
     }
     catch (Exception ex)
     {
-      DiscordLogs.MessageProcessingFailed(logger, username.Value, ex.Message, ex);
+      DiscordLogs.MessageProcessingFailed(logger, arg.Author.Username, ex.Message, ex);
       _ = await arg.SendAsync("Sorry, an unexpected error occurred while processing your message. Please try again later.");
       return;
     }

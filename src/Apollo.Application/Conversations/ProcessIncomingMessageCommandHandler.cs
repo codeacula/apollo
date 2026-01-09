@@ -27,7 +27,6 @@ public sealed class ProcessIncomingMessageCommandHandler(
   ILogger<ProcessIncomingMessageCommandHandler> logger,
   IMediator mediator,
   IPersonService personService,
-  IPersonCache personCache,
   IPersonStore personStore,
   PersonConfig personConfig,
   TimeProvider timeProvider
@@ -35,8 +34,6 @@ public sealed class ProcessIncomingMessageCommandHandler(
 {
   public async Task<Result<Reply>> Handle(ProcessIncomingMessageCommand request, CancellationToken cancellationToken = default)
   {
-    string? usernameForLogging = null;
-
     try
     {
       var validationResult = ValidateRequest(request);
@@ -47,20 +44,18 @@ public sealed class ProcessIncomingMessageCommandHandler(
 
       var personId = new PersonId(request.Message.Platform, request.Message.ProviderId);
       var username = new Username(request.Message.Username);
-      usernameForLogging = username.Value;
 
-      var userResult = await GetOrCreateUserAsync(personId, username, cancellationToken);
+      var userResult = await personService.GetOrCreateAsync(personId, username, cancellationToken);
       if (userResult.IsFailed)
       {
-        return userResult.ToResult<Reply>();
+        return Result.Fail<Reply>($"Failed to get or create user {username.Value}: {userResult.GetErrorMessages()}");
       }
 
       var person = userResult.Value;
 
-      var accessResult = await CheckAndCacheAccessAsync(personId, person);
-      if (accessResult.IsFailed)
+      if (!person.HasAccess.Value)
       {
-        return accessResult;
+        return Result.Fail<Reply>($"User {personId.Value} does not have access.");
       }
 
       await CaptureNotificationChannelAsync(request, username, person, cancellationToken);
@@ -75,11 +70,11 @@ public sealed class ProcessIncomingMessageCommandHandler(
 
       await SaveReplyAsync(conversationResult.Value, response);
 
-      return CreateReply(response);
+      return CreateReplyToUser(response);
     }
     catch (Exception ex)
     {
-      DataAccessLogs.UnhandledMessageProcessingError(logger, ex, usernameForLogging ?? "unknown");
+      DataAccessLogs.UnhandledMessageProcessingError(logger, ex, request.Message.Username ?? "unknown");
       return Result.Fail<Reply>(ex.Message);
     }
   }
@@ -100,28 +95,6 @@ public sealed class ProcessIncomingMessageCommandHandler(
     return string.IsNullOrWhiteSpace(request.Message.Content)
       ? Result.Fail<Reply>("Message content is empty.")
       : (Result<Reply>)Result.Ok();
-  }
-
-  private async Task<Result<Person>> GetOrCreateUserAsync(PersonId personId, Username username, CancellationToken cancellationToken)
-  {
-    var userResult = await personService.GetOrCreateAsync(personId, username, cancellationToken);
-
-    return userResult.IsFailed
-      ? Result.Fail<Person>($"Failed to get or create user {username.Value}: {userResult.GetErrorMessages()}")
-      : userResult;
-  }
-
-  private async Task<Result<Reply>> CheckAndCacheAccessAsync(PersonId personId, Person person)
-  {
-    var hasAccess = person.HasAccess.Value;
-
-    var cacheResult = await personCache.SetAccessAsync(personId, hasAccess);
-    if (cacheResult.IsFailed)
-    {
-      CacheLogs.UnableToSetToCache(logger, [.. cacheResult.Errors.Select(e => e.Message)]);
-    }
-
-    return !hasAccess ? Result.Fail<Reply>($"User {personId.Value} does not have access.") : (Result<Reply>)Result.Ok();
   }
 
   private async Task CaptureNotificationChannelAsync(ProcessIncomingMessageCommand request, Username username, Person person, CancellationToken cancellationToken)
@@ -192,7 +165,7 @@ public sealed class ProcessIncomingMessageCommandHandler(
     }
   }
 
-  private Result<Reply> CreateReply(string response)
+  private Result<Reply> CreateReplyToUser(string response)
   {
     var currentTime = timeProvider.GetUtcDateTime();
     return Result.Ok(new Reply
