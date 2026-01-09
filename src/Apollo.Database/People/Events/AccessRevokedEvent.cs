@@ -1,3 +1,3 @@
 namespace Apollo.Database.People.Events;
 
-public sealed record AccessRevokedEvent(string PersonId, DateTime RevokedOn);
+public sealed record AccessRevokedEvent(Guid PersonId, DateTime RevokedOn);

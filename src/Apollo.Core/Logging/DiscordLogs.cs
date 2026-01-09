@@ -47,6 +47,6 @@ public static partial class DiscordLogs
   [LoggerMessage(
       EventId = 2006,
       Level = LogLevel.Error,
-      Message = "Exception occurred while processing incoming message from user {Username}: {ExceptionMessage}")]
-  public static partial void MessageProcessingFailed(ILogger logger, string username, string exceptionMessage, Exception exception);
+      Message = "Exception occurred while processing incoming message from user {Username} ({PlatformUserId}): {ExceptionMessage}")]
+  public static partial void MessageProcessingFailed(ILogger logger, string username, string platformUserId, string exceptionMessage, Exception exception);
 }

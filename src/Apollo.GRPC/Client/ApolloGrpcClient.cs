@@ -54,7 +54,7 @@ public class ApolloGrpcClient : IApolloGrpcClient, IApolloServiceClient, IDispos
       Platform = request.Platform,
       Description = request.Description,
       ReminderDate = request.ReminderDate,
-      ProviderId = request.ProviderId
+      ProviderId = request.PlatformId
     };
 
     Result<GrpcToDoDTO> grpcResponse = await ApolloGrpcService.CreateToDoAsync(grpcRequest);
@@ -71,13 +71,13 @@ public class ApolloGrpcClient : IApolloGrpcClient, IApolloServiceClient, IDispos
       Result.Fail(string.Join("; ", grpcResult.Errors.Select(e => e.Message)));
   }
 
-  public async Task<Result<IEnumerable<ToDoSummary>>> GetToDosAsync(PersonId personId, bool includeCompleted = false)
+  public async Task<Result<IEnumerable<ToDoSummary>>> GetToDosAsync(PlatformId personId, bool includeCompleted = false)
   {
     var grpcRequest = new GrpcGetPersonToDosRequest
     {
       Platform = personId.Platform,
       IncludeCompleted = includeCompleted,
-      ProviderId = personId.ProviderId
+      PlatformUserId = personId.PlatformUserId
     };
 
     Result<GrpcToDoDTO[]> grpcResponse = await ApolloGrpcService.GetPersonToDosAsync(grpcRequest);
@@ -103,16 +103,16 @@ public class ApolloGrpcClient : IApolloGrpcClient, IApolloServiceClient, IDispos
   {
     return new ToDo
     {
-      Id = new ToDoId(dto.Id),
-      PersonId = new PersonId(dto.PersonPlatform, dto.PersonProviderId),
-      Description = new Description(dto.Description),
-      Priority = new Priority(Level.Blue),
-      Energy = new Energy(Level.Blue),
-      Interest = new Interest(Level.Blue),
+      Id = new(dto.Id),
+      PersonId = new(dto.PersonPlatform, dto.PersonProviderId),
+      Description = new(dto.Description),
+      Priority = new(Level.Blue),
+      Energy = new(Level.Blue),
+      Interest = new(Level.Blue),
       Reminders = [],
       DueDate = null,
-      CreatedOn = new CreatedOn(dto.CreatedOn),
-      UpdatedOn = new UpdatedOn(dto.UpdatedOn)
+      CreatedOn = new(dto.CreatedOn),
+      UpdatedOn = new(dto.UpdatedOn)
     };
   }
 }

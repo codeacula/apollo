@@ -17,27 +17,27 @@ public sealed class PersonCache(IConnectionMultiplexer redis, ILogger<PersonCach
   private const string KeyPrefix = "person:access:";
   private static readonly TimeSpan CacheTtl = TimeSpan.FromMinutes(5);
 
-  public async Task<Result<bool?>> GetAccessAsync(PersonId personId)
+  public async Task<Result<bool?>> GetAccessAsync(PlatformId platformId)
   {
     try
     {
-      var key = GetCacheKey(personId);
+      var key = GetCacheKey(platformId);
       var value = await _db.StringGetAsync(key);
 
       if (!value.HasValue)
       {
-        CacheLogs.CacheMiss(_logger, personId.Value);
+        CacheLogs.CacheMiss(_logger, platformId.Value);
         return Result.Ok<bool?>(null);
       }
 
       var hasAccess = (bool)value;
-      CacheLogs.CacheHit(_logger, personId.Value, hasAccess);
+      CacheLogs.CacheHit(_logger, platformId.Value, hasAccess);
       return Result.Ok<bool?>(hasAccess);
     }
     catch (Exception ex)
     {
-      CacheLogs.CacheReadError(_logger, ex, personId.Value);
-      return Result.Fail<bool?>($"Failed to read from cache for user {personId.Value}: {ex.Message}");
+      CacheLogs.CacheReadError(_logger, ex, platformId.Value);
+      return Result.Fail<bool?>($"Failed to read from cache for user {platformId.Value}: {ex.Message}");
     }
   }
 
@@ -75,8 +75,8 @@ public sealed class PersonCache(IConnectionMultiplexer redis, ILogger<PersonCach
     }
   }
 
-  private static string GetCacheKey(PersonId personId)
+  private static string GetCacheKey(PlatformId platformId)
   {
-    return KeyPrefix + personId.Value;
+    return KeyPrefix + platformId.Platform + ":" + platformId.PlatformUserId;
   }
 }

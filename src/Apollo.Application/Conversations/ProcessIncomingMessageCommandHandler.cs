@@ -42,7 +42,7 @@ public sealed class ProcessIncomingMessageCommandHandler(
         return validationResult;
       }
 
-      var personId = new PersonId(request.Message.Platform, request.Message.ProviderId);
+      var personId = new PersonId(request.Message.Platform, request.Message.PlatformId);
       var username = new Username(request.Message.Username);
 
       var userResult = await personService.GetOrCreateAsync(personId, username, cancellationToken);
@@ -87,7 +87,7 @@ public sealed class ProcessIncomingMessageCommandHandler(
       return Result.Fail<Reply>("No username was provided.");
     }
 
-    if (string.IsNullOrWhiteSpace(request.Message.ProviderId))
+    if (string.IsNullOrWhiteSpace(request.Message.PlatformId))
     {
       return Result.Fail<Reply>("No provider id was provided.");
     }

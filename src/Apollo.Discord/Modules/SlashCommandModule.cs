@@ -47,7 +47,7 @@ public class SlashCommandModule(IApolloServiceClient apolloAPIClient) : Applicat
       Platform = ApolloPlatform.Discord,
       Description = todo,
       ReminderDate = null,
-      ProviderId = Context.User.Id.ToString(CultureInfo.InvariantCulture)
+      PlatformId = Context.User.Id.ToString(CultureInfo.InvariantCulture)
     };
 
     var result = await apolloAPIClient.CreateToDoAsync(createRequest);

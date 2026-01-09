@@ -6,6 +6,7 @@ namespace Apollo.Domain.People.Models;
 public sealed record Person
 {
   public PersonId Id { get; init; }
+  public PlatformId PlatformId { get; init; }
   public Username Username { get; init; }
   public HasAccess HasAccess { get; init; }
   public PersonTimeZoneId? TimeZoneId { get; init; }
