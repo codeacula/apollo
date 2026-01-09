@@ -19,13 +19,13 @@ public class PromptyLoaderTests
     Assert.Contains("Apollo", systemPrompt);
     Assert.Contains("friendly", systemPrompt);
     Assert.Contains("neurodivergent", systemPrompt);
-    
+
     // Should not contain YAML frontmatter
     Assert.DoesNotContain("---", systemPrompt);
     Assert.DoesNotContain("name:", systemPrompt);
     Assert.DoesNotContain("model:", systemPrompt);
-    
+
     Console.WriteLine($"Loaded prompt length: {systemPrompt.Length} characters");
-    Console.WriteLine($"First 200 chars: {systemPrompt.Substring(0, Math.Min(200, systemPrompt.Length))}");
+    Console.WriteLine($"First 200 chars: {systemPrompt[..Math.Min(200, systemPrompt.Length)]}");
   }
 }

@@ -30,7 +30,7 @@ public static class PromptyLoader
     // Remove the "system:" prefix if present
     if (template.StartsWith("system:", StringComparison.OrdinalIgnoreCase))
     {
-      template = template.Substring("system:".Length).Trim();
+      template = template["system:".Length..].Trim();
     }
 
     return template;
