@@ -1,4 +1,5 @@
 using Apollo.Database.Conversations.Events;
+using Apollo.Domain.Common.Enums;
 using Apollo.Domain.Conversations.Models;
 
 using JasperFx.Events;
@@ -8,7 +9,8 @@ namespace Apollo.Database.Conversations;
 public sealed record DbConversation
 {
   public required Guid Id { get; init; }
-  public required Guid PersonId { get; init; }
+  public required Platform PersonPlatform { get; init; }
+  public required string PersonProviderId { get; init; }
   public required List<DbMessage> Messages { get; init; }
   public DateTime CreatedOn { get; init; }
   public DateTime UpdatedOn { get; init; }
@@ -18,7 +20,7 @@ public sealed record DbConversation
     return new()
     {
       Id = new(conversation.Id),
-      PersonId = new(conversation.PersonId),
+      PersonId = new(conversation.PersonPlatform, conversation.PersonProviderId),
       CreatedOn = new(conversation.CreatedOn),
       UpdatedOn = new(conversation.UpdatedOn),
       Messages = conversation.Messages.ConvertAll(m => (Message)m)
@@ -35,7 +37,8 @@ public sealed record DbConversation
       CreatedOn = eventData.CreatedOn,
       UpdatedOn = eventData.CreatedOn,
       Messages = [],
-      PersonId = eventData.PersonId
+      PersonPlatform = eventData.PersonPlatform,
+      PersonProviderId = eventData.PersonProviderId
     };
   }
 

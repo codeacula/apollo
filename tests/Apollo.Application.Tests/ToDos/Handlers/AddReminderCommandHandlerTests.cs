@@ -1,6 +1,7 @@
 using Apollo.Application.ToDos.Commands;
 using Apollo.Application.ToDos.Handlers;
 using Apollo.Core.ToDos;
+using Apollo.Domain.Common.Enums;
 using Apollo.Domain.Common.ValueObjects;
 using Apollo.Domain.People.ValueObjects;
 using Apollo.Domain.ToDos.Models;
@@ -116,7 +117,7 @@ public class AddReminderCommandHandlerTests
       Energy = new Energy(0),
       Id = toDoId,
       Interest = new Interest(0),
-      PersonId = new PersonId(Guid.NewGuid()),
+      PersonId = new PersonId(Platform.Discord, "123"),
       Priority = new Priority(0),
       UpdatedOn = new UpdatedOn(DateTime.UtcNow)
     };

@@ -1,6 +1,7 @@
 using Apollo.Application.ToDos.Commands;
 using Apollo.Application.ToDos.Handlers;
 using Apollo.Core.ToDos;
+using Apollo.Domain.Common.Enums;
 using Apollo.Domain.Common.ValueObjects;
 using Apollo.Domain.People.ValueObjects;
 using Apollo.Domain.ToDos.Models;
@@ -22,7 +23,7 @@ public class CreateToDoCommandHandlerTests
     var scheduler = new Mock<IToDoReminderScheduler>();
     var handler = new CreateToDoCommandHandler(store.Object, reminderStore.Object, scheduler.Object);
 
-    var personId = new PersonId(Guid.NewGuid());
+    var personId = new PersonId(Platform.Discord, "123");
     var description = new Description("test");
     var reminderDate = DateTime.UtcNow.AddMinutes(5);
     var quartzJobId = new QuartzJobId(Guid.NewGuid());
@@ -88,7 +89,7 @@ public class CreateToDoCommandHandlerTests
     var scheduler = new Mock<IToDoReminderScheduler>();
     var handler = new CreateToDoCommandHandler(store.Object, reminderStore.Object, scheduler.Object);
 
-    var personId = new PersonId(Guid.NewGuid());
+    var personId = new PersonId(Platform.Discord, "123");
     var description = new Description("test");
 
     _ = store

@@ -9,7 +9,7 @@ namespace Apollo.Core.People;
 /// </summary>
 public interface IPersonCache
 {
-  Task<Result<bool?>> GetAccessAsync(Username username);
-  Task<Result> SetAccessAsync(Username username, bool hasAccess);
-  Task<Result> InvalidateAccessAsync(Username username);
+  Task<Result<bool?>> GetAccessAsync(PersonId personId);
+  Task<Result> SetAccessAsync(PersonId personId, bool hasAccess);
+  Task<Result> InvalidateAccessAsync(PersonId personId);
 }

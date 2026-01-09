@@ -18,4 +18,7 @@ public sealed record CreateToDoRequest
 
   [DataMember(Order = 4)]
   public DateTime? ReminderDate { get; init; }
+
+  [DataMember(Order = 5)]
+  public required string ProviderId { get; init; }
 }

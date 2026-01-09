@@ -15,4 +15,7 @@ public sealed record NewMessageRequest
 
   [DataMember(Order = 3)]
   public required Platform Platform { get; init; }
+
+  [DataMember(Order = 4)]
+  public required string ProviderId { get; init; }
 }

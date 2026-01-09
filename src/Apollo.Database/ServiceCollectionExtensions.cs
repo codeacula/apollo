@@ -42,7 +42,8 @@ public static class ServiceCollectionExtensions
 
         _ = options.Schema.For<DbPerson>()
           .Identity(x => x.Id)
-          .UniqueIndex(x => x.Username);
+          .Index(x => x.Username)
+          .Index(x => new { x.Platform, x.ProviderId }, idx => idx.IsUnique = true);
 
         _ = options.Events.AddEventType<PersonCreatedEvent>();
         _ = options.Events.AddEventType<AccessGrantedEvent>();
@@ -51,14 +52,16 @@ public static class ServiceCollectionExtensions
         _ = options.Events.AddEventType<PersonTimeZoneUpdatedEvent>();
 
         _ = options.Schema.For<DbConversation>()
-          .Identity(x => x.Id);
+          .Identity(x => x.Id)
+          .Index(x => new { x.PersonPlatform, x.PersonProviderId });
 
         _ = options.Events.AddEventType<ConversationStartedEvent>();
         _ = options.Events.AddEventType<UserSentMessageEvent>();
         _ = options.Events.AddEventType<ApolloRepliedEvent>();
 
         _ = options.Schema.For<DbToDo>()
-          .Identity(x => x.Id);
+          .Identity(x => x.Id)
+          .Index(x => new { x.PersonPlatform, x.PersonProviderId });
 
         _ = options.Events.AddEventType<ToDoCreatedEvent>();
         _ = options.Events.AddEventType<ToDoUpdatedEvent>();

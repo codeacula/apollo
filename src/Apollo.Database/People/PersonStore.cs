@@ -13,30 +13,16 @@ namespace Apollo.Database.People;
 
 public sealed class PersonStore(SuperAdminConfig SuperAdminConfig, IDocumentSession session, TimeProvider timeProvider) : IPersonStore
 {
-  public async Task<Result<Person>> GetByUsernameAsync(Username username, CancellationToken cancellationToken = default)
-  {
-    try
-    {
-      var dbUserResult = await session.Query<DbPerson>().FirstOrDefaultAsync(u => u.Username == username.Value && u.Platform == username.Platform, cancellationToken);
-
-      return dbUserResult is not null ? Result.Ok((Person)dbUserResult) : Result.Fail<Person>($"User with username {username.Value} not found");
-    }
-    catch (Exception ex)
-    {
-      return Result.Fail(ex.Message);
-    }
-  }
-
   public async Task<Result<Person>> CreateAsync(PersonId id, Username username, CancellationToken cancellationToken = default)
   {
     try
     {
       var time = timeProvider.GetUtcDateTime();
-      var pce = new PersonCreatedEvent(id, username.Value, username.Platform, time);
+      var pce = new PersonCreatedEvent(id.Value, username.Value, id.Platform, id.ProviderId, time);
 
       var events = new List<object> { pce };
 
-      if (IsSuperAdmin(username))
+      if (IsSuperAdmin(id, username))
       {
         events.Add(new AccessGrantedEvent(id.Value, time));
       }
@@ -54,10 +40,10 @@ public sealed class PersonStore(SuperAdminConfig SuperAdminConfig, IDocumentSess
     }
   }
 
-  private bool IsSuperAdmin(Username username)
+  private bool IsSuperAdmin(PersonId personId, Username username)
   {
     return !string.IsNullOrWhiteSpace(SuperAdminConfig.DiscordUsername)
-      && username.Platform == Platform.Discord
+      && personId.Platform == Platform.Discord
       && string.Equals(username.Value, SuperAdminConfig.DiscordUsername, StringComparison.OrdinalIgnoreCase);
   }
 
@@ -79,7 +65,8 @@ public sealed class PersonStore(SuperAdminConfig SuperAdminConfig, IDocumentSess
   {
     try
     {
-      var dbUser = await session.Query<DbPerson>().FirstOrDefaultAsync(u => u.Id == id.Value, cancellationToken);
+      var dbUser = await session.Query<DbPerson>()
+        .FirstOrDefaultAsync(u => u.Platform == id.Platform && u.ProviderId == id.ProviderId, cancellationToken);
       return dbUser is null ? Result.Fail<Person>($"User with ID {id} not found") : Result.Ok((Person)dbUser);
     }
     catch (Exception ex)
@@ -126,7 +113,9 @@ public sealed class PersonStore(SuperAdminConfig SuperAdminConfig, IDocumentSess
     try
     {
       var time = timeProvider.GetUtcDateTime();
-      _ = session.Events.Append(person.Id.Value, new NotificationChannelAddedEvent(person.Id.Value, channel.Type, channel.Identifier, time));
+      _ = session.Events.Append(
+        person.Id.Value,
+        new NotificationChannelAddedEvent(person.Id.Platform, person.Id.ProviderId, channel.Type, channel.Identifier, time));
 
       await session.SaveChangesAsync(cancellationToken);
 
@@ -143,7 +132,9 @@ public sealed class PersonStore(SuperAdminConfig SuperAdminConfig, IDocumentSess
     try
     {
       var time = timeProvider.GetUtcDateTime();
-      _ = session.Events.Append(person.Id.Value, new NotificationChannelRemovedEvent(person.Id.Value, channel.Type, channel.Identifier, time));
+      _ = session.Events.Append(
+        person.Id.Value,
+        new NotificationChannelRemovedEvent(person.Id.Platform, person.Id.ProviderId, channel.Type, channel.Identifier, time));
 
       await session.SaveChangesAsync(cancellationToken);
 
@@ -160,7 +151,15 @@ public sealed class PersonStore(SuperAdminConfig SuperAdminConfig, IDocumentSess
     try
     {
       var time = timeProvider.GetUtcDateTime();
-      _ = session.Events.Append(person.Id.Value, new NotificationChannelToggledEvent(person.Id.Value, channel.Type, channel.Identifier, channel.IsEnabled, time));
+      _ = session.Events.Append(
+        person.Id.Value,
+        new NotificationChannelToggledEvent(
+          person.Id.Platform,
+          person.Id.ProviderId,
+          channel.Type,
+          channel.Identifier,
+          channel.IsEnabled,
+          time));
 
       await session.SaveChangesAsync(cancellationToken);
 

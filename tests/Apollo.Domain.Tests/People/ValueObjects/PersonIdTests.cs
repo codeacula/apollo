@@ -1,3 +1,4 @@
+using Apollo.Domain.Common.Enums;
 using Apollo.Domain.People.ValueObjects;
 
 namespace Apollo.Domain.Tests.People.ValueObjects;
@@ -5,26 +6,12 @@ namespace Apollo.Domain.Tests.People.ValueObjects;
 public class PersonIdTests
 {
   [Fact]
-  public void ImplicitCastToGuidReturnsValue()
-  {
-    // Arrange
-    var guid = Guid.NewGuid();
-
-    // Act
-    Guid result = new PersonId(guid);
-
-    // Assert
-    Assert.Equal(guid, result);
-  }
-
-  [Fact]
   public void PersonIdEqualityWorksCorrectly()
   {
     // Arrange
-    var guid = Guid.NewGuid();
-    var personId1 = new PersonId(guid);
-    var personId2 = new PersonId(guid);
-    var personId3 = new PersonId(Guid.NewGuid());
+    var personId1 = new PersonId(Platform.Discord, "123");
+    var personId2 = new PersonId(Platform.Discord, "123");
+    var personId3 = new PersonId(Platform.Discord, "456");
 
     // Act & Assert
     Assert.Equal(personId1, personId2);
@@ -32,15 +19,28 @@ public class PersonIdTests
   }
 
   [Fact]
-  public void PersonIdValueIsAccessible()
+  public void PersonIdValueIncludesPlatform()
   {
     // Arrange
-    var guid = Guid.NewGuid();
+    var personId = new PersonId(Platform.Discord, "123");
 
     // Act
-    var personId = new PersonId(guid);
+    var value = personId.Value;
 
     // Assert
-    Assert.Equal(guid, personId.Value);
+    Assert.Equal("Discord:123", value);
+  }
+
+  [Fact]
+  public void PersonIdParseRoundTripWorks()
+  {
+    // Arrange
+    var personId = new PersonId(Platform.Discord, "123");
+
+    // Act
+    var parsed = PersonId.Parse(personId.Value);
+
+    // Assert
+    Assert.Equal(personId, parsed);
   }
 }

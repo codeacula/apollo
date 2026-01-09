@@ -68,7 +68,8 @@ public sealed class ConversationStore(IDocumentSession session, TimeProvider tim
       var ev = new ConversationStartedEvent
       {
         Id = conversationId,
-        PersonId = id.Value,
+        PersonPlatform = id.Platform,
+        PersonProviderId = id.ProviderId,
         CreatedOn = timeProvider.GetUtcDateTime()
       };
 
@@ -102,7 +103,8 @@ public sealed class ConversationStore(IDocumentSession session, TimeProvider tim
   {
     try
     {
-      var conversation = await session.Query<DbConversation>().FirstOrDefaultAsync(u => u.PersonId == personId.Value, cancellationToken);
+      var conversation = await session.Query<DbConversation>()
+        .FirstOrDefaultAsync(u => u.PersonPlatform == personId.Platform && u.PersonProviderId == personId.ProviderId, cancellationToken);
       return conversation is null ? Result.Fail<Conversation>("No conversation found.") : Result.Ok((Conversation)conversation);
     }
     catch (Exception ex)
@@ -115,7 +117,8 @@ public sealed class ConversationStore(IDocumentSession session, TimeProvider tim
   {
     try
     {
-      var conversation = await session.Query<DbConversation>().FirstOrDefaultAsync(u => u.PersonId == personId.Value, cancellationToken);
+      var conversation = await session.Query<DbConversation>()
+        .FirstOrDefaultAsync(u => u.PersonPlatform == personId.Platform && u.PersonProviderId == personId.ProviderId, cancellationToken);
 
       return conversation is not null ? Result.Ok((Conversation)conversation) : await CreateAsync(personId, cancellationToken);
     }

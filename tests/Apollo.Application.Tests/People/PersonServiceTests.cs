@@ -32,10 +32,11 @@ public class PersonServiceTests
   public async Task GetOrCreateAsyncWithValidUsernameReturnsExistingUserAsync()
   {
     // Arrange
-    var username = new Username("testuser", Platform.Discord);
+    var username = new Username("testuser");
+    var personId = new PersonId(Platform.Discord, "123");
     var expectedPerson = new Person
     {
-      Id = new PersonId(Guid.NewGuid()),
+      Id = personId,
       Username = username,
       HasAccess = new HasAccess(true),
       CreatedOn = new CreatedOn(DateTime.UtcNow),
@@ -43,11 +44,11 @@ public class PersonServiceTests
     };
 
     _ = _mockPersonStore
-      .Setup(x => x.GetByUsernameAsync(username, It.IsAny<CancellationToken>()))
+      .Setup(x => x.GetAsync(personId, It.IsAny<CancellationToken>()))
       .ReturnsAsync(Result.Ok(expectedPerson));
 
     // Act
-    var result = await _personService.GetOrCreateAsync(username);
+    var result = await _personService.GetOrCreateAsync(personId, username);
 
     // Assert
     Assert.True(result.IsSuccess);
@@ -60,10 +61,11 @@ public class PersonServiceTests
   public async Task GetOrCreateAsyncWithValidUsernameCreatesNewUserWhenNotFoundAsync()
   {
     // Arrange
-    var username = new Username("newuser", Platform.Discord);
+    var username = new Username("newuser");
+    var personId = new PersonId(Platform.Discord, "123");
     var createdPerson = new Person
     {
-      Id = new PersonId(Guid.NewGuid()),
+      Id = personId,
       Username = username,
       HasAccess = new HasAccess(false),
       CreatedOn = new CreatedOn(DateTime.UtcNow),
@@ -71,30 +73,31 @@ public class PersonServiceTests
     };
 
     _ = _mockPersonStore
-      .Setup(x => x.GetByUsernameAsync(username, It.IsAny<CancellationToken>()))
+      .Setup(x => x.GetAsync(personId, It.IsAny<CancellationToken>()))
       .ReturnsAsync(Result.Fail<Person>("User not found"));
 
     _ = _mockPersonStore
-      .Setup(x => x.CreateAsync(It.IsAny<PersonId>(), username, It.IsAny<CancellationToken>()))
+      .Setup(x => x.CreateAsync(personId, username, It.IsAny<CancellationToken>()))
       .ReturnsAsync(Result.Ok(createdPerson));
 
     // Act
-    var result = await _personService.GetOrCreateAsync(username);
+    var result = await _personService.GetOrCreateAsync(personId, username);
 
     // Assert
     Assert.True(result.IsSuccess);
     Assert.Equal(createdPerson.Username, result.Value.Username);
-    _mockPersonStore.Verify(x => x.CreateAsync(It.IsAny<PersonId>(), username, It.IsAny<CancellationToken>()), Times.Once);
+    _mockPersonStore.Verify(x => x.CreateAsync(personId, username, It.IsAny<CancellationToken>()), Times.Once);
   }
 
   [Fact]
   public async Task GetOrCreateAsyncWithInvalidUsernameReturnsFailureAsync()
   {
     // Arrange
-    var username = new Username("", Platform.Discord);
+    var username = new Username(string.Empty);
+    var personId = new PersonId(Platform.Discord, "123");
 
     // Act
-    var result = await _personService.GetOrCreateAsync(username);
+    var result = await _personService.GetOrCreateAsync(personId, username);
 
     // Assert
     Assert.True(result.IsFailed);
@@ -105,10 +108,11 @@ public class PersonServiceTests
   public async Task GrantAccessAsyncWithValidUsernameGrantsAccessAsync()
   {
     // Arrange
-    var username = new Username("testuser", Platform.Discord);
+    var username = new Username("testuser");
+    var personId = new PersonId(Platform.Discord, "123");
     var person = new Person
     {
-      Id = new PersonId(Guid.NewGuid()),
+      Id = personId,
       Username = username,
       HasAccess = new HasAccess(false),
       CreatedOn = new CreatedOn(DateTime.UtcNow),
@@ -116,7 +120,7 @@ public class PersonServiceTests
     };
 
     _ = _mockPersonStore
-      .Setup(x => x.GetByUsernameAsync(username, It.IsAny<CancellationToken>()))
+      .Setup(x => x.GetAsync(personId, It.IsAny<CancellationToken>()))
       .ReturnsAsync(Result.Ok(person));
 
     _ = _mockPersonStore
@@ -124,7 +128,7 @@ public class PersonServiceTests
       .ReturnsAsync(Result.Ok());
 
     // Act
-    var result = await _personService.GrantAccessAsync(username);
+    var result = await _personService.GrantAccessAsync(personId);
 
     // Assert
     Assert.True(result.IsSuccess);
@@ -132,31 +136,31 @@ public class PersonServiceTests
   }
 
   [Fact]
-  public async Task GrantAccessAsyncWithInvalidUsernameReturnsFailureAsync()
+  public async Task GrantAccessAsyncWithInvalidPersonIdReturnsFailureAsync()
   {
     // Arrange
-    var username = new Username("", Platform.Discord);
+    var personId = new PersonId(Platform.Discord, string.Empty);
 
     // Act
-    var result = await _personService.GrantAccessAsync(username);
+    var result = await _personService.GrantAccessAsync(personId);
 
     // Assert
     Assert.True(result.IsFailed);
-    Assert.Contains("Invalid username", result.Errors[0].Message);
+    Assert.Contains("Invalid person id", result.Errors[0].Message);
   }
 
   [Fact]
   public async Task GrantAccessAsyncWithNonExistentUserReturnsFailureAsync()
   {
     // Arrange
-    var username = new Username("nonexistent", Platform.Discord);
+    var personId = new PersonId(Platform.Discord, "123");
 
     _ = _mockPersonStore
-      .Setup(x => x.GetByUsernameAsync(username, It.IsAny<CancellationToken>()))
+      .Setup(x => x.GetAsync(personId, It.IsAny<CancellationToken>()))
       .ReturnsAsync(Result.Fail<Person>("User not found"));
 
     // Act
-    var result = await _personService.GrantAccessAsync(username);
+    var result = await _personService.GrantAccessAsync(personId);
 
     // Assert
     Assert.True(result.IsFailed);
@@ -164,17 +168,17 @@ public class PersonServiceTests
   }
 
   [Fact]
-  public async Task HasAccessAsyncWithValidUsernameReturnsCachedValueAsync()
+  public async Task HasAccessAsyncWithValidPersonIdReturnsCachedValueAsync()
   {
     // Arrange
-    var username = new Username("testuser", Platform.Discord);
+    var personId = new PersonId(Platform.Discord, "123");
 
     _ = _mockPersonCache
-      .Setup(x => x.GetAccessAsync(username))
+      .Setup(x => x.GetAccessAsync(personId))
       .ReturnsAsync(Result.Ok<bool?>(true));
 
     // Act
-    var result = await _personService.HasAccessAsync(username);
+    var result = await _personService.HasAccessAsync(personId);
 
     // Assert
     Assert.True(result.IsSuccess);
@@ -182,31 +186,31 @@ public class PersonServiceTests
   }
 
   [Fact]
-  public async Task HasAccessAsyncWithInvalidUsernameReturnsFailureAsync()
+  public async Task HasAccessAsyncWithInvalidPersonIdReturnsFailureAsync()
   {
     // Arrange
-    var username = new Username("", Platform.Discord);
+    var personId = new PersonId(Platform.Discord, "");
 
     // Act
-    var result = await _personService.HasAccessAsync(username);
+    var result = await _personService.HasAccessAsync(personId);
 
     // Assert
     Assert.True(result.IsFailed);
-    Assert.Contains("Invalid username", result.Errors[0].Message);
+    Assert.Contains("Invalid person id", result.Errors[0].Message);
   }
 
   [Fact]
   public async Task HasAccessAsyncWhenCacheFailsReturnsFailureAsync()
   {
     // Arrange
-    var username = new Username("testuser", Platform.Discord);
+    var personId = new PersonId(Platform.Discord, "123");
 
     _ = _mockPersonCache
-      .Setup(x => x.GetAccessAsync(username))
+      .Setup(x => x.GetAccessAsync(personId))
       .ReturnsAsync(Result.Fail<bool?>("Cache error"));
 
     // Act
-    var result = await _personService.HasAccessAsync(username);
+    var result = await _personService.HasAccessAsync(personId);
 
     // Assert
     Assert.True(result.IsFailed);
@@ -217,14 +221,14 @@ public class PersonServiceTests
   public async Task HasAccessAsyncWhenCacheReturnsNullReturnsTrueAsync()
   {
     // Arrange
-    var username = new Username("testuser", Platform.Discord);
+    var personId = new PersonId(Platform.Discord, "123");
 
     _ = _mockPersonCache
-      .Setup(x => x.GetAccessAsync(username))
+      .Setup(x => x.GetAccessAsync(personId))
       .ReturnsAsync(Result.Ok<bool?>(null));
 
     // Act
-    var result = await _personService.HasAccessAsync(username);
+    var result = await _personService.HasAccessAsync(personId);
 
     // Assert
     Assert.True(result.IsSuccess);

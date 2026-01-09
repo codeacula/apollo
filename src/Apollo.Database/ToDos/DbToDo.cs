@@ -1,4 +1,5 @@
 using Apollo.Database.ToDos.Events;
+using Apollo.Domain.Common.Enums;
 using Apollo.Domain.ToDos.Models;
 
 using JasperFx.Events;
@@ -8,7 +9,8 @@ namespace Apollo.Database.ToDos;
 public sealed record DbToDo
 {
   public required Guid Id { get; init; }
-  public required Guid PersonId { get; init; }
+  public required Platform PersonPlatform { get; init; }
+  public required string PersonProviderId { get; init; }
   public required string Description { get; init; }
   public DateTime? DueDate { get; init; }
   public bool IsCompleted { get; init; }
@@ -21,7 +23,7 @@ public sealed record DbToDo
     return new()
     {
       Id = new(dbToDo.Id),
-      PersonId = new(dbToDo.PersonId),
+      PersonId = new(dbToDo.PersonPlatform, dbToDo.PersonProviderId),
       Description = new(dbToDo.Description),
       Priority = new(0),
       Energy = new(0),
@@ -40,7 +42,8 @@ public sealed record DbToDo
     return new()
     {
       Id = eventData.Id,
-      PersonId = eventData.PersonId,
+      PersonPlatform = eventData.PersonPlatform,
+      PersonProviderId = eventData.PersonProviderId,
       Description = eventData.Description,
       IsCompleted = false,
       IsDeleted = false,

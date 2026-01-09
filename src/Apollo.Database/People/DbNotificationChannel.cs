@@ -7,7 +7,8 @@ namespace Apollo.Database.People;
 /// </summary>
 public sealed record DbNotificationChannel
 {
-  public Guid PersonId { get; init; }
+  public required Platform PersonPlatform { get; init; }
+  public required string PersonProviderId { get; init; }
   public NotificationChannelType Type { get; init; }
   public required string Identifier { get; init; }
   public bool IsEnabled { get; init; }

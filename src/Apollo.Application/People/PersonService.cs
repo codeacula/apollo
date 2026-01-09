@@ -13,7 +13,7 @@ public sealed class PersonService(
   IPersonCache personCache,
   ILogger<PersonService> logger) : IPersonService
 {
-  public async Task<Result<Person>> GetOrCreateAsync(Username username, CancellationToken cancellationToken = default)
+  public async Task<Result<Person>> GetOrCreateAsync(PersonId personId, Username username, CancellationToken cancellationToken = default)
   {
     if (!username.IsValid)
     {
@@ -21,52 +21,58 @@ public sealed class PersonService(
       return Result.Fail<Person>("Invalid username");
     }
 
-    var userResult = await personStore.GetByUsernameAsync(username, cancellationToken);
+    if (!personId.IsValid)
+    {
+      ValidationLogs.InvalidPersonId(logger);
+      return Result.Fail<Person>("Invalid person id");
+    }
+
+    var userResult = await personStore.GetAsync(personId, cancellationToken);
 
     if (userResult.IsSuccess)
     {
       return userResult;
     }
 
-    var createResult = await personStore.CreateAsync(new(Guid.NewGuid()), username, cancellationToken);
+    var createResult = await personStore.CreateAsync(personId, username, cancellationToken);
 
     return createResult.IsSuccess ? createResult : Result.Fail<Person>($"Failed to get or create user {username}");
   }
 
-  public async Task<Result> GrantAccessAsync(Username username, CancellationToken cancellationToken = default)
+  public async Task<Result> GrantAccessAsync(PersonId personId, CancellationToken cancellationToken = default)
   {
-    if (!username.IsValid)
+    if (!personId.IsValid)
     {
-      ValidationLogs.InvalidUsername(logger);
-      return Result.Fail("Invalid username");
+      ValidationLogs.InvalidPersonId(logger);
+      return Result.Fail("Invalid person id");
     }
 
-    var userResult = await personStore.GetByUsernameAsync(username, cancellationToken);
+    var userResult = await personStore.GetAsync(personId, cancellationToken);
 
     return userResult.IsFailed
-      ? Result.Fail($"User {username} not found")
+      ? Result.Fail($"User {personId.Value} not found")
       : await personStore.GrantAccessAsync(userResult.Value.Id, cancellationToken);
   }
 
-  public async Task<Result<HasAccess>> HasAccessAsync(Username username, CancellationToken cancellationToken = default)
+  public async Task<Result<HasAccess>> HasAccessAsync(PersonId personId, CancellationToken cancellationToken = default)
   {
-    if (!username.IsValid)
+    if (!personId.IsValid)
     {
-      ValidationLogs.InvalidUsername(logger);
-      return Result.Fail<HasAccess>("Invalid username");
+      ValidationLogs.InvalidPersonId(logger);
+      return Result.Fail<HasAccess>("Invalid person id");
     }
 
-    var cacheResult = await personCache.GetAccessAsync(username);
+    var cacheResult = await personCache.GetAccessAsync(personId);
     if (cacheResult.IsFailed)
     {
-      ValidationLogs.CacheCheckFailed(logger, username, cacheResult.GetErrorMessages());
-      return Result.Fail<HasAccess>($"Cache error for user {username}: fail-closed policy denies access");
+      ValidationLogs.CacheCheckFailed(logger, personId.Value, cacheResult.GetErrorMessages());
+      return Result.Fail<HasAccess>($"Cache error for user {personId.Value}: fail-closed policy denies access");
     }
 
     if (cacheResult.Value.HasValue)
     {
       var cachedAccess = cacheResult.Value.Value;
-      ValidationLogs.CacheHit(logger, username, cachedAccess);
+      ValidationLogs.CacheHit(logger, personId.Value, cachedAccess);
       return Result.Ok(new HasAccess(cachedAccess));
     }
 

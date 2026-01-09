@@ -28,18 +28,19 @@ public class IncomingMessageHandler(
     }
 
     // Validate user access
-    var username = new Username(arg.Author.Username, ApolloPlatform.Discord);
-    var validationResult = await personCache.GetAccessAsync(username);
+    var username = new Username(arg.Author.Username);
+    var personId = new PersonId(ApolloPlatform.Discord, arg.Author.Id.ToString());
+    var validationResult = await personCache.GetAccessAsync(personId);
     if (validationResult.IsFailed)
     {
-      ValidationLogs.ValidationFailed(logger, username, validationResult.GetErrorMessages());
+      ValidationLogs.ValidationFailed(logger, personId.Value, validationResult.GetErrorMessages());
       _ = await arg.SendAsync("Sorry, unable to verify your access at this time.");
       return;
     }
 
     if (!validationResult.Value ?? false)
     {
-      ValidationLogs.AccessDenied(logger, username);
+      ValidationLogs.AccessDenied(logger, personId.Value);
       _ = await arg.SendAsync("Sorry, you do not have access to use this bot.");
       return;
     }
@@ -51,7 +52,8 @@ public class IncomingMessageHandler(
       {
         Username = username,
         Content = arg.Content,
-        Platform = ApolloPlatform.Discord
+        Platform = ApolloPlatform.Discord,
+        ProviderId = personId.ProviderId
       };
 
       var response = await apolloAPIClient.SendMessageAsync(newMessage);
