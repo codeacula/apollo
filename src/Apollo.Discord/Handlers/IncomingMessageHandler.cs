@@ -1,5 +1,3 @@
-using Apollo.Core;
-using Apollo.Core.API;
 using Apollo.Core.Conversations;
 using Apollo.Core.Logging;
 using Apollo.Core.People;
@@ -14,7 +12,7 @@ using ApolloPlatform = Apollo.Domain.Common.Enums.Platform;
 namespace Apollo.Discord.Handlers;
 
 public class IncomingMessageHandler(
-  IApolloAPIClient apolloAPIClient,
+  IApolloServiceClient apolloAPIClient,
   IPersonCache personCache,
   DiscordConfig discordConfig,
   ILogger<IncomingMessageHandler> logger) : IMessageCreateGatewayHandler
@@ -29,7 +27,7 @@ public class IncomingMessageHandler(
 
     // Validate user access
     var username = new Username(arg.Author.Username);
-    var personId = new PersonId(ApolloPlatform.Discord, arg.Author.Id.ToString());
+    var personId = new PersonId(ApolloPlatform.Discord, arg.Author.Id.ToString(CultureInfo.InvariantCulture));
     var validationResult = await personCache.GetAccessAsync(personId);
     if (validationResult.IsFailed)
     {

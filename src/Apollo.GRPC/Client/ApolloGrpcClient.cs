@@ -23,7 +23,7 @@ using GrpcToDoDTO = Apollo.GRPC.Contracts.ToDoDTO;
 
 namespace Apollo.GRPC.Client;
 
-public class ApolloGrpcClient : IApolloGrpcClient, IApolloAPIClient, IDisposable
+public class ApolloGrpcClient : IApolloGrpcClient, IApolloServiceClient, IDisposable
 {
   public IApolloGrpcService ApolloGrpcService { get; }
   private readonly GrpcChannel _channel;

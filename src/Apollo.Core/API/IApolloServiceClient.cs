@@ -8,7 +8,7 @@ using FluentResults;
 
 namespace Apollo.Core.API;
 
-public interface IApolloAPIClient
+public interface IApolloServiceClient
 {
   Task<Result<ToDo>> CreateToDoAsync(CreateToDoRequest request);
   Task<Result<IEnumerable<ToDoSummary>>> GetToDosAsync(PersonId personId, bool includeCompleted = false);
