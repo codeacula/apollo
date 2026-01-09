@@ -1,5 +1,3 @@
-using Apollo.Core;
-using Apollo.Core.API;
 using Apollo.Core.ToDos.Requests;
 using Apollo.Discord.Components;
 using Apollo.Domain.People.ValueObjects;
@@ -49,7 +47,7 @@ public class SlashCommandModule(IApolloServiceClient apolloAPIClient) : Applicat
       Platform = ApolloPlatform.Discord,
       Description = todo,
       ReminderDate = null,
-      ProviderId = Context.User.Id.ToString()
+      ProviderId = Context.User.Id.ToString(CultureInfo.InvariantCulture)
     };
 
     var result = await apolloAPIClient.CreateToDoAsync(createRequest);
@@ -81,7 +79,7 @@ public class SlashCommandModule(IApolloServiceClient apolloAPIClient) : Applicat
   {
     _ = await RespondAsync(InteractionCallback.DeferredMessage());
 
-    var personId = new PersonId(ApolloPlatform.Discord, Context.User.Id.ToString());
+    var personId = new PersonId(ApolloPlatform.Discord, Context.User.Id.ToString(CultureInfo.InvariantCulture));
     var result = await apolloAPIClient.GetToDosAsync(personId, includeCompleted);
 
     if (result.IsFailed)

@@ -84,22 +84,22 @@ public sealed class ProcessIncomingMessageCommandHandler(
     }
   }
 
+  [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0046:Convert to conditional expression", Justification = "Looks better this way.")]
   private static Result<Reply> ValidateRequest(ProcessIncomingMessageCommand request)
   {
     if (string.IsNullOrWhiteSpace(request.Message.Username))
     {
       return Result.Fail<Reply>("No username was provided.");
     }
-    else if (string.IsNullOrWhiteSpace(request.Message.ProviderId))
+
+    if (string.IsNullOrWhiteSpace(request.Message.ProviderId))
     {
       return Result.Fail<Reply>("No provider id was provided.");
     }
-    else
-    {
-      return string.IsNullOrWhiteSpace(request.Message.Content)
-        ? Result.Fail<Reply>("Message content is empty.")
-        : (Result<Reply>)Result.Ok();
-    }
+
+    return string.IsNullOrWhiteSpace(request.Message.Content)
+      ? Result.Fail<Reply>("Message content is empty.")
+      : (Result<Reply>)Result.Ok();
   }
 
   private async Task<Result<Person>> GetOrCreateUserAsync(PersonId personId, Username username, CancellationToken cancellationToken)
