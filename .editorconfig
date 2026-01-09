@@ -33,6 +33,9 @@ dotnet_diagnostic.IDE0022.severity = silent
 # IDE0072: Add missing cases
 dotnet_diagnostic.IDE0072.severity = silent
 
+# SKEXP0040: Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+dotnet_diagnostic.SKEXP0040.severity = silent
+
 [*.md]
 indent_style = space
 indent_size = 4
