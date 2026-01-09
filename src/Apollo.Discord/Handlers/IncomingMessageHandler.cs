@@ -14,7 +14,7 @@ using ApolloPlatform = Apollo.Domain.Common.Enums.Platform;
 namespace Apollo.Discord.Handlers;
 
 public class IncomingMessageHandler(
-  IApolloAPIClient apolloAPIClient,
+  IApolloServiceClient apolloAPIClient,
   IPersonCache personCache,
   DiscordConfig discordConfig,
   ILogger<IncomingMessageHandler> logger) : IMessageCreateGatewayHandler
