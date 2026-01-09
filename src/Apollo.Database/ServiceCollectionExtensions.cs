@@ -43,7 +43,7 @@ public static class ServiceCollectionExtensions
         _ = options.Schema.For<DbPerson>()
           .Identity(x => x.Id)
           .Index(x => x.Username)
-          .Index(x => new { x.Platform, x.ProviderId });
+          .Index(x => new { x.Platform, x.ProviderId }, idx => idx.IsUnique = true);
 
         _ = options.Events.AddEventType<PersonCreatedEvent>();
         _ = options.Events.AddEventType<AccessGrantedEvent>();

@@ -8,11 +8,11 @@ namespace Apollo.GRPC.Contracts;
 public sealed record GetPersonToDosRequest
 {
   [DataMember(Order = 1)]
-  public required Platform Platform { get; init; }
+  public required string ProviderId { get; init; }
 
   [DataMember(Order = 2)]
-  public bool IncludeCompleted { get; init; }
+  public required Platform Platform { get; init; }
 
   [DataMember(Order = 3)]
-  public required string ProviderId { get; init; }
+  public bool IncludeCompleted { get; init; }
 }
