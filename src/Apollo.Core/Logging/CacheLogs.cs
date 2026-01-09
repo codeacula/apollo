@@ -53,6 +53,6 @@ public static partial class CacheLogs
   [LoggerMessage(
     EventId = 3007,
     Level = LogLevel.Error,
-    Message = "Unable to set value to cache: {ErrorMessages}")]
-  public static partial void UnableToSetToCache(ILogger logger, string[] errorMessages);
+    Message = "Unable to set value to cache: {ErrorMessage}")]
+  public static partial void UnableToSetToCache(ILogger logger, string errorMessage);
 }
