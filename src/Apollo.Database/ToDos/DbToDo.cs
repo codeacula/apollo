@@ -1,6 +1,5 @@
 using Apollo.Database.ToDos.Events;
 using Apollo.Domain.Common.Enums;
-using Apollo.Domain.People.ValueObjects;
 using Apollo.Domain.ToDos.Models;
 
 using JasperFx.Events;

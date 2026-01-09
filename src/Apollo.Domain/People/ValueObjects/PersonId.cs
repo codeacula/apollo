@@ -44,12 +44,7 @@ public readonly record struct PersonId(Platform Platform, string ProviderId)
 
   public static PersonId Parse(string value)
   {
-    if (!TryParse(value, out var personId))
-    {
-      throw new FormatException($"Invalid person id value '{value}'.");
-    }
-
-    return personId;
+    return !TryParse(value, out var personId) ? throw new FormatException($"Invalid person id value '{value}'.") : personId;
   }
 
   public override string ToString()

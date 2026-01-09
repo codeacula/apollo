@@ -1,7 +1,6 @@
 using Apollo.Database.Conversations.Events;
 using Apollo.Domain.Common.Enums;
 using Apollo.Domain.Conversations.Models;
-using Apollo.Domain.People.ValueObjects;
 
 using JasperFx.Events;
 

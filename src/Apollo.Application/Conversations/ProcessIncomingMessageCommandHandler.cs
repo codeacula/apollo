@@ -94,13 +94,11 @@ public sealed class ProcessIncomingMessageCommandHandler(
     {
       return Result.Fail<Reply>("No provider id was provided.");
     }
-    else if (string.IsNullOrWhiteSpace(request.Message.Content))
-    {
-      return Result.Fail<Reply>("Message content is empty.");
-    }
     else
     {
-      return (Result<Reply>)Result.Ok();
+      return string.IsNullOrWhiteSpace(request.Message.Content)
+        ? Result.Fail<Reply>("Message content is empty.")
+        : (Result<Reply>)Result.Ok();
     }
   }
 
