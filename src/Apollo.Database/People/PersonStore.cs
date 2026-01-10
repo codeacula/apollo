@@ -76,6 +76,20 @@ public sealed class PersonStore(SuperAdminConfig SuperAdminConfig, IDocumentSess
     }
   }
 
+  public async Task<Result<Person>> GetByPlatformIdAsync(PlatformId platformId, CancellationToken cancellationToken = default)
+  {
+    try
+    {
+      var dbUser = await session.Query<DbPerson>()
+        .FirstOrDefaultAsync(u => u.PlatformUserId == platformId.PlatformUserId && u.Platform == platformId.Platform, cancellationToken);
+      return dbUser is null ? Result.Fail<Person>($"User with ID {platformId.PlatformUserId} from {platformId.Platform} not found") : Result.Ok((Person)dbUser);
+    }
+    catch (Exception ex)
+    {
+      return Result.Fail(ex.Message);
+    }
+  }
+
   public async Task<Result> GrantAccessAsync(PersonId id, CancellationToken cancellationToken = default)
   {
     try

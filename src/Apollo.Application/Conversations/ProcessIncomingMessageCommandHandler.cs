@@ -42,10 +42,10 @@ public sealed class ProcessIncomingMessageCommandHandler(
         return validationResult;
       }
 
-      var personId = new PersonId(request.Message.Platform, request.Message.PlatformId);
-      var username = new Username(request.Message.Username);
+      var platformId = new PlatformId(request.Message.Username, request.Message.PlatformUserId, request.Message.Platform);
+      var username = new Username();
 
-      var userResult = await personService.GetOrCreateAsync(personId, username, cancellationToken);
+      var userResult = await personService.GetOrCreateAsync(platformId, cancellationToken);
       if (userResult.IsFailed)
       {
         return Result.Fail<Reply>($"Failed to get or create user {username.Value}: {userResult.GetErrorMessages()}");
@@ -55,7 +55,7 @@ public sealed class ProcessIncomingMessageCommandHandler(
 
       if (!person.HasAccess.Value)
       {
-        return Result.Fail<Reply>($"User {personId.Value} does not have access.");
+        return Result.Fail<Reply>($"User {person.Username} does not have access.");
       }
 
       await CaptureNotificationChannelAsync(request, username, person, cancellationToken);
@@ -87,9 +87,9 @@ public sealed class ProcessIncomingMessageCommandHandler(
       return Result.Fail<Reply>("No username was provided.");
     }
 
-    if (string.IsNullOrWhiteSpace(request.Message.PlatformId))
+    if (string.IsNullOrWhiteSpace(request.Message.PlatformUserId))
     {
-      return Result.Fail<Reply>("No provider id was provided.");
+      return Result.Fail<Reply>("No platform id was provided.");
     }
 
     return string.IsNullOrWhiteSpace(request.Message.Content)

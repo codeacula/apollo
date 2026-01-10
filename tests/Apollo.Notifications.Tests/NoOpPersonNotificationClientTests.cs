@@ -15,7 +15,7 @@ public class NoOpPersonNotificationClientTests
     var client = new NoOpPersonNotificationClient();
     var person = new Person
     {
-      Id = new PersonId(Domain.Common.Enums.Platform.Discord, "111"),
+      Id = new PersonId(Guid.NewGuid()),
       Username = new Username("testuser"),
       HasAccess = new HasAccess(true),
       NotificationChannels = [],

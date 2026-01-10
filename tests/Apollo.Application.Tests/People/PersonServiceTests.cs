@@ -1,7 +1,6 @@
 using Apollo.Application.People;
 using Apollo.Core.People;
 using Apollo.Domain.Common.Enums;
-using Apollo.Domain.Common.ValueObjects;
 using Apollo.Domain.People.Models;
 using Apollo.Domain.People.ValueObjects;
 
@@ -29,149 +28,93 @@ public class PersonServiceTests
   }
 
   [Fact]
-  public async Task GetOrCreateAsyncWithValidUsernameReturnsExistingUserAsync()
+  public async Task GetOrCreateAsyncWithExistingUserReturnsUserAsync()
   {
     // Arrange
-    var username = new Username("testuser");
-    var personId = new PersonId(Platform.Discord, "123");
+    var platformId = new PlatformId("testuser", "123", Platform.Discord);
+    var personId = new PersonId(Guid.NewGuid());
     var expectedPerson = new Person
     {
       Id = personId,
-      Username = username,
+      Username = new Username("testuser"),
       HasAccess = new HasAccess(true),
       CreatedOn = new CreatedOn(DateTime.UtcNow),
       UpdatedOn = new UpdatedOn(DateTime.UtcNow)
     };
 
     _ = _mockPersonStore
-      .Setup(x => x.GetAsync(personId, It.IsAny<CancellationToken>()))
+      .Setup(x => x.GetByPlatformIdAsync(platformId, It.IsAny<CancellationToken>()))
       .ReturnsAsync(Result.Ok(expectedPerson));
 
     // Act
-    var result = await _personService.GetOrCreateAsync(personId, username);
+    var result = await _personService.GetOrCreateAsync(platformId);
 
     // Assert
     Assert.True(result.IsSuccess);
     Assert.Equal(expectedPerson.Id, result.Value.Id);
     Assert.Equal(expectedPerson.Username, result.Value.Username);
-    _mockPersonStore.Verify(x => x.CreateAsync(It.IsAny<PersonId>(), It.IsAny<Username>(), It.IsAny<CancellationToken>()), Times.Never);
+    _mockPersonStore.Verify(x => x.CreateByPlatformIdAsync(It.IsAny<PlatformId>(), It.IsAny<CancellationToken>()), Times.Never);
   }
 
   [Fact]
-  public async Task GetOrCreateAsyncWithValidUsernameCreatesNewUserWhenNotFoundAsync()
+  public async Task GetOrCreateAsyncCreatesNewUserWhenNotFoundAsync()
   {
     // Arrange
-    var username = new Username("newuser");
-    var personId = new PersonId(Platform.Discord, "123");
+    var platformId = new PlatformId("newuser", "456", Platform.Discord);
+    var personId = new PersonId(Guid.NewGuid());
     var createdPerson = new Person
     {
       Id = personId,
-      Username = username,
+      Username = new Username("newuser"),
       HasAccess = new HasAccess(false),
       CreatedOn = new CreatedOn(DateTime.UtcNow),
       UpdatedOn = new UpdatedOn(DateTime.UtcNow)
     };
 
     _ = _mockPersonStore
-      .Setup(x => x.GetAsync(personId, It.IsAny<CancellationToken>()))
+      .Setup(x => x.GetByPlatformIdAsync(platformId, It.IsAny<CancellationToken>()))
       .ReturnsAsync(Result.Fail<Person>("User not found"));
 
     _ = _mockPersonStore
-      .Setup(x => x.CreateAsync(personId, username, It.IsAny<CancellationToken>()))
+      .Setup(x => x.CreateByPlatformIdAsync(platformId, It.IsAny<CancellationToken>()))
       .ReturnsAsync(Result.Ok(createdPerson));
 
     // Act
-    var result = await _personService.GetOrCreateAsync(personId, username);
+    var result = await _personService.GetOrCreateAsync(platformId);
 
     // Assert
     Assert.True(result.IsSuccess);
     Assert.Equal(createdPerson.Username, result.Value.Username);
-    _mockPersonStore.Verify(x => x.CreateAsync(personId, username, It.IsAny<CancellationToken>()), Times.Once);
+    _mockPersonStore.Verify(x => x.CreateByPlatformIdAsync(platformId, It.IsAny<CancellationToken>()), Times.Once);
   }
 
   [Fact]
-  public async Task GetOrCreateAsyncWithInvalidUsernameReturnsFailureAsync()
+  public async Task GetOrCreateAsyncReturnsFailureWhenBothGetAndCreateFailAsync()
   {
     // Arrange
-    var username = new Username(string.Empty);
-    var personId = new PersonId(Platform.Discord, "123");
-
-    // Act
-    var result = await _personService.GetOrCreateAsync(personId, username);
-
-    // Assert
-    Assert.True(result.IsFailed);
-    Assert.Contains("Invalid username", result.Errors[0].Message);
-  }
-
-  [Fact]
-  public async Task GrantAccessAsyncWithValidUsernameGrantsAccessAsync()
-  {
-    // Arrange
-    var username = new Username("testuser");
-    var personId = new PersonId(Platform.Discord, "123");
-    var person = new Person
-    {
-      Id = personId,
-      Username = username,
-      HasAccess = new HasAccess(false),
-      CreatedOn = new CreatedOn(DateTime.UtcNow),
-      UpdatedOn = new UpdatedOn(DateTime.UtcNow)
-    };
+    var platformId = new PlatformId("failuser", "789", Platform.Discord);
 
     _ = _mockPersonStore
-      .Setup(x => x.GetAsync(personId, It.IsAny<CancellationToken>()))
-      .ReturnsAsync(Result.Ok(person));
-
-    _ = _mockPersonStore
-      .Setup(x => x.GrantAccessAsync(person.Id, It.IsAny<CancellationToken>()))
-      .ReturnsAsync(Result.Ok());
-
-    // Act
-    var result = await _personService.GrantAccessAsync(personId);
-
-    // Assert
-    Assert.True(result.IsSuccess);
-    _mockPersonStore.Verify(x => x.GrantAccessAsync(person.Id, It.IsAny<CancellationToken>()), Times.Once);
-  }
-
-  [Fact]
-  public async Task GrantAccessAsyncWithInvalidPersonIdReturnsFailureAsync()
-  {
-    // Arrange
-    var personId = new PersonId(Platform.Discord, string.Empty);
-
-    // Act
-    var result = await _personService.GrantAccessAsync(personId);
-
-    // Assert
-    Assert.True(result.IsFailed);
-    Assert.Contains("Invalid person id", result.Errors[0].Message);
-  }
-
-  [Fact]
-  public async Task GrantAccessAsyncWithNonExistentUserReturnsFailureAsync()
-  {
-    // Arrange
-    var personId = new PersonId(Platform.Discord, "123");
-
-    _ = _mockPersonStore
-      .Setup(x => x.GetAsync(personId, It.IsAny<CancellationToken>()))
+      .Setup(x => x.GetByPlatformIdAsync(platformId, It.IsAny<CancellationToken>()))
       .ReturnsAsync(Result.Fail<Person>("User not found"));
 
+    _ = _mockPersonStore
+      .Setup(x => x.CreateByPlatformIdAsync(platformId, It.IsAny<CancellationToken>()))
+      .ReturnsAsync(Result.Fail<Person>("Database error"));
+
     // Act
-    var result = await _personService.GrantAccessAsync(personId);
+    var result = await _personService.GetOrCreateAsync(platformId);
 
     // Assert
     Assert.True(result.IsFailed);
-    Assert.Contains("not found", result.Errors[0].Message);
+    Assert.Contains("Failed to get or create user", result.Errors[0].Message);
   }
 
   [Fact]
   public async Task HasAccessAsyncWithValidPersonIdReturnsCachedValueAsync()
   {
     // Arrange
-    var personId = new PersonId(Platform.Discord, "123");
+    var personId = new PersonId(Guid.NewGuid());
 
     _ = _mockPersonCache
       .Setup(x => x.GetAccessAsync(personId))
@@ -186,24 +129,10 @@ public class PersonServiceTests
   }
 
   [Fact]
-  public async Task HasAccessAsyncWithInvalidPersonIdReturnsFailureAsync()
-  {
-    // Arrange
-    var personId = new PersonId(Platform.Discord, "");
-
-    // Act
-    var result = await _personService.HasAccessAsync(personId);
-
-    // Assert
-    Assert.True(result.IsFailed);
-    Assert.Contains("Invalid person id", result.Errors[0].Message);
-  }
-
-  [Fact]
   public async Task HasAccessAsyncWhenCacheFailsReturnsFailureAsync()
   {
     // Arrange
-    var personId = new PersonId(Platform.Discord, "123");
+    var personId = new PersonId(Guid.NewGuid());
 
     _ = _mockPersonCache
       .Setup(x => x.GetAccessAsync(personId))
@@ -221,7 +150,7 @@ public class PersonServiceTests
   public async Task HasAccessAsyncWhenCacheReturnsNullReturnsTrueAsync()
   {
     // Arrange
-    var personId = new PersonId(Platform.Discord, "123");
+    var personId = new PersonId(Guid.NewGuid());
 
     _ = _mockPersonCache
       .Setup(x => x.GetAccessAsync(personId))
@@ -233,5 +162,61 @@ public class PersonServiceTests
     // Assert
     Assert.True(result.IsSuccess);
     Assert.True(result.Value.Value);
+  }
+
+  [Fact]
+  public async Task HasAccessAsyncWhenCacheReturnsFalseReturnsFalseAsync()
+  {
+    // Arrange
+    var personId = new PersonId(Guid.NewGuid());
+
+    _ = _mockPersonCache
+      .Setup(x => x.GetAccessAsync(personId))
+      .ReturnsAsync(Result.Ok<bool?>(false));
+
+    // Act
+    var result = await _personService.HasAccessAsync(personId);
+
+    // Assert
+    Assert.True(result.IsSuccess);
+    Assert.False(result.Value.Value);
+  }
+
+  [Fact]
+  public async Task MapPlatformIdToPersonIdAsyncSucceedsWhenCacheSucceedsAsync()
+  {
+    // Arrange
+    var platformId = new PlatformId("testuser", "123", Platform.Discord);
+    var personId = new PersonId(Guid.NewGuid());
+
+    _ = _mockPersonCache
+      .Setup(x => x.MapPlatformIdToPersonIdAsync(platformId, personId))
+      .ReturnsAsync(Result.Ok());
+
+    // Act
+    var result = await _personService.MapPlatformIdToPersonIdAsync(platformId, personId);
+
+    // Assert
+    Assert.True(result.IsSuccess);
+    _mockPersonCache.Verify(x => x.MapPlatformIdToPersonIdAsync(platformId, personId), Times.Once);
+  }
+
+  [Fact]
+  public async Task MapPlatformIdToPersonIdAsyncReturnsFailureWhenCacheFailsAsync()
+  {
+    // Arrange
+    var platformId = new PlatformId("testuser", "123", Platform.Discord);
+    var personId = new PersonId(Guid.NewGuid());
+
+    _ = _mockPersonCache
+      .Setup(x => x.MapPlatformIdToPersonIdAsync(platformId, personId))
+      .ReturnsAsync(Result.Fail("Cache write error"));
+
+    // Act
+    var result = await _personService.MapPlatformIdToPersonIdAsync(platformId, personId);
+
+    // Assert
+    Assert.True(result.IsFailed);
+    Assert.Contains("Failed to map platform ID to person ID", result.Errors[0].Message);
   }
 }

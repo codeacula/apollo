@@ -73,4 +73,10 @@ public static partial class ValidationLogs
     Level = LogLevel.Information,
     Message = "Access denied for person id: {PersonId}")]
   public static partial void AccessDenied(ILogger logger, string personId);
+
+  [LoggerMessage(
+    EventId = 3111,
+    Level = LogLevel.Warning,
+    Message = "Failed to map PlatformId {PlatformUserId} on {Platform} to PersonId {PersonId}: {Errors}")]
+  public static partial void PlatformIdMappingFailed(ILogger logger, string platformUserId, string platform, string personId, string errors);
 }

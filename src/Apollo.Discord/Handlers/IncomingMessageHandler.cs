@@ -1,3 +1,5 @@
+using System.Globalization;
+
 using Apollo.Core.Conversations;
 using Apollo.Core.Logging;
 using Apollo.Core.People;
@@ -14,6 +16,7 @@ namespace Apollo.Discord.Handlers;
 public class IncomingMessageHandler(
   IApolloServiceClient apolloServiceClient,
   IPersonCache personCache,
+  IPersonService personService,
   DiscordConfig discordConfig,
   ILogger<IncomingMessageHandler> logger) : IMessageCreateGatewayHandler
 {
@@ -25,9 +28,41 @@ public class IncomingMessageHandler(
       return;
     }
 
-    // Validate user access
-    var platformId = new PlatformId(arg.Author.Id.ToString(CultureInfo.InvariantCulture), ApolloPlatform.Discord);
-    var validationResult = await personCache.GetAccessAsync(platformId);
+    // Resolve PlatformId to PersonId
+    var platformId = new PlatformId(arg.Author.Username, arg.Author.Id.ToString(CultureInfo.InvariantCulture), ApolloPlatform.Discord);
+    var personIdResult = await personCache.GetPersonIdAsync(platformId);
+
+    PersonId personId;
+    if (personIdResult.IsFailed)
+    {
+      ValidationLogs.ValidationFailed(logger, platformId.PlatformUserId, personIdResult.GetErrorMessages());
+      _ = await arg.SendAsync("Sorry, unable to verify your access at this time.");
+      return;
+    }
+
+    if (personIdResult.Value.HasValue)
+    {
+      personId = personIdResult.Value.Value;
+    }
+    else
+    {
+      // PersonId not in cache, get or create via service
+      var getOrCreateResult = await personService.GetOrCreateAsync(platformId);
+      if (getOrCreateResult.IsFailed)
+      {
+        ValidationLogs.ValidationFailed(logger, platformId.PlatformUserId, getOrCreateResult.GetErrorMessages());
+        _ = await arg.SendAsync("Sorry, unable to verify your access at this time.");
+        return;
+      }
+
+      personId = getOrCreateResult.Value.Id;
+
+      // Cache the mapping for future lookups
+      _ = await personService.MapPlatformIdToPersonIdAsync(platformId, personId);
+    }
+
+    // Validate user access using PersonId
+    var validationResult = await personCache.GetAccessAsync(personId);
 
     if (validationResult.IsFailed || !(validationResult.Value ?? false))
     {
@@ -43,7 +78,7 @@ public class IncomingMessageHandler(
         Username = arg.Author.Username,
         Content = arg.Content,
         Platform = ApolloPlatform.Discord,
-        PlatformId = platformId.PlatformUserId
+        PlatformUserId = platformId.PlatformUserId
       };
 
       var response = await apolloServiceClient.SendMessageAsync(newMessage);

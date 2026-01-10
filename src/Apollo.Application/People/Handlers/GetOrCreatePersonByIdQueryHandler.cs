@@ -11,7 +11,7 @@ public sealed class GetOrCreatePersonByIdQueryHandler(IPersonStore personStore)
 {
   public async Task<Result<Person>> Handle(GetOrCreatePersonByIdQuery request, CancellationToken cancellationToken)
   {
-    if (!request.Username.IsValid || !request.PersonId.IsValid)
+    if (!request.Username.IsValid || !request.PersonId)
     {
       return Result.Fail<Person>("Invalid username or person id");
     }
