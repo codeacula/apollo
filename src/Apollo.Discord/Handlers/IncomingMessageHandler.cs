@@ -1,5 +1,3 @@
-using System.Globalization;
-
 using Apollo.Core.Conversations;
 using Apollo.Core.Logging;
 using Apollo.Core.People;

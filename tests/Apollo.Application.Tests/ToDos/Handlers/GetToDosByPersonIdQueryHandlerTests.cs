@@ -21,7 +21,7 @@ public class GetToDosByPersonIdQueryHandlerTests
     // Arrange
     var toDoStore = new Mock<IToDoStore>();
     var handler = new GetToDosByPersonIdQueryHandler(toDoStore.Object);
-    var personId = new PersonId(Platform.Discord, "123");
+    var personId = new PersonId(Guid.NewGuid());
     var toDos = new[] { CreateToDo(personId), CreateToDo(personId) };
 
     _ = toDoStore
@@ -43,7 +43,7 @@ public class GetToDosByPersonIdQueryHandlerTests
     // Arrange
     var toDoStore = new Mock<IToDoStore>();
     var handler = new GetToDosByPersonIdQueryHandler(toDoStore.Object);
-    var personId = new PersonId(Platform.Discord, "123");
+    var personId = new PersonId(Guid.NewGuid());
 
     _ = toDoStore
       .Setup(x => x.GetByPersonIdAsync(personId, false, It.IsAny<CancellationToken>()))
@@ -63,7 +63,7 @@ public class GetToDosByPersonIdQueryHandlerTests
     // Arrange
     var toDoStore = new Mock<IToDoStore>();
     var handler = new GetToDosByPersonIdQueryHandler(toDoStore.Object);
-    var personId = new PersonId(Platform.Discord, "123");
+    var personId = new PersonId(Guid.NewGuid());
 
     _ = toDoStore
       .Setup(x => x.GetByPersonIdAsync(personId, false, It.IsAny<CancellationToken>()))

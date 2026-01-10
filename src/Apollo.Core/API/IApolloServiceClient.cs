@@ -11,6 +11,6 @@ namespace Apollo.Core.API;
 public interface IApolloServiceClient
 {
   Task<Result<ToDo>> CreateToDoAsync(CreateToDoRequest request);
-  Task<Result<IEnumerable<ToDoSummary>>> GetToDosAsync(PersonId personId, bool includeCompleted = false);
+  Task<Result<IEnumerable<ToDoSummary>>> GetToDosAsync(PlatformId platformId, bool includeCompleted = false);
   Task<Result<string>> SendMessageAsync(NewMessageRequest request);
 }

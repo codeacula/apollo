@@ -5,4 +5,4 @@ using FluentResults;
 
 namespace Apollo.Application.People.Queries;
 
-public sealed record GetOrCreatePersonByIdQuery(PersonId PersonId, Username Username) : IRequest<Result<Person>>;
+public sealed record GetOrCreatePersonByPlatformIdQuery(PlatformId PlatformId) : IRequest<Result<Person>>;

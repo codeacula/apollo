@@ -117,7 +117,7 @@ public class AddReminderCommandHandlerTests
       Energy = new Energy(0),
       Id = toDoId,
       Interest = new Interest(0),
-      PersonId = new PersonId(Platform.Discord, "123"),
+      PersonId = new PersonId(Guid.NewGuid()),
       Priority = new Priority(0),
       UpdatedOn = new UpdatedOn(DateTime.UtcNow)
     };

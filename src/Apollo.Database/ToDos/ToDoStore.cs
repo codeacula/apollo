@@ -35,7 +35,7 @@ public sealed class ToDoStore(IDocumentSession session, TimeProvider timeProvide
     try
     {
       var time = timeProvider.GetUtcDateTime();
-      var ev = new ToDoCreatedEvent(id.Value, personId, description.Value, time);
+      var ev = new ToDoCreatedEvent(id.Value, personId.Value, description.Value, time);
 
       _ = session.Events.StartStream<DbToDo>(id.Value, [ev]);
       await session.SaveChangesAsync(cancellationToken);

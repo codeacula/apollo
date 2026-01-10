@@ -55,7 +55,7 @@ public class PersonCacheTests
 
     // Assert
     Assert.True(result.IsSuccess);
-    Assert.NotNull(result.Value);
+    _ = Assert.NotNull(result.Value);
     Assert.Equal(expectedGuid, result.Value.Value.Value);
   }
 

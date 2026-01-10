@@ -1,4 +1,5 @@
 using Apollo.Application.Conversations;
+using Apollo.Application.People.Handlers;
 using Apollo.Application.People.Queries;
 using Apollo.Application.ToDos.Commands;
 using Apollo.Application.ToDos.Queries;
@@ -27,9 +28,9 @@ public sealed class ApolloGrpcService(
 
   public async Task<GrpcResult<ToDoDTO>> CreateToDoAsync(CreateToDoRequest request)
   {
-    var username = new Username(request.Username);
-    var personId = new PersonId(request.Platform, request.ProviderId);
-    var personResult = await mediator.Send(new GetOrCreatePersonByIdQuery(personId, username));
+    var username = new Username();
+    var personId = new PlatformId(request.Username, request.PlatformId, request.Platform);
+    var personResult = await mediator.Send(new GetOrCreatePersonByPlatformIdQuery(personId, username));
 
     if (personResult.IsFailed)
     {

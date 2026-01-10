@@ -2,10 +2,8 @@ using Apollo.Core.API;
 using Apollo.Core.Conversations;
 using Apollo.Core.ToDos.Responses;
 using Apollo.Domain.Common.Enums;
-using Apollo.Domain.Common.ValueObjects;
 using Apollo.Domain.People.ValueObjects;
 using Apollo.Domain.ToDos.Models;
-using Apollo.Domain.ToDos.ValueObjects;
 using Apollo.GRPC.Interceptors;
 using Apollo.GRPC.Service;
 
@@ -50,11 +48,11 @@ public class ApolloGrpcClient : IApolloGrpcClient, IApolloServiceClient, IDispos
   {
     var grpcRequest = new GrpcCreateToDoRequest
     {
-      Username = request.Username,
       Platform = request.Platform,
+      PlatformId = request.PlatformId,
+      Title = request.Title,
       Description = request.Description,
       ReminderDate = request.ReminderDate,
-      ProviderId = request.PlatformId
     };
 
     Result<GrpcToDoDTO> grpcResponse = await ApolloGrpcService.CreateToDoAsync(grpcRequest);
@@ -71,13 +69,13 @@ public class ApolloGrpcClient : IApolloGrpcClient, IApolloServiceClient, IDispos
       Result.Fail(string.Join("; ", grpcResult.Errors.Select(e => e.Message)));
   }
 
-  public async Task<Result<IEnumerable<ToDoSummary>>> GetToDosAsync(PlatformId personId, bool includeCompleted = false)
+  public async Task<Result<IEnumerable<ToDoSummary>>> GetToDosAsync(PlatformId platformId, bool includeCompleted = false)
   {
     var grpcRequest = new GrpcGetPersonToDosRequest
     {
-      Platform = personId.Platform,
+      Platform = platformId.Platform,
       IncludeCompleted = includeCompleted,
-      PlatformUserId = personId.PlatformUserId
+      PlatformUserId = platformId.PlatformUserId
     };
 
     Result<GrpcToDoDTO[]> grpcResponse = await ApolloGrpcService.GetPersonToDosAsync(grpcRequest);
@@ -104,7 +102,7 @@ public class ApolloGrpcClient : IApolloGrpcClient, IApolloServiceClient, IDispos
     return new ToDo
     {
       Id = new(dto.Id),
-      PersonId = new(dto.PersonPlatform, dto.PersonProviderId),
+      PersonId = new(dto.PersonId),
       Description = new(dto.Description),
       Priority = new(Level.Blue),
       Energy = new(Level.Blue),

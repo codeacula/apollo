@@ -66,7 +66,7 @@ public class GetToDoByIdQueryHandlerTests
       Energy = new Energy(Level.Blue),
       Id = toDoId,
       Interest = new Interest(Level.Blue),
-      PersonId = new PersonId(Platform.Discord, "123"),
+      PersonId = new PersonId(Guid.NewGuid()),
       Priority = new Priority(Level.Blue),
       Reminders = [],
       UpdatedOn = new UpdatedOn(DateTime.UtcNow)
