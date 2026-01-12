@@ -103,7 +103,7 @@ public sealed class ConversationStore(IDocumentSession session, TimeProvider tim
     try
     {
       var conversation = await session.Query<DbConversation>()
-        .FirstOrDefaultAsync(u => u.Id == personId.Value, cancellationToken);
+        .FirstOrDefaultAsync(u => u.PersonId == personId.Value, cancellationToken);
       return conversation is null ? Result.Fail<Conversation>("No conversation found.") : Result.Ok((Conversation)conversation);
     }
     catch (Exception ex)
