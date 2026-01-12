@@ -13,70 +13,58 @@ public sealed class PersonService(
   IPersonCache personCache,
   ILogger<PersonService> logger) : IPersonService
 {
-  public async Task<Result<Person>> GetOrCreateAsync(PersonId personId, Username username, CancellationToken cancellationToken = default)
+  public async Task<Result<Person>> GetOrCreateAsync(PlatformId platformId, CancellationToken ct = default)
   {
-    if (!username.IsValid)
-    {
-      ValidationLogs.InvalidUsername(logger);
-      return Result.Fail<Person>("Invalid username");
-    }
-
-    if (!personId.IsValid)
-    {
-      ValidationLogs.InvalidPersonId(logger);
-      return Result.Fail<Person>("Invalid person id");
-    }
-
-    var userResult = await personStore.GetAsync(personId, cancellationToken);
+    var userResult = await personStore.GetByPlatformIdAsync(platformId, ct);
 
     if (userResult.IsSuccess)
     {
       return userResult;
     }
 
-    var createResult = await personStore.CreateAsync(personId, username, cancellationToken);
+    var createResult = await personStore.CreateByPlatformIdAsync(platformId, ct);
 
-    return createResult.IsSuccess ? createResult : Result.Fail<Person>($"Failed to get or create user {username}");
-  }
-
-  public async Task<Result> GrantAccessAsync(PersonId personId, CancellationToken cancellationToken = default)
-  {
-    if (!personId.IsValid)
+    if (createResult.IsFailed)
     {
-      ValidationLogs.InvalidPersonId(logger);
-      return Result.Fail("Invalid person id");
+      return Result.Fail<Person>($"Failed to get or create user {platformId.Username} on {platformId.Platform}: {createResult.GetErrorMessages()}");
     }
 
-    var userResult = await personStore.GetAsync(personId, cancellationToken);
+    // Best-effort: populate PlatformId -> PersonId cache mapping after successful creation.
+    // Cache mapping failures are logged inside MapPlatformIdToPersonIdAsync and do not affect the result.
+    _ = await personCache.MapPlatformIdToPersonIdAsync(platformId, createResult.Value.Id);
 
-    return userResult.IsFailed
-      ? Result.Fail($"User {personId.Value} not found")
-      : await personStore.GrantAccessAsync(userResult.Value.Id, cancellationToken);
+    return createResult;
   }
 
-  public async Task<Result<HasAccess>> HasAccessAsync(PersonId personId, CancellationToken cancellationToken = default)
+  public async Task<Result<HasAccess>> HasAccessAsync(PlatformId platformId)
   {
-    if (!personId.IsValid)
-    {
-      ValidationLogs.InvalidPersonId(logger);
-      return Result.Fail<HasAccess>("Invalid person id");
-    }
-
-    var cacheResult = await personCache.GetAccessAsync(personId);
+    var cacheResult = await personCache.GetAccessAsync(platformId);
     if (cacheResult.IsFailed)
     {
-      ValidationLogs.CacheCheckFailed(logger, personId.Value, cacheResult.GetErrorMessages());
-      return Result.Fail<HasAccess>($"Cache error for user {personId.Value}: fail-closed policy denies access");
+      ValidationLogs.CacheCheckFailed(logger, platformId.PlatformUserId, platformId.Platform, cacheResult.GetErrorMessages());
+      return Result.Fail<HasAccess>($"Cache error for user {platformId.PlatformUserId}: fail-closed policy denies access");
     }
 
     if (cacheResult.Value.HasValue)
     {
       var cachedAccess = cacheResult.Value.Value;
-      ValidationLogs.CacheHit(logger, personId.Value, cachedAccess);
+      ValidationLogs.CacheHit(logger, platformId.PlatformUserId, platformId.Platform, cachedAccess);
       return Result.Ok(new HasAccess(cachedAccess));
     }
 
     // Default to returning true because the API will update cache if needed and reject the request
     return Result.Ok(new HasAccess(true));
+  }
+
+  public async Task<Result> MapPlatformIdToPersonIdAsync(PlatformId platformId, PersonId personId, CancellationToken ct = default)
+  {
+    var cacheResult = await personCache.MapPlatformIdToPersonIdAsync(platformId, personId);
+    if (cacheResult.IsFailed)
+    {
+      ValidationLogs.PlatformIdMappingFailed(logger, platformId.PlatformUserId, platformId.Platform.ToString(), personId.Value.ToString(), cacheResult.GetErrorMessages());
+      return Result.Fail($"Failed to map platform ID to person ID: {cacheResult.GetErrorMessages()}");
+    }
+
+    return Result.Ok();
   }
 }

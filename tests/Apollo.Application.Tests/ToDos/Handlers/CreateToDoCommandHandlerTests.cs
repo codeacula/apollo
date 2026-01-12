@@ -23,7 +23,7 @@ public class CreateToDoCommandHandlerTests
     var scheduler = new Mock<IToDoReminderScheduler>();
     var handler = new CreateToDoCommandHandler(store.Object, reminderStore.Object, scheduler.Object);
 
-    var personId = new PersonId(Platform.Discord, "123");
+    var personId = new PersonId(Guid.NewGuid());
     var description = new Description("test");
     var reminderDate = DateTime.UtcNow.AddMinutes(5);
     var quartzJobId = new QuartzJobId(Guid.NewGuid());
@@ -89,7 +89,7 @@ public class CreateToDoCommandHandlerTests
     var scheduler = new Mock<IToDoReminderScheduler>();
     var handler = new CreateToDoCommandHandler(store.Object, reminderStore.Object, scheduler.Object);
 
-    var personId = new PersonId(Platform.Discord, "123");
+    var personId = new PersonId(Guid.NewGuid());
     var description = new Description("test");
 
     _ = store

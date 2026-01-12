@@ -10,11 +10,11 @@ public class SuperAdminConfigTests
     // Arrange & Act
     var config = new SuperAdminConfig
     {
-      DiscordUsername = "admin"
+      DiscordUserId = "admin"
     };
 
     // Assert
-    Assert.Equal("admin", config.DiscordUsername);
+    Assert.Equal("admin", config.DiscordUserId);
   }
 
   [Fact]
@@ -23,11 +23,11 @@ public class SuperAdminConfigTests
     // Arrange & Act
     var config = new SuperAdminConfig
     {
-      DiscordUsername = null
+      DiscordUserId = null
     };
 
     // Assert
-    Assert.Null(config.DiscordUsername);
+    Assert.Null(config.DiscordUserId);
   }
 
   [Fact]
@@ -37,6 +37,6 @@ public class SuperAdminConfigTests
     var config = new SuperAdminConfig();
 
     // Assert
-    Assert.Null(config.DiscordUsername);
+    Assert.Null(config.DiscordUserId);
   }
 }

@@ -1,3 +1,5 @@
+using Apollo.Domain.Common.Enums;
+
 using Microsoft.Extensions.Logging;
 
 namespace Apollo.Core.Logging;
@@ -23,8 +25,8 @@ public static partial class ValidationLogs
   [LoggerMessage(
     EventId = 3101,
     Level = LogLevel.Debug,
-    Message = "Cache hit for person id {PersonId}: {HasAccess}")]
-  public static partial void CacheHit(ILogger logger, string personId, bool hasAccess);
+    Message = "Cache hit for person id {PersonPlatformId} on {Platform}: : {HasAccess}")]
+  public static partial void CacheHit(ILogger logger, string personPlatformId, Platform platform, bool hasAccess);
 
   [LoggerMessage(
     EventId = 3102,
@@ -35,8 +37,8 @@ public static partial class ValidationLogs
   [LoggerMessage(
     EventId = 3103,
     Level = LogLevel.Error,
-    Message = "Cache check failed for person id {PersonId}: {Errors}")]
-  public static partial void CacheCheckFailed(ILogger logger, string personId, string errors);
+    Message = "Cache check failed for person id {PersonPlatformId} on {Platform}: {Errors}")]
+  public static partial void CacheCheckFailed(ILogger logger, string personPlatformId, Platform platform, string errors);
 
   [LoggerMessage(
     EventId = 3104,
@@ -73,4 +75,10 @@ public static partial class ValidationLogs
     Level = LogLevel.Information,
     Message = "Access denied for person id: {PersonId}")]
   public static partial void AccessDenied(ILogger logger, string personId);
+
+  [LoggerMessage(
+    EventId = 3111,
+    Level = LogLevel.Warning,
+    Message = "Failed to map PlatformId {PlatformUserId} on {Platform} to PersonId {PersonId}: {Errors}")]
+  public static partial void PlatformIdMappingFailed(ILogger logger, string platformUserId, string platform, string personId, string errors);
 }

@@ -11,10 +11,15 @@
     <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.10" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.10" />
     <PackageReference Include="Microsoft.SemanticKernel" Version="1.66.0" />
+    <PackageReference Include="Microsoft.SemanticKernel.Prompty" Version="1.68.0-beta" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Apollo.Core\Apollo.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Prompts\Apollo.prompty" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

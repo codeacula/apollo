@@ -2,10 +2,8 @@ using Apollo.Core.API;
 using Apollo.Core.Conversations;
 using Apollo.Core.ToDos.Responses;
 using Apollo.Domain.Common.Enums;
-using Apollo.Domain.Common.ValueObjects;
 using Apollo.Domain.People.ValueObjects;
 using Apollo.Domain.ToDos.Models;
-using Apollo.Domain.ToDos.ValueObjects;
 using Apollo.GRPC.Interceptors;
 using Apollo.GRPC.Service;
 
@@ -17,8 +15,10 @@ using Grpc.Net.Client;
 using ProtoBuf.Grpc.Client;
 
 using CoreCreateToDoRequest = Apollo.Core.ToDos.Requests.CreateToDoRequest;
+using CoreNewMessageRequest = Apollo.Core.Conversations.NewMessageRequest;
 using GrpcCreateToDoRequest = Apollo.GRPC.Contracts.CreateToDoRequest;
 using GrpcGetPersonToDosRequest = Apollo.GRPC.Contracts.GetPersonToDosRequest;
+using GrpcNewMessageRequest = Apollo.GRPC.Contracts.NewMessageRequest;
 using GrpcToDoDTO = Apollo.GRPC.Contracts.ToDoDTO;
 
 namespace Apollo.GRPC.Client;
@@ -50,11 +50,12 @@ public class ApolloGrpcClient : IApolloGrpcClient, IApolloServiceClient, IDispos
   {
     var grpcRequest = new GrpcCreateToDoRequest
     {
-      Username = request.Username,
-      Platform = request.Platform,
+      Platform = request.PlatformId.Platform,
+      PlatformUserId = request.PlatformId.PlatformUserId,
+      Username = request.PlatformId.Username,
+      Title = request.Title,
       Description = request.Description,
       ReminderDate = request.ReminderDate,
-      ProviderId = request.ProviderId
     };
 
     Result<GrpcToDoDTO> grpcResponse = await ApolloGrpcService.CreateToDoAsync(grpcRequest);
@@ -62,22 +63,31 @@ public class ApolloGrpcClient : IApolloGrpcClient, IApolloServiceClient, IDispos
     return grpcResponse.IsFailed ? Result.Fail<ToDo>(grpcResponse.Errors) : Result.Ok(MapToDomain(grpcResponse.Value));
   }
 
-  public async Task<Result<string>> SendMessageAsync(NewMessageRequest request)
+  public async Task<Result<string>> SendMessageAsync(CoreNewMessageRequest request)
   {
-    var grpcResult = await ApolloGrpcService.SendApolloMessageAsync(request);
+    var grpcRequest = new GrpcNewMessageRequest
+    {
+      Platform = request.PlatformId.Platform,
+      PlatformUserId = request.PlatformId.PlatformUserId,
+      Username = request.PlatformId.Username,
+      Content = request.Content
+    };
+
+    var grpcResult = await ApolloGrpcService.SendApolloMessageAsync(grpcRequest);
 
     return grpcResult.IsSuccess ?
       Result.Ok(grpcResult.Data ?? string.Empty) :
       Result.Fail(string.Join("; ", grpcResult.Errors.Select(e => e.Message)));
   }
 
-  public async Task<Result<IEnumerable<ToDoSummary>>> GetToDosAsync(PersonId personId, bool includeCompleted = false)
+  public async Task<Result<IEnumerable<ToDoSummary>>> GetToDosAsync(PlatformId platformId, bool includeCompleted = false)
   {
     var grpcRequest = new GrpcGetPersonToDosRequest
     {
-      Platform = personId.Platform,
+      Platform = platformId.Platform,
       IncludeCompleted = includeCompleted,
-      ProviderId = personId.ProviderId
+      PlatformUserId = platformId.PlatformUserId,
+      Username = platformId.Username
     };
 
     Result<GrpcToDoDTO[]> grpcResponse = await ApolloGrpcService.GetPersonToDosAsync(grpcRequest);
@@ -103,16 +113,16 @@ public class ApolloGrpcClient : IApolloGrpcClient, IApolloServiceClient, IDispos
   {
     return new ToDo
     {
-      Id = new ToDoId(dto.Id),
-      PersonId = new PersonId(dto.PersonPlatform, dto.PersonProviderId),
-      Description = new Description(dto.Description),
-      Priority = new Priority(Level.Blue),
-      Energy = new Energy(Level.Blue),
-      Interest = new Interest(Level.Blue),
+      Id = new(dto.Id),
+      PersonId = new(dto.PersonId),
+      Description = new(dto.Description),
+      Priority = new(Level.Blue),
+      Energy = new(Level.Blue),
+      Interest = new(Level.Blue),
       Reminders = [],
       DueDate = null,
-      CreatedOn = new CreatedOn(dto.CreatedOn),
-      UpdatedOn = new UpdatedOn(dto.UpdatedOn)
+      CreatedOn = new(dto.CreatedOn),
+      UpdatedOn = new(dto.UpdatedOn)
     };
   }
 }

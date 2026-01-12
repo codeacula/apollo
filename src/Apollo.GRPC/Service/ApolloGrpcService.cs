@@ -2,13 +2,14 @@ using Apollo.Application.Conversations;
 using Apollo.Application.People.Queries;
 using Apollo.Application.ToDos.Commands;
 using Apollo.Application.ToDos.Queries;
-using Apollo.Core.Conversations;
 using Apollo.Core.ToDos;
 using Apollo.Domain.People.ValueObjects;
 using Apollo.Domain.ToDos.ValueObjects;
 using Apollo.GRPC.Contracts;
 
 using MediatR;
+
+using CoreNewMessageRequest = Apollo.Core.Conversations.NewMessageRequest;
 
 namespace Apollo.GRPC.Service;
 
@@ -19,7 +20,13 @@ public sealed class ApolloGrpcService(
 {
   public async Task<GrpcResult<string>> SendApolloMessageAsync(NewMessageRequest message)
   {
-    var requestResult = await mediator.Send(new ProcessIncomingMessageCommand(message));
+    var coreRequest = new CoreNewMessageRequest
+    {
+      PlatformId = message.ToPlatformId(),
+      Content = message.Content
+    };
+
+    var requestResult = await mediator.Send(new ProcessIncomingMessageCommand(coreRequest));
     return requestResult.IsSuccess ?
       requestResult.Value.Content.Value :
       requestResult.Errors.Select(e => new GrpcError(e.Message)).ToArray();
@@ -27,9 +34,8 @@ public sealed class ApolloGrpcService(
 
   public async Task<GrpcResult<ToDoDTO>> CreateToDoAsync(CreateToDoRequest request)
   {
-    var username = new Username(request.Username);
-    var personId = new PersonId(request.Platform, request.ProviderId);
-    var personResult = await mediator.Send(new GetOrCreatePersonByIdQuery(personId, username));
+    var platformId = request.ToPlatformId();
+    var personResult = await mediator.Send(new GetOrCreatePersonByPlatformIdQuery(platformId));
 
     if (personResult.IsFailed)
     {
@@ -53,8 +59,7 @@ public sealed class ApolloGrpcService(
     return new ToDoDTO
     {
       Id = todo.Id.Value,
-      PersonPlatform = todo.PersonId.Platform,
-      PersonProviderId = todo.PersonId.ProviderId,
+      PersonId = todo.PersonId.Value,
       Description = todo.Description.Value,
       ReminderDate = request.ReminderDate,
       CreatedOn = todo.CreatedOn.Value,
@@ -76,8 +81,7 @@ public sealed class ApolloGrpcService(
     return new ToDoDTO
     {
       Id = todo.Id.Value,
-      PersonPlatform = todo.PersonId.Platform,
-      PersonProviderId = todo.PersonId.ProviderId,
+      PersonId = todo.PersonId.Value,
       Description = todo.Description.Value,
       CreatedOn = todo.CreatedOn.Value,
       UpdatedOn = todo.UpdatedOn.Value
@@ -86,8 +90,16 @@ public sealed class ApolloGrpcService(
 
   public async Task<GrpcResult<ToDoDTO[]>> GetPersonToDosAsync(GetPersonToDosRequest request)
   {
-    var personId = new PersonId(request.Platform, request.ProviderId);
-    var query = new GetToDosByPersonIdQuery(personId, request.IncludeCompleted);
+    // First, resolve PlatformUserId to PersonId
+    var platformId = new PlatformId(request.Username, request.PlatformUserId, request.Platform);
+    var personResult = await mediator.Send(new GetOrCreatePersonByPlatformIdQuery(platformId));
+
+    if (personResult.IsFailed)
+    {
+      return personResult.Errors.Select(e => new GrpcError(e.Message)).ToArray();
+    }
+
+    var query = new GetToDosByPersonIdQuery(personResult.Value.Id, request.IncludeCompleted);
     var result = await mediator.Send(query);
 
     if (result.IsFailed)
@@ -115,8 +127,7 @@ public sealed class ApolloGrpcService(
       return new ToDoDTO
       {
         Id = t.Id.Value,
-        PersonPlatform = t.PersonId.Platform,
-        PersonProviderId = t.PersonId.ProviderId,
+        PersonId = t.PersonId.Value,
         Description = t.Description.Value,
         ReminderDate = reminderDate,
         CreatedOn = t.CreatedOn.Value,

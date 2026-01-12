@@ -43,7 +43,7 @@ public static class ServiceCollectionExtensions
         _ = options.Schema.For<DbPerson>()
           .Identity(x => x.Id)
           .Index(x => x.Username)
-          .Index(x => new { x.Platform, x.ProviderId }, idx => idx.IsUnique = true);
+          .Index(x => new { x.Platform, x.PlatformUserId }, idx => idx.IsUnique = true);
 
         _ = options.Events.AddEventType<PersonCreatedEvent>();
         _ = options.Events.AddEventType<AccessGrantedEvent>();
@@ -53,7 +53,7 @@ public static class ServiceCollectionExtensions
 
         _ = options.Schema.For<DbConversation>()
           .Identity(x => x.Id)
-          .Index(x => new { x.PersonPlatform, x.PersonProviderId });
+          .Index(x => new { x.PersonId });
 
         _ = options.Events.AddEventType<ConversationStartedEvent>();
         _ = options.Events.AddEventType<UserSentMessageEvent>();
@@ -61,7 +61,7 @@ public static class ServiceCollectionExtensions
 
         _ = options.Schema.For<DbToDo>()
           .Identity(x => x.Id)
-          .Index(x => new { x.PersonPlatform, x.PersonProviderId });
+          .Index(x => x.PersonId);
 
         _ = options.Events.AddEventType<ToDoCreatedEvent>();
         _ = options.Events.AddEventType<ToDoUpdatedEvent>();

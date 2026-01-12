@@ -11,28 +11,37 @@ using Marten;
 
 namespace Apollo.Database.People;
 
-public sealed class PersonStore(SuperAdminConfig SuperAdminConfig, IDocumentSession session, TimeProvider timeProvider) : IPersonStore
+public sealed class PersonStore(SuperAdminConfig SuperAdminConfig, IDocumentSession session, TimeProvider timeProvider, IPersonCache personCache) : IPersonStore
 {
-  public async Task<Result<Person>> CreateAsync(PersonId id, Username username, CancellationToken cancellationToken = default)
+  public async Task<Result<Person>> CreateByPlatformIdAsync(PlatformId platformId, CancellationToken cancellationToken = default)
   {
     try
     {
       var time = timeProvider.GetUtcDateTime();
-      var pce = new PersonCreatedEvent(id.Value, username.Value, id.Platform, id.ProviderId, time);
+      var id = Guid.NewGuid();
+      var pce = new PersonCreatedEvent(id, platformId.Username, platformId.Platform, platformId.PlatformUserId, time);
 
       var events = new List<object> { pce };
 
-      if (IsSuperAdmin(id, username))
+      if (IsSuperAdmin(platformId))
       {
-        events.Add(new AccessGrantedEvent(id.Value, time));
+        events.Add(new AccessGrantedEvent(id, time));
       }
 
-      _ = session.Events.StartStream<DbPerson>(id.Value, events);
+      _ = session.Events.StartStream<DbPerson>(id, events);
       await session.SaveChangesAsync(cancellationToken);
 
-      var newPerson = await session.Events.AggregateStreamAsync<DbPerson>(id.Value, token: cancellationToken);
+      var newPerson = await session.Events.AggregateStreamAsync<DbPerson>(id, token: cancellationToken);
 
-      return newPerson is null ? Result.Fail<Person>($"Failed to create new user {username}") : Result.Ok((Person)newPerson);
+      if (newPerson is null)
+      {
+        return Result.Fail<Person>($"Failed to create new user {platformId.Username}");
+      }
+
+      // Best-effort: populate PlatformId -> PersonId cache mapping after successful creation
+      _ = await personCache.MapPlatformIdToPersonIdAsync(platformId, new PersonId(id));
+
+      return Result.Ok((Person)newPerson);
     }
     catch (Exception ex)
     {
@@ -40,11 +49,11 @@ public sealed class PersonStore(SuperAdminConfig SuperAdminConfig, IDocumentSess
     }
   }
 
-  private bool IsSuperAdmin(PersonId personId, Username username)
+  private bool IsSuperAdmin(PlatformId platformId)
   {
-    return !string.IsNullOrWhiteSpace(SuperAdminConfig.DiscordUsername)
-      && personId.Platform == Platform.Discord
-      && string.Equals(username.Value, SuperAdminConfig.DiscordUsername, StringComparison.OrdinalIgnoreCase);
+    return !string.IsNullOrWhiteSpace(SuperAdminConfig.DiscordUserId)
+      && platformId.Platform == Platform.Discord
+      && string.Equals(platformId.PlatformUserId, SuperAdminConfig.DiscordUserId, StringComparison.OrdinalIgnoreCase);
   }
 
   public async Task<Result<HasAccess>> GetAccessAsync(PersonId id, CancellationToken cancellationToken = default)
@@ -66,8 +75,22 @@ public sealed class PersonStore(SuperAdminConfig SuperAdminConfig, IDocumentSess
     try
     {
       var dbUser = await session.Query<DbPerson>()
-        .FirstOrDefaultAsync(u => u.Platform == id.Platform && u.ProviderId == id.ProviderId, cancellationToken);
+        .FirstOrDefaultAsync(u => u.Id == id.Value, cancellationToken);
       return dbUser is null ? Result.Fail<Person>($"User with ID {id} not found") : Result.Ok((Person)dbUser);
+    }
+    catch (Exception ex)
+    {
+      return Result.Fail(ex.Message);
+    }
+  }
+
+  public async Task<Result<Person>> GetByPlatformIdAsync(PlatformId platformId, CancellationToken cancellationToken = default)
+  {
+    try
+    {
+      var dbUser = await session.Query<DbPerson>()
+        .FirstOrDefaultAsync(u => u.PlatformUserId == platformId.PlatformUserId && u.Platform == platformId.Platform, cancellationToken);
+      return dbUser is null ? Result.Fail<Person>($"User with ID {platformId.PlatformUserId} from {platformId.Platform} not found") : Result.Ok((Person)dbUser);
     }
     catch (Exception ex)
     {
@@ -82,6 +105,9 @@ public sealed class PersonStore(SuperAdminConfig SuperAdminConfig, IDocumentSess
       _ = session.Events.Append(id.Value, new AccessGrantedEvent(id.Value, timeProvider.GetUtcDateTime()));
 
       await session.SaveChangesAsync(cancellationToken);
+
+      // Invalidate access cache after granting access
+      _ = await personCache.InvalidateAccessAsync(id);
 
       return Result.Ok();
     }
@@ -115,7 +141,7 @@ public sealed class PersonStore(SuperAdminConfig SuperAdminConfig, IDocumentSess
       var time = timeProvider.GetUtcDateTime();
       _ = session.Events.Append(
         person.Id.Value,
-        new NotificationChannelAddedEvent(person.Id.Platform, person.Id.ProviderId, channel.Type, channel.Identifier, time));
+        new NotificationChannelAddedEvent(person.PlatformId.Platform, person.PlatformId.PlatformUserId, channel.Type, channel.Identifier, time));
 
       await session.SaveChangesAsync(cancellationToken);
 
@@ -134,7 +160,7 @@ public sealed class PersonStore(SuperAdminConfig SuperAdminConfig, IDocumentSess
       var time = timeProvider.GetUtcDateTime();
       _ = session.Events.Append(
         person.Id.Value,
-        new NotificationChannelRemovedEvent(person.Id.Platform, person.Id.ProviderId, channel.Type, channel.Identifier, time));
+        new NotificationChannelRemovedEvent(person.PlatformId.Platform, person.PlatformId.PlatformUserId, channel.Type, channel.Identifier, time));
 
       await session.SaveChangesAsync(cancellationToken);
 
@@ -154,8 +180,8 @@ public sealed class PersonStore(SuperAdminConfig SuperAdminConfig, IDocumentSess
       _ = session.Events.Append(
         person.Id.Value,
         new NotificationChannelToggledEvent(
-          person.Id.Platform,
-          person.Id.ProviderId,
+          person.PlatformId.Platform,
+          person.PlatformId.PlatformUserId,
           channel.Type,
           channel.Identifier,
           channel.IsEnabled,

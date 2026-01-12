@@ -9,10 +9,10 @@ namespace Apollo.Database.People;
 
 public sealed record DbPerson
 {
-  public required string Id { get; init; }
-  public required string Username { get; init; }
+  public required Guid Id { get; init; }
   public Platform Platform { get; init; }
-  public required string ProviderId { get; init; }
+  public required string PlatformUserId { get; init; }
+  public required string Username { get; init; }
   public bool HasAccess { get; init; }
   public string? TimeZoneId { get; init; }
   public ICollection<DbNotificationChannel> NotificationChannels { get; init; } = [];
@@ -33,7 +33,8 @@ public sealed record DbPerson
 
     return new()
     {
-      Id = new(person.Platform, person.ProviderId),
+      Id = new(person.Id),
+      PlatformId = new(person.Username, person.PlatformUserId, person.Platform),
       Username = new(person.Username),
       HasAccess = new(person.HasAccess),
       TimeZoneId = timeZoneId,
@@ -49,11 +50,11 @@ public sealed record DbPerson
 
     return new()
     {
-      Id = eventData.Id,
+      Id = eventData.PersonId,
       Username = eventData.Username,
       HasAccess = false,
       Platform = eventData.Platform,
-      ProviderId = eventData.ProviderId,
+      PlatformUserId = eventData.PlatformUserId,
       CreatedOn = eventData.CreatedOn,
       UpdatedOn = eventData.CreatedOn
     };

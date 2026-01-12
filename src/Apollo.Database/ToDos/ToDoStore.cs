@@ -35,7 +35,7 @@ public sealed class ToDoStore(IDocumentSession session, TimeProvider timeProvide
     try
     {
       var time = timeProvider.GetUtcDateTime();
-      var ev = new ToDoCreatedEvent(id.Value, personId.Platform, personId.ProviderId, description.Value, time);
+      var ev = new ToDoCreatedEvent(id.Value, personId.Value, description.Value, time);
 
       _ = session.Events.StartStream<DbToDo>(id.Value, [ev]);
       await session.SaveChangesAsync(cancellationToken);
@@ -85,7 +85,7 @@ public sealed class ToDoStore(IDocumentSession session, TimeProvider timeProvide
     try
     {
       var query = session.Query<DbToDo>()
-        .Where(t => t.PersonPlatform == personId.Platform && t.PersonProviderId == personId.ProviderId && !t.IsDeleted);
+        .Where(t => t.PersonId == personId.Value && !t.IsDeleted);
 
       if (!includeCompleted)
       {

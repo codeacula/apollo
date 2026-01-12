@@ -10,7 +10,7 @@ using ApolloPlatform = Apollo.Domain.Common.Enums.Platform;
 
 namespace Apollo.Discord.Modules;
 
-public class SlashCommandModule(IApolloServiceClient apolloAPIClient) : ApplicationCommandModule<ApplicationCommandContext>
+public class SlashCommandModule(IApolloServiceClient apolloServiceClient) : ApplicationCommandModule<ApplicationCommandContext>
 {
   [SlashCommand("config", "Allows you to configure your Apollo settings.")]
   public async Task ConfigAsync()
@@ -37,20 +37,28 @@ public class SlashCommandModule(IApolloServiceClient apolloAPIClient) : Applicat
   }
 
   [SlashCommand("todo", "Quickly create a new To Do")]
-  public async Task CreateFastToDoAsync([SlashCommandParameter(Name = "todo", Description = "The To Do you wish to create.")] string todo)
+  public async Task CreateFastToDoAsync(
+    [SlashCommandParameter(Name = "title", Description = "The title of the To Do")] string todoTitle,
+    [SlashCommandParameter(Name = "description", Description = "Any notes or details about the To Do")] string todoDescription
+  )
   {
     _ = await RespondAsync(InteractionCallback.DeferredMessage());
 
+    var platformId = new PlatformId(
+      Context.User.Username,
+      Context.User.Id.ToString(CultureInfo.InvariantCulture),
+      ApolloPlatform.Discord
+    );
+
     var createRequest = new CreateToDoRequest
     {
-      Username = Context.User.Username,
-      Platform = ApolloPlatform.Discord,
-      Description = todo,
+      PlatformId = platformId,
+      Title = todoTitle,
+      Description = todoDescription,
       ReminderDate = null,
-      ProviderId = Context.User.Id.ToString(CultureInfo.InvariantCulture)
     };
 
-    var result = await apolloAPIClient.CreateToDoAsync(createRequest);
+    var result = await apolloServiceClient.CreateToDoAsync(createRequest);
 
     if (result.IsFailed)
     {
@@ -79,8 +87,8 @@ public class SlashCommandModule(IApolloServiceClient apolloAPIClient) : Applicat
   {
     _ = await RespondAsync(InteractionCallback.DeferredMessage());
 
-    var personId = new PersonId(ApolloPlatform.Discord, Context.User.Id.ToString(CultureInfo.InvariantCulture));
-    var result = await apolloAPIClient.GetToDosAsync(personId, includeCompleted);
+    var platformId = new PlatformId(Context.User.Username, Context.User.Id.ToString(CultureInfo.InvariantCulture), ApolloPlatform.Discord);
+    var result = await apolloServiceClient.GetToDosAsync(platformId, includeCompleted);
 
     if (result.IsFailed)
     {
