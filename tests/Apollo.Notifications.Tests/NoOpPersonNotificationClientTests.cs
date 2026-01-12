@@ -1,4 +1,5 @@
 using Apollo.Core.Notifications;
+using Apollo.Domain.Common.Enums;
 using Apollo.Domain.People.Models;
 using Apollo.Domain.People.ValueObjects;
 
@@ -16,6 +17,7 @@ public class NoOpPersonNotificationClientTests
     var person = new Person
     {
       Id = new PersonId(Guid.NewGuid()),
+      PlatformId = new PlatformId("testuser", "123", Platform.Discord),
       Username = new Username("testuser"),
       HasAccess = new HasAccess(true),
       NotificationChannels = [],

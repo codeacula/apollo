@@ -85,7 +85,7 @@ public sealed class ToDoStore(IDocumentSession session, TimeProvider timeProvide
     try
     {
       var query = session.Query<DbToDo>()
-        .Where(t => t.Id == personId.Value && !t.IsDeleted);
+        .Where(t => t.PersonId == personId.Value && !t.IsDeleted);
 
       if (!includeCompleted)
       {

@@ -25,6 +25,7 @@ public class PersonNotificationClientTests
     var person = new Person
     {
       Id = new PersonId(Guid.NewGuid()),
+      PlatformId = new PlatformId("testuser", "123", Platform.Discord),
       Username = new Username("testuser"),
       HasAccess = new HasAccess(true),
       NotificationChannels = [],
@@ -57,6 +58,7 @@ public class PersonNotificationClientTests
     var person = new Person
     {
       Id = new PersonId(Guid.NewGuid()),
+      PlatformId = new PlatformId("testuser", "123", Platform.Discord),
       Username = new Username("testuser"),
       HasAccess = new HasAccess(true),
       NotificationChannels =
