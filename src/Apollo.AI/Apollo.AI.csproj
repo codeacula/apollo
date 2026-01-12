@@ -20,6 +20,8 @@
 
   <ItemGroup>
     <None Include="Prompts\Apollo.prompty" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Prompts\ApolloToolCalling.prompty" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Prompts\ApolloResponse.prompty" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>
