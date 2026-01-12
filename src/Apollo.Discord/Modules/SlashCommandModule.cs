@@ -44,10 +44,15 @@ public class SlashCommandModule(IApolloServiceClient apolloServiceClient) : Appl
   {
     _ = await RespondAsync(InteractionCallback.DeferredMessage());
 
+    var platformId = new PlatformId(
+      Context.User.Username,
+      Context.User.Id.ToString(CultureInfo.InvariantCulture),
+      ApolloPlatform.Discord
+    );
+
     var createRequest = new CreateToDoRequest
     {
-      Platform = ApolloPlatform.Discord,
-      PlatformId = Context.User.Id.ToString(CultureInfo.InvariantCulture),
+      PlatformId = platformId,
       Title = todoTitle,
       Description = todoDescription,
       ReminderDate = null,

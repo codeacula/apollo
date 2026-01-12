@@ -120,6 +120,23 @@ public sealed class PersonCache(IConnectionMultiplexer redis, ILogger<PersonCach
     }
   }
 
+  public async Task<Result> InvalidatePlatformMappingAsync(PlatformId platformId)
+  {
+    try
+    {
+      var key = GetMappingCacheKey(platformId);
+      _ = await _db.KeyDeleteAsync(key);
+
+      CacheLogs.PlatformMappingCacheInvalidated(_logger, platformId.PlatformUserId, platformId.Platform);
+      return Result.Ok();
+    }
+    catch (Exception ex)
+    {
+      CacheLogs.PlatformMappingCacheDeleteError(_logger, ex, platformId.PlatformUserId, platformId.Platform);
+      return Result.Fail($"Failed to invalidate platform mapping cache for {platformId.PlatformUserId}: {ex.Message}");
+    }
+  }
+
   private static string GetMappingCacheKey(PlatformId platformId)
   {
     return MappingKeyPrefix + platformId.Platform + ":" + platformId.PlatformUserId;

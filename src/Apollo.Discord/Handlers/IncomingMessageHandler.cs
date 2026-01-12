@@ -73,10 +73,8 @@ public class IncomingMessageHandler(
     {
       var newMessage = new NewMessageRequest
       {
-        Username = arg.Author.Username,
-        Content = arg.Content,
-        Platform = ApolloPlatform.Discord,
-        PlatformUserId = platformId.PlatformUserId
+        PlatformId = platformId,
+        Content = arg.Content
       };
 
       var response = await apolloServiceClient.SendMessageAsync(newMessage);

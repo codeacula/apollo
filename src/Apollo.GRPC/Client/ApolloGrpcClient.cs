@@ -48,8 +48,9 @@ public class ApolloGrpcClient : IApolloGrpcClient, IApolloServiceClient, IDispos
   {
     var grpcRequest = new GrpcCreateToDoRequest
     {
-      Platform = request.Platform,
-      PlatformId = request.PlatformId,
+      Platform = request.PlatformId.Platform,
+      PlatformUserId = request.PlatformId.PlatformUserId,
+      Username = request.PlatformId.Username,
       Title = request.Title,
       Description = request.Description,
       ReminderDate = request.ReminderDate,

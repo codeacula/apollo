@@ -252,13 +252,59 @@ public class PersonCacheTests
     var personId = new PersonId(Guid.NewGuid());
 
     _ = redis.Setup(x => x.GetDatabase(It.IsAny<int>(), It.IsAny<object>())).Returns(db.Object);
-    _ = db.Setup(x => x.StringSetAsync(It.IsAny<RedisKey>(), It.IsAny<RedisValue>(), It.IsAny<TimeSpan?>(), It.IsAny<bool>(), It.IsAny<When>(), It.IsAny<CommandFlags>()))
+    _ = db.SetupSequence(x => x.StringSetAsync(It.IsAny<RedisKey>(), It.IsAny<RedisValue>(), It.IsAny<Expiration>()))
       .ThrowsAsync(new RedisException("boom"));
 
     var cache = new PersonCache(redis.Object, logger.Object);
 
     // Act
     var result = await cache.MapPlatformIdToPersonIdAsync(platformId, personId);
+
+    // Assert
+    Assert.True(result.IsFailed);
+    Assert.Contains("boom", result.Errors[0].Message);
+  }
+
+  [Fact]
+  public async Task InvalidatePlatformMappingAsyncDeletesKeySuccessfullyAsync()
+  {
+    // Arrange
+    var redis = new Mock<IConnectionMultiplexer>();
+    var db = new Mock<IDatabase>();
+    var logger = new Mock<ILogger<PersonCache>>();
+    var platformId = new PlatformId("testuser", "123", Platform.Discord);
+
+    _ = redis.Setup(x => x.GetDatabase(It.IsAny<int>(), It.IsAny<object>())).Returns(db.Object);
+    _ = db.Setup(x => x.KeyDeleteAsync(It.IsAny<RedisKey>(), It.IsAny<CommandFlags>()))
+      .ReturnsAsync(true);
+
+    var cache = new PersonCache(redis.Object, logger.Object);
+
+    // Act
+    var result = await cache.InvalidatePlatformMappingAsync(platformId);
+
+    // Assert
+    Assert.True(result.IsSuccess);
+    db.Verify(x => x.KeyDeleteAsync(It.IsAny<RedisKey>(), It.IsAny<CommandFlags>()), Times.Once);
+  }
+
+  [Fact]
+  public async Task InvalidatePlatformMappingAsyncReturnsFailureWhenExceptionThrownAsync()
+  {
+    // Arrange
+    var redis = new Mock<IConnectionMultiplexer>();
+    var db = new Mock<IDatabase>();
+    var logger = new Mock<ILogger<PersonCache>>();
+    var platformId = new PlatformId("testuser", "123", Platform.Discord);
+
+    _ = redis.Setup(x => x.GetDatabase(It.IsAny<int>(), It.IsAny<object>())).Returns(db.Object);
+    _ = db.Setup(x => x.KeyDeleteAsync(It.IsAny<RedisKey>(), It.IsAny<CommandFlags>()))
+      .ThrowsAsync(new RedisException("boom"));
+
+    var cache = new PersonCache(redis.Object, logger.Object);
+
+    // Act
+    var result = await cache.InvalidatePlatformMappingAsync(platformId);
 
     // Assert
     Assert.True(result.IsFailed);

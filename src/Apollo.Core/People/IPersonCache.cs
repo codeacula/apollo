@@ -11,6 +11,7 @@ public interface IPersonCache
 {
   Task<Result<PersonId?>> GetPersonIdAsync(PlatformId platformId);
   Task<Result> MapPlatformIdToPersonIdAsync(PlatformId platformId, PersonId personId);
+  Task<Result> InvalidatePlatformMappingAsync(PlatformId platformId);
   Task<Result<bool?>> GetAccessAsync(PersonId personId);
   Task<Result> SetAccessAsync(PersonId personId, bool hasAccess);
   Task<Result> InvalidateAccessAsync(PersonId personId);
