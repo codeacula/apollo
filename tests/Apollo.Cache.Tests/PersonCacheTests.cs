@@ -89,7 +89,7 @@ public class PersonCacheTests
     var redis = new Mock<IConnectionMultiplexer>();
     var db = new Mock<IDatabase>();
     var logger = new Mock<ILogger<PersonCache>>();
-    var personId = new PersonId(Guid.NewGuid());
+    var platformId = new PlatformId("asdfasdf", "asdfasdfas", Platform.Discord);
 
     _ = redis.Setup(x => x.GetDatabase(It.IsAny<int>(), It.IsAny<object>())).Returns(db.Object);
     _ = db.Setup(x => x.StringGetAsync(It.IsAny<RedisKey>(), It.IsAny<CommandFlags>()))
@@ -98,7 +98,7 @@ public class PersonCacheTests
     var cache = new PersonCache(redis.Object, logger.Object);
 
     // Act
-    var result = await cache.GetAccessAsync(personId);
+    var result = await cache.GetAccessAsync(platformId);
 
     // Assert
     Assert.True(result.IsSuccess);
@@ -112,16 +112,19 @@ public class PersonCacheTests
     var redis = new Mock<IConnectionMultiplexer>();
     var db = new Mock<IDatabase>();
     var logger = new Mock<ILogger<PersonCache>>();
-    var personId = new PersonId(Guid.NewGuid());
+    var platformId = new PlatformId("asdfasdf", "asdfasdfas", Platform.Discord);
+    var personId = Guid.NewGuid();
 
     _ = redis.Setup(x => x.GetDatabase(It.IsAny<int>(), It.IsAny<object>())).Returns(db.Object);
-    _ = db.Setup(x => x.StringGetAsync(It.IsAny<RedisKey>(), It.IsAny<CommandFlags>()))
+    // First call returns the PersonId mapping, second call returns the access value
+    _ = db.SetupSequence(x => x.StringGetAsync(It.IsAny<RedisKey>(), It.IsAny<CommandFlags>()))
+      .ReturnsAsync((RedisValue)personId.ToString())
       .ReturnsAsync((RedisValue)true);
 
     var cache = new PersonCache(redis.Object, logger.Object);
 
     // Act
-    var result = await cache.GetAccessAsync(personId);
+    var result = await cache.GetAccessAsync(platformId);
 
     // Assert
     Assert.True(result.IsSuccess);
@@ -136,16 +139,19 @@ public class PersonCacheTests
     var redis = new Mock<IConnectionMultiplexer>();
     var db = new Mock<IDatabase>();
     var logger = new Mock<ILogger<PersonCache>>();
-    var personId = new PersonId(Guid.NewGuid());
+    var platformId = new PlatformId("asdfasdf", "asdfasdfas", Platform.Discord);
+    var personId = Guid.NewGuid();
 
     _ = redis.Setup(x => x.GetDatabase(It.IsAny<int>(), It.IsAny<object>())).Returns(db.Object);
-    _ = db.Setup(x => x.StringGetAsync(It.IsAny<RedisKey>(), It.IsAny<CommandFlags>()))
+    // First call returns the PersonId mapping successfully, second call throws exception
+    _ = db.SetupSequence(x => x.StringGetAsync(It.IsAny<RedisKey>(), It.IsAny<CommandFlags>()))
+      .ReturnsAsync((RedisValue)personId.ToString())
       .ThrowsAsync(new RedisException("boom"));
 
     var cache = new PersonCache(redis.Object, logger.Object);
 
     // Act
-    var result = await cache.GetAccessAsync(personId);
+    var result = await cache.GetAccessAsync(platformId);
 
     // Assert
     Assert.True(result.IsFailed);

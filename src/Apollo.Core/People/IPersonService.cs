@@ -7,7 +7,7 @@ namespace Apollo.Core.People;
 
 public interface IPersonService
 {
-  Task<Result<Person>> GetOrCreateAsync(PlatformId platformId, CancellationToken cancellationToken = default);
-  Task<Result<HasAccess>> HasAccessAsync(PersonId personId, CancellationToken cancellationToken = default);
-  Task<Result> MapPlatformIdToPersonIdAsync(PlatformId platformId, PersonId personId, CancellationToken cancellationToken = default);
+  Task<Result<Person>> GetOrCreateAsync(PlatformId platformId, CancellationToken ct = default);
+  Task<Result<HasAccess>> HasAccessAsync(PlatformId platformId);
+  Task<Result> MapPlatformIdToPersonIdAsync(PlatformId platformId, PersonId personId, CancellationToken ct = default);
 }

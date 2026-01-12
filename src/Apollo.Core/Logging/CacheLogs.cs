@@ -61,8 +61,8 @@ public static partial class CacheLogs
   [LoggerMessage(
     EventId = 3010,
     Level = LogLevel.Debug,
-    Message = "Cache miss for person id: {PersonId}")]
-  public static partial void PersonCacheMiss(ILogger logger, string personId);
+    Message = "Cache miss for person id: {PersonPlatformId} on {Platform}")]
+  public static partial void PersonCacheMiss(ILogger logger, string personPlatformId, Platform platform);
 
   [LoggerMessage(
     EventId = 3011,
@@ -85,8 +85,8 @@ public static partial class CacheLogs
   [LoggerMessage(
     EventId = 3014,
     Level = LogLevel.Error,
-    Message = "Error reading from cache for person id: {PersonId}")]
-  public static partial void PersonCacheReadError(ILogger logger, Exception exception, string personId);
+    Message = "Error reading from cache for person id: {PersonPlatformId} on {Platform}")]
+  public static partial void PersonCacheReadError(ILogger logger, Exception exception, string personPlatformId, Platform platform);
 
   [LoggerMessage(
     EventId = 3015,

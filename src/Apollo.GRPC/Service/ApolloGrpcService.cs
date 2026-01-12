@@ -1,15 +1,15 @@
 using Apollo.Application.Conversations;
-using Apollo.Application.People.Handlers;
 using Apollo.Application.People.Queries;
 using Apollo.Application.ToDos.Commands;
 using Apollo.Application.ToDos.Queries;
-using Apollo.Core.Conversations;
 using Apollo.Core.ToDos;
 using Apollo.Domain.People.ValueObjects;
 using Apollo.Domain.ToDos.ValueObjects;
 using Apollo.GRPC.Contracts;
 
 using MediatR;
+
+using CoreNewMessageRequest = Apollo.Core.Conversations.NewMessageRequest;
 
 namespace Apollo.GRPC.Service;
 
@@ -20,7 +20,13 @@ public sealed class ApolloGrpcService(
 {
   public async Task<GrpcResult<string>> SendApolloMessageAsync(NewMessageRequest message)
   {
-    var requestResult = await mediator.Send(new ProcessIncomingMessageCommand(message));
+    var coreRequest = new CoreNewMessageRequest
+    {
+      PlatformId = message.ToPlatformId(),
+      Content = message.Content
+    };
+
+    var requestResult = await mediator.Send(new ProcessIncomingMessageCommand(coreRequest));
     return requestResult.IsSuccess ?
       requestResult.Value.Content.Value :
       requestResult.Errors.Select(e => new GrpcError(e.Message)).ToArray();
