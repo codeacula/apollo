@@ -75,7 +75,7 @@ public sealed class QuartzToDoReminderScheduler(ISchedulerFactory schedulerFacto
 
   private static QuartzJobId CreateQuartzJobId(UtcDateTime reminderUtc)
   {
-    var input = $"{ToDoReminderIdNamespace}|{reminderUtc:O}";
+    var input = $"{ToDoReminderIdNamespace}|{reminderUtc.Value:O}";
     var hash = SHA256.HashData(Encoding.UTF8.GetBytes(input));
     return new QuartzJobId(new Guid(hash.AsSpan(0, 16)));
   }
