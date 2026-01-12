@@ -13,35 +13,35 @@ public sealed class PersonService(
   IPersonCache personCache,
   ILogger<PersonService> logger) : IPersonService
 {
-  public async Task<Result<Person>> GetOrCreateAsync(PlatformId platformId, CancellationToken cancellationToken = default)
+  public async Task<Result<Person>> GetOrCreateAsync(PlatformId platformId, CancellationToken ct = default)
   {
-    var userResult = await personStore.GetByPlatformIdAsync(platformId, cancellationToken);
+    var userResult = await personStore.GetByPlatformIdAsync(platformId, ct);
 
     if (userResult.IsSuccess)
     {
       return userResult;
     }
 
-    var createResult = await personStore.CreateByPlatformIdAsync(platformId, cancellationToken);
+    var createResult = await personStore.CreateByPlatformIdAsync(platformId, ct);
 
     return createResult.IsSuccess
       ? createResult
       : Result.Fail<Person>($"Failed to get or create user {platformId.Username} on {platformId.Platform}: {createResult.GetErrorMessages()}");
   }
 
-  public async Task<Result<HasAccess>> HasAccessAsync(PersonId personId, CancellationToken cancellationToken = default)
+  public async Task<Result<HasAccess>> HasAccessAsync(PlatformId platformId)
   {
-    var cacheResult = await personCache.GetAccessAsync(personId);
+    var cacheResult = await personCache.GetAccessAsync(platformId);
     if (cacheResult.IsFailed)
     {
-      ValidationLogs.CacheCheckFailed(logger, personId.Value.ToString(), cacheResult.GetErrorMessages());
-      return Result.Fail<HasAccess>($"Cache error for user {personId.Value}: fail-closed policy denies access");
+      ValidationLogs.CacheCheckFailed(logger, platformId.PlatformUserId, platformId.Platform, cacheResult.GetErrorMessages());
+      return Result.Fail<HasAccess>($"Cache error for user {platformId.PlatformUserId}: fail-closed policy denies access");
     }
 
     if (cacheResult.Value.HasValue)
     {
       var cachedAccess = cacheResult.Value.Value;
-      ValidationLogs.CacheHit(logger, personId.Value.ToString(), cachedAccess);
+      ValidationLogs.CacheHit(logger, platformId.PlatformUserId, platformId.Platform, cachedAccess);
       return Result.Ok(new HasAccess(cachedAccess));
     }
 
@@ -49,7 +49,7 @@ public sealed class PersonService(
     return Result.Ok(new HasAccess(true));
   }
 
-  public async Task<Result> MapPlatformIdToPersonIdAsync(PlatformId platformId, PersonId personId, CancellationToken cancellationToken = default)
+  public async Task<Result> MapPlatformIdToPersonIdAsync(PlatformId platformId, PersonId personId, CancellationToken ct = default)
   {
     var cacheResult = await personCache.MapPlatformIdToPersonIdAsync(platformId, personId);
     if (cacheResult.IsFailed)

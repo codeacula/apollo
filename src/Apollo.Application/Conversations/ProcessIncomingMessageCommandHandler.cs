@@ -42,13 +42,12 @@ public sealed class ProcessIncomingMessageCommandHandler(
         return validationResult;
       }
 
-      var platformId = new PlatformId(request.Message.Username, request.Message.PlatformUserId, request.Message.Platform);
-      var username = new Username();
+      var platformId = request.Message.PlatformId;
 
       var userResult = await personService.GetOrCreateAsync(platformId, cancellationToken);
       if (userResult.IsFailed)
       {
-        return Result.Fail<Reply>($"Failed to get or create user {username.Value}: {userResult.GetErrorMessages()}");
+        return Result.Fail<Reply>($"Failed to get or create user {platformId.Username}: {userResult.GetErrorMessages()}");
       }
 
       var person = userResult.Value;
@@ -58,7 +57,7 @@ public sealed class ProcessIncomingMessageCommandHandler(
         return Result.Fail<Reply>($"User {person.Username} does not have access.");
       }
 
-      await CaptureNotificationChannelAsync(request, username, person, cancellationToken);
+      await CaptureNotificationChannelAsync(request, person, cancellationToken);
 
       var conversationResult = await GetOrCreateConversationAsync(person, request.Message.Content, cancellationToken);
       if (conversationResult.IsFailed)
@@ -74,7 +73,7 @@ public sealed class ProcessIncomingMessageCommandHandler(
     }
     catch (Exception ex)
     {
-      DataAccessLogs.UnhandledMessageProcessingError(logger, ex, request.Message.Username ?? "unknown");
+      DataAccessLogs.UnhandledMessageProcessingError(logger, ex, request.Message.PlatformId.Username ?? "unknown");
       return Result.Fail<Reply>(ex.Message);
     }
   }
@@ -82,12 +81,12 @@ public sealed class ProcessIncomingMessageCommandHandler(
   [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0046:Convert to conditional expression", Justification = "Looks better this way.")]
   private static Result<Reply> ValidateRequest(ProcessIncomingMessageCommand request)
   {
-    if (string.IsNullOrWhiteSpace(request.Message.Username))
+    if (string.IsNullOrWhiteSpace(request.Message.PlatformId.Username))
     {
       return Result.Fail<Reply>("No username was provided.");
     }
 
-    if (string.IsNullOrWhiteSpace(request.Message.PlatformUserId))
+    if (string.IsNullOrWhiteSpace(request.Message.PlatformId.PlatformUserId))
     {
       return Result.Fail<Reply>("No platform id was provided.");
     }
@@ -97,9 +96,9 @@ public sealed class ProcessIncomingMessageCommandHandler(
       : (Result<Reply>)Result.Ok();
   }
 
-  private async Task CaptureNotificationChannelAsync(ProcessIncomingMessageCommand request, Username username, Person person, CancellationToken cancellationToken)
+  private async Task CaptureNotificationChannelAsync(ProcessIncomingMessageCommand request, Person person, CancellationToken cancellationToken)
   {
-    var channelType = request.Message.Platform switch
+    var channelType = request.Message.PlatformId.Platform switch
     {
       Platform.Discord => NotificationChannelType.Discord,
       _ => (NotificationChannelType?)null
@@ -115,7 +114,7 @@ public sealed class ProcessIncomingMessageCommandHandler(
 
     if (channelResult.IsFailed)
     {
-      DataAccessLogs.FailedToAddNotificationChannel(logger, username.Value, channelResult.GetErrorMessages());
+      DataAccessLogs.FailedToAddNotificationChannel(logger, person.Username.Value, channelResult.GetErrorMessages());
     }
   }
 

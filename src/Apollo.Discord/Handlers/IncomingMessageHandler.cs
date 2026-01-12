@@ -14,7 +14,6 @@ namespace Apollo.Discord.Handlers;
 public class IncomingMessageHandler(
   IApolloServiceClient apolloServiceClient,
   IPersonCache personCache,
-  IPersonService personService,
   DiscordConfig discordConfig,
   ILogger<IncomingMessageHandler> logger) : IMessageCreateGatewayHandler
 {
@@ -28,44 +27,23 @@ public class IncomingMessageHandler(
 
     // Resolve PlatformId to PersonId
     var platformId = new PlatformId(arg.Author.Username, arg.Author.Id.ToString(CultureInfo.InvariantCulture), ApolloPlatform.Discord);
-    var personIdResult = await personCache.GetPersonIdAsync(platformId);
 
-    PersonId personId;
-    if (personIdResult.IsFailed)
+    // Validate user access using PersonId
+    var validationResult = await personCache.GetAccessAsync(platformId);
+
+    if (validationResult.IsFailed)
     {
-      ValidationLogs.ValidationFailed(logger, platformId.PlatformUserId, personIdResult.GetErrorMessages());
+      ValidationLogs.ValidationFailed(logger, platformId.PlatformUserId, validationResult.GetErrorMessages());
       _ = await arg.SendAsync("Sorry, unable to verify your access at this time.");
       return;
     }
 
-    if (personIdResult.Value.HasValue)
+    // If we have a cached value of false, deny access. Cache miss (null) allows the request to proceed
+    // to the API which will validate and update the cache as needed.
+    if (validationResult.Value == false)
     {
-      personId = personIdResult.Value.Value;
-    }
-    else
-    {
-      // PersonId not in cache, get or create via service
-      var getOrCreateResult = await personService.GetOrCreateAsync(platformId);
-      if (getOrCreateResult.IsFailed)
-      {
-        ValidationLogs.ValidationFailed(logger, platformId.PlatformUserId, getOrCreateResult.GetErrorMessages());
-        _ = await arg.SendAsync("Sorry, unable to verify your access at this time.");
-        return;
-      }
-
-      personId = getOrCreateResult.Value.Id;
-
-      // Cache the mapping for future lookups
-      _ = await personService.MapPlatformIdToPersonIdAsync(platformId, personId);
-    }
-
-    // Validate user access using PersonId
-    var validationResult = await personCache.GetAccessAsync(personId);
-
-    if (validationResult.IsFailed || !(validationResult.Value ?? false))
-    {
-      ValidationLogs.ValidationFailed(logger, platformId.PlatformUserId, validationResult.GetErrorMessages());
-      _ = await arg.SendAsync("Sorry, unable to verify your access at this time.");
+      ValidationLogs.ValidationFailed(logger, platformId.PlatformUserId, "Access denied");
+      _ = await arg.SendAsync("Sorry, you do not have access to Apollo.");
       return;
     }
 
@@ -73,10 +51,8 @@ public class IncomingMessageHandler(
     {
       var newMessage = new NewMessageRequest
       {
-        Username = arg.Author.Username,
-        Content = arg.Content,
-        Platform = ApolloPlatform.Discord,
-        PlatformUserId = platformId.PlatformUserId
+        PlatformId = platformId,
+        Content = arg.Content
       };
 
       var response = await apolloServiceClient.SendMessageAsync(newMessage);

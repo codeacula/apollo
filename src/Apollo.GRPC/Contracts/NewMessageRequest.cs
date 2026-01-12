@@ -6,7 +6,7 @@ using Apollo.Domain.People.ValueObjects;
 namespace Apollo.GRPC.Contracts;
 
 [DataContract]
-public sealed record CreateToDoRequest
+public sealed record NewMessageRequest
 {
   [DataMember(Order = 1)]
   public required Platform Platform { get; init; }
@@ -18,13 +18,7 @@ public sealed record CreateToDoRequest
   public required string Username { get; init; }
 
   [DataMember(Order = 4)]
-  public required string Title { get; init; }
-
-  [DataMember(Order = 5)]
-  public required string Description { get; init; }
-
-  [DataMember(Order = 6)]
-  public DateTime? ReminderDate { get; init; }
+  public required string Content { get; init; }
 
   public PlatformId ToPlatformId() => new(Username, PlatformUserId, Platform);
 }

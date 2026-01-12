@@ -61,7 +61,7 @@ public static class ServiceCollectionExtensions
 
         _ = options.Schema.For<DbToDo>()
           .Identity(x => x.Id)
-          .Index(x => new { x.PersonPlatform, x.PersonProviderId });
+          .Index(x => x.PersonId);
 
         _ = options.Events.AddEventType<ToDoCreatedEvent>();
         _ = options.Events.AddEventType<ToDoUpdatedEvent>();

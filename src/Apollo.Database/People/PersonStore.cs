@@ -11,7 +11,7 @@ using Marten;
 
 namespace Apollo.Database.People;
 
-public sealed class PersonStore(SuperAdminConfig SuperAdminConfig, IDocumentSession session, TimeProvider timeProvider) : IPersonStore
+public sealed class PersonStore(SuperAdminConfig SuperAdminConfig, IDocumentSession session, TimeProvider timeProvider, IPersonCache personCache) : IPersonStore
 {
   public async Task<Result<Person>> CreateByPlatformIdAsync(PlatformId platformId, CancellationToken cancellationToken = default)
   {
@@ -97,6 +97,9 @@ public sealed class PersonStore(SuperAdminConfig SuperAdminConfig, IDocumentSess
       _ = session.Events.Append(id.Value, new AccessGrantedEvent(id.Value, timeProvider.GetUtcDateTime()));
 
       await session.SaveChangesAsync(cancellationToken);
+
+      // Invalidate access cache after granting access
+      _ = await personCache.InvalidateAccessAsync(id);
 
       return Result.Ok();
     }

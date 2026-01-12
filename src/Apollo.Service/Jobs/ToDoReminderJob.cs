@@ -47,7 +47,7 @@ public class ToDoReminderJob(
       ToDoLogs.LogFoundDueToDos(logger, reminders.Count);
 
       // Collect all ToDos linked to these reminders, grouped by PersonId
-      var toDosByPerson = new Dictionary<string, List<(Domain.ToDos.Models.ToDo ToDo, Domain.ToDos.Models.Reminder Reminder)>>();
+      var toDosByPerson = new Dictionary<Guid, List<(Domain.ToDos.Models.ToDo ToDo, Domain.ToDos.Models.Reminder Reminder)>>();
 
       foreach (var reminder in reminders)
       {
@@ -88,13 +88,13 @@ public class ToDoReminderJob(
           var personResult = await personStore.GetAsync(firstToDo.PersonId, context.CancellationToken);
           if (personResult.IsFailed)
           {
-            ToDoLogs.LogFailedToGetPerson(logger, firstToDo.PersonId.Value, firstToDo.Id.Value);
+            ToDoLogs.LogFailedToGetPerson(logger, firstToDo.PersonId.Value.ToString(), firstToDo.Id.Value);
             continue;
           }
 
           var person = personResult.Value;
 
-          if (person.Id.Platform == Platform.Discord)
+          if (person.PlatformId.Platform == Platform.Discord)
           {
             var toDoDescriptions = todoReminderPairs.Select(p => p.ToDo.Description.Value);
 

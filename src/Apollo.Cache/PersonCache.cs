@@ -62,27 +62,34 @@ public sealed class PersonCache(IConnectionMultiplexer redis, ILogger<PersonCach
     }
   }
 
-  public async Task<Result<bool?>> GetAccessAsync(PersonId personId)
+  public async Task<Result<bool?>> GetAccessAsync(PlatformId platformId)
   {
     try
     {
-      var key = GetAccessCacheKey(personId);
-      var value = await _db.StringGetAsync(key);
-
-      if (!value.HasValue)
+      var personIdResult = await GetPersonIdAsync(platformId);
+      if (personIdResult.IsFailed)
       {
-        CacheLogs.PersonCacheMiss(_logger, personId.Value.ToString());
         return Result.Ok<bool?>(null);
       }
 
+      if (!personIdResult.Value.HasValue)
+      {
+        CacheLogs.PersonCacheMiss(_logger, platformId.PlatformUserId, platformId.Platform);
+        return Result.Ok<bool?>(null);
+      }
+
+      var personId = personIdResult.Value.Value;
+
+      var key = GetAccessCacheKey(personId);
+      var value = await _db.StringGetAsync(key);
       var hasAccess = (bool)value;
       CacheLogs.PersonCacheHit(_logger, personId.Value.ToString(), hasAccess);
       return Result.Ok<bool?>(hasAccess);
     }
     catch (Exception ex)
     {
-      CacheLogs.PersonCacheReadError(_logger, ex, personId.Value.ToString());
-      return Result.Fail<bool?>($"Failed to read from cache for person {personId.Value}: {ex.Message}");
+      CacheLogs.PersonCacheReadError(_logger, ex, platformId.PlatformUserId, platformId.Platform);
+      return Result.Fail<bool?>($"Failed to read from cache for person {platformId.PlatformUserId} on {platformId.Platform}: {ex.Message}");
     }
   }
 
@@ -117,6 +124,23 @@ public sealed class PersonCache(IConnectionMultiplexer redis, ILogger<PersonCach
     {
       CacheLogs.PersonCacheDeleteError(_logger, ex, personId.Value.ToString());
       return Result.Fail($"Failed to invalidate cache for person {personId.Value}: {ex.Message}");
+    }
+  }
+
+  public async Task<Result> InvalidatePlatformMappingAsync(PlatformId platformId)
+  {
+    try
+    {
+      var key = GetMappingCacheKey(platformId);
+      _ = await _db.KeyDeleteAsync(key);
+
+      CacheLogs.PlatformMappingCacheInvalidated(_logger, platformId.PlatformUserId, platformId.Platform);
+      return Result.Ok();
+    }
+    catch (Exception ex)
+    {
+      CacheLogs.PlatformMappingCacheDeleteError(_logger, ex, platformId.PlatformUserId, platformId.Platform);
+      return Result.Fail($"Failed to invalidate platform mapping cache for {platformId.PlatformUserId}: {ex.Message}");
     }
   }
 

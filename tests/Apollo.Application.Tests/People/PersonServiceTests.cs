@@ -28,6 +28,11 @@ public class PersonServiceTests
     _personService = new PersonService(_mockPersonStore.Object, _mockPersonCache.Object, _mockLogger.Object);
   }
 
+  private static PlatformId GetPlatformId()
+  {
+    return new PlatformId("testuser", "123", Platform.Discord);
+  }
+
   [Fact]
   public async Task GetOrCreateAsyncWithExistingUserReturnsUserAsync()
   {
@@ -115,14 +120,14 @@ public class PersonServiceTests
   public async Task HasAccessAsyncWithValidPersonIdReturnsCachedValueAsync()
   {
     // Arrange
-    var personId = new PersonId(Guid.NewGuid());
+    var platformId = GetPlatformId();
 
     _ = _mockPersonCache
-      .Setup(x => x.GetAccessAsync(personId))
+      .Setup(x => x.GetAccessAsync(platformId))
       .ReturnsAsync(Result.Ok<bool?>(true));
 
     // Act
-    var result = await _personService.HasAccessAsync(personId);
+    var result = await _personService.HasAccessAsync(platformId);
 
     // Assert
     Assert.True(result.IsSuccess);
@@ -133,14 +138,14 @@ public class PersonServiceTests
   public async Task HasAccessAsyncWhenCacheFailsReturnsFailureAsync()
   {
     // Arrange
-    var personId = new PersonId(Guid.NewGuid());
+    var platformId = GetPlatformId();
 
     _ = _mockPersonCache
-      .Setup(x => x.GetAccessAsync(personId))
+      .Setup(x => x.GetAccessAsync(platformId))
       .ReturnsAsync(Result.Fail<bool?>("Cache error"));
 
     // Act
-    var result = await _personService.HasAccessAsync(personId);
+    var result = await _personService.HasAccessAsync(platformId);
 
     // Assert
     Assert.True(result.IsFailed);
@@ -151,14 +156,14 @@ public class PersonServiceTests
   public async Task HasAccessAsyncWhenCacheReturnsNullReturnsTrueAsync()
   {
     // Arrange
-    var personId = new PersonId(Guid.NewGuid());
+    var platformId = GetPlatformId();
 
     _ = _mockPersonCache
-      .Setup(x => x.GetAccessAsync(personId))
+      .Setup(x => x.GetAccessAsync(platformId))
       .ReturnsAsync(Result.Ok<bool?>(null));
 
     // Act
-    var result = await _personService.HasAccessAsync(personId);
+    var result = await _personService.HasAccessAsync(platformId);
 
     // Assert
     Assert.True(result.IsSuccess);
@@ -169,14 +174,14 @@ public class PersonServiceTests
   public async Task HasAccessAsyncWhenCacheReturnsFalseReturnsFalseAsync()
   {
     // Arrange
-    var personId = new PersonId(Guid.NewGuid());
+    var platformId = GetPlatformId();
 
     _ = _mockPersonCache
-      .Setup(x => x.GetAccessAsync(personId))
+      .Setup(x => x.GetAccessAsync(platformId))
       .ReturnsAsync(Result.Ok<bool?>(false));
 
     // Act
-    var result = await _personService.HasAccessAsync(personId);
+    var result = await _personService.HasAccessAsync(platformId);
 
     // Assert
     Assert.True(result.IsSuccess);

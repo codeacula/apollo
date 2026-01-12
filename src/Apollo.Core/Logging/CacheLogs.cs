@@ -61,8 +61,8 @@ public static partial class CacheLogs
   [LoggerMessage(
     EventId = 3010,
     Level = LogLevel.Debug,
-    Message = "Cache miss for person id: {PersonId}")]
-  public static partial void PersonCacheMiss(ILogger logger, string personId);
+    Message = "Cache miss for person id: {PersonPlatformId} on {Platform}")]
+  public static partial void PersonCacheMiss(ILogger logger, string personPlatformId, Platform platform);
 
   [LoggerMessage(
     EventId = 3011,
@@ -85,8 +85,8 @@ public static partial class CacheLogs
   [LoggerMessage(
     EventId = 3014,
     Level = LogLevel.Error,
-    Message = "Error reading from cache for person id: {PersonId}")]
-  public static partial void PersonCacheReadError(ILogger logger, Exception exception, string personId);
+    Message = "Error reading from cache for person id: {PersonPlatformId} on {Platform}")]
+  public static partial void PersonCacheReadError(ILogger logger, Exception exception, string personPlatformId, Platform platform);
 
   [LoggerMessage(
     EventId = 3015,
@@ -117,4 +117,16 @@ public static partial class CacheLogs
     Level = LogLevel.Error,
     Message = "Error reading platform mapping from cache for: {PlatformUserId}, platform: {Platform}")]
   public static partial void PlatformMappingCacheReadError(ILogger logger, Exception exception, string platformUserId, Platform platform);
+
+  [LoggerMessage(
+    EventId = 3020,
+    Level = LogLevel.Information,
+    Message = "Platform mapping cache invalidated for: {PlatformUserId}, platform: {Platform}")]
+  public static partial void PlatformMappingCacheInvalidated(ILogger logger, string platformUserId, Platform platform);
+
+  [LoggerMessage(
+    EventId = 3021,
+    Level = LogLevel.Error,
+    Message = "Error deleting platform mapping from cache for: {PlatformUserId}, platform: {Platform}")]
+  public static partial void PlatformMappingCacheDeleteError(ILogger logger, Exception exception, string platformUserId, Platform platform);
 }
