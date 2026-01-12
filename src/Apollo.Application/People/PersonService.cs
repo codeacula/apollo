@@ -24,9 +24,16 @@ public sealed class PersonService(
 
     var createResult = await personStore.CreateByPlatformIdAsync(platformId, ct);
 
-    return createResult.IsSuccess
-      ? createResult
-      : Result.Fail<Person>($"Failed to get or create user {platformId.Username} on {platformId.Platform}: {createResult.GetErrorMessages()}");
+    if (createResult.IsFailed)
+    {
+      return Result.Fail<Person>($"Failed to get or create user {platformId.Username} on {platformId.Platform}: {createResult.GetErrorMessages()}");
+    }
+
+    // Best-effort: populate PlatformId -> PersonId cache mapping after successful creation.
+    // Cache mapping failures are logged inside MapPlatformIdToPersonIdAsync and do not affect the result.
+    _ = await personCache.MapPlatformIdToPersonIdAsync(platformId, createResult.Value.Id);
+
+    return createResult;
   }
 
   public async Task<Result<HasAccess>> HasAccessAsync(PlatformId platformId)

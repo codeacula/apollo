@@ -42,6 +42,7 @@ public class PersonServiceTests
     var expectedPerson = new Person
     {
       Id = personId,
+      PlatformId = platformId,
       Username = new Username("testuser"),
       HasAccess = new HasAccess(true),
       CreatedOn = new CreatedOn(DateTime.UtcNow),
@@ -71,6 +72,7 @@ public class PersonServiceTests
     var createdPerson = new Person
     {
       Id = personId,
+      PlatformId = platformId,
       Username = new Username("newuser"),
       HasAccess = new HasAccess(false),
       CreatedOn = new CreatedOn(DateTime.UtcNow),

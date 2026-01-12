@@ -14,5 +14,8 @@ public sealed record GetPersonToDosRequest
   public required Platform Platform { get; init; }
 
   [DataMember(Order = 3)]
+  public required string Username { get; init; }
+
+  [DataMember(Order = 4)]
   public bool IncludeCompleted { get; init; }
 }

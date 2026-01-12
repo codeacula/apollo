@@ -86,7 +86,8 @@ public class ApolloGrpcClient : IApolloGrpcClient, IApolloServiceClient, IDispos
     {
       Platform = platformId.Platform,
       IncludeCompleted = includeCompleted,
-      PlatformUserId = platformId.PlatformUserId
+      PlatformUserId = platformId.PlatformUserId,
+      Username = platformId.Username
     };
 
     Result<GrpcToDoDTO[]> grpcResponse = await ApolloGrpcService.GetPersonToDosAsync(grpcRequest);

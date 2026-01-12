@@ -33,7 +33,15 @@ public sealed class PersonStore(SuperAdminConfig SuperAdminConfig, IDocumentSess
 
       var newPerson = await session.Events.AggregateStreamAsync<DbPerson>(id, token: cancellationToken);
 
-      return newPerson is null ? Result.Fail<Person>($"Failed to create new user {platformId.Username}") : Result.Ok((Person)newPerson);
+      if (newPerson is null)
+      {
+        return Result.Fail<Person>($"Failed to create new user {platformId.Username}");
+      }
+
+      // Best-effort: populate PlatformId -> PersonId cache mapping after successful creation
+      _ = await personCache.MapPlatformIdToPersonIdAsync(platformId, new PersonId(id));
+
+      return Result.Ok((Person)newPerson);
     }
     catch (Exception ex)
     {

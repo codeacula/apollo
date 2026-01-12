@@ -82,6 +82,10 @@ public sealed class PersonCache(IConnectionMultiplexer redis, ILogger<PersonCach
 
       var key = GetAccessCacheKey(personId);
       var value = await _db.StringGetAsync(key);
+      if (!value.HasValue)
+      {
+        return Result.Ok<bool?>(null);
+      }
       var hasAccess = (bool)value;
       CacheLogs.PersonCacheHit(_logger, personId.Value.ToString(), hasAccess);
       return Result.Ok<bool?>(hasAccess);

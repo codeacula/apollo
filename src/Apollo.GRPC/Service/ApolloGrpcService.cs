@@ -91,7 +91,7 @@ public sealed class ApolloGrpcService(
   public async Task<GrpcResult<ToDoDTO[]>> GetPersonToDosAsync(GetPersonToDosRequest request)
   {
     // First, resolve PlatformUserId to PersonId
-    var platformId = new PlatformId("", request.PlatformUserId, request.Platform);
+    var platformId = new PlatformId(request.Username, request.PlatformUserId, request.Platform);
     var personResult = await mediator.Send(new GetOrCreatePersonByPlatformIdQuery(platformId));
 
     if (personResult.IsFailed)
