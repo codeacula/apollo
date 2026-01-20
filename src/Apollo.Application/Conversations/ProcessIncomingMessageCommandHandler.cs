@@ -65,7 +65,7 @@ public sealed class ProcessIncomingMessageCommandHandler(
         return conversationResult.ToResult<Reply>();
       }
 
-      var response = await SendToAIAsync(conversationResult.Value, person, request.Message.Content, cancellationToken);
+      var response = await SendToAIAsync(conversationResult.Value, person, cancellationToken);
 
       await SaveReplyAsync(conversationResult.Value, response);
 
