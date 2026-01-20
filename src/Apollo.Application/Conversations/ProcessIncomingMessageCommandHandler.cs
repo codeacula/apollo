@@ -4,7 +4,6 @@ using Apollo.AI.DTOs;
 using Apollo.AI.Enums;
 using Apollo.Application.People;
 using Apollo.Application.ToDos;
-using Apollo.Application.ToDos.Queries;
 using Apollo.Core;
 using Apollo.Core.Conversations;
 using Apollo.Core.Logging;
@@ -45,13 +44,13 @@ public sealed class ProcessIncomingMessageCommandHandler(
 
       var platformId = request.Message.PlatformId;
 
-      var userResult = await personService.GetOrCreateAsync(platformId, cancellationToken);
-      if (userResult.IsFailed)
+      var personResult = await personService.GetOrCreateAsync(platformId, cancellationToken);
+      if (personResult.IsFailed)
       {
-        return Result.Fail<Reply>($"Failed to get or create user {platformId.Username}: {userResult.GetErrorMessages()}");
+        return Result.Fail<Reply>($"Failed to get or create user {platformId.Username}: {personResult.GetErrorMessages()}");
       }
 
-      var person = userResult.Value;
+      var person = personResult.Value;
 
       if (!person.HasAccess.Value)
       {
@@ -133,7 +132,7 @@ public sealed class ProcessIncomingMessageCommandHandler(
     return convoResult.IsFailed ? Result.Fail<Conversation>("Unable to add message to conversation.") : convoResult;
   }
 
-  private async Task<string> SendToAIAsync(Conversation conversation, Person person, string currentMessage, CancellationToken cancellationToken)
+  private async Task<string> SendToAIAsync(Conversation conversation, Person person, CancellationToken cancellationToken)
   {
     var toDoPlugin = new ToDoPlugin(mediator, personStore, fuzzyTimeParser, timeProvider, personConfig, person.Id);
     apolloAIAgent.AddPlugin(toDoPlugin, ToDoPlugin.PluginName);
@@ -141,58 +140,6 @@ public sealed class ProcessIncomingMessageCommandHandler(
     var personPlugin = new PersonPlugin(personStore, personConfig, person.Id);
     apolloAIAgent.AddPlugin(personPlugin, PersonPlugin.PluginName);
 
-    // Check if two-phase prompts are available
-    if (!string.IsNullOrWhiteSpace(aiConfig.ToolCallingSystemPrompt) &&
-        !string.IsNullOrWhiteSpace(aiConfig.ResponseSystemPrompt))
-    {
-      return await SendTwoPhaseRequestAsync(conversation, person, currentMessage, cancellationToken);
-    }
-
-    // Fallback to legacy single-phase approach
-    return await SendLegacyRequestAsync(conversation, cancellationToken);
-  }
-
-  private async Task<string> SendTwoPhaseRequestAsync(Conversation conversation, Person person, string currentMessage, CancellationToken cancellationToken)
-  {
-    // Get conversation history (excluding the current message which was just added)
-    var conversationHistory = conversation.Messages
-      .Where(m => m.Content.Value != currentMessage || !m.FromUser.Value)
-      .OrderBy(m => m.CreatedOn.Value)
-      .Select(m => new ChatMessageDTO(
-          m.FromUser.Value ? ChatRole.User : ChatRole.Assistant,
-          m.Content.Value,
-          m.CreatedOn.Value
-        )
-      ).ToList();
-
-    // Get current ToDos context for the tool calling phase
-    var toDosContext = await GetCurrentToDosContextAsync(person.Id, cancellationToken);
-
-    var request = new TwoPhaseCompletionRequestDTO(
-      aiConfig.ToolCallingSystemPrompt,
-      aiConfig.ResponseSystemPrompt,
-      currentMessage,
-      conversationHistory,
-      toDosContext);
-
-    ConversationLogs.TwoPhaseRequestStarted(logger, person.Id.Value, currentMessage);
-
-    var result = await apolloAIAgent.TwoPhaseCompletionAsync(
-      request,
-      aiConfig.ToolCallingTemperature,
-      aiConfig.ResponseTemperature,
-      cancellationToken);
-
-    if (result.ActionsTaken.Count > 0)
-    {
-      ConversationLogs.ActionsTaken(logger, person.Id.Value, result.ActionsTaken);
-    }
-
-    return result.Response;
-  }
-
-  private async Task<string> SendLegacyRequestAsync(Conversation conversation, CancellationToken cancellationToken)
-  {
     var messages = conversation.Messages
       .OrderBy(m => m.CreatedOn.Value)
       .Select(m => new ChatMessageDTO(
@@ -204,31 +151,6 @@ public sealed class ProcessIncomingMessageCommandHandler(
 
     var completionRequest = new ChatCompletionRequestDTO(aiConfig.SystemPrompt, messages);
     return await apolloAIAgent.ChatAsync(completionRequest, cancellationToken);
-  }
-
-  private async Task<string?> GetCurrentToDosContextAsync(PersonId personId, CancellationToken cancellationToken)
-  {
-    try
-    {
-      var query = new GetToDosByPersonIdQuery(personId);
-      var result = await mediator.Send(query, cancellationToken);
-
-      if (result.IsFailed || !result.Value.Any())
-      {
-        return null;
-      }
-
-      var todoList = result.Value.Select(t =>
-        $"- {t.Description.Value} (ID: {t.Id.Value})"
-      );
-
-      return string.Join("\n", todoList);
-    }
-    catch (Exception ex)
-    {
-      ConversationLogs.FailedToGetToDosContext(logger, personId.Value, ex.Message);
-      return null;
-    }
   }
 
   private async Task SaveReplyAsync(Conversation conversation, string response)
