@@ -11,7 +11,6 @@
     <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.2" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.2" />
     <PackageReference Include="Microsoft.SemanticKernel" Version="1.69.0" />
-    <PackageReference Include="Microsoft.SemanticKernel.Prompty" Version="1.69.0-beta" />
     <PackageReference Include="YamlDotNet" Version="16.3.0" />
   </ItemGroup>
 
@@ -20,9 +19,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="Prompts\Apollo.prompty" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="Prompts\ApolloToolCalling.prompty" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="Prompts\ApolloResponse.prompty" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Prompts\ApolloToolCalling.yml" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Prompts\ApolloResponse.yml" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>
