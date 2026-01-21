@@ -1,76 +1,49 @@
 using Apollo.AI.Config;
 using Apollo.AI.DTOs;
-using Apollo.AI.Enums;
-using Apollo.AI.Plugins;
-
-using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.ChatCompletion;
-using Microsoft.SemanticKernel.Connectors.OpenAI;
+using Apollo.AI.Prompts;
+using Apollo.AI.Requests;
 
 namespace Apollo.AI;
 
-public class ApolloAIAgent : IApolloAIAgent
+public sealed class ApolloAIAgent(ApolloAIConfig config, IPromptLoader promptLoader) : IApolloAIAgent
 {
-  private readonly Kernel _kernel;
-  private readonly OpenAIPromptExecutionSettings _promptExecutionSettings = new()
-  {
-    FunctionChoiceBehavior = FunctionChoiceBehavior.Auto(),
-    Temperature = 0.7d
-  };
+  private const string ToolCallingPromptName = "ApolloToolCalling";
+  private const string ResponsePromptName = "ApolloResponse";
 
-  public ApolloAIAgent(ApolloAIConfig apolloAIConfig)
+  public IAIRequestBuilder CreateRequest()
   {
-    var builder = Kernel.CreateBuilder();
-    _ = builder.Services.AddOpenAIChatCompletion(apolloAIConfig.ModelId, new Uri(apolloAIConfig.Endpoint));
-    _kernel = builder.Build();
-    AddPlugin(new TimePlugin(TimeProvider.System), "Time");
+    return new AIRequestBuilder(config);
   }
 
-  public void AddPlugin(object plugin, string pluginName)
+  public IAIRequestBuilder CreateToolCallingRequest(
+    IEnumerable<ChatMessageDTO> messages,
+    IDictionary<string, object> plugins)
   {
-    _ = _kernel.Plugins.AddFromObject(plugin, pluginName);
+    var prompt = promptLoader.Load(ToolCallingPromptName);
+
+    return CreateRequest()
+      .FromPromptDefinition(prompt)
+      .WithMessages(messages)
+      .WithPlugins(plugins)
+      .WithToolCalling(enabled: true);
   }
 
-  public void AddPlugin<TPluginType>(string pluginName)
+  public IAIRequestBuilder CreateResponseRequest(
+    IEnumerable<ChatMessageDTO> messages,
+    string actionsSummary)
   {
-    _ = _kernel.Plugins.AddFromType<TPluginType>(pluginName);
+    var prompt = promptLoader.Load(ResponsePromptName);
+    var systemPrompt = BuildResponseSystemPrompt(prompt.SystemPrompt, actionsSummary);
+
+    return CreateRequest()
+      .WithSystemPrompt(systemPrompt)
+      .WithTemperature(prompt.Temperature)
+      .WithMessages(messages)
+      .WithToolCalling(enabled: false);
   }
 
-  public async Task<string> ChatAsync(ChatCompletionRequestDTO chatCompletionRequest, CancellationToken cancellationToken = default)
+  private static string BuildResponseSystemPrompt(string basePrompt, string actionsSummary)
   {
-    try
-    {
-      var chatCompletionService = _kernel.GetRequiredService<IChatCompletionService>();
-      ChatHistory chatHistory = [];
-
-      chatHistory.AddSystemMessage(chatCompletionRequest.SystemMessage);
-
-      chatCompletionRequest.Messages.OrderBy(msg => msg.CreatedOn).ToList().ForEach(msg =>
-      {
-        if (msg.Role == ChatRole.User)
-        {
-          chatHistory.AddUserMessage(msg.Content);
-        }
-        else if (msg.Role == ChatRole.Assistant)
-        {
-          chatHistory.AddAssistantMessage(msg.Content);
-        }
-      });
-
-      var response = await chatCompletionService.GetChatMessageContentAsync(
-          chatHistory,
-          executionSettings: _promptExecutionSettings,
-          kernel: _kernel,
-          cancellationToken: cancellationToken);
-
-      return response == null || response.Content == null
-        ? throw new InvalidOperationException("Received null response from chat completion service.")
-        : response.Content;
-    }
-    catch (Exception ex)
-    {
-      Console.WriteLine("Error during chat: " + ex.Message);
-      throw;
-    }
+    return $"{basePrompt}\n\n# Actions Taken This Request\n\n{actionsSummary}";
   }
 }

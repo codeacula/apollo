@@ -1,4 +1,5 @@
 using Apollo.AI.DTOs;
+using Apollo.AI.Requests;
 
 using Moq;
 
@@ -7,12 +8,65 @@ namespace Apollo.AI.Tests;
 public class ApolloReminderMessageGeneratorTests
 {
   private readonly Mock<IApolloAIAgent> _mockApolloAIAgent;
+  private readonly Mock<IAIRequestBuilder> _mockRequestBuilder;
   private readonly ApolloReminderMessageGenerator _generator;
+
+  private string? _capturedSystemPrompt;
+  private ChatMessageDTO? _capturedMessage;
 
   public ApolloReminderMessageGeneratorTests()
   {
     _mockApolloAIAgent = new Mock<IApolloAIAgent>();
+    _mockRequestBuilder = new Mock<IAIRequestBuilder>();
     _generator = new ApolloReminderMessageGenerator(_mockApolloAIAgent.Object);
+
+    SetupDefaultBuilderChain();
+  }
+
+  private void SetupDefaultBuilderChain()
+  {
+    _mockRequestBuilder
+      .Setup(x => x.WithSystemPrompt(It.IsAny<string>()))
+      .Callback<string>(s => _capturedSystemPrompt = s)
+      .Returns(_mockRequestBuilder.Object);
+
+    _mockRequestBuilder
+      .Setup(x => x.WithTemperature(It.IsAny<double>()))
+      .Returns(_mockRequestBuilder.Object);
+
+    _mockRequestBuilder
+      .Setup(x => x.WithMessage(It.IsAny<ChatMessageDTO>()))
+      .Callback<ChatMessageDTO>(m => _capturedMessage = m)
+      .Returns(_mockRequestBuilder.Object);
+
+    _mockRequestBuilder
+      .Setup(x => x.WithToolCalling(It.IsAny<bool>()))
+      .Returns(_mockRequestBuilder.Object);
+
+    _mockApolloAIAgent
+      .Setup(x => x.CreateRequest())
+      .Returns(_mockRequestBuilder.Object);
+  }
+
+  private void SetupSuccessResult(string content)
+  {
+    _mockRequestBuilder
+      .Setup(x => x.ExecuteAsync(It.IsAny<CancellationToken>()))
+      .ReturnsAsync(new AIRequestResult { Success = true, Content = content });
+  }
+
+  private void SetupFailureResult(string errorMessage)
+  {
+    _mockRequestBuilder
+      .Setup(x => x.ExecuteAsync(It.IsAny<CancellationToken>()))
+      .ReturnsAsync(AIRequestResult.Failure(errorMessage));
+  }
+
+  private void SetupThrowsException(Exception exception)
+  {
+    _mockRequestBuilder
+      .Setup(x => x.ExecuteAsync(It.IsAny<CancellationToken>()))
+      .ThrowsAsync(exception);
   }
 
   [Fact]
@@ -21,11 +75,9 @@ public class ApolloReminderMessageGeneratorTests
     // Arrange
     const string personName = "TestUser";
     var toDoDescriptions = new List<string> { "Buy groceries", "Walk the dog" };
-    const string expectedMessage = "Hey TestUser! *gentle purr* Just a friendly nudge - you have a couple of tasks waiting:\n- Buy groceries\n- Walk the dog\n\nYou've got this! 🐾";
+    const string expectedMessage = "Hey TestUser! *gentle purr* Just a friendly nudge - you have a couple of tasks waiting. You've got this!";
 
-    _ = _mockApolloAIAgent
-      .Setup(x => x.ChatAsync(It.IsAny<ChatCompletionRequestDTO>(), It.IsAny<CancellationToken>()))
-      .ReturnsAsync(expectedMessage);
+    SetupSuccessResult(expectedMessage);
 
     // Act
     var result = await _generator.GenerateReminderMessageAsync(personName, toDoDescriptions, CancellationToken.None);
@@ -33,14 +85,10 @@ public class ApolloReminderMessageGeneratorTests
     // Assert
     Assert.True(result.IsSuccess);
     Assert.Equal(expectedMessage, result.Value);
-    _mockApolloAIAgent.Verify(
-      x => x.ChatAsync(
-        It.Is<ChatCompletionRequestDTO>(req =>
-          req.Messages.Any(m => m.Content.Contains(personName)) &&
-          req.Messages.Any(m => m.Content.Contains("Buy groceries")) &&
-          req.Messages.Any(m => m.Content.Contains("Walk the dog"))),
-        It.IsAny<CancellationToken>()),
-      Times.Once);
+    Assert.NotNull(_capturedMessage);
+    Assert.Contains(personName, _capturedMessage!.Content);
+    Assert.Contains("Buy groceries", _capturedMessage.Content);
+    Assert.Contains("Walk the dog", _capturedMessage.Content);
   }
 
   [Fact]
@@ -50,22 +98,16 @@ public class ApolloReminderMessageGeneratorTests
     const string personName = "Alice";
     var toDoDescriptions = new List<string> { "Complete project report" };
 
-    _ = _mockApolloAIAgent
-      .Setup(x => x.ChatAsync(It.IsAny<ChatCompletionRequestDTO>(), It.IsAny<CancellationToken>()))
-      .ReturnsAsync("Reminder message");
+    SetupSuccessResult("Reminder message");
 
     // Act
     _ = await _generator.GenerateReminderMessageAsync(personName, toDoDescriptions, CancellationToken.None);
 
     // Assert
-    _mockApolloAIAgent.Verify(
-      x => x.ChatAsync(
-        It.Is<ChatCompletionRequestDTO>(req =>
-          req.SystemMessage.Contains("Apollo") &&
-          req.SystemMessage.Contains("friendly") &&
-          req.SystemMessage.Contains("reminder")),
-        It.IsAny<CancellationToken>()),
-      Times.Once);
+    Assert.NotNull(_capturedSystemPrompt);
+    Assert.Contains("Apollo", _capturedSystemPrompt);
+    Assert.Contains("friendly", _capturedSystemPrompt);
+    Assert.Contains("reminder", _capturedSystemPrompt);
   }
 
   [Fact]
@@ -75,9 +117,25 @@ public class ApolloReminderMessageGeneratorTests
     const string personName = "TestUser";
     var toDoDescriptions = new List<string> { "Buy groceries" };
 
-    _ = _mockApolloAIAgent
-      .Setup(x => x.ChatAsync(It.IsAny<ChatCompletionRequestDTO>(), It.IsAny<CancellationToken>()))
-      .ThrowsAsync(new InvalidOperationException("AI service unavailable"));
+    SetupThrowsException(new InvalidOperationException("AI service unavailable"));
+
+    // Act
+    var result = await _generator.GenerateReminderMessageAsync(personName, toDoDescriptions, CancellationToken.None);
+
+    // Assert
+    Assert.True(result.IsFailed);
+    Assert.Contains("Failed to generate reminder message", result.Errors[0].Message);
+    Assert.Contains("AI service unavailable", result.Errors[0].Message);
+  }
+
+  [Fact]
+  public async Task GenerateReminderMessageAsyncReturnsFailureWhenAIReturnsFailureResultAsync()
+  {
+    // Arrange
+    const string personName = "TestUser";
+    var toDoDescriptions = new List<string> { "Buy groceries" };
+
+    SetupFailureResult("AI service unavailable");
 
     // Act
     var result = await _generator.GenerateReminderMessageAsync(personName, toDoDescriptions, CancellationToken.None);
@@ -101,26 +159,19 @@ public class ApolloReminderMessageGeneratorTests
       "Task 4"
     };
 
-    _ = _mockApolloAIAgent
-      .Setup(x => x.ChatAsync(It.IsAny<ChatCompletionRequestDTO>(), It.IsAny<CancellationToken>()))
-      .ReturnsAsync("Multi-task reminder");
+    SetupSuccessResult("Multi-task reminder");
 
     // Act
     var result = await _generator.GenerateReminderMessageAsync(personName, toDoDescriptions, CancellationToken.None);
 
     // Assert
     Assert.True(result.IsSuccess);
-    _mockApolloAIAgent.Verify(
-      x => x.ChatAsync(
-        It.Is<ChatCompletionRequestDTO>(req =>
-          req.Messages.Any(m =>
-            m.Content.Contains("Task 1") &&
-            m.Content.Contains("Task 2") &&
-            m.Content.Contains("Task 3") &&
-            m.Content.Contains("Task 4") &&
-            m.Content.Contains(", "))),
-        It.IsAny<CancellationToken>()),
-      Times.Once);
+    Assert.NotNull(_capturedMessage);
+    Assert.Contains("Task 1", _capturedMessage!.Content);
+    Assert.Contains("Task 2", _capturedMessage.Content);
+    Assert.Contains("Task 3", _capturedMessage.Content);
+    Assert.Contains("Task 4", _capturedMessage.Content);
+    Assert.Contains(", ", _capturedMessage.Content);
   }
 
   [Fact]
@@ -130,9 +181,7 @@ public class ApolloReminderMessageGeneratorTests
     const string personName = "Charlie";
     var toDoDescriptions = new List<string>();
 
-    _ = _mockApolloAIAgent
-      .Setup(x => x.ChatAsync(It.IsAny<ChatCompletionRequestDTO>(), It.IsAny<CancellationToken>()))
-      .ReturnsAsync("No tasks reminder");
+    SetupSuccessResult("No tasks reminder");
 
     // Act
     var result = await _generator.GenerateReminderMessageAsync(personName, toDoDescriptions, CancellationToken.None);
@@ -149,20 +198,14 @@ public class ApolloReminderMessageGeneratorTests
     const string personName = "SpecialUser123";
     var toDoDescriptions = new List<string> { "Some task" };
 
-    _ = _mockApolloAIAgent
-      .Setup(x => x.ChatAsync(It.IsAny<ChatCompletionRequestDTO>(), It.IsAny<CancellationToken>()))
-      .ReturnsAsync("Message");
+    SetupSuccessResult("Message");
 
     // Act
     _ = await _generator.GenerateReminderMessageAsync(personName, toDoDescriptions, CancellationToken.None);
 
     // Assert
-    _mockApolloAIAgent.Verify(
-      x => x.ChatAsync(
-        It.Is<ChatCompletionRequestDTO>(req =>
-          req.Messages.Any(m => m.Content.Contains("SpecialUser123"))),
-        It.IsAny<CancellationToken>()),
-      Times.Once);
+    Assert.NotNull(_capturedMessage);
+    Assert.Contains("SpecialUser123", _capturedMessage!.Content);
   }
 
   [Fact]
@@ -173,9 +216,7 @@ public class ApolloReminderMessageGeneratorTests
     var toDoDescriptions = new List<string> { "Buy groceries" };
     const string quotedResponse = "\"Hey there! Don't forget your tasks!\"";
 
-    _ = _mockApolloAIAgent
-      .Setup(x => x.ChatAsync(It.IsAny<ChatCompletionRequestDTO>(), It.IsAny<CancellationToken>()))
-      .ReturnsAsync(quotedResponse);
+    SetupSuccessResult(quotedResponse);
 
     // Act
     var result = await _generator.GenerateReminderMessageAsync(personName, toDoDescriptions, CancellationToken.None);
@@ -185,5 +226,37 @@ public class ApolloReminderMessageGeneratorTests
     Assert.Equal("Hey there! Don't forget your tasks!", result.Value);
     Assert.False(result.Value.StartsWith('"'));
     Assert.False(result.Value.EndsWith('"'));
+  }
+
+  [Fact]
+  public async Task GenerateReminderMessageAsyncDisablesToolCallingAsync()
+  {
+    // Arrange
+    const string personName = "TestUser";
+    var toDoDescriptions = new List<string> { "Buy groceries" };
+
+    SetupSuccessResult("Message");
+
+    // Act
+    _ = await _generator.GenerateReminderMessageAsync(personName, toDoDescriptions, CancellationToken.None);
+
+    // Assert
+    _mockRequestBuilder.Verify(x => x.WithToolCalling(false), Times.Once);
+  }
+
+  [Fact]
+  public async Task GenerateReminderMessageAsyncSetsTemperatureAsync()
+  {
+    // Arrange
+    const string personName = "TestUser";
+    var toDoDescriptions = new List<string> { "Buy groceries" };
+
+    SetupSuccessResult("Message");
+
+    // Act
+    _ = await _generator.GenerateReminderMessageAsync(personName, toDoDescriptions, CancellationToken.None);
+
+    // Assert
+    _mockRequestBuilder.Verify(x => x.WithTemperature(0.8), Times.Once);
   }
 }
