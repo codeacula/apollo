@@ -7,7 +7,7 @@
 
   <ItemGroup>
     <PackageReference Include="FluentResults" Version="4.0.0" />
-    <PackageReference Include="NetCord" Version="1.0.0-alpha.451" />
+    <PackageReference Include="NetCord" Version="1.0.0-alpha.455" />
   </ItemGroup>
 
   <PropertyGroup>

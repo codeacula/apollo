@@ -14,7 +14,8 @@ public class ApolloAIAgent : IApolloAIAgent
   private readonly Kernel _kernel;
   private readonly OpenAIPromptExecutionSettings _promptExecutionSettings = new()
   {
-    FunctionChoiceBehavior = FunctionChoiceBehavior.Auto()
+    FunctionChoiceBehavior = FunctionChoiceBehavior.Auto(),
+    Temperature = 0.7d
   };
 
   public ApolloAIAgent(ApolloAIConfig apolloAIConfig)
