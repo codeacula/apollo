@@ -133,11 +133,12 @@ public sealed class ProcessIncomingMessageCommandHandler(
   private async Task<string> ProcessWithAIAsync(Conversation conversation, Person person, CancellationToken cancellationToken)
   {
     var messages = BuildMessageHistory(conversation);
+    var toolMessages = BuildToolCallingMessages(conversation);
     var plugins = CreatePlugins(person);
 
     // Phase 1: Tool Calling
     var toolResult = await apolloAIAgent
-      .CreateToolCallingRequest(messages, plugins)
+      .CreateToolCallingRequest(toolMessages, plugins)
       .ExecuteAsync(cancellationToken);
 
     // Phase 2: Response Generation
@@ -149,24 +150,38 @@ public sealed class ProcessIncomingMessageCommandHandler(
       .CreateResponseRequest(messages, actionsSummary)
       .ExecuteAsync(cancellationToken);
 
-    if (!responseResult.Success)
-    {
-      return $"I encountered an issue while processing your request: {responseResult.ErrorMessage}";
-    }
-
-    return responseResult.Content;
+    return !responseResult.Success
+      ? $"I encountered an issue while processing your request: {responseResult.ErrorMessage}"
+      : responseResult.Content;
   }
 
   private static List<ChatMessageDTO> BuildMessageHistory(Conversation conversation)
   {
-    return conversation.Messages
+    return [.. conversation.Messages
       .OrderBy(m => m.CreatedOn.Value)
       .Select(m => new ChatMessageDTO(
         m.FromUser.Value ? ChatRole.User : ChatRole.Assistant,
         m.Content.Value,
         m.CreatedOn.Value
-      ))
-      .ToList();
+      ))];
+  }
+
+  private static List<ChatMessageDTO> BuildToolCallingMessages(Conversation conversation)
+  {
+    var latestUserMessage = conversation.Messages
+      .Where(m => m.FromUser.Value)
+      .OrderByDescending(m => m.CreatedOn.Value)
+      .FirstOrDefault();
+
+    return latestUserMessage is null
+      ? []
+      : [
+        new ChatMessageDTO(
+          ChatRole.User,
+          latestUserMessage.Content.Value,
+          latestUserMessage.CreatedOn.Value
+        )
+      ];
   }
 
   private Dictionary<string, object> CreatePlugins(Person person)
