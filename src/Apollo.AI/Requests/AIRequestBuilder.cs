@@ -111,7 +111,7 @@ public sealed class AIRequestBuilder : IAIRequestBuilder
   {
     var builder = Kernel.CreateBuilder();
     builder.Services.AddOpenAIChatCompletion(_config.ModelId, new Uri(_config.Endpoint));
-    builder.Services.AddSingleton<IFunctionInvocationFilter>(new FunctionInvocationFilter(toolCalls));
+    builder.Services.AddSingleton<IFunctionInvocationFilter>(new FunctionInvocationFilter(toolCalls, maxToolCalls: 5));
 
     var kernel = builder.Build();
 
