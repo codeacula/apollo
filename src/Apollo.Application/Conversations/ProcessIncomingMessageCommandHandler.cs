@@ -1,5 +1,4 @@
 using Apollo.AI;
-using Apollo.AI.Config;
 using Apollo.AI.DTOs;
 using Apollo.AI.Enums;
 using Apollo.Application.People;
@@ -20,7 +19,6 @@ using FluentResults;
 namespace Apollo.Application.Conversations;
 
 public sealed class ProcessIncomingMessageCommandHandler(
-  ApolloAIConfig aiConfig,
   IApolloAIAgent apolloAIAgent,
   IConversationStore conversationStore,
   IFuzzyTimeParser fuzzyTimeParser,
@@ -44,13 +42,13 @@ public sealed class ProcessIncomingMessageCommandHandler(
 
       var platformId = request.Message.PlatformId;
 
-      var userResult = await personService.GetOrCreateAsync(platformId, cancellationToken);
-      if (userResult.IsFailed)
+      var personResult = await personService.GetOrCreateAsync(platformId, cancellationToken);
+      if (personResult.IsFailed)
       {
-        return Result.Fail<Reply>($"Failed to get or create user {platformId.Username}: {userResult.GetErrorMessages()}");
+        return Result.Fail<Reply>($"Failed to get or create user {platformId.Username}: {personResult.GetErrorMessages()}");
       }
 
-      var person = userResult.Value;
+      var person = personResult.Value;
 
       if (!person.HasAccess.Value)
       {
@@ -65,7 +63,7 @@ public sealed class ProcessIncomingMessageCommandHandler(
         return conversationResult.ToResult<Reply>();
       }
 
-      var response = await SendToAIAsync(conversationResult.Value, person, cancellationToken);
+      var response = await ProcessWithAIAsync(conversationResult.Value, person, cancellationToken);
 
       await SaveReplyAsync(conversationResult.Value, response);
 
@@ -109,7 +107,7 @@ public sealed class ProcessIncomingMessageCommandHandler(
       return;
     }
 
-    var channel = new NotificationChannel(channelType.Value, channelType.Value.ToString(), isEnabled: true);
+    var channel = new NotificationChannel(channelType.Value, request.Message.PlatformId.PlatformUserId, isEnabled: true);
     var channelResult = await personStore.EnsureNotificationChannelAsync(person, channel, cancellationToken);
 
     if (channelResult.IsFailed)
@@ -132,26 +130,70 @@ public sealed class ProcessIncomingMessageCommandHandler(
     return convoResult.IsFailed ? Result.Fail<Conversation>("Unable to add message to conversation.") : convoResult;
   }
 
-  private async Task<string> SendToAIAsync(Conversation conversation, Person person, CancellationToken cancellationToken)
+  private async Task<string> ProcessWithAIAsync(Conversation conversation, Person person, CancellationToken cancellationToken)
   {
-    var messages = conversation.Messages
+    var messages = BuildMessageHistory(conversation);
+    var toolMessages = BuildToolCallingMessages(conversation);
+    var plugins = CreatePlugins(person);
+
+    // Phase 1: Tool Calling
+    var toolResult = await apolloAIAgent
+      .CreateToolCallingRequest(toolMessages, plugins)
+      .ExecuteAsync(cancellationToken);
+
+    // Phase 2: Response Generation
+    var actionsSummary = toolResult.HasToolCalls
+      ? toolResult.FormatActionsSummary()
+      : "None";
+
+    var responseResult = await apolloAIAgent
+      .CreateResponseRequest(messages, actionsSummary)
+      .ExecuteAsync(cancellationToken);
+
+    return !responseResult.Success
+      ? $"I encountered an issue while processing your request: {responseResult.ErrorMessage}"
+      : responseResult.Content;
+  }
+
+  private static List<ChatMessageDTO> BuildMessageHistory(Conversation conversation)
+  {
+    return [.. conversation.Messages
       .OrderBy(m => m.CreatedOn.Value)
       .Select(m => new ChatMessageDTO(
-          m.FromUser.Value ? ChatRole.User : ChatRole.Assistant,
-          m.Content.Value,
-          m.CreatedOn.Value
+        m.FromUser.Value ? ChatRole.User : ChatRole.Assistant,
+        m.Content.Value,
+        m.CreatedOn.Value
+      ))];
+  }
+
+  private static List<ChatMessageDTO> BuildToolCallingMessages(Conversation conversation)
+  {
+    var latestUserMessage = conversation.Messages
+      .Where(m => m.FromUser.Value)
+      .OrderByDescending(m => m.CreatedOn.Value)
+      .FirstOrDefault();
+
+    return latestUserMessage is null
+      ? []
+      : [
+        new ChatMessageDTO(
+          ChatRole.User,
+          latestUserMessage.Content.Value,
+          latestUserMessage.CreatedOn.Value
         )
-      ).ToList();
+      ];
+  }
 
-    var completionRequest = new ChatCompletionRequestDTO(aiConfig.SystemPrompt, messages);
-
+  private Dictionary<string, object> CreatePlugins(Person person)
+  {
     var toDoPlugin = new ToDoPlugin(mediator, personStore, fuzzyTimeParser, timeProvider, personConfig, person.Id);
-    apolloAIAgent.AddPlugin(toDoPlugin, ToDoPlugin.PluginName);
-
     var personPlugin = new PersonPlugin(personStore, personConfig, person.Id);
-    apolloAIAgent.AddPlugin(personPlugin, PersonPlugin.PluginName);
 
-    return await apolloAIAgent.ChatAsync(completionRequest, cancellationToken);
+    return new Dictionary<string, object>
+    {
+      [ToDoPlugin.PluginName] = toDoPlugin,
+      [PersonPlugin.PluginName] = personPlugin
+    };
   }
 
   private async Task SaveReplyAsync(Conversation conversation, string response)

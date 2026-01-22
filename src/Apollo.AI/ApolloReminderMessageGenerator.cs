@@ -1,4 +1,5 @@
 using Apollo.AI.DTOs;
+using Apollo.AI.Enums;
 using Apollo.Core.ToDos;
 
 using FluentResults;
@@ -34,15 +35,21 @@ public sealed class ApolloReminderMessageGenerator(IApolloAIAgent apolloAIAgent)
       var taskList = string.Join(", ", toDoDescriptions);
       var userMessage = $"Create a reminder message for {personName}. Their pending tasks are: {taskList}";
 
-      var request = new ChatCompletionRequestDTO(
-        ReminderSystemPrompt,
-        [new ChatMessageDTO(Enums.ChatRole.User, userMessage, DateTime.UtcNow)]
-      );
+      var result = await apolloAIAgent
+        .CreateRequest()
+        .WithSystemPrompt(ReminderSystemPrompt)
+        .WithTemperature(0.8)
+        .WithMessage(new ChatMessageDTO(ChatRole.User, userMessage, DateTime.UtcNow))
+        .WithToolCalling(enabled: false)
+        .ExecuteAsync(cancellationToken);
 
-      var response = await apolloAIAgent.ChatAsync(request, cancellationToken);
+      if (!result.Success)
+      {
+        return Result.Fail<string>($"Failed to generate reminder message: {result.ErrorMessage}");
+      }
 
       // Remove any surrounding quotes the LLM might add
-      return Result.Ok(response.Trim().Trim('"'));
+      return Result.Ok(result.Content.Trim().Trim('"'));
     }
     catch (Exception ex)
     {

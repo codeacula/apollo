@@ -1,5 +1,4 @@
 using Apollo.Core.API;
-using Apollo.Core.Conversations;
 using Apollo.Core.ToDos.Responses;
 using Apollo.Domain.Common.Enums;
 using Apollo.Domain.People.ValueObjects;
