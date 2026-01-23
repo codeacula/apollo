@@ -58,7 +58,7 @@ public class SlashCommandModule(IApolloServiceClient apolloServiceClient) : Appl
       ReminderDate = null,
     };
 
-    var result = await apolloServiceClient.CreateToDoAsync(createRequest);
+    var result = await apolloServiceClient.CreateToDoAsync(createRequest, CancellationToken.None);
 
     if (result.IsFailed)
     {
@@ -88,7 +88,7 @@ public class SlashCommandModule(IApolloServiceClient apolloServiceClient) : Appl
     _ = await RespondAsync(InteractionCallback.DeferredMessage());
 
     var platformId = new PlatformId(Context.User.Username, Context.User.Id.ToString(CultureInfo.InvariantCulture), ApolloPlatform.Discord);
-    var result = await apolloServiceClient.GetToDosAsync(platformId, includeCompleted);
+    var result = await apolloServiceClient.GetToDosAsync(platformId, includeCompleted, CancellationToken.None);
 
     if (result.IsFailed)
     {
