@@ -14,16 +14,19 @@ namespace Apollo.AI.Requests;
 public sealed class AIRequestBuilder : IAIRequestBuilder
 {
   private readonly ApolloAIConfig _config;
+  private readonly IPromptTemplateProcessor _templateProcessor;
   private readonly List<ChatMessageDTO> _messages = [];
   private readonly Dictionary<string, object> _plugins = [];
+  private readonly Dictionary<string, string> _templateVariables = [];
 
   private string _systemPrompt = "";
   private double _temperature = 0.7;
   private bool _toolCallingEnabled = true;
 
-  public AIRequestBuilder(ApolloAIConfig config)
+  public AIRequestBuilder(ApolloAIConfig config, IPromptTemplateProcessor templateProcessor)
   {
     _config = config;
+    _templateProcessor = templateProcessor;
   }
 
   public IAIRequestBuilder WithSystemPrompt(string systemPrompt)
@@ -75,6 +78,15 @@ public sealed class AIRequestBuilder : IAIRequestBuilder
   {
     _systemPrompt = prompt.SystemPrompt;
     _temperature = prompt.Temperature;
+    return this;
+  }
+
+  public IAIRequestBuilder WithTemplateVariables(IDictionary<string, string> variables)
+  {
+    foreach (var (key, value) in variables)
+    {
+      _templateVariables[key] = value;
+    }
     return this;
   }
 
@@ -131,7 +143,8 @@ public sealed class AIRequestBuilder : IAIRequestBuilder
 
     if (!string.IsNullOrWhiteSpace(_systemPrompt))
     {
-      history.AddSystemMessage(_systemPrompt);
+      var processedPrompt = _templateProcessor.Process(_systemPrompt, _templateVariables);
+      history.AddSystemMessage(processedPrompt);
     }
 
     foreach (var message in _messages.OrderBy(m => m.CreatedOn))

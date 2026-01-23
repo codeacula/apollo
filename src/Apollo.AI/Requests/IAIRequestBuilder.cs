@@ -13,6 +13,7 @@ public interface IAIRequestBuilder
   IAIRequestBuilder WithPlugins(IDictionary<string, object> plugins);
   IAIRequestBuilder WithToolCalling(bool enabled = true);
   IAIRequestBuilder FromPromptDefinition(PromptDefinition prompt);
+  IAIRequestBuilder WithTemplateVariables(IDictionary<string, string> variables);
 
   Task<AIRequestResult> ExecuteAsync(CancellationToken cancellationToken = default);
 }
