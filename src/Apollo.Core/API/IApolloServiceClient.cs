@@ -10,7 +10,7 @@ namespace Apollo.Core.API;
 
 public interface IApolloServiceClient
 {
-  Task<Result<ToDo>> CreateToDoAsync(CreateToDoRequest request);
-  Task<Result<IEnumerable<ToDoSummary>>> GetToDosAsync(PlatformId platformId, bool includeCompleted = false);
-  Task<Result<string>> SendMessageAsync(NewMessageRequest request);
+  Task<Result<ToDo>> CreateToDoAsync(CreateToDoRequest request, CancellationToken cancellationToken = default);
+  Task<Result<IEnumerable<ToDoSummary>>> GetToDosAsync(PlatformId platformId, bool includeCompleted = false, CancellationToken cancellationToken = default);
+  Task<Result<string>> SendMessageAsync(NewMessageRequest request, CancellationToken cancellationToken = default);
 }

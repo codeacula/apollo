@@ -45,7 +45,7 @@ public class ApolloGrpcClient : IApolloGrpcClient, IApolloServiceClient, IDispos
     GC.SuppressFinalize(this);
   }
 
-  public async Task<Result<ToDo>> CreateToDoAsync(CoreCreateToDoRequest request)
+  public async Task<Result<ToDo>> CreateToDoAsync(CoreCreateToDoRequest request, CancellationToken cancellationToken = default)
   {
     var grpcRequest = new GrpcCreateToDoRequest
     {
@@ -62,7 +62,7 @@ public class ApolloGrpcClient : IApolloGrpcClient, IApolloServiceClient, IDispos
     return grpcResponse.IsFailed ? Result.Fail<ToDo>(grpcResponse.Errors) : Result.Ok(MapToDomain(grpcResponse.Value));
   }
 
-  public async Task<Result<string>> SendMessageAsync(CoreNewMessageRequest request)
+  public async Task<Result<string>> SendMessageAsync(CoreNewMessageRequest request, CancellationToken cancellationToken = default)
   {
     var grpcRequest = new GrpcNewMessageRequest
     {
@@ -79,7 +79,7 @@ public class ApolloGrpcClient : IApolloGrpcClient, IApolloServiceClient, IDispos
       Result.Fail(string.Join("; ", grpcResult.Errors.Select(e => e.Message)));
   }
 
-  public async Task<Result<IEnumerable<ToDoSummary>>> GetToDosAsync(PlatformId platformId, bool includeCompleted = false)
+  public async Task<Result<IEnumerable<ToDoSummary>>> GetToDosAsync(PlatformId platformId, bool includeCompleted = false, CancellationToken cancellationToken = default)
   {
     var grpcRequest = new GrpcGetPersonToDosRequest
     {

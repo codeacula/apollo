@@ -55,7 +55,7 @@ public class IncomingMessageHandler(
         Content = arg.Content
       };
 
-      var response = await apolloServiceClient.SendMessageAsync(newMessage);
+      var response = await apolloServiceClient.SendMessageAsync(newMessage, CancellationToken.None);
 
       if (response.IsFailed)
       {
