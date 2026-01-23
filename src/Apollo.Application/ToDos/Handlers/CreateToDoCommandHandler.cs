@@ -39,6 +39,7 @@ public sealed class CreateToDoCommandHandler(
 
         var createReminderResult = await reminderStore.CreateAsync(
           reminderId,
+          request.PersonId,
           reminderDetails,
           reminderTime,
           jobResult.Value,

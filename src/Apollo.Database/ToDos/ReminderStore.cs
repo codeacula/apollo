@@ -1,6 +1,7 @@
 using Apollo.Core;
 using Apollo.Core.ToDos;
 using Apollo.Database.ToDos.Events;
+using Apollo.Domain.People.ValueObjects;
 using Apollo.Domain.ToDos.Models;
 using Apollo.Domain.ToDos.ValueObjects;
 
@@ -14,6 +15,7 @@ public sealed class ReminderStore(IDocumentSession session, TimeProvider timePro
 {
   public async Task<Result<Reminder>> CreateAsync(
     ReminderId id,
+    PersonId personId,
     Details details,
     ReminderTime reminderTime,
     QuartzJobId quartzJobId,
@@ -22,7 +24,7 @@ public sealed class ReminderStore(IDocumentSession session, TimeProvider timePro
     try
     {
       var time = timeProvider.GetUtcDateTime();
-      var ev = new ReminderCreatedEvent(id.Value, details.Value, reminderTime.Value, quartzJobId.Value, time);
+      var ev = new ReminderCreatedEvent(id.Value, personId.Value, details.Value, reminderTime.Value, quartzJobId.Value, time);
 
       _ = session.Events.StartStream<DbReminder>(id.Value, [ev]);
       await session.SaveChangesAsync(cancellationToken);

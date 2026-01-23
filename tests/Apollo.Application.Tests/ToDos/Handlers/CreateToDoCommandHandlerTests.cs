@@ -52,10 +52,11 @@ public class CreateToDoCommandHandlerTests
 
     _ = reminderStore
       .InSequence(sequence)
-      .Setup(x => x.CreateAsync(It.IsAny<ReminderId>(), It.IsAny<Details>(), It.IsAny<ReminderTime>(), quartzJobId, It.IsAny<CancellationToken>()))
-      .ReturnsAsync((ReminderId id, Details details, ReminderTime time, QuartzJobId jobId, CancellationToken _) => Result.Ok(new Reminder
+      .Setup(x => x.CreateAsync(It.IsAny<ReminderId>(), personId, It.IsAny<Details>(), It.IsAny<ReminderTime>(), quartzJobId, It.IsAny<CancellationToken>()))
+      .ReturnsAsync((ReminderId id, PersonId pid, Details details, ReminderTime time, QuartzJobId jobId, CancellationToken _) => Result.Ok(new Reminder
       {
         Id = id,
+        PersonId = pid,
         Details = details,
         ReminderTime = time,
         QuartzJobId = jobId,
@@ -77,7 +78,7 @@ public class CreateToDoCommandHandlerTests
 
     Assert.True(result.IsSuccess);
     scheduler.Verify(x => x.GetOrCreateJobAsync(reminderDate, It.IsAny<CancellationToken>()), Times.Exactly(2));
-    reminderStore.Verify(x => x.CreateAsync(It.IsAny<ReminderId>(), It.IsAny<Details>(), It.IsAny<ReminderTime>(), quartzJobId, It.IsAny<CancellationToken>()), Times.Once);
+    reminderStore.Verify(x => x.CreateAsync(It.IsAny<ReminderId>(), It.IsAny<PersonId>(), It.IsAny<Details>(), It.IsAny<ReminderTime>(), quartzJobId, It.IsAny<CancellationToken>()), Times.Once);
     reminderStore.Verify(x => x.LinkToToDoAsync(It.IsAny<ReminderId>(), It.IsAny<ToDoId>(), It.IsAny<CancellationToken>()), Times.Once);
   }
 
@@ -110,6 +111,6 @@ public class CreateToDoCommandHandlerTests
 
     Assert.True(result.IsSuccess);
     scheduler.Verify(x => x.GetOrCreateJobAsync(It.IsAny<DateTime>(), It.IsAny<CancellationToken>()), Times.Never);
-    reminderStore.Verify(x => x.CreateAsync(It.IsAny<ReminderId>(), It.IsAny<Details>(), It.IsAny<ReminderTime>(), It.IsAny<QuartzJobId>(), It.IsAny<CancellationToken>()), Times.Never);
+    reminderStore.Verify(x => x.CreateAsync(It.IsAny<ReminderId>(), It.IsAny<PersonId>(), It.IsAny<Details>(), It.IsAny<ReminderTime>(), It.IsAny<QuartzJobId>(), It.IsAny<CancellationToken>()), Times.Never);
   }
 }

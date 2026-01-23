@@ -5,21 +5,14 @@ using YamlDotNet.Serialization.NamingConventions;
 
 namespace Apollo.AI.Prompts;
 
-public sealed class PromptLoader : IPromptLoader
+public sealed class PromptLoader(string? promptsDirectory = null) : IPromptLoader
 {
-  private readonly string _promptsDirectory;
-  private readonly ConcurrentDictionary<string, PromptDefinition> _cache = new();
-  private readonly IDeserializer _deserializer;
-
-  public PromptLoader(string? promptsDirectory = null)
-  {
-    _promptsDirectory = promptsDirectory
+  private readonly string _promptsDirectory = promptsDirectory
       ?? Path.Combine(AppContext.BaseDirectory, "Prompts");
-
-    _deserializer = new DeserializerBuilder()
+  private readonly ConcurrentDictionary<string, PromptDefinition> _cache = new();
+  private readonly IDeserializer _deserializer = new DeserializerBuilder()
       .WithNamingConvention(CamelCaseNamingConvention.Instance)
       .Build();
-  }
 
   public PromptDefinition Load(string promptName)
   {

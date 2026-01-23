@@ -4,7 +4,6 @@ using Apollo.Core.Notifications;
 using Apollo.Core.People;
 using Apollo.Core.ToDos;
 using Apollo.Domain.Common.Enums;
-using Apollo.Domain.ToDos.ValueObjects;
 
 using Quartz;
 
@@ -12,7 +11,6 @@ namespace Apollo.Service.Jobs;
 
 [DisallowConcurrentExecution]
 public class ToDoReminderJob(
-  IToDoStore toDoStore,
   IReminderStore reminderStore,
   IPersonStore personStore,
   IPersonNotificationClient notificationClient,
@@ -32,9 +30,8 @@ public class ToDoReminderJob(
         return;
       }
 
-      var jobId = new QuartzJobId(jobGuid);
+      var jobId = new Domain.ToDos.ValueObjects.QuartzJobId(jobGuid);
 
-      // Get reminders by QuartzJobId
       var remindersResult = await reminderStore.GetByQuartzJobIdAsync(jobId, context.CancellationToken);
 
       if (remindersResult.IsFailed)
@@ -46,49 +43,19 @@ public class ToDoReminderJob(
       var reminders = remindersResult.Value.ToList();
       ToDoLogs.LogFoundDueToDos(logger, reminders.Count);
 
-      // Collect all ToDos linked to these reminders, grouped by PersonId
-      var toDosByPerson = new Dictionary<Guid, List<(Domain.ToDos.Models.ToDo ToDo, Domain.ToDos.Models.Reminder Reminder)>>();
+      var remindersByPerson = reminders.GroupBy(r => r.PersonId.Value);
 
-      foreach (var reminder in reminders)
+      foreach (var personGroup in remindersByPerson)
       {
-        var linkedToDoIdsResult = await reminderStore.GetLinkedToDoIdsAsync(reminder.Id, context.CancellationToken);
-        if (linkedToDoIdsResult.IsFailed)
-        {
-          continue;
-        }
-
-        foreach (var toDoId in linkedToDoIdsResult.Value)
-        {
-          var toDoResult = await toDoStore.GetAsync(toDoId, context.CancellationToken);
-          if (toDoResult.IsFailed)
-          {
-            continue;
-          }
-
-          var toDo = toDoResult.Value;
-          var personId = toDo.PersonId.Value;
-
-          if (!toDosByPerson.TryGetValue(personId, out var todoList))
-          {
-            todoList = [];
-            toDosByPerson[personId] = todoList;
-          }
-
-          todoList.Add((toDo, reminder));
-        }
-      }
-
-      // Send notifications grouped by person
-      foreach (var (personId, todoReminderPairs) in toDosByPerson)
-      {
-        var firstToDo = todoReminderPairs[0].ToDo;
+        var personId = personGroup.Key;
+        var personReminders = personGroup.ToList();
 
         try
         {
-          var personResult = await personStore.GetAsync(firstToDo.PersonId, context.CancellationToken);
+          var personResult = await personStore.GetAsync(new(personId), context.CancellationToken);
           if (personResult.IsFailed)
           {
-            ToDoLogs.LogFailedToGetPerson(logger, firstToDo.PersonId.Value.ToString(), firstToDo.Id.Value);
+            ToDoLogs.LogFailedToGetPerson(logger, personId.ToString(), personReminders[0].Id.Value);
             continue;
           }
 
@@ -96,12 +63,11 @@ public class ToDoReminderJob(
 
           if (person.PlatformId.Platform == Platform.Discord)
           {
-            var toDoDescriptions = todoReminderPairs.Select(p => p.ToDo.Description.Value);
+            var reminderDetails = personReminders.Select(r => r.Details.Value);
 
-            // Use AI to generate a personalized reminder message
             var messageResult = await reminderMessageGenerator.GenerateReminderMessageAsync(
               person.Username.Value,
-              toDoDescriptions,
+              reminderDetails,
               context.CancellationToken);
 
             string reminderContent;
@@ -111,10 +77,9 @@ public class ToDoReminderJob(
             }
             else
             {
-              // Fallback to static message if AI generation fails
-              ToDoLogs.LogErrorProcessingReminder(logger, new InvalidOperationException($"AI message generation failed: {messageResult.GetErrorMessages()}"), firstToDo.Id.Value);
-              var reminderMessage = string.Join("\n", toDoDescriptions.Select(d => $"• {d}"));
-              reminderContent = $"**Reminder: You have {todoReminderPairs.Count} ToDo(s) due:**\n{reminderMessage}";
+              ToDoLogs.LogErrorProcessingReminder(logger, new InvalidOperationException($"AI message generation failed: {messageResult.GetErrorMessages()}"), personReminders[0].Id.Value);
+              var reminderMessage = string.Join("\n", reminderDetails.Select(d => $"• {d}"));
+              reminderContent = $"**Reminder: You have {personReminders.Count} reminder(s) due:**\n{reminderMessage}";
             }
 
             var notification = new Notification
@@ -122,20 +87,19 @@ public class ToDoReminderJob(
               Content = reminderContent
             };
 
-            ToDoLogs.LogSendingGroupedReminder(logger, todoReminderPairs.Count, person.Username.Value);
+            ToDoLogs.LogSendingGroupedReminder(logger, personReminders.Count, person.Username.Value);
 
             var sendResult = await notificationClient.SendNotificationAsync(person, notification, context.CancellationToken);
 
             if (sendResult.IsFailed)
             {
-              ToDoLogs.LogErrorProcessingReminder(logger, new InvalidOperationException(sendResult.GetErrorMessages()), firstToDo.Id.Value);
+              ToDoLogs.LogErrorProcessingReminder(logger, new InvalidOperationException(sendResult.GetErrorMessages()), personReminders[0].Id.Value);
             }
             else
             {
               ToDoLogs.LogReminder(logger, person.Username.Value, reminderContent);
 
-              // Mark reminders as sent
-              foreach (var (_, reminder) in todoReminderPairs)
+              foreach (var reminder in personReminders)
               {
                 var markAsSentResult = await reminderStore.MarkAsSentAsync(reminder.Id, context.CancellationToken);
                 if (markAsSentResult.IsFailed)
@@ -148,7 +112,7 @@ public class ToDoReminderJob(
         }
         catch (Exception ex)
         {
-          ToDoLogs.LogErrorProcessingReminder(logger, ex, firstToDo.Id.Value);
+          ToDoLogs.LogErrorProcessingReminder(logger, ex, personReminders[0].Id.Value);
         }
       }
 
