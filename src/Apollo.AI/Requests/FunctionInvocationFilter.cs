@@ -2,9 +2,6 @@ using Microsoft.SemanticKernel;
 
 namespace Apollo.AI.Requests;
 
-/// <summary>
-/// A filter that captures function invocation results for tracking tool calls.
-/// </summary>
 internal sealed class FunctionInvocationFilter(List<ToolCallResult> toolCalls, int maxToolCalls) : IFunctionInvocationFilter
 {
   private const string ToDoPluginName = "ToDos";
@@ -24,27 +21,58 @@ internal sealed class FunctionInvocationFilter(List<ToolCallResult> toolCalls, i
 
   private bool _createdToDo;
   private bool _limitReached;
+  private string? _lastToolCall;
+  private int _consecutiveRepeats;
+  private const int MaxConsecutiveRepeats = 3;
 
   public async Task OnFunctionInvocationAsync(FunctionInvocationContext context, Func<FunctionInvocationContext, Task> next)
   {
+    var pluginName = context.Function.PluginName ?? "Unknown";
+    var functionName = context.Function.Name;
+    var toolCallKey = $"{pluginName}.{functionName}";
+
+    Console.WriteLine($"[TOOL] Attempting to invoke: {toolCallKey}");
+
+    // Detect infinite loops - if the same tool is called repeatedly, STOP HARD
+    if (_lastToolCall == toolCallKey)
+    {
+      _consecutiveRepeats++;
+      if (_consecutiveRepeats >= MaxConsecutiveRepeats)
+      {
+        Console.WriteLine($"[TOOL] TERMINATED - Detected infinite loop: {toolCallKey} called {_consecutiveRepeats + 1} times in a row");
+        // Throw exception to terminate the auto-invocation loop immediately
+        throw new InvalidOperationException($"Tool calling loop terminated: {toolCallKey} was called {_consecutiveRepeats + 1} times consecutively, indicating an infinite loop.");
+      }
+    }
+    else
+    {
+      _consecutiveRepeats = 0;
+      _lastToolCall = toolCallKey;
+    }
+
     if (_limitReached || toolCalls.Count >= maxToolCalls)
     {
       _limitReached = true;
+      Console.WriteLine($"[TOOL] BLOCKED - Tool call limit reached ({toolCalls.Count}/{maxToolCalls})");
       BlockInvocation(context, "Tool call limit reached for this request.", includeInResults: false);
       return;
     }
 
     if (_createdToDo && IsBlockedAfterCreate(context))
     {
+      Console.WriteLine($"[TOOL] BLOCKED - Cannot modify newly created ToDo");
       BlockInvocation(context, "Cannot complete or delete a newly created ToDo, or unlink/delete its reminders, within the same request.");
       return;
     }
 
+    var beforeExec = DateTimeOffset.UtcNow;
     await next(context);
+    var afterExec = DateTimeOffset.UtcNow;
 
-    var pluginName = context.Function.PluginName ?? "Unknown";
-    var functionName = context.Function.Name;
     var result = context.Result?.ToString() ?? "";
+
+    Console.WriteLine($"[TOOL] Executed {pluginName}.{functionName} in {(afterExec - beforeExec).TotalMilliseconds:F0}ms");
+    Console.WriteLine($"[TOOL] Result: {(result.Length > 100 ? result.Substring(0, 100) + "..." : result)}");
 
     toolCalls.Add(new ToolCallResult
     {

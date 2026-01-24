@@ -50,7 +50,7 @@ public sealed record DbPerson
 
     return new()
     {
-      Id = eventData.PersonId,
+      Id = eventData.Id,
       Username = eventData.Username,
       HasAccess = false,
       Platform = eventData.Platform,

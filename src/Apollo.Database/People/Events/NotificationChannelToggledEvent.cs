@@ -8,4 +8,4 @@ public sealed record NotificationChannelToggledEvent(
   NotificationChannelType ChannelType,
   string Identifier,
   bool IsEnabled,
-  DateTime ToggledOn);
+  DateTime ToggledOn) : BaseEvent;

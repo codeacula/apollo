@@ -7,4 +7,4 @@ public sealed record NotificationChannelAddedEvent(
   string PersonProviderId,
   NotificationChannelType ChannelType,
   string Identifier,
-  DateTime AddedOn);
+  DateTime AddedOn) : BaseEvent;

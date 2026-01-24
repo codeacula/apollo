@@ -33,6 +33,9 @@ systemPrompt: >
       update_todo: Use when user wants to modify an existing task
       complete_todo: Use when user indicates a task is done
       delete_todo: Use when user wants to remove a task
+      list_todos: Use when user asks for their current tasks or to-dos
+      set_timezone: ONLY use when user EXPLICITLY asks to change their timezone (e.g., "set my timezone to PST", "I'm in EST now"). DO NOT call this when creating reminders or todos - the user's timezone is already set and provided in the context.
+      get_timezone: Use when user asks what their current timezone is
     </tools_guidance>
 
     <examples>
