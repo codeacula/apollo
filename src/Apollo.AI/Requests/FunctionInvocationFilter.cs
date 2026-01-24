@@ -23,6 +23,7 @@ internal sealed class FunctionInvocationFilter(List<ToolCallResult> toolCalls, i
   };
 
   private bool _createdToDo;
+  private bool _createdReminder;
   private bool _limitReached;
 
   public async Task OnFunctionInvocationAsync(FunctionInvocationContext context, Func<FunctionInvocationContext, Task> next)
@@ -36,7 +37,13 @@ internal sealed class FunctionInvocationFilter(List<ToolCallResult> toolCalls, i
 
     if (_createdToDo && IsBlockedAfterCreate(context))
     {
-      BlockInvocation(context, "Cannot complete or delete a newly created ToDo, or unlink/delete its reminders, within the same request.");
+      BlockInvocation(context, "Cannot complete or delete a newly created ToDo within the same request.");
+      return;
+    }
+
+    if (_createdReminder && IsBlockedReminderAfterCreate(context))
+    {
+      BlockInvocation(context, "Cannot unlink or delete a newly created reminder within the same request.");
       return;
     }
 
@@ -57,6 +64,12 @@ internal sealed class FunctionInvocationFilter(List<ToolCallResult> toolCalls, i
     if (IsCreateToDo(context))
     {
       _createdToDo = true;
+
+      // Check if a reminder was actually created by looking at the reminderDate parameter
+      if (HasReminderParameter(context))
+      {
+        _createdReminder = true;
+      }
     }
   }
 
@@ -73,7 +86,24 @@ internal sealed class FunctionInvocationFilter(List<ToolCallResult> toolCalls, i
       return BlockedAfterCreateFunctions.Contains(context.Function.Name);
     }
 
+    return false;
+  }
+
+  private static bool IsBlockedReminderAfterCreate(FunctionInvocationContext context)
+  {
     return BlockedAfterCreateReminders.Contains(context.Function.Name);
+  }
+
+  private static bool HasReminderParameter(FunctionInvocationContext context)
+  {
+    // Check if the reminderDate parameter was provided and is not null or empty
+    if (context.Arguments.TryGetValue("reminderDate", out var reminderDateArg))
+    {
+      var reminderDate = reminderDateArg?.ToString();
+      return !string.IsNullOrWhiteSpace(reminderDate);
+    }
+
+    return false;
   }
 
   private void BlockInvocation(FunctionInvocationContext context, string errorMessage, bool includeInResults = true)
