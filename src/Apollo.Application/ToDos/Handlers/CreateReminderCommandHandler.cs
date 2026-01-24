@@ -9,21 +9,14 @@ using FluentResults;
 
 namespace Apollo.Application.ToDos.Handlers;
 
-public sealed class AddReminderCommandHandler(
-  IToDoStore toDoStore,
+public sealed class CreateReminderCommandHandler(
   IReminderStore reminderStore,
-  IToDoReminderScheduler toDoReminderScheduler) : IRequestHandler<AddReminderCommand, Result<Reminder>>
+  IToDoReminderScheduler toDoReminderScheduler) : IRequestHandler<CreateReminderCommand, Result<Reminder>>
 {
-  public async Task<Result<Reminder>> Handle(AddReminderCommand request, CancellationToken cancellationToken)
+  public async Task<Result<Reminder>> Handle(CreateReminderCommand request, CancellationToken cancellationToken)
   {
     try
     {
-      var toDoResult = await toDoStore.GetAsync(request.ToDoId, cancellationToken);
-      if (toDoResult.IsFailed)
-      {
-        return Result.Fail<Reminder>(toDoResult.GetErrorMessages());
-      }
-
       var jobResult = await toDoReminderScheduler.GetOrCreateJobAsync(request.ReminderDate, cancellationToken);
       if (jobResult.IsFailed)
       {
@@ -31,12 +24,12 @@ public sealed class AddReminderCommandHandler(
       }
 
       var reminderId = new ReminderId(Guid.NewGuid());
-      var reminderDetails = new Details(toDoResult.Value.Description.Value);
+      var reminderDetails = new Details(request.Details);
       var reminderTime = new ReminderTime(request.ReminderDate);
 
       var createReminderResult = await reminderStore.CreateAsync(
         reminderId,
-        toDoResult.Value.PersonId,
+        request.PersonId,
         reminderDetails,
         reminderTime,
         jobResult.Value,
@@ -47,16 +40,9 @@ public sealed class AddReminderCommandHandler(
         return Result.Fail<Reminder>($"Failed to create reminder: {createReminderResult.GetErrorMessages()}");
       }
 
-      var linkResult = await reminderStore.LinkToToDoAsync(reminderId, request.ToDoId, cancellationToken);
-      if (linkResult.IsFailed)
-      {
-        return Result.Fail<Reminder>($"Reminder created but failed to link to ToDo: {linkResult.GetErrorMessages()}");
-      }
-
       var ensureJobResult = await toDoReminderScheduler.GetOrCreateJobAsync(request.ReminderDate, cancellationToken);
       return ensureJobResult.IsFailed
-        ? Result.Fail<Reminder>($"Reminder created but failed to ensure job exists: {ensureJobResult.GetErrorMessages()}")
-        : (Result<Reminder>)createReminderResult.Value;
+        ? Result.Fail<Reminder>($"Reminder created but failed to ensure job exists: {ensureJobResult.GetErrorMessages()}") : (Result<Reminder>)createReminderResult.Value;
     }
     catch (Exception ex)
     {

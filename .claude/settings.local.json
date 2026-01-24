@@ -4,7 +4,10 @@
       "Bash(cat:*)",
       "Bash(find:*)",
       "Bash(dotnet build:*)",
-      "Bash(dotnet test:*)"
+      "Bash(dotnet test:*)",
+      "mcp__acp__Write",
+      "mcp__acp__Edit",
+      "mcp__acp__Bash"
     ]
   }
 }

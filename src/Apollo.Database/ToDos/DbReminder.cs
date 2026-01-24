@@ -8,6 +8,7 @@ namespace Apollo.Database.ToDos;
 public sealed record DbReminder
 {
   public required Guid Id { get; init; }
+  public required Guid PersonId { get; init; }
   public required string Details { get; init; }
   public required Guid QuartzJobId { get; init; }
   public required DateTime ReminderTime { get; init; }
@@ -22,6 +23,7 @@ public sealed record DbReminder
     return new()
     {
       Id = new(dbReminder.Id),
+      PersonId = new(dbReminder.PersonId),
       Details = new(dbReminder.Details),
       QuartzJobId = new(dbReminder.QuartzJobId),
       ReminderTime = new(dbReminder.ReminderTime),
@@ -38,6 +40,7 @@ public sealed record DbReminder
     return new()
     {
       Id = eventData.Id,
+      PersonId = eventData.PersonId,
       Details = eventData.Details,
       QuartzJobId = eventData.QuartzJobId,
       ReminderTime = eventData.ReminderTime,

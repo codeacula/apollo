@@ -1,3 +1,4 @@
+using Apollo.Domain.People.ValueObjects;
 using Apollo.Domain.ToDos.Models;
 using Apollo.Domain.ToDos.ValueObjects;
 
@@ -9,6 +10,7 @@ public interface IReminderStore
 {
   Task<Result<Reminder>> CreateAsync(
     ReminderId id,
+    PersonId personId,
     Details details,
     ReminderTime reminderTime,
     QuartzJobId quartzJobId,

@@ -19,13 +19,21 @@ public sealed class PersonStore(SuperAdminConfig SuperAdminConfig, IDocumentSess
     {
       var time = timeProvider.GetUtcDateTime();
       var id = Guid.NewGuid();
-      var pce = new PersonCreatedEvent(id, platformId.Username, platformId.Platform, platformId.PlatformUserId, time);
+      var pce = new PersonCreatedEvent(platformId.Username, platformId.Platform, platformId.PlatformUserId)
+      {
+        Id = id,
+        CreatedOn = time
+      };
 
       var events = new List<object> { pce };
 
       if (IsSuperAdmin(platformId))
       {
-        events.Add(new AccessGrantedEvent(id, time));
+        events.Add(new AccessGrantedEvent(time)
+        {
+          Id = id,
+          CreatedOn = time
+        });
       }
 
       _ = session.Events.StartStream<DbPerson>(id, events);
@@ -102,7 +110,13 @@ public sealed class PersonStore(SuperAdminConfig SuperAdminConfig, IDocumentSess
   {
     try
     {
-      _ = session.Events.Append(id.Value, new AccessGrantedEvent(id.Value, timeProvider.GetUtcDateTime()));
+      var time = timeProvider.GetUtcDateTime();
+      _ = session.Events.Append(id.Value, new AccessGrantedEvent(time)
+      {
+        Id = id.Value,
+        CreatedOn = time
+      });
+
 
       await session.SaveChangesAsync(cancellationToken);
 
@@ -122,7 +136,11 @@ public sealed class PersonStore(SuperAdminConfig SuperAdminConfig, IDocumentSess
     try
     {
       var time = timeProvider.GetUtcDateTime();
-      _ = session.Events.Append(id.Value, new PersonTimeZoneUpdatedEvent(id.Value, timeZoneId.Value, time));
+      _ = session.Events.Append(id.Value, new PersonTimeZoneUpdatedEvent(timeZoneId.Value, time)
+      {
+        Id = id.Value,
+        CreatedOn = time
+      });
 
       await session.SaveChangesAsync(cancellationToken);
 
@@ -141,7 +159,11 @@ public sealed class PersonStore(SuperAdminConfig SuperAdminConfig, IDocumentSess
       var time = timeProvider.GetUtcDateTime();
       _ = session.Events.Append(
         person.Id.Value,
-        new NotificationChannelAddedEvent(person.PlatformId.Platform, person.PlatformId.PlatformUserId, channel.Type, channel.Identifier, time));
+        new NotificationChannelAddedEvent(person.PlatformId.Platform, person.PlatformId.PlatformUserId, channel.Type, channel.Identifier, time)
+        {
+          Id = person.Id.Value,
+          CreatedOn = time
+        });
 
       await session.SaveChangesAsync(cancellationToken);
 
@@ -160,7 +182,11 @@ public sealed class PersonStore(SuperAdminConfig SuperAdminConfig, IDocumentSess
       var time = timeProvider.GetUtcDateTime();
       _ = session.Events.Append(
         person.Id.Value,
-        new NotificationChannelRemovedEvent(person.PlatformId.Platform, person.PlatformId.PlatformUserId, channel.Type, channel.Identifier, time));
+        new NotificationChannelRemovedEvent(person.PlatformId.Platform, person.PlatformId.PlatformUserId, channel.Type, channel.Identifier, time)
+        {
+          Id = person.Id.Value,
+          CreatedOn = time
+        });
 
       await session.SaveChangesAsync(cancellationToken);
 
@@ -185,7 +211,11 @@ public sealed class PersonStore(SuperAdminConfig SuperAdminConfig, IDocumentSess
           channel.Type,
           channel.Identifier,
           channel.IsEnabled,
-          time));
+          time)
+        {
+          Id = person.Id.Value,
+          CreatedOn = time
+        });
 
       await session.SaveChangesAsync(cancellationToken);
 

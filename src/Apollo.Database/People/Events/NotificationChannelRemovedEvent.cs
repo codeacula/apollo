@@ -7,4 +7,4 @@ public sealed record NotificationChannelRemovedEvent(
   string PersonProviderId,
   NotificationChannelType ChannelType,
   string Identifier,
-  DateTime RemovedOn);
+  DateTime RemovedOn) : BaseEvent;

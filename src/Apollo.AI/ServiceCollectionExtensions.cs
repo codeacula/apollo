@@ -23,6 +23,7 @@ public static class ServiceCollectionExtensions
     _ = services
       .AddSingleton(config)
       .AddSingleton<IPromptLoader, PromptLoader>()
+      .AddSingleton<IPromptTemplateProcessor, PromptTemplateProcessor>()
       .AddTransient<IApolloAIAgent, ApolloAIAgent>()
       .AddTransient<IReminderMessageGenerator, ApolloReminderMessageGenerator>();
 

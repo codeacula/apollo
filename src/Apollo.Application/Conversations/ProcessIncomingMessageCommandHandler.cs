@@ -26,6 +26,7 @@ public sealed class ProcessIncomingMessageCommandHandler(
   IMediator mediator,
   IPersonService personService,
   IPersonStore personStore,
+  IToDoStore toDoStore,
   PersonConfig personConfig,
   TimeProvider timeProvider
 ) : IRequestHandler<ProcessIncomingMessageCommand, Result<Reply>>
@@ -136,9 +137,13 @@ public sealed class ProcessIncomingMessageCommandHandler(
     var toolMessages = BuildToolCallingMessages(conversation);
     var plugins = CreatePlugins(person);
 
+    // Get context variables
+    var userTimezone = GetUserTimezone(person);
+    var activeTodos = await BuildActiveTodosSummaryAsync(person.Id, cancellationToken);
+
     // Phase 1: Tool Calling
     var toolResult = await apolloAIAgent
-      .CreateToolCallingRequest(toolMessages, plugins)
+      .CreateToolCallingRequest(toolMessages, plugins, userTimezone, activeTodos)
       .ExecuteAsync(cancellationToken);
 
     // Phase 2: Response Generation
@@ -147,7 +152,7 @@ public sealed class ProcessIncomingMessageCommandHandler(
       : "None";
 
     var responseResult = await apolloAIAgent
-      .CreateResponseRequest(messages, actionsSummary)
+      .CreateResponseRequest(messages, actionsSummary, userTimezone)
       .ExecuteAsync(cancellationToken);
 
     return !responseResult.Success
@@ -215,5 +220,31 @@ public sealed class ProcessIncomingMessageCommandHandler(
       CreatedOn = new(currentTime),
       UpdatedOn = new(currentTime)
     });
+  }
+
+  private static string GetUserTimezone(Person person)
+  {
+    return person.TimeZoneId?.Value ?? "UTC";
+  }
+
+  private async Task<string> BuildActiveTodosSummaryAsync(PersonId personId, CancellationToken cancellationToken)
+  {
+    var todosResult = await toDoStore.GetByPersonIdAsync(personId, includeCompleted: false, cancellationToken);
+
+    if (todosResult.IsFailed || !todosResult.Value.Any())
+    {
+      return "No active todos";
+    }
+
+    var todos = todosResult.Value
+      .OrderBy(t => t.DueDate?.Value)
+      .Take(10) // Limit to 10 to avoid bloating the prompt
+      .ToList();
+
+    return string.Join("\n", todos.Select(t =>
+    {
+      var dueDate = t.DueDate?.Value.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture) ?? "No due date";
+      return $"• [{t.Id.Value}] {t.Description.Value} (Due: {dueDate})";
+    }));
   }
 }

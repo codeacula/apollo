@@ -1,3 +1,3 @@
 namespace Apollo.Database.People.Events;
 
-public sealed record PersonUpdatedEvent(Guid PersonId, string DisplayName, DateTime UpdatedOn);
+public sealed record PersonUpdatedEvent(string DisplayName, DateTime UpdatedOn) : BaseEvent;
