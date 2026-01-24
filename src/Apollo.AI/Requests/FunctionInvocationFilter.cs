@@ -66,7 +66,7 @@ internal sealed class FunctionInvocationFilter(List<ToolCallResult> toolCalls, i
       _createdToDo = true;
 
       // Check if a reminder was actually created by looking at the reminderDate parameter
-      if (HasReminderParameter(context))
+      if (IsReminderDateProvided(context))
       {
         _createdReminder = true;
       }
@@ -91,10 +91,12 @@ internal sealed class FunctionInvocationFilter(List<ToolCallResult> toolCalls, i
 
   private static bool IsBlockedReminderAfterCreate(FunctionInvocationContext context)
   {
+    // TODO: Add plugin name validation when delete_reminder and unlink_reminder functions are implemented
+    // to ensure we only block reminder functions from the appropriate plugin
     return BlockedAfterCreateReminders.Contains(context.Function.Name);
   }
 
-  private static bool HasReminderParameter(FunctionInvocationContext context)
+  private static bool IsReminderDateProvided(FunctionInvocationContext context)
   {
     // Check if the reminderDate parameter was provided and is not null or empty
     if (context.Arguments.TryGetValue("reminderDate", out var reminderDateArg))
