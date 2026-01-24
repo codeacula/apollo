@@ -9,6 +9,7 @@ internal sealed class FunctionInvocationFilter(List<ToolCallResult> toolCalls, i
 {
   private const string ToDoPluginName = "ToDos";
   private const string CreateToDoFunction = "create_todo";
+  private const string RemindersPluginName = "Reminders";
 
   private static readonly HashSet<string> BlockedAfterCreateFunctions = new(StringComparer.OrdinalIgnoreCase)
   {
@@ -91,9 +92,14 @@ internal sealed class FunctionInvocationFilter(List<ToolCallResult> toolCalls, i
 
   private static bool IsBlockedReminderAfterCreate(FunctionInvocationContext context)
   {
-    // TODO: Add plugin name validation when delete_reminder and unlink_reminder functions are implemented
-    // to ensure we only block reminder functions from the appropriate plugin
-    return BlockedAfterCreateReminders.Contains(context.Function.Name);
+    // Only block reminder functions from the Reminders plugin (when implemented)
+    // This prevents false positives from functions in other plugins with the same name
+    if (string.Equals(context.Function.PluginName, RemindersPluginName, StringComparison.OrdinalIgnoreCase))
+    {
+      return BlockedAfterCreateReminders.Contains(context.Function.Name);
+    }
+
+    return false;
   }
 
   private static bool IsReminderDateProvided(FunctionInvocationContext context)
