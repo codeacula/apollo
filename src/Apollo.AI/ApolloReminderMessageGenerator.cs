@@ -24,7 +24,7 @@ public sealed class ApolloReminderMessageGenerator(
 
       var requestBuilder = apolloAIAgent
         .CreateReminderRequest(
-          person.TimeZoneId.ToString() ?? "",
+          person.TimeZoneId?.Value ?? "",
           timeProvider.GetUtcDateTime().ToString("yyyy-MM-ddTHH:mm:sszzz", CultureInfo.InvariantCulture),
           taskList
         );
