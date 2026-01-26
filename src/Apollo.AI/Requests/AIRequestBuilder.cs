@@ -205,10 +205,10 @@ public sealed class AIRequestBuilder(ApolloAIConfig config, IPromptTemplateProce
       Temperature = _temperature,
       FunctionChoiceBehavior = _toolCallingEnabled
         ? FunctionChoiceBehavior.Auto(autoInvoke: true, options: new FunctionChoiceBehaviorOptions
-          {
-            AllowConcurrentInvocation = false,
-            AllowParallelCalls = false
-          })
+        {
+          AllowConcurrentInvocation = false,
+          AllowParallelCalls = false
+        })
         : null,
       MaxTokens = 2000  // Limit response size to prevent massive requests
     };

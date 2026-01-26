@@ -45,7 +45,7 @@ public sealed class PromptLoader(string? promptsDirectory = null) : IPromptLoade
     var yaml = await File.ReadAllTextAsync(filePath, ct);
     var definition = _deserializer.Deserialize<PromptDefinition>(yaml);
 
-    _cache.TryAdd(promptName, definition);
+    _ = _cache.TryAdd(promptName, definition);
     return definition;
   }
 }

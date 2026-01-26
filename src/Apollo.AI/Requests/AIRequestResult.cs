@@ -26,12 +26,7 @@ public sealed record AIRequestResult
 
   public string FormatActionsSummary()
   {
-    if (!HasToolCalls)
-    {
-      return "None";
-    }
-
-    return string.Join("\n", ToolCalls.Select(tc => $"- {tc.ToSummary()}"));
+    return !HasToolCalls ? "None" : string.Join("\n", ToolCalls.Select(tc => $"- {tc.ToSummary()}"));
   }
 
   public static AIRequestResult Failure(string errorMessage) => new()
