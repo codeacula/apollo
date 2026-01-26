@@ -60,7 +60,7 @@ internal sealed class FunctionInvocationFilter(List<ToolCallResult> toolCalls, i
 
     if (_createdToDo && IsBlockedAfterCreate(context))
     {
-      Console.WriteLine($"[TOOL] BLOCKED - Cannot modify newly created ToDo");
+      Console.WriteLine("[TOOL] BLOCKED - Cannot modify newly created ToDo");
       BlockInvocation(context, "Cannot complete or delete a newly created ToDo, or unlink/delete its reminders, within the same request.");
       return;
     }
@@ -72,7 +72,7 @@ internal sealed class FunctionInvocationFilter(List<ToolCallResult> toolCalls, i
     var result = context.Result?.ToString() ?? "";
 
     Console.WriteLine($"[TOOL] Executed {pluginName}.{functionName} in {(afterExec - beforeExec).TotalMilliseconds:F0}ms");
-    Console.WriteLine($"[TOOL] Result: {(result.Length > 100 ? result.Substring(0, 100) + "..." : result)}");
+    Console.WriteLine($"[TOOL] Result: {(result.Length > 100 ? result[..100] + "..." : result)}");
 
     toolCalls.Add(new ToolCallResult
     {
@@ -96,12 +96,9 @@ internal sealed class FunctionInvocationFilter(List<ToolCallResult> toolCalls, i
 
   private static bool IsBlockedAfterCreate(FunctionInvocationContext context)
   {
-    if (string.Equals(context.Function.PluginName, ToDoPluginName, StringComparison.OrdinalIgnoreCase))
-    {
-      return BlockedAfterCreateFunctions.Contains(context.Function.Name);
-    }
-
-    return BlockedAfterCreateReminders.Contains(context.Function.Name);
+    return string.Equals(context.Function.PluginName, ToDoPluginName, StringComparison.OrdinalIgnoreCase)
+      ? BlockedAfterCreateFunctions.Contains(context.Function.Name)
+      : BlockedAfterCreateReminders.Contains(context.Function.Name);
   }
 
   private void BlockInvocation(FunctionInvocationContext context, string errorMessage, bool includeInResults = true)

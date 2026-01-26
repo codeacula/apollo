@@ -1,4 +1,3 @@
-using Apollo.Application;
 using Apollo.Cache;
 using Apollo.Discord;
 using Apollo.GRPC;
@@ -17,7 +16,6 @@ var redisConnection = builder.Configuration.GetConnectionString("Redis")
 // Add services to the container.
 _ = builder.Services
   .AddCacheServices(redisConnection)
-      .AddApplicationServices()
       .AddGrpcClientServices()
       .AddDiscordServices();
 

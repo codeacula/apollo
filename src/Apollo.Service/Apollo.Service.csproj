@@ -1,9 +1,10 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>ea0797f8-b37f-4f42-a7b7-3cfac0e6ec48</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -22,6 +23,7 @@
     <ProjectReference Include="..\Apollo.Application\Apollo.Application.csproj" />
     <ProjectReference Include="..\Apollo.Cache\Apollo.Cache.csproj" />
     <ProjectReference Include="..\Apollo.Core\Apollo.Core.csproj" />
+    <ProjectReference Include="..\Apollo.Domain\Apollo.Domain.csproj" />
     <ProjectReference Include="..\Apollo.Database\Apollo.Database.csproj" />
     <ProjectReference Include="..\Apollo.GRPC\Apollo.GRPC.csproj" />
     <ProjectReference Include="..\Apollo.Notifications\Apollo.Notifications.csproj" />

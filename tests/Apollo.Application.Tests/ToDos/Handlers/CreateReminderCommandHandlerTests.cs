@@ -22,7 +22,7 @@ public class CreateReminderCommandHandlerTests
     var handler = new CreateReminderCommandHandler(reminderStore.Object, scheduler.Object);
 
     var personId = new PersonId(Guid.NewGuid());
-    var details = "Get coffee";
+    const string details = "Get coffee";
     var reminderDate = DateTime.UtcNow.AddMinutes(30);
     var quartzJobId = new QuartzJobId(Guid.NewGuid());
 
@@ -60,7 +60,7 @@ public class CreateReminderCommandHandlerTests
     var handler = new CreateReminderCommandHandler(reminderStore.Object, scheduler.Object);
 
     var personId = new PersonId(Guid.NewGuid());
-    var details = "Get coffee";
+    const string details = "Get coffee";
     var reminderDate = DateTime.UtcNow.AddMinutes(30);
 
     _ = scheduler
@@ -81,7 +81,7 @@ public class CreateReminderCommandHandlerTests
     var handler = new CreateReminderCommandHandler(reminderStore.Object, scheduler.Object);
 
     var personId = new PersonId(Guid.NewGuid());
-    var details = "Get coffee";
+    const string details = "Get coffee";
     var reminderDate = DateTime.UtcNow.AddMinutes(30);
     var quartzJobId = new QuartzJobId(Guid.NewGuid());
 

@@ -3,7 +3,7 @@ using Apollo.Core.Logging;
 using Apollo.Core.Notifications;
 using Apollo.Core.People;
 using Apollo.Core.ToDos;
-using Apollo.Domain.Common.Enums;
+using Apollo.Domain.ToDos.ValueObjects;
 
 using Quartz;
 
@@ -30,7 +30,7 @@ public class ToDoReminderJob(
         return;
       }
 
-      var jobId = new Domain.ToDos.ValueObjects.QuartzJobId(jobGuid);
+      var jobId = new QuartzJobId(jobGuid);
 
       var remindersResult = await reminderStore.GetByQuartzJobIdAsync(jobId, context.CancellationToken);
 
@@ -43,9 +43,7 @@ public class ToDoReminderJob(
       var reminders = remindersResult.Value.ToList();
       ToDoLogs.LogFoundDueToDos(logger, reminders.Count);
 
-      var remindersByPerson = reminders.GroupBy(r => r.PersonId.Value);
-
-      foreach (var personGroup in remindersByPerson)
+      foreach (var personGroup in reminders.GroupBy(r => r.PersonId.Value))
       {
         var personId = personGroup.Key;
         var personReminders = personGroup.ToList();
@@ -61,52 +59,48 @@ public class ToDoReminderJob(
 
           var person = personResult.Value;
 
-          if (person.PlatformId.Platform == Platform.Discord)
+          var reminderDetails = personReminders.Select(r => r.Details.Value);
+
+          var messageResult = await reminderMessageGenerator.GenerateReminderMessageAsync(
+            person,
+            reminderDetails,
+            context.CancellationToken);
+
+          string reminderContent;
+          if (messageResult.IsSuccess)
           {
-            var reminderDetails = personReminders.Select(r => r.Details.Value);
+            reminderContent = messageResult.Value;
+          }
+          else
+          {
+            ToDoLogs.LogErrorProcessingReminder(logger, new InvalidOperationException($"AI message generation failed: {messageResult.GetErrorMessages()}"), personReminders[0].Id.Value);
+            var reminderMessage = string.Join("\n", reminderDetails.Select(d => $"• {d}"));
+            reminderContent = $"**Reminder: You have {personReminders.Count} reminder(s) due:**\n{reminderMessage}";
+          }
 
-            var messageResult = await reminderMessageGenerator.GenerateReminderMessageAsync(
-              person.Username.Value,
-              reminderDetails,
-              context.CancellationToken);
+          var notification = new Notification
+          {
+            Content = reminderContent
+          };
 
-            string reminderContent;
-            if (messageResult.IsSuccess)
+          ToDoLogs.LogSendingGroupedReminder(logger, personReminders.Count, person.Username.Value);
+
+          var sendResult = await notificationClient.SendNotificationAsync(person, notification, context.CancellationToken);
+
+          if (sendResult.IsFailed)
+          {
+            ToDoLogs.LogErrorProcessingReminder(logger, new InvalidOperationException(sendResult.GetErrorMessages()), personReminders[0].Id.Value);
+            return;
+          }
+
+          ToDoLogs.LogReminder(logger, person.Username.Value, reminderContent);
+
+          foreach (var reminder in personReminders)
+          {
+            var markAsSentResult = await reminderStore.MarkAsSentAsync(reminder.Id, context.CancellationToken);
+            if (markAsSentResult.IsFailed)
             {
-              reminderContent = messageResult.Value;
-            }
-            else
-            {
-              ToDoLogs.LogErrorProcessingReminder(logger, new InvalidOperationException($"AI message generation failed: {messageResult.GetErrorMessages()}"), personReminders[0].Id.Value);
-              var reminderMessage = string.Join("\n", reminderDetails.Select(d => $"• {d}"));
-              reminderContent = $"**Reminder: You have {personReminders.Count} reminder(s) due:**\n{reminderMessage}";
-            }
-
-            var notification = new Notification
-            {
-              Content = reminderContent
-            };
-
-            ToDoLogs.LogSendingGroupedReminder(logger, personReminders.Count, person.Username.Value);
-
-            var sendResult = await notificationClient.SendNotificationAsync(person, notification, context.CancellationToken);
-
-            if (sendResult.IsFailed)
-            {
-              ToDoLogs.LogErrorProcessingReminder(logger, new InvalidOperationException(sendResult.GetErrorMessages()), personReminders[0].Id.Value);
-            }
-            else
-            {
-              ToDoLogs.LogReminder(logger, person.Username.Value, reminderContent);
-
-              foreach (var reminder in personReminders)
-              {
-                var markAsSentResult = await reminderStore.MarkAsSentAsync(reminder.Id, context.CancellationToken);
-                if (markAsSentResult.IsFailed)
-                {
-                  ToDoLogs.LogFailedToMarkReminderAsSent(logger, reminder.Id.Value, markAsSentResult.GetErrorMessages());
-                }
-              }
+              ToDoLogs.LogFailedToMarkReminderAsSent(logger, reminder.Id.Value, markAsSentResult.GetErrorMessages());
             }
           }
         }

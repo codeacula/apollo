@@ -1,7 +1,6 @@
 using Apollo.Application.ToDos.Commands;
 using Apollo.Core;
 using Apollo.Core.ToDos;
-using Apollo.Domain.Common.ValueObjects;
 using Apollo.Domain.ToDos.Models;
 using Apollo.Domain.ToDos.ValueObjects;
 

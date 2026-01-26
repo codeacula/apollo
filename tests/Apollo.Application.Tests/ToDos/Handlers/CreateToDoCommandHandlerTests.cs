@@ -1,7 +1,6 @@
 using Apollo.Application.ToDos.Commands;
 using Apollo.Application.ToDos.Handlers;
 using Apollo.Core.ToDos;
-using Apollo.Domain.Common.Enums;
 using Apollo.Domain.Common.ValueObjects;
 using Apollo.Domain.People.ValueObjects;
 using Apollo.Domain.ToDos.Models;
