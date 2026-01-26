@@ -19,8 +19,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="Prompts\ApolloToolCalling.yml" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="Prompts\ApolloResponse.yml" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Prompts\**\*.yml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>
