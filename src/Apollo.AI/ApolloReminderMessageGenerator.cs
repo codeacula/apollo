@@ -1,6 +1,7 @@
 using System.Globalization;
 
 using Apollo.Core;
+using Apollo.Core.People;
 using Apollo.Core.ToDos;
 using Apollo.Domain.People.Models;
 
@@ -10,7 +11,8 @@ namespace Apollo.AI;
 
 public sealed class ApolloReminderMessageGenerator(
   IApolloAIAgent apolloAIAgent,
-  TimeProvider timeProvider
+  TimeProvider timeProvider,
+  PersonConfig personConfig
 ) : IReminderMessageGenerator
 {
   public async Task<Result<string>> GenerateReminderMessageAsync(
@@ -22,10 +24,18 @@ public sealed class ApolloReminderMessageGenerator(
     {
       var taskList = string.Join(", ", toDoDescriptions);
 
+      // Get the user's timezone or use default
+      var timeZoneId = person.TimeZoneId?.Value ?? personConfig.DefaultTimeZoneId;
+      var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+
+      // Convert UTC time to user's timezone
+      var utcNow = timeProvider.GetUtcDateTime();
+      var localTime = TimeZoneInfo.ConvertTimeFromUtc(utcNow, timeZoneInfo);
+
       var requestBuilder = apolloAIAgent
         .CreateReminderRequest(
-          person.TimeZoneId?.Value ?? "",
-          timeProvider.GetUtcDateTime().ToString("yyyy-MM-ddTHH:mm:sszzz", CultureInfo.InvariantCulture),
+          timeZoneId,
+          localTime.ToString("yyyy-MM-ddTHH:mm:sszzz", CultureInfo.InvariantCulture),
           taskList
         );
 
