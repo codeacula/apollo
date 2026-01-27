@@ -1,6 +1,6 @@
-# 🏳️‍🌈 CODE OF CONDUCT
+# CODE OF CONDUCT
 
-It's simple - we promote empathy, inclusivity, and patience [^1]. If you can't follow that, leave.
+It's simple - we promote empathy, inclusivity, and patience - except for when dealing with intolerance. If you can't follow that, leave.
 
 If you're incapable of not seeing human rights as political, you don't need to be here. There's nothing tolerant about me, and I'm not going to pretend there is. Human rights are inherent in all of us. Trans rights are human rights. ACAB.
 
@@ -17,6 +17,7 @@ If you're incapable of not seeing human rights as political, you don't need to b
 - LGBTQ+ (El Jibble) and diverse voices
 - Honest feedback, kindly delivered
 - Thoughtful technical and creative contributions
+- Critical thinking and open-mindedness
 
 ## Consequences
 
