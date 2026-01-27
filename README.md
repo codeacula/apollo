@@ -18,11 +18,9 @@ If you want to help out, we outline how to do so in [CONTRIBUTING](CONTRIBUTING.
 
 Please follow the directions in [SECURITY](SECURITY.md).
 
-## 📜 Documentation
+## Documentation
 
-This documentation is meant to be broken up so it's easy for both humans and AI to consume. Aside from specific documentation to support GitHub, all documentation should live inside the `/docs` folder. We use [Obsidian](https://obsidian.md/) style markdown in the documentation.
-
-If you'd like a starting place, [ARCHITECTURE.md](ARCHITECTURE.md) can help get you started.
+All project documentation, including architecture, coding practices, and local development setup, lives in [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## 🔮 About
 
