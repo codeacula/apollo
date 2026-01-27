@@ -131,6 +131,30 @@ public sealed class PersonStore(SuperAdminConfig SuperAdminConfig, IDocumentSess
     }
   }
 
+  public async Task<Result> RevokeAccessAsync(PersonId id, CancellationToken cancellationToken = default)
+  {
+    try
+    {
+      var time = timeProvider.GetUtcDateTime();
+      _ = session.Events.Append(id.Value, new AccessRevokedEvent(time)
+      {
+        Id = id.Value,
+        CreatedOn = time
+      });
+
+      await session.SaveChangesAsync(cancellationToken);
+
+      // Invalidate access cache after revoking access
+      _ = await personCache.InvalidateAccessAsync(id);
+
+      return Result.Ok();
+    }
+    catch (Exception ex)
+    {
+      return Result.Fail(ex.Message);
+    }
+  }
+
   public async Task<Result> SetTimeZoneAsync(PersonId id, PersonTimeZoneId timeZoneId, CancellationToken cancellationToken = default)
   {
     try

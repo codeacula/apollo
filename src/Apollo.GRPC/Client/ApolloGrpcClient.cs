@@ -17,6 +17,7 @@ using CoreCreateToDoRequest = Apollo.Core.ToDos.Requests.CreateToDoRequest;
 using CoreNewMessageRequest = Apollo.Core.Conversations.NewMessageRequest;
 using GrpcCreateToDoRequest = Apollo.GRPC.Contracts.CreateToDoRequest;
 using GrpcGetPersonToDosRequest = Apollo.GRPC.Contracts.GetPersonToDosRequest;
+using GrpcManageAccessRequest = Apollo.GRPC.Contracts.ManageAccessRequest;
 using GrpcNewMessageRequest = Apollo.GRPC.Contracts.NewMessageRequest;
 using GrpcToDoDTO = Apollo.GRPC.Contracts.ToDoDTO;
 
@@ -106,6 +107,44 @@ public class ApolloGrpcClient : IApolloGrpcClient, IApolloServiceClient, IDispos
     }).ToArray();
 
     return Result.Ok<IEnumerable<ToDoSummary>>(summaries);
+  }
+
+  public async Task<Result<string>> GrantAccessAsync(PlatformId adminPlatformId, PlatformId targetPlatformId, CancellationToken cancellationToken = default)
+  {
+    var grpcRequest = new GrpcManageAccessRequest
+    {
+      AdminPlatform = adminPlatformId.Platform,
+      AdminPlatformUserId = adminPlatformId.PlatformUserId,
+      AdminUsername = adminPlatformId.Username,
+      TargetPlatform = targetPlatformId.Platform,
+      TargetPlatformUserId = targetPlatformId.PlatformUserId,
+      TargetUsername = targetPlatformId.Username
+    };
+
+    var grpcResult = await ApolloGrpcService.GrantAccessAsync(grpcRequest);
+
+    return grpcResult.IsSuccess
+      ? Result.Ok(grpcResult.Data ?? string.Empty)
+      : Result.Fail(string.Join("; ", grpcResult.Errors.Select(e => e.Message)));
+  }
+
+  public async Task<Result<string>> RevokeAccessAsync(PlatformId adminPlatformId, PlatformId targetPlatformId, CancellationToken cancellationToken = default)
+  {
+    var grpcRequest = new GrpcManageAccessRequest
+    {
+      AdminPlatform = adminPlatformId.Platform,
+      AdminPlatformUserId = adminPlatformId.PlatformUserId,
+      AdminUsername = adminPlatformId.Username,
+      TargetPlatform = targetPlatformId.Platform,
+      TargetPlatformUserId = targetPlatformId.PlatformUserId,
+      TargetUsername = targetPlatformId.Username
+    };
+
+    var grpcResult = await ApolloGrpcService.RevokeAccessAsync(grpcRequest);
+
+    return grpcResult.IsSuccess
+      ? Result.Ok(grpcResult.Data ?? string.Empty)
+      : Result.Fail(string.Join("; ", grpcResult.Errors.Select(e => e.Message)));
   }
 
   private static ToDo MapToDomain(GrpcToDoDTO dto)

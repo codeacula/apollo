@@ -2,7 +2,9 @@ using Apollo.Application.Conversations;
 using Apollo.Application.People.Queries;
 using Apollo.Application.ToDos.Commands;
 using Apollo.Application.ToDos.Queries;
+using Apollo.Core.People;
 using Apollo.Core.ToDos;
+using Apollo.Domain.Common.Enums;
 using Apollo.Domain.People.ValueObjects;
 using Apollo.Domain.ToDos.ValueObjects;
 using Apollo.GRPC.Contracts;
@@ -15,7 +17,9 @@ namespace Apollo.GRPC.Service;
 
 public sealed class ApolloGrpcService(
   IMediator mediator,
-  IReminderStore reminderStore
+  IReminderStore reminderStore,
+  IPersonStore personStore,
+  SuperAdminConfig superAdminConfig
 ) : IApolloGrpcService
 {
   public async Task<GrpcResult<string>> SendApolloMessageAsync(NewMessageRequest message)
@@ -164,5 +168,68 @@ public sealed class ApolloGrpcService(
     var result = await mediator.Send(command);
 
     return result.IsFailed ? (GrpcResult<string>)result.Errors.Select(e => new GrpcError(e.Message)).ToArray() : (GrpcResult<string>)"ToDo deleted successfully";
+  }
+
+  public async Task<GrpcResult<string>> GrantAccessAsync(ManageAccessRequest request)
+  {
+    // Verify the requester is a super admin
+    if (!IsSuperAdmin(request.AdminPlatform, request.AdminPlatformUserId))
+    {
+      return new GrpcError("Only super admins can grant access", "UNAUTHORIZED");
+    }
+
+    // Get or create the target user
+    var targetPlatformId = request.ToTargetPlatformId();
+    var personResult = await mediator.Send(new GetOrCreatePersonByPlatformIdQuery(targetPlatformId));
+
+    if (personResult.IsFailed)
+    {
+      return personResult.Errors.Select(e => new GrpcError(e.Message)).ToArray();
+    }
+
+    // Grant access to the target user
+    var grantResult = await personStore.GrantAccessAsync(personResult.Value.Id);
+
+    return grantResult.IsFailed
+      ? (GrpcResult<string>)grantResult.Errors.Select(e => new GrpcError(e.Message)).ToArray()
+      : (GrpcResult<string>)$"Access granted to {request.TargetUsername}";
+  }
+
+  public async Task<GrpcResult<string>> RevokeAccessAsync(ManageAccessRequest request)
+  {
+    // Verify the requester is a super admin
+    if (!IsSuperAdmin(request.AdminPlatform, request.AdminPlatformUserId))
+    {
+      return new GrpcError("Only super admins can revoke access", "UNAUTHORIZED");
+    }
+
+    // Get the target user
+    var targetPlatformId = request.ToTargetPlatformId();
+    var personResult = await personStore.GetByPlatformIdAsync(targetPlatformId);
+
+    if (personResult.IsFailed)
+    {
+      return personResult.Errors.Select(e => new GrpcError(e.Message)).ToArray();
+    }
+
+    // Prevent revoking super admin's own access
+    if (IsSuperAdmin(request.TargetPlatform, request.TargetPlatformUserId))
+    {
+      return new GrpcError("Cannot revoke access from the super admin", "FORBIDDEN");
+    }
+
+    // Revoke access from the target user
+    var revokeResult = await personStore.RevokeAccessAsync(personResult.Value.Id);
+
+    return revokeResult.IsFailed
+      ? (GrpcResult<string>)revokeResult.Errors.Select(e => new GrpcError(e.Message)).ToArray()
+      : (GrpcResult<string>)$"Access revoked from {request.TargetUsername}";
+  }
+
+  private bool IsSuperAdmin(Platform platform, string platformUserId)
+  {
+    return !string.IsNullOrWhiteSpace(superAdminConfig.DiscordUserId)
+      && platform == Platform.Discord
+      && string.Equals(platformUserId, superAdminConfig.DiscordUserId, StringComparison.OrdinalIgnoreCase);
   }
 }
