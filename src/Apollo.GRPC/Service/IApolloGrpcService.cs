@@ -27,4 +27,10 @@ public interface IApolloGrpcService
 
   [OperationContract]
   Task<GrpcResult<string>> DeleteToDoAsync(DeleteToDoRequest request);
+
+  [OperationContract]
+  Task<GrpcResult<string>> GrantAccessAsync(ManageAccessRequest request);
+
+  [OperationContract]
+  Task<GrpcResult<string>> RevokeAccessAsync(ManageAccessRequest request);
 }
