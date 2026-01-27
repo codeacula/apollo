@@ -26,11 +26,24 @@ public sealed class ApolloReminderMessageGenerator(
 
       // Get the user's timezone or use default
       var timeZoneId = person.TimeZoneId?.Value ?? personConfig.DefaultTimeZoneId;
-      var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+      TimeZoneInfo timeZoneInfo;
+      try
+      {
+        timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+      }
+      catch (TimeZoneNotFoundException)
+      {
+        return Result.Fail<string>($"Timezone '{timeZoneId}' is not recognized.");
+      }
+      catch (InvalidTimeZoneException)
+      {
+        return Result.Fail<string>($"Timezone '{timeZoneId}' is invalid.");
+      }
 
       // Convert UTC time to user's timezone
       var utcNow = timeProvider.GetUtcDateTime();
-      var localTime = TimeZoneInfo.ConvertTimeFromUtc(utcNow, timeZoneInfo);
+      var offset = timeZoneInfo.GetUtcOffset(utcNow);
+      var localTime = new DateTimeOffset(utcNow, TimeSpan.Zero).ToOffset(offset);
 
       var requestBuilder = apolloAIAgent
         .CreateReminderRequest(

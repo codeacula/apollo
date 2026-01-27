@@ -50,7 +50,8 @@ public class ApolloReminderMessageGeneratorTests
     };
 
     var toDoDescriptions = new[] { "Buy groceries" };
-    const string expectedLocalTime = "2025-12-12T15:30:00"; // UTC 20:30 -> EST 15:30 (3:30 PM)
+    // UTC 20:30 -> EST 15:30 (3:30 PM) with offset -05:00
+    const string expectedLocalTime = "2025-12-12T15:30:00-05:00";
 
     string capturedTime = null!;
     string capturedTimezone = null!;
@@ -74,7 +75,7 @@ public class ApolloReminderMessageGeneratorTests
     // Assert
     Assert.True(result.IsSuccess);
     Assert.Equal("America/New_York", capturedTimezone);
-    Assert.StartsWith(expectedLocalTime, capturedTime);
+    Assert.Equal(expectedLocalTime, capturedTime);
   }
 
   [Fact]
@@ -93,7 +94,8 @@ public class ApolloReminderMessageGeneratorTests
     };
 
     var toDoDescriptions = new[] { "Take medication" };
-    const string expectedLocalTime = "2025-12-12T14:30:00"; // UTC 20:30 -> CST 14:30 (2:30 PM)
+    // UTC 20:30 -> CST 14:30 (2:30 PM) with offset -06:00
+    const string expectedLocalTime = "2025-12-12T14:30:00-06:00";
 
     string capturedTime = null!;
     string capturedTimezone = null!;
@@ -117,7 +119,7 @@ public class ApolloReminderMessageGeneratorTests
     // Assert
     Assert.True(result.IsSuccess);
     Assert.Equal("America/Chicago", capturedTimezone);
-    Assert.StartsWith(expectedLocalTime, capturedTime);
+    Assert.Equal(expectedLocalTime, capturedTime);
   }
 
   [Fact]
@@ -137,7 +139,8 @@ public class ApolloReminderMessageGeneratorTests
     };
 
     var toDoDescriptions = new[] { "Start streaming" };
-    const string expectedLocalTime = "2025-12-12T12:30:00"; // UTC 20:30 -> PST 12:30 (12:30 PM)
+    // UTC 20:30 -> PST 12:30 (12:30 PM) with offset -08:00
+    const string expectedLocalTime = "2025-12-12T12:30:00-08:00";
 
     string capturedTime = null!;
 
@@ -155,7 +158,37 @@ public class ApolloReminderMessageGeneratorTests
 
     // Assert
     Assert.True(result.IsSuccess);
-    Assert.StartsWith(expectedLocalTime, capturedTime);
+    Assert.Equal(expectedLocalTime, capturedTime);
+  }
+
+  [Fact]
+  public async Task GenerateReminderMessageHandlesInvalidTimeZoneAsync()
+  {
+    // Arrange - create a person with a manually constructed PersonTimeZoneId that bypasses TryParse validation
+    // This simulates a corrupted database state or edge case
+    var person = new Person
+    {
+      Id = new PersonId(Guid.NewGuid()),
+      PlatformId = new PlatformId("testuser", "test-platform-id", Platform.Discord),
+      Username = new Username("testuser"),
+      HasAccess = new HasAccess(true),
+      TimeZoneId = null, // Will use default timezone
+      CreatedOn = new CreatedOn(DateTime.UtcNow),
+      UpdatedOn = new UpdatedOn(DateTime.UtcNow)
+    };
+
+    // Create generator with invalid default timezone config
+    var invalidConfig = new PersonConfig { DefaultTimeZoneId = "Invalid/Timezone" };
+    var generatorWithInvalidConfig = new ApolloReminderMessageGenerator(_mockAIAgent.Object, _mockTimeProvider, invalidConfig);
+
+    var toDoDescriptions = new[] { "Test task" };
+
+    // Act
+    var result = await generatorWithInvalidConfig.GenerateReminderMessageAsync(person, toDoDescriptions);
+
+    // Assert
+    Assert.True(result.IsFailed);
+    Assert.Contains("Timezone", result.Errors[0].Message);
   }
 
   private sealed class FixedTimeProvider(DateTimeOffset fixedTime) : TimeProvider
