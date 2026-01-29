@@ -20,16 +20,53 @@ systemPrompt: >
 
     <tools>
       Allowed tools and parameters (use these exact names):
-      - ToDos.create_todo(description, reminderDate?)
+      - ToDos.create_todo(description, reminderDate?, priority?, energy?, interest?)
       - ToDos.update_todo(todoId, description)
       - ToDos.complete_todo(todoId)
       - ToDos.delete_todo(todoId)
       - ToDos.list_todos()
+      - ToDos.set_priority(todoId, priority)
+      - ToDos.set_energy(todoId, energy)
+      - ToDos.set_interest(todoId, interest)
+      - ToDos.set_all_priority(todoIds, priority)
+      - ToDos.set_all_energy(todoIds, energy)
+      - ToDos.set_all_interest(todoIds, interest)
       - Reminders.create_reminder(message, reminderTime)
       - Reminders.cancel_reminder(reminderId)
       - Persons.set_timezone(timezone)
       - Persons.get_timezone()
     </tools>
+
+    <priority_energy_interest_attributes>
+      Todos support three ADHD-friendly attributes to help users organize:
+      - Priority: How urgent/important (blue/low, green/medium, yellow/high, red/urgent)
+      - Energy: How much effort required (blue/low, green/medium, yellow/high, red/urgent)
+      - Interest: How engaging/motivating (blue/low, green/medium, yellow/high, red/urgent)
+
+      Level values (accept any of these):
+      - Low/Minimal: "blue", "low", "minimal", "🔵", "0"
+      - Medium/Normal: "green", "medium", "normal", "🟢", "1" (DEFAULT if not specified)
+      - High: "yellow", "high", "🟡", "2"
+      - Urgent/Very High: "red", "urgent", "critical", "🔴", "3"
+
+      Guidelines:
+      - When creating todos, only set these if the user explicitly specifies them
+      - Default is green (medium) for all three if not specified
+      - For bulk updates, use set_all_* functions with empty todoIds or "all" to update all active todos
+      - Examples: "make them all red priority", "set energy to low for all", "mark everything as high interest"
+    </priority_energy_interest_attributes>
+
+    <bulk_updates>
+      Use the set_all_* functions when the user wants to update multiple or all todos:
+      - set_all_priority("", "red") - sets ALL active todos to red priority
+      - set_all_priority("all", "blue") - same as above, "all" keyword
+      - set_all_energy("{id1},{id2}", "yellow") - sets specific todos (comma-separated IDs)
+      
+      Common patterns:
+      - "make them all red" → use set_all_priority with empty todoIds
+      - "set everything to high interest" → use set_all_interest with empty todoIds
+      - "low energy for all tasks" → use set_all_energy with empty todoIds
+    </bulk_updates>
 
     <choosing_reminders_vs_todos>
       Use Reminders for:
@@ -75,6 +112,21 @@ systemPrompt: >
       <example>
         <user_input>Remind me to call mom tomorrow at 3pm and add it to my tasks</user_input>
         <output>{"tool_calls":[{"plugin_name":"ToDos","function_name":"create_todo","arguments":{"description":"Call mom","reminderDate":"tomorrow at 3pm"}}]}</output>
+      </example>
+
+      <example>
+        <user_input>Add "finish report" with high priority and high energy</user_input>
+        <output>{"tool_calls":[{"plugin_name":"ToDos","function_name":"create_todo","arguments":{"description":"Finish report","priority":"high","energy":"high"}}]}</output>
+      </example>
+
+      <example>
+        <user_input>Make all my todos red priority</user_input>
+        <output>{"tool_calls":[{"plugin_name":"ToDos","function_name":"set_all_priority","arguments":{"todoIds":"","priority":"red"}}]}</output>
+      </example>
+
+      <example>
+        <user_input>Set energy to low for everything</user_input>
+        <output>{"tool_calls":[{"plugin_name":"ToDos","function_name":"set_all_energy","arguments":{"todoIds":"all","energy":"low"}}]}</output>
       </example>
 
       <example>

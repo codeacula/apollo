@@ -87,4 +87,10 @@ public static partial class ToDoLogs
       Level = LogLevel.Warning,
       Message = "Failed to delete reminder {ReminderId}: {ErrorMessage}")]
   public static partial void LogFailedToDeleteReminder(ILogger logger, Guid reminderId, string errorMessage);
+
+  [LoggerMessage(
+      EventId = 5014,
+      Level = LogLevel.Warning,
+      Message = "Bulk update had partial failures: {ErrorCount} errors occurred")]
+  public static partial void LogBulkUpdatePartialFailure(ILogger logger, int errorCount);
 }

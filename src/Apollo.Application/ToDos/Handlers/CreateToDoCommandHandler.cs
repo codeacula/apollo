@@ -1,6 +1,7 @@
 using Apollo.Application.ToDos.Commands;
 using Apollo.Core;
 using Apollo.Core.ToDos;
+using Apollo.Domain.Common.Enums;
 using Apollo.Domain.ToDos.Models;
 using Apollo.Domain.ToDos.ValueObjects;
 
@@ -18,7 +19,13 @@ public sealed class CreateToDoCommandHandler(
     try
     {
       var toDoId = new ToDoId(Guid.NewGuid());
-      var result = await toDoStore.CreateAsync(toDoId, request.PersonId, request.Description, cancellationToken);
+
+      // Default to Green (Level.Green = 1) if not specified
+      var priority = request.Priority ?? new Priority(Level.Green);
+      var energy = request.Energy ?? new Energy(Level.Green);
+      var interest = request.Interest ?? new Interest(Level.Green);
+
+      var result = await toDoStore.CreateAsync(toDoId, request.PersonId, request.Description, priority, energy, interest, cancellationToken);
 
       if (result.IsFailed)
       {

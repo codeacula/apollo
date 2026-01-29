@@ -1,11 +1,14 @@
 using System.ComponentModel;
+using System.Text;
 
 using Apollo.Application.ToDos.Commands;
 using Apollo.Application.ToDos.Queries;
 using Apollo.Core;
 using Apollo.Core.People;
 using Apollo.Core.ToDos;
+using Apollo.Domain.Common.Enums;
 using Apollo.Domain.People.ValueObjects;
+using Apollo.Domain.ToDos.Models;
 using Apollo.Domain.ToDos.ValueObjects;
 
 using FluentResults;
@@ -30,6 +33,9 @@ public sealed class ToDoPlugin(
   public async Task<string> CreateToDoAsync(
     [Description("The todo description")] string description,
     [Description("Optional reminder time. Supports fuzzy formats like 'in 10 minutes', 'in 2 hours', 'tomorrow', 'next week', or ISO 8601 format (e.g., 2025-12-31T10:00:00).")] string? reminderDate = null,
+    [Description("Optional priority level. Accepts: 'blue'/'low' (0), 'green'/'medium' (1, default), 'yellow'/'high' (2), 'red'/'urgent' (3), or color emojis.")] string? priority = null,
+    [Description("Optional energy level. Accepts: 'blue'/'low' (0), 'green'/'medium' (1, default), 'yellow'/'high' (2), 'red'/'urgent' (3), or color emojis.")] string? energy = null,
+    [Description("Optional interest level. Accepts: 'blue'/'low' (0), 'green'/'medium' (1, default), 'yellow'/'high' (2), 'red'/'urgent' (3), or color emojis.")] string? interest = null,
     CancellationToken cancellationToken = default)
   {
     try
@@ -40,10 +46,17 @@ public sealed class ToDoPlugin(
         return $"Failed to create todo: {reminder.GetErrorMessages()}";
       }
 
+      var priorityResult = ParseLevel(priority);
+      var energyResult = ParseLevel(energy);
+      var interestResult = ParseLevel(interest);
+
       var command = new CreateToDoCommand(
         personId,
         new Description(description),
-        reminder.Value
+        reminder.Value,
+        priorityResult.IsSuccess ? new Priority(priorityResult.Value) : null,
+        energyResult.IsSuccess ? new Energy(energyResult.Value) : null,
+        interestResult.IsSuccess ? new Interest(interestResult.Value) : null
       );
 
       var result = await mediator.Send(command, cancellationToken);
@@ -143,6 +156,225 @@ public sealed class ToDoPlugin(
     }
   }
 
+  [KernelFunction("set_priority")]
+  [Description("Sets the priority level for a specific todo")]
+  public async Task<string> SetPriorityAsync(
+    [Description("The todo ID (GUID)")] string todoId,
+    [Description("Priority level. Accepts: 'blue'/'low' (0), 'green'/'medium' (1), 'yellow'/'high' (2), 'red'/'urgent' (3), or color emojis.")] string priority,
+    CancellationToken cancellationToken = default)
+  {
+    try
+    {
+      var guidResult = TryParseToDoId(todoId);
+      if (guidResult.IsFailed)
+      {
+        return $"Failed to set priority: {guidResult.GetErrorMessages()}";
+      }
+
+      var levelResult = ParseLevel(priority);
+      if (levelResult.IsFailed)
+      {
+        return $"Failed to set priority: {levelResult.GetErrorMessages()}";
+      }
+
+      var command = new SetToDoPriorityCommand(personId, new ToDoId(guidResult.Value), new Priority(levelResult.Value));
+      var result = await mediator.Send(command, cancellationToken);
+
+      return result.IsFailed ? $"Failed to set priority: {result.GetErrorMessages()}" : $"Successfully set priority to {LevelToEmoji(levelResult.Value)}.";
+    }
+    catch (Exception ex)
+    {
+      return $"Error setting priority: {ex.Message}";
+    }
+  }
+
+  [KernelFunction("set_energy")]
+  [Description("Sets the energy level for a specific todo")]
+  public async Task<string> SetEnergyAsync(
+    [Description("The todo ID (GUID)")] string todoId,
+    [Description("Energy level. Accepts: 'blue'/'low' (0), 'green'/'medium' (1), 'yellow'/'high' (2), 'red'/'urgent' (3), or color emojis.")] string energy,
+    CancellationToken cancellationToken = default)
+  {
+    try
+    {
+      var guidResult = TryParseToDoId(todoId);
+      if (guidResult.IsFailed)
+      {
+        return $"Failed to set energy: {guidResult.GetErrorMessages()}";
+      }
+
+      var levelResult = ParseLevel(energy);
+      if (levelResult.IsFailed)
+      {
+        return $"Failed to set energy: {levelResult.GetErrorMessages()}";
+      }
+
+      var command = new SetToDoEnergyCommand(personId, new ToDoId(guidResult.Value), new Energy(levelResult.Value));
+      var result = await mediator.Send(command, cancellationToken);
+
+      return result.IsFailed ? $"Failed to set energy: {result.GetErrorMessages()}" : $"Successfully set energy to {LevelToEmoji(levelResult.Value)}.";
+    }
+    catch (Exception ex)
+    {
+      return $"Error setting energy: {ex.Message}";
+    }
+  }
+
+  [KernelFunction("set_interest")]
+  [Description("Sets the interest level for a specific todo")]
+  public async Task<string> SetInterestAsync(
+    [Description("The todo ID (GUID)")] string todoId,
+    [Description("Interest level. Accepts: 'blue'/'low' (0), 'green'/'medium' (1), 'yellow'/'high' (2), 'red'/'urgent' (3), or color emojis.")] string interest,
+    CancellationToken cancellationToken = default)
+  {
+    try
+    {
+      var guidResult = TryParseToDoId(todoId);
+      if (guidResult.IsFailed)
+      {
+        return $"Failed to set interest: {guidResult.GetErrorMessages()}";
+      }
+
+      var levelResult = ParseLevel(interest);
+      if (levelResult.IsFailed)
+      {
+        return $"Failed to set interest: {levelResult.GetErrorMessages()}";
+      }
+
+      var command = new SetToDoInterestCommand(personId, new ToDoId(guidResult.Value), new Interest(levelResult.Value));
+      var result = await mediator.Send(command, cancellationToken);
+
+      return result.IsFailed ? $"Failed to set interest: {result.GetErrorMessages()}" : $"Successfully set interest to {LevelToEmoji(levelResult.Value)}.";
+    }
+    catch (Exception ex)
+    {
+      return $"Error setting interest: {ex.Message}";
+    }
+  }
+
+  [KernelFunction("set_all_priority")]
+  [Description("Sets the priority level for multiple todos at once. If todoIds is empty or 'all', updates all active todos.")]
+  public async Task<string> SetAllPriorityAsync(
+    [Description("Comma-separated list of todo IDs (GUIDs), or empty/'all' for all active todos")] string todoIds,
+    [Description("Priority level. Accepts: 'blue'/'low' (0), 'green'/'medium' (1), 'yellow'/'high' (2), 'red'/'urgent' (3), or color emojis.")] string priority,
+    CancellationToken cancellationToken = default)
+  {
+    try
+    {
+      var levelResult = ParseLevel(priority);
+      if (levelResult.IsFailed)
+      {
+        return $"Failed to set priority: {levelResult.GetErrorMessages()}";
+      }
+
+      var ids = ParseToDoIds(todoIds);
+      var command = new SetAllToDosAttributeCommand(
+        personId,
+        ids,
+        new Priority(levelResult.Value),
+        null,
+        null
+      );
+
+      var result = await mediator.Send(command, cancellationToken);
+
+      if (result.IsFailed)
+      {
+        return $"Failed to set priority: {result.GetErrorMessages()}";
+      }
+
+      return ids.Count == 0
+        ? $"Successfully set priority to {LevelToEmoji(levelResult.Value)} for all {result.Value} active todos."
+        : $"Successfully set priority to {LevelToEmoji(levelResult.Value)} for {result.Value} todos.";
+    }
+    catch (Exception ex)
+    {
+      return $"Error setting priority: {ex.Message}";
+    }
+  }
+
+  [KernelFunction("set_all_energy")]
+  [Description("Sets the energy level for multiple todos at once. If todoIds is empty or 'all', updates all active todos.")]
+  public async Task<string> SetAllEnergyAsync(
+    [Description("Comma-separated list of todo IDs (GUIDs), or empty/'all' for all active todos")] string todoIds,
+    [Description("Energy level. Accepts: 'blue'/'low' (0), 'green'/'medium' (1), 'yellow'/'high' (2), 'red'/'urgent' (3), or color emojis.")] string energy,
+    CancellationToken cancellationToken = default)
+  {
+    try
+    {
+      var levelResult = ParseLevel(energy);
+      if (levelResult.IsFailed)
+      {
+        return $"Failed to set energy: {levelResult.GetErrorMessages()}";
+      }
+
+      var ids = ParseToDoIds(todoIds);
+      var command = new SetAllToDosAttributeCommand(
+        personId,
+        ids,
+        null,
+        new Energy(levelResult.Value),
+        null
+      );
+
+      var result = await mediator.Send(command, cancellationToken);
+
+      if (result.IsFailed)
+      {
+        return $"Failed to set energy: {result.GetErrorMessages()}";
+      }
+
+      return ids.Count == 0
+        ? $"Successfully set energy to {LevelToEmoji(levelResult.Value)} for all {result.Value} active todos."
+        : $"Successfully set energy to {LevelToEmoji(levelResult.Value)} for {result.Value} todos.";
+    }
+    catch (Exception ex)
+    {
+      return $"Error setting energy: {ex.Message}";
+    }
+  }
+
+  [KernelFunction("set_all_interest")]
+  [Description("Sets the interest level for multiple todos at once. If todoIds is empty or 'all', updates all active todos.")]
+  public async Task<string> SetAllInterestAsync(
+    [Description("Comma-separated list of todo IDs (GUIDs), or empty/'all' for all active todos")] string todoIds,
+    [Description("Interest level. Accepts: 'blue'/'low' (0), 'green'/'medium' (1), 'yellow'/'high' (2), 'red'/'urgent' (3), or color emojis.")] string interest,
+    CancellationToken cancellationToken = default)
+  {
+    try
+    {
+      var levelResult = ParseLevel(interest);
+      if (levelResult.IsFailed)
+      {
+        return $"Failed to set interest: {levelResult.GetErrorMessages()}";
+      }
+
+      var ids = ParseToDoIds(todoIds);
+      var command = new SetAllToDosAttributeCommand(
+        personId,
+        ids,
+        null,
+        null,
+        new Interest(levelResult.Value)
+      );
+
+      var result = await mediator.Send(command, cancellationToken);
+
+      if (result.IsFailed)
+      {
+        return $"Failed to set interest: {result.GetErrorMessages()}";
+      }
+
+      return ids.Count == 0
+        ? $"Successfully set interest to {LevelToEmoji(levelResult.Value)} for all {result.Value} active todos."
+        : $"Successfully set interest to {LevelToEmoji(levelResult.Value)} for {result.Value} todos.";
+    }
+    catch (Exception ex)
+    {
+      return $"Error setting interest: {ex.Message}";
+    }
+  }
+
   [KernelFunction("list_todos")]
   [Description("Lists all active todos for the current person")]
   public async Task<string> ListToDosAsync(CancellationToken cancellationToken = default)
@@ -162,11 +394,7 @@ public sealed class ToDoPlugin(
         return "You currently have no active todos.";
       }
 
-      var todoList = result.Value.Select((t, index) =>
-        $"{index + 1}. {t.Description.Value} (ID: {t.Id.Value}, Created: {t.CreatedOn.Value:yyyy-MM-dd})"
-      );
-
-      return $"Here are your active todos:\n{string.Join("\n", todoList)}";
+      return FormatToDosAsTable(result.Value);
     }
     catch (Exception ex)
     {
@@ -179,6 +407,89 @@ public sealed class ToDoPlugin(
     return !Guid.TryParse(todoId, out var todoGuid)
       ? (Result<Guid>)Result.Fail("Invalid todo ID format. The ID must be a valid GUID.")
       : Result.Ok(todoGuid);
+  }
+
+  private static List<ToDoId> ParseToDoIds(string todoIds)
+  {
+    if (string.IsNullOrWhiteSpace(todoIds) || todoIds.Equals("all", StringComparison.OrdinalIgnoreCase))
+    {
+      return [];
+    }
+
+    var ids = todoIds.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+    return ids
+      .Where(id => Guid.TryParse(id, out _))
+      .Select(id => new ToDoId(Guid.Parse(id)))
+      .ToList();
+  }
+
+  private static Result<Level> ParseLevel(string? input)
+  {
+    if (string.IsNullOrWhiteSpace(input))
+    {
+      return Result.Fail<Level>("Level cannot be empty.");
+    }
+
+    var normalized = input.Trim().ToLowerInvariant();
+
+    return normalized switch
+    {
+      // Color names
+      "blue" or "low" or "minimal" => Result.Ok(Level.Blue),
+      "green" or "medium" or "normal" => Result.Ok(Level.Green),
+      "yellow" or "high" => Result.Ok(Level.Yellow),
+      "red" or "urgent" or "critical" => Result.Ok(Level.Red),
+
+      // Emojis
+      "🔵" => Result.Ok(Level.Blue),
+      "🟢" => Result.Ok(Level.Green),
+      "🟡" => Result.Ok(Level.Yellow),
+      "🔴" => Result.Ok(Level.Red),
+
+      // Numbers
+      "0" => Result.Ok(Level.Blue),
+      "1" => Result.Ok(Level.Green),
+      "2" => Result.Ok(Level.Yellow),
+      "3" => Result.Ok(Level.Red),
+
+      _ => Result.Fail<Level>($"Invalid level '{input}'. Use: blue/low (0), green/medium (1), yellow/high (2), red/urgent (3), or color emojis.")
+    };
+  }
+
+  private static string LevelToEmoji(Level level) => level switch
+  {
+    Level.Blue => "🔵",
+    Level.Green => "🟢",
+    Level.Yellow => "🟡",
+    Level.Red => "🔴",
+    _ => "⚪"
+  };
+
+  private static string FormatToDosAsTable(IEnumerable<ToDo> todos)
+  {
+    var sb = new StringBuilder();
+    sb.AppendLine("Here are your active todos:");
+    sb.AppendLine();
+    sb.AppendLine("| Task                           | P   | E   | I   | ID                                   |");
+    sb.AppendLine("| ------------------------------ | --- | --- | --- | ------------------------------------ |");
+
+    foreach (var todo in todos)
+    {
+      var taskName = todo.Description.Value.Length > 30
+        ? todo.Description.Value[..27] + "..."
+        : todo.Description.Value.PadRight(30);
+
+      var priority = LevelToEmoji(todo.Priority.Value);
+      var energy = LevelToEmoji(todo.Energy.Value);
+      var interest = LevelToEmoji(todo.Interest.Value);
+
+      sb.AppendLine($"| {taskName} | {priority}  | {energy}  | {interest}  | {todo.Id.Value} |");
+    }
+
+    sb.AppendLine();
+    sb.AppendLine("P = Priority, E = Energy, I = Interest");
+
+    return sb.ToString();
   }
 
   private async Task<Result<DateTime?>> ParseReminderDateAsync(string? reminderDate, CancellationToken cancellationToken)

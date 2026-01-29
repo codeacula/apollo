@@ -30,12 +30,12 @@ public sealed class ToDoStore(IDocumentSession session, TimeProvider timeProvide
     }
   }
 
-  public async Task<Result<ToDo>> CreateAsync(ToDoId id, PersonId personId, Description description, CancellationToken cancellationToken = default)
+  public async Task<Result<ToDo>> CreateAsync(ToDoId id, PersonId personId, Description description, Priority priority, Energy energy, Interest interest, CancellationToken cancellationToken = default)
   {
     try
     {
       var time = timeProvider.GetUtcDateTime();
-      var ev = new ToDoCreatedEvent(id.Value, personId.Value, description.Value, time);
+      var ev = new ToDoCreatedEvent(id.Value, personId.Value, description.Value, (int)priority.Value, (int)energy.Value, (int)interest.Value, time);
 
       _ = session.Events.StartStream<DbToDo>(id.Value, [ev]);
       await session.SaveChangesAsync(cancellationToken);
@@ -109,6 +109,57 @@ public sealed class ToDoStore(IDocumentSession session, TimeProvider timeProvide
     {
       var time = timeProvider.GetUtcDateTime();
       _ = session.Events.Append(id.Value, new ToDoUpdatedEvent(id.Value, description.Value, time));
+
+      await session.SaveChangesAsync(cancellationToken);
+
+      return Result.Ok();
+    }
+    catch (Exception ex)
+    {
+      return Result.Fail(ex.Message);
+    }
+  }
+
+  public async Task<Result> UpdatePriorityAsync(ToDoId toDoId, Priority priority, CancellationToken cancellationToken = default)
+  {
+    try
+    {
+      var time = timeProvider.GetUtcDateTime();
+      _ = session.Events.Append(toDoId.Value, new ToDoPriorityUpdatedEvent(toDoId.Value, (int)priority.Value, time));
+
+      await session.SaveChangesAsync(cancellationToken);
+
+      return Result.Ok();
+    }
+    catch (Exception ex)
+    {
+      return Result.Fail(ex.Message);
+    }
+  }
+
+  public async Task<Result> UpdateEnergyAsync(ToDoId toDoId, Energy energy, CancellationToken cancellationToken = default)
+  {
+    try
+    {
+      var time = timeProvider.GetUtcDateTime();
+      _ = session.Events.Append(toDoId.Value, new ToDoEnergyUpdatedEvent(toDoId.Value, (int)energy.Value, time));
+
+      await session.SaveChangesAsync(cancellationToken);
+
+      return Result.Ok();
+    }
+    catch (Exception ex)
+    {
+      return Result.Fail(ex.Message);
+    }
+  }
+
+  public async Task<Result> UpdateInterestAsync(ToDoId toDoId, Interest interest, CancellationToken cancellationToken = default)
+  {
+    try
+    {
+      var time = timeProvider.GetUtcDateTime();
+      _ = session.Events.Append(toDoId.Value, new ToDoInterestUpdatedEvent(toDoId.Value, (int)interest.Value, time));
 
       await session.SaveChangesAsync(cancellationToken);
 
