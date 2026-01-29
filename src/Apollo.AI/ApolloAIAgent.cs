@@ -10,7 +10,7 @@ public sealed class ApolloAIAgent(
   IPromptLoader promptLoader,
   IPromptTemplateProcessor templateProcessor) : IApolloAIAgent
 {
-  private const string ToolCallingPromptName = "ApolloToolCalling";
+  private const string ToolPlanningPromptName = "ApolloToolPlanning";
   private const string ResponsePromptName = "ApolloResponse";
   private const string ReminderPromptName = "ApolloReminder";
 
@@ -19,13 +19,12 @@ public sealed class ApolloAIAgent(
     return new AIRequestBuilder(config, templateProcessor);
   }
 
-  public IAIRequestBuilder CreateToolCallingRequest(
+  public IAIRequestBuilder CreateToolPlanningRequest(
     IEnumerable<ChatMessageDTO> messages,
-    IDictionary<string, object> plugins,
     string userTimezone,
     string activeTodos)
   {
-    var prompt = promptLoader.Load(ToolCallingPromptName);
+    var prompt = promptLoader.Load(ToolPlanningPromptName);
     var currentDateTime = DateTimeOffset.Now.ToString("yyyy-MM-ddTHH:mm:sszzz", System.Globalization.CultureInfo.InvariantCulture);
 
     var variables = new Dictionary<string, string>
@@ -38,8 +37,7 @@ public sealed class ApolloAIAgent(
     return CreateRequest()
       .FromPromptDefinition(prompt)
       .WithMessages(messages)
-      .WithPlugins(plugins)
-      .WithToolCalling(enabled: true)
+      .WithToolCalling(enabled: false)
       .WithTemplateVariables(variables);
   }
 

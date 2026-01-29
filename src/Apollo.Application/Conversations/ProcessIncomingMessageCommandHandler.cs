@@ -1,6 +1,8 @@
 using Apollo.AI;
-using Apollo.AI.DTOs;
-using Apollo.AI.Enums;
+using Apollo.AI.Models;
+using Apollo.AI.Planning;
+using Apollo.AI.Requests;
+using Apollo.AI.Tooling;
 using Apollo.Application.People;
 using Apollo.Application.ToDos;
 using Apollo.Core;
@@ -20,6 +22,10 @@ namespace Apollo.Application.Conversations;
 
 public sealed class ProcessIncomingMessageCommandHandler(
   IApolloAIAgent apolloAIAgent,
+  ToolPlanParser toolPlanParser,
+  ToolPlanValidator toolPlanValidator,
+  ToolExecutionService toolExecutionService,
+  ConversationHistoryBuilder conversationHistoryBuilder,
   IConversationStore conversationStore,
   IFuzzyTimeParser fuzzyTimeParser,
   ILogger<ProcessIncomingMessageCommandHandler> logger,
@@ -133,26 +139,59 @@ public sealed class ProcessIncomingMessageCommandHandler(
 
   private async Task<string> ProcessWithAIAsync(Conversation conversation, Person person, CancellationToken cancellationToken)
   {
-    var messages = BuildMessageHistory(conversation);
-    var toolMessages = BuildToolCallingMessages(conversation);
+    var responseMessages = ConversationHistoryBuilder.BuildForResponse(conversation);
     var plugins = CreatePlugins(person);
 
     // Get context variables
     var userTimezone = GetUserTimezone(person);
-    var activeTodos = await BuildActiveTodosSummaryAsync(person.Id, cancellationToken);
+    var activeTodosSnapshot = await BuildActiveTodosSnapshotAsync(person.Id, cancellationToken);
+    var toolPlanningMessages = ConversationHistoryBuilder.BuildForToolPlanning(conversation, activeTodosSnapshot.TodoIds);
 
-    // Phase 1: Tool Calling
-    var toolResult = await apolloAIAgent
-      .CreateToolCallingRequest(toolMessages, plugins, userTimezone, activeTodos)
+    // Phase 1: Tool Planning (JSON output)
+    var toolPlanResult = await apolloAIAgent
+      .CreateToolPlanningRequest(toolPlanningMessages, userTimezone, activeTodosSnapshot.Summary)
       .ExecuteAsync(cancellationToken);
 
-    // Phase 2: Response Generation
-    var actionsSummary = toolResult.HasToolCalls
-      ? toolResult.FormatActionsSummary()
-      : "None";
+    var toolPlan = new ToolPlan();
+    if (toolPlanResult.Success)
+    {
+      var parseResult = ToolPlanParser.Parse(toolPlanResult.Content);
+      if (parseResult.IsSuccess)
+      {
+        toolPlan = parseResult.Value;
+      }
+      else
+      {
+        logger.LogWarning("Tool plan parsing failed for person {PersonId}: {ErrorMessage}", person.Id.Value, parseResult.Errors.FirstOrDefault()?.Message);
+      }
+    }
+    else
+    {
+      logger.LogWarning("Tool planning request failed for person {PersonId}: {ErrorMessage}", person.Id.Value, toolPlanResult.ErrorMessage);
+    }
+
+    // Phase 2: Validate + Execute Tool Calls
+    var validationContext = new ToolPlanValidationContext(
+      plugins,
+      toolPlanningMessages,
+      activeTodosSnapshot.TodoIds);
+
+    var validationResult = ToolPlanValidator.Validate(toolPlan, validationContext);
+    var toolResults = new List<ToolCallResult>(validationResult.BlockedCalls);
+
+    if (validationResult.ApprovedCalls.Count > 0)
+    {
+      var executed = await ToolExecutionService.ExecuteToolPlanAsync(validationResult.ApprovedCalls, plugins, cancellationToken);
+      toolResults.AddRange(executed);
+    }
+
+    // Phase 3: Response Generation
+    var actionsSummary = toolResults.Count == 0
+      ? "None"
+      : string.Join("\n", toolResults.Select(tc => $"- {tc.ToSummary()}"));
 
     var responseResult = await apolloAIAgent
-      .CreateResponseRequest(messages, actionsSummary, userTimezone)
+      .CreateResponseRequest(responseMessages, actionsSummary, userTimezone)
       .ExecuteAsync(cancellationToken);
 
     return !responseResult.Success
@@ -160,41 +199,12 @@ public sealed class ProcessIncomingMessageCommandHandler(
       : responseResult.Content;
   }
 
-  private static List<ChatMessageDTO> BuildMessageHistory(Conversation conversation)
-  {
-    return [.. conversation.Messages
-      .OrderBy(m => m.CreatedOn.Value)
-      .Select(m => new ChatMessageDTO(
-        m.FromUser.Value ? ChatRole.User : ChatRole.Assistant,
-        m.Content.Value,
-        m.CreatedOn.Value
-      ))];
-  }
-
-  private static List<ChatMessageDTO> BuildToolCallingMessages(Conversation conversation)
-  {
-    var latestUserMessage = conversation.Messages
-      .Where(m => m.FromUser.Value)
-      .OrderByDescending(m => m.CreatedOn.Value)
-      .FirstOrDefault();
-
-    return latestUserMessage is null
-      ? []
-      : [
-        new ChatMessageDTO(
-          ChatRole.User,
-          latestUserMessage.Content.Value,
-          latestUserMessage.CreatedOn.Value
-        )
-      ];
-  }
-
   private Dictionary<string, object> CreatePlugins(Person person)
   {
     var toDoPlugin = new ToDoPlugin(mediator, personStore, fuzzyTimeParser, timeProvider, personConfig, person.Id);
     var personPlugin = new PersonPlugin(personStore, personConfig, person.Id);
 
-    return new Dictionary<string, object>
+    return new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
     {
       [ToDoPlugin.PluginName] = toDoPlugin,
       [PersonPlugin.PluginName] = personPlugin
@@ -227,13 +237,13 @@ public sealed class ProcessIncomingMessageCommandHandler(
     return person.TimeZoneId?.Value ?? "UTC";
   }
 
-  private async Task<string> BuildActiveTodosSummaryAsync(PersonId personId, CancellationToken cancellationToken)
+  private async Task<ActiveTodosSnapshot> BuildActiveTodosSnapshotAsync(PersonId personId, CancellationToken cancellationToken)
   {
     var todosResult = await toDoStore.GetByPersonIdAsync(personId, includeCompleted: false, cancellationToken);
 
     if (todosResult.IsFailed || !todosResult.Value.Any())
     {
-      return "No active todos";
+      return new ActiveTodosSnapshot("No active todos", []);
     }
 
     var todos = todosResult.Value
@@ -241,10 +251,15 @@ public sealed class ProcessIncomingMessageCommandHandler(
       .Take(10) // Limit to 10 to avoid bloating the prompt
       .ToList();
 
-    return string.Join("\n", todos.Select(t =>
+    var summary = string.Join("\n", todos.Select(t =>
     {
       var dueDate = t.DueDate?.Value.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture) ?? "No due date";
       return $"• [{t.Id.Value}] {t.Description.Value} (Due: {dueDate})";
     }));
+
+    var todoIds = todos.ConvertAll(t => t.Id.Value.ToString());
+    return new ActiveTodosSnapshot(summary, todoIds);
   }
+
+  private sealed record ActiveTodosSnapshot(string Summary, IReadOnlyCollection<string> TodoIds);
 }
