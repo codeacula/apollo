@@ -25,7 +25,7 @@ public sealed class SetAllToDosAttributeCommandHandler(
           return Result.Fail<int>(allTodosResult.GetErrorMessages());
         }
 
-        todoIds = allTodosResult.Value.Select(t => t.Id).ToList();
+        todoIds = [.. allTodosResult.Value.Select(t => t.Id)];
       }
 
       var updatedCount = 0;

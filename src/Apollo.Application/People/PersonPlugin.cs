@@ -82,12 +82,9 @@ public class PersonPlugin(IPersonStore personStore, PersonConfig personConfig, P
 
       var result = await personStore.SetDailyTaskCountAsync(personId, dailyTaskCount);
 
-      if (result.IsFailed)
-      {
-        return $"Failed to set daily task count: {result.Errors.FirstOrDefault()?.Message}";
-      }
-
-      return $"Successfully set your daily task count to {count} tasks.";
+      return result.IsFailed
+        ? $"Failed to set daily task count: {result.Errors.FirstOrDefault()?.Message}"
+        : $"Successfully set your daily task count to {count} tasks.";
     }
     catch (Exception ex)
     {
@@ -109,12 +106,9 @@ public class PersonPlugin(IPersonStore personStore, PersonConfig personConfig, P
       }
 
       var person = personResult.Value;
-      if (person.DailyTaskCount is null)
-      {
-        return $"You are currently using the default daily task count: {personConfig.DefaultDailyTaskCount} tasks per day.";
-      }
-
-      return $"Your daily task count is set to: {person.DailyTaskCount.Value.Value} tasks per day.";
+      return person.DailyTaskCount is null
+        ? $"You are currently using the default daily task count: {personConfig.DefaultDailyTaskCount} tasks per day."
+        : $"Your daily task count is set to: {person.DailyTaskCount.Value.Value} tasks per day.";
     }
     catch (Exception ex)
     {

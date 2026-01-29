@@ -14,7 +14,7 @@ public readonly record struct DailyTaskCount
     error = null;
     result = default;
 
-    if (count < 1 || count > 20)
+    if (count is < 1 or > 20)
     {
       error = "Daily task count must be between 1 and 20";
       return false;

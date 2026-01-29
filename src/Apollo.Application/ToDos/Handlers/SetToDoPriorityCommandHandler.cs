@@ -1,5 +1,4 @@
 using Apollo.Application.ToDos.Commands;
-using Apollo.Core;
 using Apollo.Core.ToDos;
 
 using FluentResults;
@@ -18,13 +17,14 @@ public sealed class SetToDoPriorityCommandHandler(IToDoStore toDoStore) : IReque
       {
         return Result.Fail("To-Do not found");
       }
-
-      if (todoResult.Value.PersonId.Value != request.PersonId.Value)
+      else if (todoResult.Value.PersonId.Value != request.PersonId.Value)
       {
         return Result.Fail("You don't have permission to update this to-do");
       }
-
-      return await toDoStore.UpdatePriorityAsync(request.ToDoId, request.Priority, cancellationToken);
+      else
+      {
+        return await toDoStore.UpdatePriorityAsync(request.ToDoId, request.Priority, cancellationToken);
+      }
     }
     catch (Exception ex)
     {

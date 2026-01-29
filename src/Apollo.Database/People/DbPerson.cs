@@ -28,8 +28,8 @@ public sealed record DbPerson
       timeZoneId = parsedTimeZone;
     }
 
-    Apollo.Domain.People.ValueObjects.DailyTaskCount? dailyTaskCount = null;
-    if (dbPerson.DailyTaskCount.HasValue && Apollo.Domain.People.ValueObjects.DailyTaskCount.TryParse(dbPerson.DailyTaskCount.Value, out var parsedCount, out _))
+    DailyTaskCount? dailyTaskCount = null;
+    if (dbPerson.DailyTaskCount.HasValue && Domain.People.ValueObjects.DailyTaskCount.TryParse(dbPerson.DailyTaskCount.Value, out var parsedCount, out _))
     {
       dailyTaskCount = parsedCount;
     }

@@ -1,7 +1,6 @@
 using Apollo.Core.ToDos.Responses;
 using Apollo.Domain.Common.Enums;
 
-using NetCord;
 using NetCord.Rest;
 
 namespace Apollo.Discord.Components;
@@ -12,8 +11,10 @@ public class DailyPlanComponent : ComponentContainerProperties
   {
     AccentColor = Constants.Colors.ApolloGreen;
 
-    var components = new List<IComponentContainerComponentProperties>();
-    components.Add(new TextDisplayProperties("# 📋 Your Daily Plan"));
+    var components = new List<IComponentContainerComponentProperties>
+    {
+      new TextDisplayProperties("# 📋 Your Daily Plan")
+    };
 
     // Handle empty todos case
     if (dailyPlan.TotalActiveTodos == 0)
@@ -27,11 +28,11 @@ public class DailyPlanComponent : ComponentContainerProperties
     for (int i = 0; i < dailyPlan.SuggestedTasks.Count; i++)
     {
       var task = dailyPlan.SuggestedTasks[i];
-      
+
       var priorityEmoji = LevelToEmoji((Level)task.Priority);
       var energyEmoji = LevelToEmoji((Level)task.Energy);
       var interestEmoji = LevelToEmoji((Level)task.Interest);
-      
+
       var dueDateText = task.DueDate.HasValue
         ? $" | 📅 <t:{new DateTimeOffset(task.DueDate.Value).ToUnixTimeSeconds()}:d>"
         : string.Empty;
@@ -45,7 +46,7 @@ public class DailyPlanComponent : ComponentContainerProperties
     // Add separator and rationale
     components.Add(new TextDisplayProperties("───────────────────────────────"));
     components.Add(new TextDisplayProperties($"💡 **Why these tasks?**\n{dailyPlan.SelectionRationale}"));
-    
+
     // Add footer with task count
     components.Add(new TextDisplayProperties(
       $"📊 Showing {dailyPlan.SuggestedTasks.Count} of {dailyPlan.TotalActiveTodos} active todos"

@@ -388,13 +388,14 @@ public sealed class ToDoPlugin(
       {
         return $"Failed to retrieve todos: {result.Errors.FirstOrDefault()?.Message}";
       }
-
-      if (!result.Value.Any())
+      else if (!result.Value.Any())
       {
         return "You currently have no active todos.";
       }
-
-      return FormatToDosAsTable(result.Value);
+      else
+      {
+        return FormatToDosAsTable(result.Value);
+      }
     }
     catch (Exception ex)
     {
@@ -426,10 +427,10 @@ public sealed class ToDoPlugin(
 
       // Format as a nice table
       var sb = new StringBuilder();
-      sb.AppendLine("Here's your suggested daily plan:");
-      sb.AppendLine();
-      sb.AppendLine("| # | Task                           | P   | E   | I   |");
-      sb.AppendLine("| - | ------------------------------ | --- | --- | --- |");
+      _ = sb.AppendLine("Here's your suggested daily plan:");
+      _ = sb.AppendLine();
+      _ = sb.AppendLine("| # | Task                           | P   | E   | I   |");
+      _ = sb.AppendLine("| - | ------------------------------ | --- | --- | --- |");
 
       for (int i = 0; i < plan.SuggestedTasks.Count; i++)
       {
@@ -442,15 +443,15 @@ public sealed class ToDoPlugin(
         var energy = LevelToEmoji(task.Energy.Value);
         var interest = LevelToEmoji(task.Interest.Value);
 
-        sb.AppendLine($"| {i + 1} | {taskName} | {priority}  | {energy}  | {interest}  |");
+        _ = sb.AppendLine($"| {i + 1} | {taskName} | {priority}  | {energy}  | {interest}  |");
       }
 
-      sb.AppendLine();
-      sb.AppendLine("P = Priority, E = Energy, I = Interest");
-      sb.AppendLine();
-      sb.AppendLine($"💡 {plan.SelectionRationale}");
-      sb.AppendLine();
-      sb.AppendLine($"📊 Showing {plan.SuggestedTasks.Count} of {plan.TotalActiveTodos} active todos");
+      _ = sb.AppendLine();
+      _ = sb.AppendLine("P = Priority, E = Energy, I = Interest");
+      _ = sb.AppendLine();
+      _ = sb.AppendLine($"💡 {plan.SelectionRationale}");
+      _ = sb.AppendLine();
+      _ = sb.AppendLine($"📊 Showing {plan.SuggestedTasks.Count} of {plan.TotalActiveTodos} active todos");
 
       return sb.ToString();
     }
@@ -475,10 +476,9 @@ public sealed class ToDoPlugin(
     }
 
     var ids = todoIds.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-    return ids
+    return [.. ids
       .Where(id => Guid.TryParse(id, out _))
-      .Select(id => new ToDoId(Guid.Parse(id)))
-      .ToList();
+      .Select(id => new ToDoId(Guid.Parse(id)))];
   }
 
   private static Result<Level> ParseLevel(string? input)
@@ -526,10 +526,10 @@ public sealed class ToDoPlugin(
   private static string FormatToDosAsTable(IEnumerable<ToDo> todos)
   {
     var sb = new StringBuilder();
-    sb.AppendLine("Here are your active todos:");
-    sb.AppendLine();
-    sb.AppendLine("| Task                           | P   | E   | I   | ID                                   |");
-    sb.AppendLine("| ------------------------------ | --- | --- | --- | ------------------------------------ |");
+    _ = sb.AppendLine("Here are your active todos:");
+    _ = sb.AppendLine();
+    _ = sb.AppendLine("| Task                           | P   | E   | I   | ID                                   |");
+    _ = sb.AppendLine("| ------------------------------ | --- | --- | --- | ------------------------------------ |");
 
     foreach (var todo in todos)
     {
@@ -541,11 +541,11 @@ public sealed class ToDoPlugin(
       var energy = LevelToEmoji(todo.Energy.Value);
       var interest = LevelToEmoji(todo.Interest.Value);
 
-      sb.AppendLine($"| {taskName} | {priority}  | {energy}  | {interest}  | {todo.Id.Value} |");
+      _ = sb.AppendLine($"| {taskName} | {priority}  | {energy}  | {interest}  | {todo.Id.Value} |");
     }
 
-    sb.AppendLine();
-    sb.AppendLine("P = Priority, E = Energy, I = Interest");
+    _ = sb.AppendLine();
+    _ = sb.AppendLine("P = Priority, E = Energy, I = Interest");
 
     return sb.ToString();
   }

@@ -110,12 +110,9 @@ public sealed class RemindersPlugin(
     }
 
     // Fall back to ISO 8601 parsing
-    if (!DateTime.TryParse(reminderTime, out var parsedDate))
-    {
-      return Result.Fail<DateTime>("Invalid reminder time format. Use fuzzy time like 'in 10 minutes' or ISO 8601 format like 2025-12-31T10:00:00.");
-    }
-
-    return await ConvertToUtcAsync(parsedDate, cancellationToken);
+    return !DateTime.TryParse(reminderTime, out var parsedDate)
+      ? Result.Fail<DateTime>("Invalid reminder time format. Use fuzzy time like 'in 10 minutes' or ISO 8601 format like 2025-12-31T10:00:00.")
+      : await ConvertToUtcAsync(parsedDate, cancellationToken);
   }
 
   private async Task<Result<DateTime>> ConvertToUtcAsync(DateTime parsedDate, CancellationToken cancellationToken)

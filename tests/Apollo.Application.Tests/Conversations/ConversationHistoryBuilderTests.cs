@@ -9,8 +9,6 @@ namespace Apollo.Application.Tests.Conversations;
 
 public class ConversationHistoryBuilderTests
 {
-  private readonly ConversationHistoryBuilder _builder = new();
-
   [Fact]
   public void BuildForToolPlanningIncludesRecentMessagesAndTimezoneContext()
   {

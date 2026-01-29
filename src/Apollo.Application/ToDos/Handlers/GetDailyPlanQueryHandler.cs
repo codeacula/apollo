@@ -38,7 +38,7 @@ public sealed class GetDailyPlanQueryHandler(
       if (todos.Count == 0)
       {
         return Result.Ok(new DailyPlan(
-          Array.Empty<DailyPlanItem>(),
+          [],
           "You have no active todos! 🎉",
           0
         ));
@@ -53,14 +53,14 @@ public sealed class GetDailyPlanQueryHandler(
       // Step 4: Handle edge case - fewer todos than requested count
       if (todos.Count <= dailyTaskCount)
       {
-        var allItems = todos.Select(t => new DailyPlanItem(
+        var allItems = todos.ConvertAll(t => new DailyPlanItem(
           t.Id,
           t.Description.Value,
           t.Priority,
           t.Energy,
           t.Interest,
           t.DueDate?.Value
-        )).ToList();
+        ));
 
         return Result.Ok(new DailyPlan(
           allItems,
@@ -98,12 +98,9 @@ public sealed class GetDailyPlanQueryHandler(
 
       // Step 8: Parse JSON response
       var parseResult = ParseAIResponse(aiResult.Content, todos);
-      if (parseResult.IsFailed)
-      {
-        return Result.Fail<DailyPlan>(parseResult.Errors);
-      }
-
-      return Result.Ok(new DailyPlan(
+      return parseResult.IsFailed
+        ? Result.Fail<DailyPlan>(parseResult.Errors)
+        : Result.Ok(new DailyPlan(
         parseResult.Value.Tasks,
         parseResult.Value.Rationale,
         todos.Count
@@ -127,7 +124,7 @@ public sealed class GetDailyPlanQueryHandler(
         ? $" Due: {todo.DueDate.Value.Value:yyyy-MM-dd}"
         : "";
 
-      sb.AppendLine($"- [{todo.Id.Value}] {todo.Description.Value} (P:{priority} E:{energy} I:{interest}){dueDate}");
+      _ = sb.AppendLine($"- [{todo.Id.Value}] {todo.Description.Value} (P:{priority} E:{energy} I:{interest}){dueDate}");
     }
 
     return sb.ToString();
@@ -183,12 +180,7 @@ public sealed class GetDailyPlanQueryHandler(
         }
       }
 
-      if (tasks.Count == 0)
-      {
-        return Result.Fail<(List<DailyPlanItem>, string)>("AI returned no valid task IDs");
-      }
-
-      return Result.Ok((tasks, rationale));
+      return tasks.Count == 0 ? (Result<(List<DailyPlanItem> Tasks, string Rationale)>)Result.Fail<(List<DailyPlanItem>, string)>("AI returned no valid task IDs") : (Result<(List<DailyPlanItem> Tasks, string Rationale)>)Result.Ok((tasks, rationale));
     }
     catch (JsonException ex)
     {
