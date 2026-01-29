@@ -4,8 +4,9 @@
 
 - `src/` holds all runtime code: `Apollo.API` (HTTP host), `Apollo.GRPC` (gRPC host), `Apollo.Discord` (bot), `Apollo.Application` (use-cases), `Apollo.Domain` (entities/value objects), `Apollo.Core` (shared contracts/logging), `Apollo.AI` (AI agents/plugins), `Apollo.Database` (data access), `Apollo.Cache` (Redis helpers), and `Client` (Vite + Vue front-end).
 - `tests/` mirrors the runtime projects with xUnit projects named `*.Tests`.
-- `docs/` contains Obsidian-style markdown (see `docs/Architecture.md` and `docs/Environment.md`); `assets/` stores shared static files.
+- `assets/` stores shared static files.
 - Solution entry point is `Apollo.sln`; environment templates live in `.env.example`.
+- See `ARCHITECTURE.md` for comprehensive architecture documentation, coding practices, and local development setup.
 
 ## Build, Test, and Development Commands
 
@@ -39,7 +40,7 @@
 - Commits in history use short, sentence-case summaries (imperative is preferred), e.g., `Fix ChatMessageDTO name` or `Add ToDo reminder job`.
 - Keep commits focused; include config/docs updates when behavior changes.
 - PRs should include: problem/solution summary, linked issue, test evidence (`dotnet test` output), and screenshots for Client/UI changes.
-- Update `docs/` and sample configs when endpoints, env vars, or architecture diagrams change.
+- Update `ARCHITECTURE.md` and sample configs when endpoints, env vars, or architecture diagrams change.
 
 ## Security & Configuration Tips
 
