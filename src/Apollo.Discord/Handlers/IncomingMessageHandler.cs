@@ -1,7 +1,6 @@
 using Apollo.Core.Conversations;
 using Apollo.Core.Logging;
 using Apollo.Core.People;
-using Apollo.Discord.Config;
 using Apollo.Domain.People.ValueObjects;
 
 using NetCord.Gateway;
@@ -14,13 +13,12 @@ namespace Apollo.Discord.Handlers;
 public class IncomingMessageHandler(
   IApolloServiceClient apolloServiceClient,
   IPersonCache personCache,
-  DiscordConfig discordConfig,
   ILogger<IncomingMessageHandler> logger) : IMessageCreateGatewayHandler
 {
   public async ValueTask HandleAsync(Message arg)
   {
     // This is here because when Apollo replies to the user, we get yet another MessageCreate event
-    if (arg.GuildId != null || arg.Author.Username == discordConfig.BotName)
+    if (arg.GuildId != null || arg.Author.IsBot)
     {
       return;
     }

@@ -2,5 +2,5 @@ namespace Apollo.Discord.Config;
 
 public sealed record DiscordConfig
 {
-  public string BotName { get; init; } = "Apollo";
+  // Reserved for future Discord configuration settings
 }
