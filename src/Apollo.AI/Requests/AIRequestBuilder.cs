@@ -22,6 +22,7 @@ public sealed class AIRequestBuilder(ApolloAIConfig config, IPromptTemplateProce
   private string _systemPrompt = "";
   private double _temperature = 0.7;
   private bool _toolCallingEnabled = true;
+  private bool _jsonModeEnabled;
 
   public IAIRequestBuilder WithSystemPrompt(string systemPrompt)
   {
@@ -65,6 +66,12 @@ public sealed class AIRequestBuilder(ApolloAIConfig config, IPromptTemplateProce
   public IAIRequestBuilder WithToolCalling(bool enabled = true)
   {
     _toolCallingEnabled = enabled;
+    return this;
+  }
+
+  public IAIRequestBuilder WithJsonMode(bool enabled = true)
+  {
+    _jsonModeEnabled = enabled;
     return this;
   }
 
@@ -200,7 +207,7 @@ public sealed class AIRequestBuilder(ApolloAIConfig config, IPromptTemplateProce
 
   private OpenAIPromptExecutionSettings BuildExecutionSettings()
   {
-    return new OpenAIPromptExecutionSettings
+    var settings = new OpenAIPromptExecutionSettings
     {
       Temperature = _temperature,
       FunctionChoiceBehavior = _toolCallingEnabled
@@ -212,5 +219,12 @@ public sealed class AIRequestBuilder(ApolloAIConfig config, IPromptTemplateProce
         : null,
       MaxTokens = 2000  // Limit response size to prevent massive requests
     };
+
+    if (_jsonModeEnabled)
+    {
+      settings.ResponseFormat = "json_object";
+    }
+
+    return settings;
   }
 }

@@ -22,10 +22,6 @@ namespace Apollo.Application.Conversations;
 
 public sealed class ProcessIncomingMessageCommandHandler(
   IApolloAIAgent apolloAIAgent,
-  ToolPlanParser toolPlanParser,
-  ToolPlanValidator toolPlanValidator,
-  ToolExecutionService toolExecutionService,
-  ConversationHistoryBuilder conversationHistoryBuilder,
   IConversationStore conversationStore,
   IFuzzyTimeParser fuzzyTimeParser,
   ILogger<ProcessIncomingMessageCommandHandler> logger,
@@ -159,15 +155,16 @@ public sealed class ProcessIncomingMessageCommandHandler(
       if (parseResult.IsSuccess)
       {
         toolPlan = parseResult.Value;
+        ConversationLogs.ToolPlanReceived(logger, person.Id.Value, toolPlan.ToolCalls.Count);
       }
       else
       {
-        logger.LogWarning("Tool plan parsing failed for person {PersonId}: {ErrorMessage}", person.Id.Value, parseResult.Errors.FirstOrDefault()?.Message);
+        ConversationLogs.ToolPlanParsingFailed(logger, person.Id.Value, parseResult.Errors.FirstOrDefault()?.Message);
       }
     }
     else
     {
-      logger.LogWarning("Tool planning request failed for person {PersonId}: {ErrorMessage}", person.Id.Value, toolPlanResult.ErrorMessage);
+      ConversationLogs.ToolPlanningRequestFailed(logger, person.Id.Value, toolPlanResult.ErrorMessage);
     }
 
     // Phase 2: Validate + Execute Tool Calls
@@ -185,10 +182,19 @@ public sealed class ProcessIncomingMessageCommandHandler(
       toolResults.AddRange(executed);
     }
 
+    ConversationLogs.ToolExecutionCompleted(
+      logger,
+      person.Id.Value,
+      validationResult.ApprovedCalls.Count,
+      validationResult.BlockedCalls.Count,
+      toolResults.Count - validationResult.BlockedCalls.Count);
+
     // Phase 3: Response Generation
     var actionsSummary = toolResults.Count == 0
       ? "None"
       : string.Join("\n", toolResults.Select(tc => $"- {tc.ToSummary()}"));
+
+    ConversationLogs.ActionsTaken(logger, person.Id.Value, [actionsSummary]);
 
     var responseResult = await apolloAIAgent
       .CreateResponseRequest(responseMessages, actionsSummary, userTimezone)

@@ -38,6 +38,7 @@ public sealed class ApolloAIAgent(
       .FromPromptDefinition(prompt)
       .WithMessages(messages)
       .WithToolCalling(enabled: false)
+      .WithJsonMode(enabled: true)
       .WithTemplateVariables(variables);
   }
 

@@ -1,7 +1,5 @@
 using Apollo.AI.Config;
-using Apollo.AI.Planning;
 using Apollo.AI.Prompts;
-using Apollo.AI.Tooling;
 using Apollo.Core.ToDos;
 
 using Microsoft.Extensions.Configuration;
@@ -26,9 +24,6 @@ public static class ServiceCollectionExtensions
       .AddSingleton(config)
       .AddSingleton<IPromptLoader, PromptLoader>()
       .AddSingleton<IPromptTemplateProcessor, PromptTemplateProcessor>()
-      .AddSingleton<ToolPlanParser>()
-      .AddSingleton<ToolPlanValidator>()
-      .AddSingleton<ToolExecutionService>()
       .AddTransient<IApolloAIAgent, ApolloAIAgent>()
       .AddTransient<IReminderMessageGenerator, ApolloReminderMessageGenerator>();
 

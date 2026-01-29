@@ -1,4 +1,3 @@
-using Apollo.Application.Conversations;
 using Apollo.Application.People;
 using Apollo.Application.ToDos;
 using Apollo.Core.People;
@@ -16,8 +15,6 @@ public static class ServiceCollectionExtension
     _ = services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<IApolloApplication>());
 
     _ = services.AddScoped<IPersonService, PersonService>();
-
-    _ = services.AddSingleton<ConversationHistoryBuilder>();
 
     services.TryAddScoped<IToDoReminderScheduler, NoOpToDoReminderScheduler>();
 
