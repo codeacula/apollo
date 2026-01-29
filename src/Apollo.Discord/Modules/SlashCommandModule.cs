@@ -110,4 +110,33 @@ public class SlashCommandModule(IApolloServiceClient apolloServiceClient) : Appl
       message.Flags = MessageFlags.IsComponentsV2;
     });
   }
+
+  [SlashCommand("daily_todos", "Get Apollo's suggested task list for today")]
+  public async Task DailyTodosAsync()
+  {
+    _ = await RespondAsync(InteractionCallback.DeferredMessage());
+
+    var platformId = new PlatformId(Context.User.Username, Context.User.Id.ToString(CultureInfo.InvariantCulture), ApolloPlatform.Discord);
+    var result = await apolloServiceClient.GetDailyPlanAsync(platformId, CancellationToken.None);
+
+    if (result.IsFailed)
+    {
+      _ = await ModifyResponseAsync(message =>
+      {
+        message.Content = $"⚠️ Unable to generate your daily plan: {result.GetErrorMessages(", ")}";
+        message.Components = [];
+      });
+      return;
+    }
+
+    var dailyPlan = result.Value;
+    var container = new DailyPlanComponent(dailyPlan);
+
+    _ = await ModifyResponseAsync(message =>
+    {
+      message.Components = [container];
+      message.Content = string.Empty;
+      message.Flags = MessageFlags.IsComponentsV2;
+    });
+  }
 }

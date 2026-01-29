@@ -13,6 +13,7 @@ public sealed class ApolloAIAgent(
   private const string ToolPlanningPromptName = "ApolloToolPlanning";
   private const string ResponsePromptName = "ApolloResponse";
   private const string ReminderPromptName = "ApolloReminder";
+  private const string DailyPlanningPromptName = "ApolloDailyPlanning";
 
   public IAIRequestBuilder CreateRequest()
   {
@@ -78,6 +79,29 @@ public sealed class ApolloAIAgent(
 
     return CreateRequest()
       .FromPromptDefinition(prompt)
+      .WithTemplateVariables(variables);
+  }
+
+  public IAIRequestBuilder CreateDailyPlanRequest(
+    string userTimezone,
+    string currentTime,
+    string activeTodos,
+    int taskCount)
+  {
+    var prompt = promptLoader.Load(DailyPlanningPromptName);
+
+    var variables = new Dictionary<string, string>
+    {
+      ["user_timezone"] = userTimezone,
+      ["current_time"] = currentTime,
+      ["active_todos"] = activeTodos,
+      ["task_count"] = taskCount.ToString(System.Globalization.CultureInfo.InvariantCulture)
+    };
+
+    return CreateRequest()
+      .FromPromptDefinition(prompt)
+      .WithToolCalling(enabled: false)
+      .WithJsonMode(enabled: true)
       .WithTemplateVariables(variables);
   }
 }

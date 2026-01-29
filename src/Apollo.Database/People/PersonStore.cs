@@ -176,6 +176,27 @@ public sealed class PersonStore(SuperAdminConfig SuperAdminConfig, IDocumentSess
     }
   }
 
+  public async Task<Result> SetDailyTaskCountAsync(PersonId id, DailyTaskCount dailyTaskCount, CancellationToken cancellationToken = default)
+  {
+    try
+    {
+      var time = timeProvider.GetUtcDateTime();
+      _ = session.Events.Append(id.Value, new PersonDailyTaskCountUpdatedEvent(dailyTaskCount.Value, time)
+      {
+        Id = id.Value,
+        CreatedOn = time
+      });
+
+      await session.SaveChangesAsync(cancellationToken);
+
+      return Result.Ok();
+    }
+    catch (Exception ex)
+    {
+      return Result.Fail(ex.Message);
+    }
+  }
+
   public async Task<Result> AddNotificationChannelAsync(Person person, NotificationChannel channel, CancellationToken cancellationToken = default)
   {
     try

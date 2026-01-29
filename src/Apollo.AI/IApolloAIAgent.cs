@@ -33,4 +33,13 @@ public interface IApolloAIAgent
     string userTimezone,
     string currentTime,
     string reminderItems);
+
+  /// <summary>
+  /// Creates a request pre-configured for daily planning (JSON output with task selection).
+  /// </summary>
+  IAIRequestBuilder CreateDailyPlanRequest(
+    string userTimezone,
+    string currentTime,
+    string activeTodos,
+    int taskCount);
 }

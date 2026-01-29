@@ -67,4 +67,58 @@ public class PersonPlugin(IPersonStore personStore, PersonConfig personConfig, P
       return $"Error retrieving timezone: {ex.Message}";
     }
   }
+
+  [KernelFunction("set_daily_task_count")]
+  [Description("Sets how many tasks Apollo suggests in daily plans. Must be between 1 and 20.")]
+  public async Task<string> SetDailyTaskCountAsync(
+    [Description("The number of tasks to suggest per day (1-20)")] int count)
+  {
+    try
+    {
+      if (!DailyTaskCount.TryParse(count, out var dailyTaskCount, out var error))
+      {
+        return $"Failed to set daily task count: {error}";
+      }
+
+      var result = await personStore.SetDailyTaskCountAsync(personId, dailyTaskCount);
+
+      if (result.IsFailed)
+      {
+        return $"Failed to set daily task count: {result.Errors.FirstOrDefault()?.Message}";
+      }
+
+      return $"Successfully set your daily task count to {count} tasks.";
+    }
+    catch (Exception ex)
+    {
+      return $"Error setting daily task count: {ex.Message}";
+    }
+  }
+
+  [KernelFunction("get_daily_task_count")]
+  [Description("Gets the current daily task count setting (how many tasks Apollo suggests per day)")]
+  public async Task<string> GetDailyTaskCountAsync()
+  {
+    try
+    {
+      var personResult = await personStore.GetAsync(personId);
+
+      if (personResult.IsFailed)
+      {
+        return $"Failed to retrieve daily task count: {personResult.Errors.FirstOrDefault()?.Message}";
+      }
+
+      var person = personResult.Value;
+      if (person.DailyTaskCount is null)
+      {
+        return $"You are currently using the default daily task count: {personConfig.DefaultDailyTaskCount} tasks per day.";
+      }
+
+      return $"Your daily task count is set to: {person.DailyTaskCount.Value.Value} tasks per day.";
+    }
+    catch (Exception ex)
+    {
+      return $"Error retrieving daily task count: {ex.Message}";
+    }
+  }
 }

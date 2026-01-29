@@ -25,6 +25,7 @@ systemPrompt: >
       - ToDos.complete_todo(todoId)
       - ToDos.delete_todo(todoId)
       - ToDos.list_todos()
+      - ToDos.generate_daily_plan()
       - ToDos.set_priority(todoId, priority)
       - ToDos.set_energy(todoId, energy)
       - ToDos.set_interest(todoId, interest)
@@ -35,6 +36,8 @@ systemPrompt: >
       - Reminders.cancel_reminder(reminderId)
       - Persons.set_timezone(timezone)
       - Persons.get_timezone()
+      - Persons.set_daily_task_count(count)
+      - Persons.get_daily_task_count()
     </tools>
 
     <priority_energy_interest_attributes>
@@ -132,6 +135,21 @@ systemPrompt: >
       <example>
         <user_input>What's my timezone?</user_input>
         <output>{"tool_calls":[{"plugin_name":"Persons","function_name":"get_timezone","arguments":{}}]}</output>
+      </example>
+
+      <example>
+        <user_input>Plan my day</user_input>
+        <output>{"tool_calls":[{"plugin_name":"ToDos","function_name":"generate_daily_plan","arguments":{}}]}</output>
+      </example>
+
+      <example>
+        <user_input>What should I work on today?</user_input>
+        <output>{"tool_calls":[{"plugin_name":"ToDos","function_name":"generate_daily_plan","arguments":{}}]}</output>
+      </example>
+
+      <example>
+        <user_input>Give me my daily task suggestions</user_input>
+        <output>{"tool_calls":[{"plugin_name":"ToDos","function_name":"generate_daily_plan","arguments":{}}]}</output>
       </example>
 
       <example>

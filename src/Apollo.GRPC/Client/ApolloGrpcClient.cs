@@ -16,6 +16,7 @@ using ProtoBuf.Grpc.Client;
 using CoreCreateToDoRequest = Apollo.Core.ToDos.Requests.CreateToDoRequest;
 using CoreNewMessageRequest = Apollo.Core.Conversations.NewMessageRequest;
 using GrpcCreateToDoRequest = Apollo.GRPC.Contracts.CreateToDoRequest;
+using GrpcGetDailyPlanRequest = Apollo.GRPC.Contracts.GetDailyPlanRequest;
 using GrpcGetPersonToDosRequest = Apollo.GRPC.Contracts.GetPersonToDosRequest;
 using GrpcManageAccessRequest = Apollo.GRPC.Contracts.ManageAccessRequest;
 using GrpcNewMessageRequest = Apollo.GRPC.Contracts.NewMessageRequest;
@@ -107,6 +108,45 @@ public class ApolloGrpcClient : IApolloGrpcClient, IApolloServiceClient, IDispos
     }).ToArray();
 
     return Result.Ok<IEnumerable<ToDoSummary>>(summaries);
+  }
+
+  public async Task<Result<DailyPlanResponse>> GetDailyPlanAsync(PlatformId platformId, CancellationToken cancellationToken = default)
+  {
+    var grpcRequest = new GrpcGetDailyPlanRequest
+    {
+      Platform = platformId.Platform,
+      PlatformUserId = platformId.PlatformUserId,
+      Username = platformId.Username
+    };
+
+    var grpcResponse = await ApolloGrpcService.GetDailyPlanAsync(grpcRequest);
+
+    if (!grpcResponse.IsSuccess || grpcResponse.Data == null)
+    {
+      return Result.Fail<DailyPlanResponse>(
+        string.Join("; ", grpcResponse.Errors.Select(e => e.Message))
+      );
+    }
+
+    var dto = grpcResponse.Data;
+    var tasks = dto.SuggestedTasks.Select(t => new DailyPlanTaskResponse
+    {
+      Id = t.Id,
+      Description = t.Description,
+      Priority = t.Priority,
+      Energy = t.Energy,
+      Interest = t.Interest,
+      DueDate = t.DueDate
+    }).ToList();
+
+    var response = new DailyPlanResponse
+    {
+      SuggestedTasks = tasks,
+      SelectionRationale = dto.SelectionRationale,
+      TotalActiveTodos = dto.TotalActiveTodos
+    };
+
+    return Result.Ok(response);
   }
 
   public async Task<Result<string>> GrantAccessAsync(PlatformId adminPlatformId, PlatformId targetPlatformId, CancellationToken cancellationToken = default)

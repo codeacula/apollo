@@ -142,6 +142,44 @@ public sealed class ApolloGrpcService(
     return await Task.WhenAll(dtoTasks);
   }
 
+  public async Task<GrpcResult<DailyPlanDTO>> GetDailyPlanAsync(GetDailyPlanRequest request)
+  {
+    // Resolve PlatformUserId to PersonId
+    var platformId = new PlatformId(request.Username, request.PlatformUserId, request.Platform);
+    var personResult = await mediator.Send(new GetOrCreatePersonByPlatformIdQuery(platformId));
+
+    if (personResult.IsFailed)
+    {
+      return personResult.Errors.Select(e => new GrpcError(e.Message)).ToArray();
+    }
+
+    var query = new GetDailyPlanQuery(personResult.Value.Id);
+    var result = await mediator.Send(query);
+
+    if (result.IsFailed)
+    {
+      return result.Errors.Select(e => new GrpcError(e.Message)).ToArray();
+    }
+
+    var plan = result.Value;
+    var taskDtos = plan.SuggestedTasks.Select(t => new DailyPlanTaskDTO
+    {
+      Id = t.Id.Value,
+      Description = t.Description,
+      Priority = (int)t.Priority.Value,
+      Energy = (int)t.Energy.Value,
+      Interest = (int)t.Interest.Value,
+      DueDate = t.DueDate
+    }).ToArray();
+
+    return new DailyPlanDTO
+    {
+      SuggestedTasks = taskDtos,
+      SelectionRationale = plan.SelectionRationale,
+      TotalActiveTodos = plan.TotalActiveTodos
+    };
+  }
+
   public async Task<GrpcResult<string>> UpdateToDoAsync(UpdateToDoRequest request)
   {
     var command = new UpdateToDoCommand(

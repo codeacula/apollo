@@ -20,6 +20,9 @@ public interface IApolloGrpcService
   Task<GrpcResult<ToDoDTO[]>> GetPersonToDosAsync(GetPersonToDosRequest request);
 
   [OperationContract]
+  Task<GrpcResult<DailyPlanDTO>> GetDailyPlanAsync(GetDailyPlanRequest request);
+
+  [OperationContract]
   Task<GrpcResult<string>> UpdateToDoAsync(UpdateToDoRequest request);
 
   [OperationContract]

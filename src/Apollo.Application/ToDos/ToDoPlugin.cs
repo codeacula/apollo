@@ -386,7 +386,7 @@ public sealed class ToDoPlugin(
 
       if (result.IsFailed)
       {
-        return $"Failed to retrieve todos: {result.GetErrorMessages()}";
+        return $"Failed to retrieve todos: {result.Errors.FirstOrDefault()?.Message}";
       }
 
       if (!result.Value.Any())
@@ -399,6 +399,64 @@ public sealed class ToDoPlugin(
     catch (Exception ex)
     {
       return $"Error retrieving todos: {ex.Message}";
+    }
+  }
+
+  [KernelFunction("generate_daily_plan")]
+  [Description("Generates a suggested daily task list ordered for optimal execution. Returns an AI-curated list of tasks balanced for ADHD-friendly productivity.")]
+  public async Task<string> GenerateDailyPlanAsync(CancellationToken cancellationToken = default)
+  {
+    try
+    {
+      var query = new GetDailyPlanQuery(personId);
+      var result = await mediator.Send(query, cancellationToken);
+
+      if (result.IsFailed)
+      {
+        return $"Failed to generate daily plan: {result.Errors.FirstOrDefault()?.Message}";
+      }
+
+      var plan = result.Value;
+
+      // Handle empty todos case
+      if (plan.SuggestedTasks.Count == 0)
+      {
+        return plan.SelectionRationale;
+      }
+
+      // Format as a nice table
+      var sb = new StringBuilder();
+      sb.AppendLine("Here's your suggested daily plan:");
+      sb.AppendLine();
+      sb.AppendLine("| # | Task                           | P   | E   | I   |");
+      sb.AppendLine("| - | ------------------------------ | --- | --- | --- |");
+
+      for (int i = 0; i < plan.SuggestedTasks.Count; i++)
+      {
+        var task = plan.SuggestedTasks[i];
+        var taskName = task.Description.Length > 30
+          ? task.Description[..27] + "..."
+          : task.Description.PadRight(30);
+
+        var priority = LevelToEmoji(task.Priority.Value);
+        var energy = LevelToEmoji(task.Energy.Value);
+        var interest = LevelToEmoji(task.Interest.Value);
+
+        sb.AppendLine($"| {i + 1} | {taskName} | {priority}  | {energy}  | {interest}  |");
+      }
+
+      sb.AppendLine();
+      sb.AppendLine("P = Priority, E = Energy, I = Interest");
+      sb.AppendLine();
+      sb.AppendLine($"💡 {plan.SelectionRationale}");
+      sb.AppendLine();
+      sb.AppendLine($"📊 Showing {plan.SuggestedTasks.Count} of {plan.TotalActiveTodos} active todos");
+
+      return sb.ToString();
+    }
+    catch (Exception ex)
+    {
+      return $"Error generating daily plan: {ex.Message}";
     }
   }
 
