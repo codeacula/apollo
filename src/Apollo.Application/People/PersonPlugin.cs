@@ -10,7 +10,7 @@ namespace Apollo.Application.People;
 
 public class PersonPlugin(IPersonStore personStore, PersonConfig personConfig, PersonId personId)
 {
-  public const string PluginName = "Person";
+  public const string PluginName = "Persons";
   [KernelFunction("set_timezone")]
   [Description("Sets the user's timezone for interpreting reminder times. Accepts IANA timezone IDs (e.g., 'America/New_York', 'Europe/London') or common abbreviations (EST, CST, MST, PST, GMT, BST, CET, JST, AEST). US timezones are preferred for ambiguous abbreviations.")]
   public async Task<string> SetTimeZoneAsync(

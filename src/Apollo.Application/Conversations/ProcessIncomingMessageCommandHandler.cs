@@ -4,6 +4,7 @@ using Apollo.AI.Planning;
 using Apollo.AI.Requests;
 using Apollo.AI.Tooling;
 using Apollo.Application.People;
+using Apollo.Application.Reminders;
 using Apollo.Application.ToDos;
 using Apollo.Core;
 using Apollo.Core.Conversations;
@@ -208,11 +209,13 @@ public sealed class ProcessIncomingMessageCommandHandler(
   private Dictionary<string, object> CreatePlugins(Person person)
   {
     var toDoPlugin = new ToDoPlugin(mediator, personStore, fuzzyTimeParser, timeProvider, personConfig, person.Id);
+    var remindersPlugin = new RemindersPlugin(mediator, personStore, fuzzyTimeParser, timeProvider, personConfig, person.Id);
     var personPlugin = new PersonPlugin(personStore, personConfig, person.Id);
 
     return new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
     {
       [ToDoPlugin.PluginName] = toDoPlugin,
+      [RemindersPlugin.PluginName] = remindersPlugin,
       [PersonPlugin.PluginName] = personPlugin
     };
   }

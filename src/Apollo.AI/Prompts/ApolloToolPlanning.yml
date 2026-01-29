@@ -25,9 +25,26 @@ systemPrompt: >
       - ToDos.complete_todo(todoId)
       - ToDos.delete_todo(todoId)
       - ToDos.list_todos()
-      - Person.set_timezone(timezone)
-      - Person.get_timezone()
+      - Reminders.create_reminder(message, reminderTime)
+      - Reminders.cancel_reminder(reminderId)
+      - Persons.set_timezone(timezone)
+      - Persons.get_timezone()
     </tools>
+
+    <choosing_reminders_vs_todos>
+      Use Reminders for:
+      - Ephemeral, one-time notifications (e.g., "remind me to take a break in 10 minutes")
+      - Time-sensitive alerts that don't need task tracking
+      - Quick nudges or notifications
+      
+      Use ToDos for:
+      - Persistent tasks that should appear in a todo list
+      - Tasks that need to be tracked until completion
+      - Items that may be updated, rescheduled, or marked complete later
+      - Tasks that don't have a specific time ("buy groceries", "call mom")
+      
+      A todo CAN have a reminder attached, but a reminder does NOT create a todo unless the user explicitly wants task tracking.
+    </choosing_reminders_vs_todos>
 
     <schema>
       {
@@ -46,13 +63,23 @@ systemPrompt: >
 
     <examples>
       <example>
-        <user_input>Remind me to brush my teeth in 10 minutes</user_input>
-        <output>{"tool_calls":[{"plugin_name":"ToDos","function_name":"create_todo","arguments":{"description":"Brush my teeth","reminderDate":"in 10 minutes"}}]}</output>
+        <user_input>Remind me to take a break in 10 minutes</user_input>
+        <output>{"tool_calls":[{"plugin_name":"Reminders","function_name":"create_reminder","arguments":{"message":"Take a break","reminderTime":"in 10 minutes"}}]}</output>
+      </example>
+
+      <example>
+        <user_input>Add "buy groceries" to my todo list</user_input>
+        <output>{"tool_calls":[{"plugin_name":"ToDos","function_name":"create_todo","arguments":{"description":"Buy groceries"}}]}</output>
+      </example>
+
+      <example>
+        <user_input>Remind me to call mom tomorrow at 3pm and add it to my tasks</user_input>
+        <output>{"tool_calls":[{"plugin_name":"ToDos","function_name":"create_todo","arguments":{"description":"Call mom","reminderDate":"tomorrow at 3pm"}}]}</output>
       </example>
 
       <example>
         <user_input>What's my timezone?</user_input>
-        <output>{"tool_calls":[{"plugin_name":"Person","function_name":"get_timezone","arguments":{}}]}</output>
+        <output>{"tool_calls":[{"plugin_name":"Persons","function_name":"get_timezone","arguments":{}}]}</output>
       </example>
 
       <example>
