@@ -158,10 +158,10 @@ public sealed class ProcessIncomingMessageCommandHandler(
         toolPlan = parseResult.Value;
         ConversationLogs.ToolPlanReceived(logger, person.Id.Value, toolPlan.ToolCalls.Count);
       }
-       else
-       {
-         ConversationLogs.ToolPlanParsingFailed(logger, person.Id.Value, parseResult.Errors.FirstOrDefault()?.Message ?? "Unknown error");
-       }
+      else
+      {
+        ConversationLogs.ToolPlanParsingFailed(logger, person.Id.Value, parseResult.Errors.FirstOrDefault()?.Message ?? "Unknown error");
+      }
     }
     else
     {

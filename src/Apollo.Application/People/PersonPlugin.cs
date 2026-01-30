@@ -82,9 +82,9 @@ public class PersonPlugin(IPersonStore personStore, PersonConfig personConfig, P
 
       var result = await personStore.SetDailyTaskCountAsync(personId, dailyTaskCount);
 
-       return result.IsFailed
-         ? $"Failed to set daily task count: {result.Errors.FirstOrDefault()?.Message ?? "Unknown error"}"
-         : $"Successfully set your daily task count to {count} tasks.";
+      return result.IsFailed
+        ? $"Failed to set daily task count: {result.Errors.FirstOrDefault()?.Message ?? "Unknown error"}"
+        : $"Successfully set your daily task count to {count} tasks.";
     }
     catch (Exception ex)
     {
@@ -100,10 +100,10 @@ public class PersonPlugin(IPersonStore personStore, PersonConfig personConfig, P
     {
       var personResult = await personStore.GetAsync(personId);
 
-       if (personResult.IsFailed)
-       {
-         return $"Failed to retrieve daily task count: {personResult.Errors.FirstOrDefault()?.Message ?? "Unknown error"}";
-       }
+      if (personResult.IsFailed)
+      {
+        return $"Failed to retrieve daily task count: {personResult.Errors.FirstOrDefault()?.Message ?? "Unknown error"}";
+      }
 
       var person = personResult.Value;
       return person.DailyTaskCount is null

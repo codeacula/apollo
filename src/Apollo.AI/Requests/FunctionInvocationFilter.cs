@@ -1,8 +1,8 @@
+using Apollo.AI.Tooling;
+using Apollo.Core.Logging;
+
 using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
-
-using Apollo.Core.Logging;
-using Apollo.AI.Tooling;
 
 namespace Apollo.AI.Requests;
 

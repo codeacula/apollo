@@ -98,18 +98,18 @@ public sealed class AIRequestBuilder(ApolloAIConfig config, IPromptTemplateProce
   {
     var toolCalls = new List<ToolCallResult>();
 
-     try
-     {
-       var startTime = DateTimeOffset.UtcNow;
-       AILogs.AIRequestStarted(_logger, _toolCallingEnabled, _temperature);
+    try
+    {
+      var startTime = DateTimeOffset.UtcNow;
+      AILogs.AIRequestStarted(_logger, _toolCallingEnabled, _temperature);
 
-       var kernel = BuildKernel(toolCalls);
-       var chatService = kernel.GetRequiredService<IChatCompletionService>();
-       var chatHistory = BuildChatHistory();
-       var settings = BuildExecutionSettings();
+      var kernel = BuildKernel(toolCalls);
+      var chatService = kernel.GetRequiredService<IChatCompletionService>();
+      var chatHistory = BuildChatHistory();
+      var settings = BuildExecutionSettings();
 
-       var beforeLLM = DateTimeOffset.UtcNow;
-       AILogs.LLMCallStarted(_logger, (beforeLLM - startTime).TotalMilliseconds, chatHistory.Count, kernel.Plugins.Count, _toolCallingEnabled);
+      var beforeLLM = DateTimeOffset.UtcNow;
+      AILogs.LLMCallStarted(_logger, (beforeLLM - startTime).TotalMilliseconds, chatHistory.Count, kernel.Plugins.Count, _toolCallingEnabled);
 
       var response = await chatService.GetChatMessageContentAsync(
         chatHistory,
@@ -117,8 +117,8 @@ public sealed class AIRequestBuilder(ApolloAIConfig config, IPromptTemplateProce
         kernel: kernel,
         cancellationToken: cancellationToken);
 
-       var afterLLM = DateTimeOffset.UtcNow;
-       AILogs.LLMResponseReceived(_logger, (afterLLM - beforeLLM).TotalMilliseconds, toolCalls.Count);
+      var afterLLM = DateTimeOffset.UtcNow;
+      AILogs.LLMResponseReceived(_logger, (afterLLM - beforeLLM).TotalMilliseconds, toolCalls.Count);
 
       return new AIRequestResult
       {
@@ -127,10 +127,10 @@ public sealed class AIRequestBuilder(ApolloAIConfig config, IPromptTemplateProce
         ToolCalls = toolCalls
       };
     }
-     catch (InvalidOperationException ex) when (ex.Message.Contains("Tool calling loop terminated"))
-     {
-       // Infinite loop detected and stopped - this is expected, not a failure
-       AILogs.AIRequestTerminatedLoopDetected(_logger, toolCalls.Count);
+    catch (InvalidOperationException ex) when (ex.Message.Contains("Tool calling loop terminated"))
+    {
+      // Infinite loop detected and stopped - this is expected, not a failure
+      AILogs.AIRequestTerminatedLoopDetected(_logger, toolCalls.Count);
 
       // Return success with the tools that executed before the loop
       return new AIRequestResult
@@ -140,9 +140,9 @@ public sealed class AIRequestBuilder(ApolloAIConfig config, IPromptTemplateProce
         ToolCalls = toolCalls
       };
     }
-     catch (Exception ex)
-     {
-       AILogs.AIRequestFailed(_logger, ex.GetType().Name, toolCalls.Count, ex);
+    catch (Exception ex)
+    {
+      AILogs.AIRequestFailed(_logger, ex.GetType().Name, toolCalls.Count, ex);
 
       // Return the tool calls that succeeded even though the request failed
       return new AIRequestResult
@@ -154,11 +154,11 @@ public sealed class AIRequestBuilder(ApolloAIConfig config, IPromptTemplateProce
     }
   }
 
-   private Kernel BuildKernel(List<ToolCallResult> toolCalls)
-   {
-     var builder = Kernel.CreateBuilder();
-     _ = builder.Services.AddOpenAIChatCompletion(_config.ModelId, new Uri(_config.Endpoint));
-     _ = builder.Services.AddSingleton<IFunctionInvocationFilter>(new FunctionInvocationFilter(toolCalls, maxToolCalls: 5, _logger));
+  private Kernel BuildKernel(List<ToolCallResult> toolCalls)
+  {
+    var builder = Kernel.CreateBuilder();
+    _ = builder.Services.AddOpenAIChatCompletion(_config.ModelId, new Uri(_config.Endpoint));
+    _ = builder.Services.AddSingleton<IFunctionInvocationFilter>(new FunctionInvocationFilter(toolCalls, maxToolCalls: 5, _logger));
 
     var kernel = builder.Build();
 

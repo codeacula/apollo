@@ -282,10 +282,14 @@ public sealed class ToDoPlugin(
       {
         return $"Failed to set priority: {result.GetErrorMessages()}";
       }
-
-      return ids.Count == 0
-        ? $"Successfully set priority to {LevelToEmoji(levelResult.Value)} for all {result.Value} active todos."
-        : $"Successfully set priority to {LevelToEmoji(levelResult.Value)} for {result.Value} todos.";
+      else if (ids.Count == 0)
+      {
+        return $"Successfully set priority to {LevelToEmoji(levelResult.Value)} for all {result.Value} active todos.";
+      }
+      else
+      {
+        return $"Successfully set priority to {LevelToEmoji(levelResult.Value)} for {result.Value} todos.";
+      }
     }
     catch (Exception ex)
     {
@@ -323,10 +327,14 @@ public sealed class ToDoPlugin(
       {
         return $"Failed to set energy: {result.GetErrorMessages()}";
       }
-
-      return ids.Count == 0
-        ? $"Successfully set energy to {LevelToEmoji(levelResult.Value)} for all {result.Value} active todos."
-        : $"Successfully set energy to {LevelToEmoji(levelResult.Value)} for {result.Value} todos.";
+      else if (ids.Count == 0)
+      {
+        return $"Successfully set energy to {LevelToEmoji(levelResult.Value)} for all {result.Value} active todos.";
+      }
+      else
+      {
+        return $"Successfully set energy to {LevelToEmoji(levelResult.Value)} for {result.Value} todos.";
+      }
     }
     catch (Exception ex)
     {
@@ -364,10 +372,14 @@ public sealed class ToDoPlugin(
       {
         return $"Failed to set interest: {result.GetErrorMessages()}";
       }
-
-      return ids.Count == 0
-        ? $"Successfully set interest to {LevelToEmoji(levelResult.Value)} for all {result.Value} active todos."
-        : $"Successfully set interest to {LevelToEmoji(levelResult.Value)} for {result.Value} todos.";
+      else if (ids.Count == 0)
+      {
+        return $"Successfully set interest to {LevelToEmoji(levelResult.Value)} for all {result.Value} active todos.";
+      }
+      else
+      {
+        return $"Successfully set interest to {LevelToEmoji(levelResult.Value)} for {result.Value} todos.";
+      }
     }
     catch (Exception ex)
     {
@@ -384,18 +396,12 @@ public sealed class ToDoPlugin(
       var query = new GetToDosByPersonIdQuery(personId);
       var result = await mediator.Send(query, cancellationToken);
 
-       if (result.IsFailed)
-       {
-         return $"Failed to retrieve todos: {result.Errors.FirstOrDefault()?.Message ?? "Unknown error"}";
-       }
-      else if (!result.Value.Any())
+      if (result.IsFailed)
       {
-        return "You currently have no active todos.";
+        return $"Failed to retrieve todos: {result.Errors.FirstOrDefault()?.Message ?? "Unknown error"}";
       }
-      else
-      {
-        return FormatToDosAsTable(result.Value);
-      }
+
+      return !result.Value.Any() ? "You currently have no active todos." : FormatToDosAsTable(result.Value);
     }
     catch (Exception ex)
     {
@@ -412,10 +418,10 @@ public sealed class ToDoPlugin(
       var query = new GetDailyPlanQuery(personId);
       var result = await mediator.Send(query, cancellationToken);
 
-       if (result.IsFailed)
-       {
-         return $"Failed to generate daily plan: {result.Errors.FirstOrDefault()?.Message ?? "Unknown error"}";
-       }
+      if (result.IsFailed)
+      {
+        return $"Failed to generate daily plan: {result.Errors.FirstOrDefault()?.Message ?? "Unknown error"}";
+      }
 
       var plan = result.Value;
 

@@ -17,14 +17,10 @@ public sealed class SetToDoInterestCommandHandler(IToDoStore toDoStore) : IReque
       {
         return Result.Fail("To-Do not found");
       }
-      else if (todoResult.Value.PersonId.Value != request.PersonId.Value)
-      {
-        return Result.Fail("You don't have permission to update this to-do");
-      }
-      else
-      {
-        return await toDoStore.UpdateInterestAsync(request.ToDoId, request.Interest, cancellationToken);
-      }
+
+      return todoResult.Value.PersonId.Value != request.PersonId.Value
+        ? Result.Fail("You don't have permission to update this to-do")
+        : await toDoStore.UpdateInterestAsync(request.ToDoId, request.Interest, cancellationToken);
     }
     catch (Exception ex)
     {

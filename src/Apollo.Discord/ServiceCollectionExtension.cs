@@ -32,6 +32,6 @@ public static class ServiceCollectionExtensions
         .AddComponentInteractions<ModalInteraction, ModalInteractionContext>()
          .AddGatewayHandlers(typeof(IApolloDiscord).Assembly);
 
-     return services;
+    return services;
   }
 }
