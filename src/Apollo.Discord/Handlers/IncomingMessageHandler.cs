@@ -36,9 +36,9 @@ public class IncomingMessageHandler(
       return;
     }
 
-    // If we have a cached value of false, deny access. Cache miss (null) allows the request to proceed
-    // to the API which will validate and update the cache as needed.
-    if (validationResult.Value == false)
+     // If we have a cached value of false, deny access. Cache miss (null) allows the request to proceed
+     // to the API which will validate and update the cache as needed.
+     if (validationResult.Value is false)
     {
       ValidationLogs.ValidationFailed(logger, platformId.PlatformUserId, "Access denied");
       _ = await arg.SendAsync("Sorry, you do not have access to Apollo.");

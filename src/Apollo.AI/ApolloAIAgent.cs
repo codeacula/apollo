@@ -3,12 +3,15 @@ using Apollo.AI.DTOs;
 using Apollo.AI.Prompts;
 using Apollo.AI.Requests;
 
+using Microsoft.Extensions.Logging;
+
 namespace Apollo.AI;
 
 public sealed class ApolloAIAgent(
   ApolloAIConfig config,
   IPromptLoader promptLoader,
-  IPromptTemplateProcessor templateProcessor) : IApolloAIAgent
+  IPromptTemplateProcessor templateProcessor,
+  ILogger<AIRequestBuilder> logger) : IApolloAIAgent
 {
   private const string ToolPlanningPromptName = "ApolloToolPlanning";
   private const string ResponsePromptName = "ApolloResponse";
@@ -17,7 +20,7 @@ public sealed class ApolloAIAgent(
 
   public IAIRequestBuilder CreateRequest()
   {
-    return new AIRequestBuilder(config, templateProcessor);
+    return new AIRequestBuilder(config, templateProcessor, logger);
   }
 
   public IAIRequestBuilder CreateToolPlanningRequest(

@@ -384,10 +384,10 @@ public sealed class ToDoPlugin(
       var query = new GetToDosByPersonIdQuery(personId);
       var result = await mediator.Send(query, cancellationToken);
 
-      if (result.IsFailed)
-      {
-        return $"Failed to retrieve todos: {result.Errors.FirstOrDefault()?.Message}";
-      }
+       if (result.IsFailed)
+       {
+         return $"Failed to retrieve todos: {result.Errors.FirstOrDefault()?.Message ?? "Unknown error"}";
+       }
       else if (!result.Value.Any())
       {
         return "You currently have no active todos.";
@@ -412,10 +412,10 @@ public sealed class ToDoPlugin(
       var query = new GetDailyPlanQuery(personId);
       var result = await mediator.Send(query, cancellationToken);
 
-      if (result.IsFailed)
-      {
-        return $"Failed to generate daily plan: {result.Errors.FirstOrDefault()?.Message}";
-      }
+       if (result.IsFailed)
+       {
+         return $"Failed to generate daily plan: {result.Errors.FirstOrDefault()?.Message ?? "Unknown error"}";
+       }
 
       var plan = result.Value;
 

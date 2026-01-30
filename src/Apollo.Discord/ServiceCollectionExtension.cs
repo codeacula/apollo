@@ -30,10 +30,8 @@ public static class ServiceCollectionExtensions
         .AddComponentInteractions<MentionableMenuInteraction, MentionableMenuInteractionContext>()
         .AddComponentInteractions<ChannelMenuInteraction, ChannelMenuInteractionContext>()
         .AddComponentInteractions<ModalInteraction, ModalInteractionContext>()
-        .AddGatewayHandlers(typeof(IApolloDiscord).Assembly);
+         .AddGatewayHandlers(typeof(IApolloDiscord).Assembly);
 
-    // _ = services.AddScoped<IDiscordMessageSender, NetCordDiscordMessageSender>();
-
-    return services;
+     return services;
   }
 }
