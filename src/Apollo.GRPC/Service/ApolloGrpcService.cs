@@ -67,7 +67,10 @@ public sealed class ApolloGrpcService(
       Description = todo.Description.Value,
       ReminderDate = request.ReminderDate,
       CreatedOn = todo.CreatedOn.Value,
-      UpdatedOn = todo.UpdatedOn.Value
+      UpdatedOn = todo.UpdatedOn.Value,
+      Priority = todo.Priority.Value,
+      Energy = todo.Energy.Value,
+      Interest = todo.Interest.Value
     };
   }
 
@@ -88,7 +91,10 @@ public sealed class ApolloGrpcService(
       PersonId = todo.PersonId.Value,
       Description = todo.Description.Value,
       CreatedOn = todo.CreatedOn.Value,
-      UpdatedOn = todo.UpdatedOn.Value
+      UpdatedOn = todo.UpdatedOn.Value,
+      Priority = todo.Priority.Value,
+      Energy = todo.Energy.Value,
+      Interest = todo.Interest.Value
     };
   }
 
@@ -135,7 +141,10 @@ public sealed class ApolloGrpcService(
         Description = t.Description.Value,
         ReminderDate = reminderDate,
         CreatedOn = t.CreatedOn.Value,
-        UpdatedOn = t.UpdatedOn.Value
+        UpdatedOn = t.UpdatedOn.Value,
+        Priority = t.Priority.Value,
+        Energy = t.Energy.Value,
+        Interest = t.Interest.Value
       };
     });
 

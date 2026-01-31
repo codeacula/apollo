@@ -50,6 +50,8 @@ public sealed class SetAllToDosAttributeCommandHandler(
           }
 
           // Update each specified attribute
+          var todoUpdated = false;
+
           if (request.Priority.HasValue)
           {
             var result = await toDoStore.UpdatePriorityAsync(todoId, request.Priority.Value, cancellationToken);
@@ -59,7 +61,7 @@ public sealed class SetAllToDosAttributeCommandHandler(
             }
             else
             {
-              updatedCount++;
+              todoUpdated = true;
             }
           }
 
@@ -72,7 +74,7 @@ public sealed class SetAllToDosAttributeCommandHandler(
             }
             else
             {
-              updatedCount++;
+              todoUpdated = true;
             }
           }
 
@@ -85,8 +87,13 @@ public sealed class SetAllToDosAttributeCommandHandler(
             }
             else
             {
-              updatedCount++;
+              todoUpdated = true;
             }
+          }
+
+          if (todoUpdated)
+          {
+            updatedCount++;
           }
         }
         catch (Exception ex)

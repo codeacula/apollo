@@ -69,7 +69,7 @@ public sealed class ProcessIncomingMessageCommandHandler(
 
       var response = await ProcessWithAIAsync(conversationResult.Value, person, cancellationToken);
 
-      await SaveReplyAsync(conversationResult.Value, response);
+      await SaveReplyAsync(conversationResult.Value, response, cancellationToken);
 
       return CreateReplyToUser(response);
     }
@@ -220,9 +220,9 @@ public sealed class ProcessIncomingMessageCommandHandler(
     };
   }
 
-  private async Task SaveReplyAsync(Conversation conversation, string response)
+  private async Task SaveReplyAsync(Conversation conversation, string response, CancellationToken cancellationToken)
   {
-    var addReplyResult = await conversationStore.AddReplyAsync(conversation.Id, new Content(response), CancellationToken.None);
+    var addReplyResult = await conversationStore.AddReplyAsync(conversation.Id, new Content(response), cancellationToken);
 
     if (addReplyResult.IsFailed)
     {

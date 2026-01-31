@@ -1,5 +1,7 @@
 using System.Runtime.Serialization;
 
+using Apollo.Domain.Common.Enums;
+
 namespace Apollo.GRPC.Contracts;
 
 [DataContract]
@@ -22,4 +24,13 @@ public sealed record ToDoDTO
 
   [DataMember(Order = 6)]
   public DateTime UpdatedOn { get; init; }
+
+  [DataMember(Order = 7)]
+  public Level Priority { get; init; }
+
+  [DataMember(Order = 8)]
+  public Level Energy { get; init; }
+
+  [DataMember(Order = 9)]
+  public Level Interest { get; init; }
 }

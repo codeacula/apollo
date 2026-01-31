@@ -29,7 +29,7 @@ public sealed class ConversationStore(IDocumentSession session, TimeProvider tim
 
       var conversation = await GetAsync(conversationId, cancellationToken);
 
-      return Result.Ok(conversation.Value);
+      return conversation.IsFailed ? conversation : Result.Ok(conversation.Value);
     }
     catch (Exception ex)
     {
@@ -52,7 +52,7 @@ public sealed class ConversationStore(IDocumentSession session, TimeProvider tim
 
       var conversation = await GetAsync(conversationId, cancellationToken);
 
-      return Result.Ok(conversation.Value);
+      return conversation.IsFailed ? conversation : Result.Ok(conversation.Value);
     }
     catch (Exception ex)
     {
