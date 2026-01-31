@@ -1,3 +1,4 @@
+using Apollo.Core.Reminders.Requests;
 using Apollo.Core.ToDos.Requests;
 using Apollo.Discord.Components;
 using Apollo.Domain.People.ValueObjects;
@@ -131,6 +132,50 @@ public class SlashCommandModule(IApolloServiceClient apolloServiceClient) : Appl
 
     var dailyPlan = result.Value;
     var container = new DailyPlanComponent(dailyPlan);
+
+    _ = await ModifyResponseAsync(message =>
+    {
+      message.Components = [container];
+      message.Content = string.Empty;
+      message.Flags = MessageFlags.IsComponentsV2;
+    });
+  }
+
+  [SlashCommand("remind", "Set a quick reminder")]
+  public async Task CreateReminderAsync(
+    [SlashCommandParameter(Name = "message", Description = "What to remind you about")] string reminderMessage,
+    [SlashCommandParameter(Name = "when", Description = "When to remind you (e.g., 'in 10 minutes', 'in 2 hours', 'tomorrow')")] string reminderTime
+  )
+  {
+    _ = await RespondAsync(InteractionCallback.DeferredMessage());
+
+    var platformId = new PlatformId(
+      Context.User.Username,
+      Context.User.Id.ToString(CultureInfo.InvariantCulture),
+      ApolloPlatform.Discord
+    );
+
+    var createRequest = new CreateReminderRequest
+    {
+      PlatformId = platformId,
+      Message = reminderMessage,
+      ReminderTime = reminderTime,
+    };
+
+    var result = await apolloServiceClient.CreateReminderAsync(createRequest, CancellationToken.None);
+
+    if (result.IsFailed)
+    {
+      _ = await ModifyResponseAsync(message =>
+      {
+        message.Content = $"⚠️ Unable to set your reminder: {result.GetErrorMessages(", ")}";
+        message.Components = [];
+      });
+
+      return;
+    }
+
+    var container = new ReminderCreatedComponent(result.Value);
 
     _ = await ModifyResponseAsync(message =>
     {

@@ -14,6 +14,9 @@ public interface IApolloGrpcService
   Task<GrpcResult<ToDoDTO>> CreateToDoAsync(CreateToDoRequest request);
 
   [OperationContract]
+  Task<GrpcResult<ReminderDTO>> CreateReminderAsync(CreateReminderRequest request);
+
+  [OperationContract]
   Task<GrpcResult<ToDoDTO>> GetToDoAsync(GetToDoRequest request);
 
   [OperationContract]

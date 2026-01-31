@@ -19,6 +19,8 @@ public sealed class ApolloGrpcService(
   IMediator mediator,
   IReminderStore reminderStore,
   IPersonStore personStore,
+  IFuzzyTimeParser fuzzyTimeParser,
+  TimeProvider timeProvider,
   SuperAdminConfig superAdminConfig
 ) : IApolloGrpcService
 {
@@ -72,6 +74,76 @@ public sealed class ApolloGrpcService(
       Energy = todo.Energy.Value,
       Interest = todo.Interest.Value
     };
+  }
+
+  public async Task<GrpcResult<ReminderDTO>> CreateReminderAsync(CreateReminderRequest request)
+  {
+    var platformId = request.ToPlatformId();
+    var personResult = await mediator.Send(new GetOrCreatePersonByPlatformIdQuery(platformId));
+
+    if (personResult.IsFailed)
+    {
+      return personResult.Errors.Select(e => new GrpcError(e.Message)).ToArray();
+    }
+
+    // Parse the reminder time using fuzzy time parser
+    var parsedTimeResult = ParseReminderTime(request.ReminderTime);
+    if (parsedTimeResult.IsFailed)
+    {
+      return parsedTimeResult.Errors.Select(e => new GrpcError(e.Message)).ToArray();
+    }
+
+    var command = new CreateReminderCommand(
+      personResult.Value.Id,
+      request.Message,
+      parsedTimeResult.Value
+    );
+
+    var result = await mediator.Send(command);
+
+    if (result.IsFailed)
+    {
+      return result.Errors.Select(e => new GrpcError(e.Message)).ToArray();
+    }
+
+    var reminder = result.Value;
+    return new ReminderDTO
+    {
+      Id = reminder.Id.Value,
+      PersonId = reminder.PersonId.Value,
+      Details = reminder.Details.Value,
+      ReminderTime = reminder.ReminderTime.Value,
+      CreatedOn = reminder.CreatedOn.Value,
+      UpdatedOn = reminder.UpdatedOn.Value
+    };
+  }
+
+  private FluentResults.Result<DateTime> ParseReminderTime(string reminderTime)
+  {
+    if (string.IsNullOrEmpty(reminderTime))
+    {
+      return FluentResults.Result.Fail<DateTime>("Reminder time is required.");
+    }
+
+    // First, try to parse as fuzzy time (e.g., "in 10 minutes")
+    var fuzzyResult = fuzzyTimeParser.TryParseFuzzyTime(reminderTime, timeProvider.GetUtcNow().UtcDateTime);
+    if (fuzzyResult.IsSuccess)
+    {
+      return FluentResults.Result.Ok(fuzzyResult.Value);
+    }
+
+    // Fall back to ISO 8601 parsing
+    if (!DateTime.TryParse(reminderTime, out var parsedDate))
+    {
+      return FluentResults.Result.Fail<DateTime>("Invalid reminder time format. Use fuzzy time like 'in 10 minutes' or ISO 8601 format like 2025-12-31T10:00:00.");
+    }
+
+    // Assume UTC if kind is unspecified
+    var utcDate = parsedDate.Kind == DateTimeKind.Unspecified
+      ? DateTime.SpecifyKind(parsedDate, DateTimeKind.Utc)
+      : parsedDate.ToUniversalTime();
+
+    return FluentResults.Result.Ok(utcDate);
   }
 
   public async Task<GrpcResult<ToDoDTO>> GetToDoAsync(GetToDoRequest request)

@@ -1,4 +1,5 @@
 using Apollo.Core.API;
+using Apollo.Core.Reminders.Requests;
 using Apollo.Core.ToDos.Responses;
 using Apollo.Domain.Common.Enums;
 using Apollo.Domain.People.ValueObjects;
@@ -13,13 +14,16 @@ using Grpc.Net.Client;
 
 using ProtoBuf.Grpc.Client;
 
+using CoreCreateReminderRequest = Apollo.Core.Reminders.Requests.CreateReminderRequest;
 using CoreCreateToDoRequest = Apollo.Core.ToDos.Requests.CreateToDoRequest;
 using CoreNewMessageRequest = Apollo.Core.Conversations.NewMessageRequest;
+using GrpcCreateReminderRequest = Apollo.GRPC.Contracts.CreateReminderRequest;
 using GrpcCreateToDoRequest = Apollo.GRPC.Contracts.CreateToDoRequest;
 using GrpcGetDailyPlanRequest = Apollo.GRPC.Contracts.GetDailyPlanRequest;
 using GrpcGetPersonToDosRequest = Apollo.GRPC.Contracts.GetPersonToDosRequest;
 using GrpcManageAccessRequest = Apollo.GRPC.Contracts.ManageAccessRequest;
 using GrpcNewMessageRequest = Apollo.GRPC.Contracts.NewMessageRequest;
+using GrpcReminderDTO = Apollo.GRPC.Contracts.ReminderDTO;
 using GrpcToDoDTO = Apollo.GRPC.Contracts.ToDoDTO;
 
 namespace Apollo.GRPC.Client;
@@ -62,6 +66,24 @@ public class ApolloGrpcClient : IApolloGrpcClient, IApolloServiceClient, IDispos
     Result<GrpcToDoDTO> grpcResponse = await ApolloGrpcService.CreateToDoAsync(grpcRequest);
 
     return grpcResponse.IsFailed ? Result.Fail<ToDo>(grpcResponse.Errors) : Result.Ok(MapToDomain(grpcResponse.Value));
+  }
+
+  public async Task<Result<Reminder>> CreateReminderAsync(CoreCreateReminderRequest request, CancellationToken cancellationToken = default)
+  {
+    var grpcRequest = new GrpcCreateReminderRequest
+    {
+      Platform = request.PlatformId.Platform,
+      PlatformUserId = request.PlatformId.PlatformUserId,
+      Username = request.PlatformId.Username,
+      Message = request.Message,
+      ReminderTime = request.ReminderTime,
+    };
+
+    Result<GrpcReminderDTO> grpcResponse = await ApolloGrpcService.CreateReminderAsync(grpcRequest);
+
+    return grpcResponse.IsFailed
+      ? Result.Fail<Reminder>(grpcResponse.Errors)
+      : Result.Ok(MapReminderToDomain(grpcResponse.Value));
   }
 
   public async Task<Result<string>> SendMessageAsync(CoreNewMessageRequest request, CancellationToken cancellationToken = default)
@@ -199,6 +221,19 @@ public class ApolloGrpcClient : IApolloGrpcClient, IApolloServiceClient, IDispos
       Interest = new(dto.Interest),
       Reminders = [],
       DueDate = null,
+      CreatedOn = new(dto.CreatedOn),
+      UpdatedOn = new(dto.UpdatedOn)
+    };
+  }
+
+  private static Reminder MapReminderToDomain(GrpcReminderDTO dto)
+  {
+    return new Reminder
+    {
+      Id = new(dto.Id),
+      PersonId = new(dto.PersonId),
+      Details = new(dto.Details),
+      ReminderTime = new(dto.ReminderTime),
       CreatedOn = new(dto.CreatedOn),
       UpdatedOn = new(dto.UpdatedOn)
     };
