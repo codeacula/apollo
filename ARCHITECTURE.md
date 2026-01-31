@@ -160,6 +160,114 @@ sequenceDiagram
 
 ---
 
+## Message Processing Workflow (Detailed)
+
+This flowchart shows the complete ingress-to-egress flow for processing a user message:
+
+```mermaid
+flowchart TB
+    subgraph Ingress ["🔽 Ingress Layer"]
+        DM[Discord DM] --> IMH[IncomingMessageHandler]
+        SC[Slash Command] --> SCM[SlashCommandModule]
+        QC["Quick Command<br/>(todo/remind)"] --> QCP[QuickCommandParser]
+    end
+
+    subgraph Transport ["🔀 Transport Layer"]
+        IMH --> |gRPC| GRPC[ApolloGrpcService]
+        SCM --> |gRPC| GRPC
+        QCP --> |gRPC| GRPC
+    end
+
+    subgraph Orchestration ["⚙️ Application Layer"]
+        GRPC --> |MediatR| CMD[ProcessIncomingMessageCommand]
+        CMD --> Handler[ProcessIncomingMessageCommandHandler]
+
+        Handler --> VAL{Validate<br/>Request}
+        VAL -->|Invalid| ERR1[Return Error]
+        VAL -->|Valid| PERSON[PersonService.GetOrCreateAsync]
+
+        PERSON --> ACCESS{Has<br/>Access?}
+        ACCESS -->|No| ERR2[Return Access Denied]
+        ACCESS -->|Yes| CHANNEL[Capture NotificationChannel]
+
+        CHANNEL --> CONVO[Get/Create Conversation]
+        CONVO --> SAVE_MSG[Save User Message]
+    end
+
+    subgraph AIProcessing ["🤖 AI Processing (3-Phase)"]
+        SAVE_MSG --> CONTEXT[Build Context<br/>History + Active ToDos]
+
+        subgraph Phase1 ["Phase 1: Tool Planning"]
+            CONTEXT --> TP_REQ[CreateToolPlanningRequest]
+            TP_REQ --> |Semantic Kernel| LLM1[LLM]
+            LLM1 --> TP_JSON[Tool Plan JSON]
+            TP_JSON --> PARSER[ToolPlanParser]
+        end
+
+        subgraph Phase2 ["Phase 2: Validation & Execution"]
+            PARSER --> VALIDATOR[ToolPlanValidator]
+            VALIDATOR --> APPROVED[Approved Calls]
+            VALIDATOR --> BLOCKED[Blocked Calls]
+            APPROVED --> RESOLVER[ToolCallResolver]
+            RESOLVER --> EXECUTOR[ToolExecutionService]
+            EXECUTOR --> |Reflection| PLUGINS[Plugins<br/>ToDo/Reminders/Person]
+            PLUGINS --> RESULTS[ToolCallResults]
+        end
+
+        subgraph Phase3 ["Phase 3: Response Generation"]
+            RESULTS --> SUMMARY[Actions Summary]
+            BLOCKED --> SUMMARY
+            SUMMARY --> RESP_REQ[CreateResponseRequest]
+            RESP_REQ --> |Semantic Kernel| LLM2[LLM]
+            LLM2 --> RESPONSE[Natural Language Response]
+        end
+    end
+
+    subgraph Persistence ["💾 Persistence Layer"]
+        PLUGINS --> |Events| MARTEN[(Marten<br/>Event Store)]
+        MARTEN --> |Inline Projection| DOCS[(Document<br/>Read Models)]
+        RESPONSE --> SAVE_REPLY[Save Reply to Conversation]
+        SAVE_REPLY --> MARTEN
+    end
+
+    subgraph Egress ["🔼 Egress Layer"]
+        RESPONSE --> GRPC_RESP[GrpcResult]
+        GRPC_RESP --> DISCORD_SEND[Discord.SendAsync]
+        DISCORD_SEND --> USER[User Receives Response]
+    end
+
+    subgraph Background ["⏰ Background Jobs"]
+        PLUGINS --> |Schedule| QUARTZ[Quartz Scheduler]
+        QUARTZ --> |Trigger| JOB[ToDoReminderJob]
+        JOB --> NOTIFY[PersonNotificationClient]
+        NOTIFY --> |Discord DM| USER
+    end
+
+    style Ingress fill:#e3f2fd
+    style Transport fill:#f3e5f5
+    style Orchestration fill:#fff9c4
+    style AIProcessing fill:#e8f5e9
+    style Persistence fill:#fce4ec
+    style Egress fill:#e0f7fa
+    style Background fill:#fff3e0
+```
+
+### Workflow Summary
+
+| Phase | Component | Description |
+|-------|-----------|-------------|
+| **Ingress** | `IncomingMessageHandler`, `SlashCommandModule` | Receives Discord events, validates access via cache |
+| **Transport** | `ApolloGrpcService` | Translates gRPC requests to MediatR commands |
+| **Orchestration** | `ProcessIncomingMessageCommandHandler` | Validates, resolves person, manages conversation |
+| **AI Phase 1** | `ToolPlanParser` | LLM generates JSON tool plan |
+| **AI Phase 2** | `ToolPlanValidator` → `ToolExecutionService` | Validates and executes tool calls via reflection |
+| **AI Phase 3** | Response generation | LLM creates natural language response |
+| **Persistence** | Marten stores | Events appended, inline projections updated |
+| **Egress** | gRPC response → Discord | Reply sent back to user |
+| **Background** | Quartz → `ToDoReminderJob` | Scheduled reminders sent via notification channels |
+
+---
+
 ## CQRS Pattern
 
 Apollo uses MediatR for command/query separation with a unified Store pattern wrapping Marten.
@@ -218,8 +326,11 @@ flowchart LR
 
 ### Key Concepts
 
-- **Events**: Immutable records in `Apollo.Database/*/Events/` (e.g., `ToDoCreatedEvent`)
-- **Aggregates**: `Db*` classes with `Apply()` methods (e.g., `DbToDo`, `DbConversation`)
+- **Events**: Immutable records in `Apollo.Database/*/Events/` (e.g., `ToDoCreatedEvent`, `ReminderCreatedEvent`)
+- **Aggregates**: `Db*` classes with `Apply()` methods:
+  - `DbPerson`, `DbNotificationChannel` - User management
+  - `DbConversation`, `DbMessage` - Chat history
+  - `DbToDo`, `DbReminder`, `DbToDoReminder` - Task and reminder management
 - **Projections**: `SnapshotLifecycle.Inline` - read models update synchronously
 - **Storage**: Events in `mt_events`, projections in `mt_doc_*` tables
 
@@ -229,13 +340,32 @@ flowchart LR
 
 ### Apollo.Domain
 
-Core domain entities, value objects, and domain services. Pure business logic with no external dependencies. Organized around `Conversations`, `People`, and `ToDos` aggregates.
+Core domain entities, value objects, and domain services. Pure business logic with no external dependencies.
+
+**Aggregates:**
+- `Conversations` - Chat history and messages
+- `People` - User profiles and notification preferences
+- `ToDos` - Tasks with priority, energy, and interest levels
+- `Reminders` - Standalone reminders (in `ToDos/Models/Reminder.cs`)
+
+**Common (Shared):**
+- `Common/Enums/` - Shared enums like `Level` (Blue/Green/Yellow/Red), `Platform`
+- `Common/ValueObjects/` - Shared value objects: `CreatedOn`, `UpdatedOn`, `Details`, `AcknowledgedOn`, `QuartzJobId`
 
 ---
 
 ### Apollo.Core
 
-Shared utilities, abstractions, and contracts used across all projects. Includes logging utilities, result extensions, time provider helpers, and common DTOs.
+Shared utilities, abstractions, and contracts used across all projects.
+
+**Subdirectories:**
+- `Conversations/` - `IConversationStore` interface, DTOs
+- `People/` - `IPersonStore` interface, `IPersonCache`, DTOs
+- `ToDos/` - `IToDoStore`, `IReminderStore` interfaces, DTOs
+- `Reminders/` - Reminder request DTOs
+- `Notifications/` - `INotificationChannel`, `IPersonNotificationClient` interfaces
+- `Logging/` - Source-generated logging with `[LoggerMessage]` attributes
+- `API/` - API-specific DTOs
 
 **Key Packages:** `FluentResults`
 
@@ -243,7 +373,18 @@ Shared utilities, abstractions, and contracts used across all projects. Includes
 
 ### Apollo.Application
 
-Application layer with use-cases and business orchestration. Implements CQRS pattern using MediatR. Contains plugins for AI tool execution (`ToDoPlugin`, `RemindersPlugin`, `PersonPlugin`).
+Application layer with use-cases and business orchestration. Implements CQRS pattern using MediatR.
+
+**Subdirectories:**
+- `Conversations/` - Message processing orchestration
+- `People/` - Person management, `PersonPlugin`
+- `ToDos/` - Task management, `ToDoPlugin`
+- `Reminders/` - Reminder management, `RemindersPlugin`
+
+**Plugins:** Domain-specific AI plugins with `[KernelFunction]` decorated methods:
+- `ToDoPlugin` - 13+ tool functions for task management
+- `RemindersPlugin` - Reminder creation and management
+- `PersonPlugin` - User preference management
 
 **Key Packages:** `MediatR`
 
@@ -253,6 +394,21 @@ Application layer with use-cases and business orchestration. Implements CQRS pat
 
 Data persistence using Marten for event sourcing and Entity Framework Core for migrations. Contains stores, events, and aggregate projections.
 
+**Database Aggregates (Db* classes):**
+- `DbPerson` - Person aggregate with notification channels
+- `DbNotificationChannel` - Notification channel settings
+- `DbConversation` - Conversation aggregate
+- `DbMessage` - Individual messages in conversations
+- `DbToDo` - ToDo aggregate with inline projection
+- `DbReminder` - Standalone reminder aggregate
+- `DbToDoReminder` - Reminders linked to specific ToDos
+
+**Stores:**
+- `IPersonStore` / `PersonStore`
+- `IConversationStore` / `ConversationStore`
+- `IToDoStore` / `ToDoStore`
+- `IReminderStore` / `ReminderStore`
+
 **Key Packages:** `Marten`, `Microsoft.EntityFrameworkCore`, `Npgsql`
 
 ---
@@ -260,6 +416,21 @@ Data persistence using Marten for event sourcing and Entity Framework Core for m
 ### Apollo.AI
 
 AI agent implementations powered by Microsoft Semantic Kernel. Provides `IApolloAIAgent` interface for chat completions, tool planning, and LLM interactions.
+
+**Subdirectories:**
+- `Plugins/` - Infrastructure plugins (e.g., `TimePlugin`)
+- `Prompts/` - YAML prompt definitions:
+  - `ApolloToolPlanning.yml` - Tool planning phase prompts
+  - `ApolloToolCalling.yml` - Tool calling configuration
+  - `ApolloResponse.yml` - Response generation prompts
+  - `ApolloReminder.yml` - Reminder-specific prompts
+  - `ApolloDailyPlanning.yml` - Daily task selection prompts
+- `Tooling/` - Tool execution pipeline:
+  - `ToolPlanValidator` - Validates tool calls against available plugins
+  - `ToolCallResolver` - Resolves `[KernelFunction]` methods via reflection
+  - `ToolExecutionService` - Executes validated tool calls
+- `Planning/` - `ToolPlanParser` for JSON tool plan parsing
+- `Requests/` - `AIRequestBuilder` fluent builder for AI requests
 
 **Key Packages:** `Microsoft.SemanticKernel`
 
