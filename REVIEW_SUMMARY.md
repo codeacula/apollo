@@ -15,18 +15,19 @@ The Apollo codebase has **excellent architecture** but **critical security and r
 
 ## 🔴 Critical Issues (Must Fix Before Production)
 
-| # | Issue | Impact | Location | Effort |
-|---|-------|--------|----------|--------|
-| 1 | **Missing gRPC Authentication** | Anyone can bypass auth | `Apollo.GRPC/Service/ApolloGrpcService.cs` | 4h |
-| 2 | **No Authorization Checks** | Unauthorized data access | All gRPC endpoints | 8h |
-| 3 | **Prompt Injection** | AI system compromise | `Apollo.AI/Prompts/PromptTemplateProcessor.cs` | 16h |
-| 4 | **Missing Event Transactions** | Data loss/inconsistency | All stores (ToDo, Reminder, Person) | 12h |
-| 5 | **Silent Projection Failures** | Cannot detect data loss | `Apollo.Database/ServiceCollectionExtension.cs` | 8h |
-| 6 | **Stream Creation Race** | Duplicate IDs unclear | All stores | 4h |
-| 7 | **Job Transaction Boundary** | Duplicate notifications | `Apollo.Service/Jobs/ToDoReminderJob.cs` | 8h |
-| 8 | **No Job Retry Logic** | Lost reminders | `Apollo.Service/Jobs/ToDoReminderJob.cs` | 6h |
+| # | Issue | Impact | Location | Effort | Priority |
+|---|-------|--------|----------|--------|----------|
+| 1 | **Missing gRPC Authentication** | Anyone can bypass auth | `Apollo.GRPC/Service/ApolloGrpcService.cs` | 4h | 🚨 P0 |
+| 2 | **No Authorization Checks** | Unauthorized data access | All gRPC endpoints | 8h | 🚨 P0 |
+| 3 | **Prompt Injection** | AI system compromise | `Apollo.AI/Prompts/PromptTemplateProcessor.cs` | 16h | 🚨 P0 |
+| 4 | **Missing Event Transactions** | Data loss/inconsistency | All stores (ToDo, Reminder, Person) | 12h | ⚠️ P1 |
+| 5 | **Silent Projection Failures** | Cannot detect data loss | `Apollo.Database/ServiceCollectionExtension.cs` | 8h | ⚠️ P1 |
+| 6 | **Stream Creation Race** | Duplicate IDs unclear | All stores | 4h | ⚠️ P1 |
+| 7 | **Job Transaction Boundary** | Duplicate notifications | `Apollo.Service/Jobs/ToDoReminderJob.cs` | 8h | 🚨 P0 |
+| 8 | **No Job Retry Logic** | Lost reminders | `Apollo.Service/Jobs/ToDoReminderJob.cs` | 6h | ⚠️ P1 |
 
-**P0 Total Effort:** ~66 hours (~2 sprints)
+**All Critical Issues:** ~66 hours (~2 sprints)  
+**P0 Only (Blocking Production):** ~36 hours (~1 sprint) - Issues #1, #2, #3, #7
 
 ---
 
