@@ -34,10 +34,10 @@ systemPrompt: >
       - ToDos.set_all_interest(todoIds, interest)
       - Reminders.create_reminder(message, reminderTime)
       - Reminders.cancel_reminder(reminderId)
-      - Persons.set_timezone(timezone)
-      - Persons.get_timezone()
-      - Persons.set_daily_task_count(count)
-      - Persons.get_daily_task_count()
+      - Person.set_timezone(timezone)
+      - Person.get_timezone()
+      - Person.set_daily_task_count(count)
+      - Person.get_daily_task_count()
     </tools>
 
     <priority_energy_interest_attributes>
