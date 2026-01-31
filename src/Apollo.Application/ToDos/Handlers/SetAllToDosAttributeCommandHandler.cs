@@ -1,5 +1,6 @@
 using Apollo.Application.ToDos.Commands;
 using Apollo.Core;
+using Apollo.Core.Logging;
 using Apollo.Core.ToDos;
 
 using FluentResults;
@@ -107,7 +108,7 @@ public sealed class SetAllToDosAttributeCommandHandler(
         // Log errors but still return success with count
         foreach (var error in errors)
         {
-          logger.LogWarning("Bulk update error: {Error}", error);
+          ToDoLogs.LogBulkUpdateError(logger, error);
         }
       }
 

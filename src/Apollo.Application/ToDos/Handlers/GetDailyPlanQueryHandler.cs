@@ -124,7 +124,7 @@ public sealed class GetDailyPlanQueryHandler(
         ? $" Due: {todo.DueDate.Value.Value:yyyy-MM-dd}"
         : "";
 
-      _ = sb.AppendLine($"- [{todo.Id.Value}] {todo.Description.Value} (P:{priority} E:{energy} I:{interest}){dueDate}");
+      _ = sb.AppendLine(CultureInfo.InvariantCulture, $"- [{todo.Id.Value}] {todo.Description.Value} (P:{priority} E:{energy} I:{interest}){dueDate}");
     }
 
     return sb.ToString();

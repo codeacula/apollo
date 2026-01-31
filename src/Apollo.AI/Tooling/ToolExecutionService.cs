@@ -61,7 +61,7 @@ public sealed class ToolExecutionService
   private static async Task<string> InvokeAsync(
     object plugin,
     MethodInfo method,
-    IDictionary<string, string?> arguments,
+    Dictionary<string, string?> arguments,
     CancellationToken cancellationToken)
   {
     var parameters = method.GetParameters();
@@ -104,7 +104,11 @@ public sealed class ToolExecutionService
 
   private static async Task<string> FinishTaskAsync(Task task)
   {
-    await task;
+    // VSTHRD003: This task is created via reflection (method.Invoke) and is immediately awaited.
+    // The reflection call starts the task in our context, so deadlock is not a concern here.
+#pragma warning disable VSTHRD003
+    await task.ConfigureAwait(false);
+#pragma warning restore VSTHRD003
     return "";
   }
 
@@ -124,7 +128,7 @@ public sealed class ToolExecutionService
     return Convert.ChangeType(value, underlyingType, System.Globalization.CultureInfo.InvariantCulture);
   }
 
-  private static string SerializeArguments(IDictionary<string, string?> arguments)
+  private static string SerializeArguments(Dictionary<string, string?> arguments)
   {
     return JsonSerializer.Serialize(arguments);
   }

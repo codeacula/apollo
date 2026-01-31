@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Globalization;
 using System.Text;
 
 using Apollo.Application.ToDos.Commands;
@@ -398,7 +399,7 @@ public sealed class ToDoPlugin(
 
       if (result.IsFailed)
       {
-        return $"Failed to retrieve todos: {result.Errors.FirstOrDefault()?.Message ?? "Unknown error"}";
+        return $"Failed to retrieve todos: {(result.Errors.Count > 0 ? result.Errors[0].Message : "Unknown error")}";
       }
 
       return !result.Value.Any() ? "You currently have no active todos." : FormatToDosAsTable(result.Value);
@@ -420,7 +421,7 @@ public sealed class ToDoPlugin(
 
       if (result.IsFailed)
       {
-        return $"Failed to generate daily plan: {result.Errors.FirstOrDefault()?.Message ?? "Unknown error"}";
+        return $"Failed to generate daily plan: {(result.Errors.Count > 0 ? result.Errors[0].Message : "Unknown error")}";
       }
 
       var plan = result.Value;
@@ -449,15 +450,15 @@ public sealed class ToDoPlugin(
         var energy = LevelToEmoji(task.Energy.Value);
         var interest = LevelToEmoji(task.Interest.Value);
 
-        _ = sb.AppendLine($"| {i + 1} | {taskName} | {priority}  | {energy}  | {interest}  |");
+        _ = sb.AppendLine(CultureInfo.InvariantCulture, $"| {i + 1} | {taskName} | {priority}  | {energy}  | {interest}  |");
       }
 
       _ = sb.AppendLine();
       _ = sb.AppendLine("P = Priority, E = Energy, I = Interest");
       _ = sb.AppendLine();
-      _ = sb.AppendLine($"💡 {plan.SelectionRationale}");
+      _ = sb.AppendLine(CultureInfo.InvariantCulture, $"💡 {plan.SelectionRationale}");
       _ = sb.AppendLine();
-      _ = sb.AppendLine($"📊 Showing {plan.SuggestedTasks.Count} of {plan.TotalActiveTodos} active todos");
+      _ = sb.AppendLine(CultureInfo.InvariantCulture, $"📊 Showing {plan.SuggestedTasks.Count} of {plan.TotalActiveTodos} active todos");
 
       return sb.ToString();
     }
@@ -547,7 +548,7 @@ public sealed class ToDoPlugin(
       var energy = LevelToEmoji(todo.Energy.Value);
       var interest = LevelToEmoji(todo.Interest.Value);
 
-      _ = sb.AppendLine($"| {taskName} | {priority}  | {energy}  | {interest}  | {todo.Id.Value} |");
+      _ = sb.AppendLine(CultureInfo.InvariantCulture, $"| {taskName} | {priority}  | {energy}  | {interest}  | {todo.Id.Value} |");
     }
 
     _ = sb.AppendLine();

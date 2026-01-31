@@ -93,4 +93,10 @@ public static partial class ToDoLogs
       Level = LogLevel.Warning,
       Message = "Bulk update had partial failures: {ErrorCount} errors occurred")]
   public static partial void LogBulkUpdatePartialFailure(ILogger logger, int errorCount);
+
+  [LoggerMessage(
+      EventId = 5015,
+      Level = LogLevel.Warning,
+      Message = "Bulk update error: {Error}")]
+  public static partial void LogBulkUpdateError(ILogger logger, string error);
 }

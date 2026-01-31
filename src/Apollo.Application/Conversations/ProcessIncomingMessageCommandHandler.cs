@@ -160,7 +160,7 @@ public sealed class ProcessIncomingMessageCommandHandler(
       }
       else
       {
-        ConversationLogs.ToolPlanParsingFailed(logger, person.Id.Value, parseResult.Errors.FirstOrDefault()?.Message ?? "Unknown error");
+        ConversationLogs.ToolPlanParsingFailed(logger, person.Id.Value, parseResult.Errors.Count > 0 ? parseResult.Errors[0].Message : "Unknown error");
       }
     }
     else
