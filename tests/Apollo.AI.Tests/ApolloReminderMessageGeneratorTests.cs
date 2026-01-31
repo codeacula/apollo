@@ -1,13 +1,9 @@
-using Apollo.AI;
 using Apollo.AI.Requests;
 using Apollo.Core.People;
-using Apollo.Core.ToDos;
 using Apollo.Domain.Common.Enums;
 using Apollo.Domain.Common.ValueObjects;
 using Apollo.Domain.People.Models;
 using Apollo.Domain.People.ValueObjects;
-
-using FluentResults;
 
 using Moq;
 

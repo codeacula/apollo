@@ -1,147 +1,494 @@
 # Apollo's Architecture Overview
 
-I wrote Apollo as a SaaS-based microservice with a focus on modularity, scalability, and maintainability. The focus was to create a codebase that allowed for rapid development and easy extension of features without compromising the stability of the system. Apollo takes advantage of the following technologies and development practices:
+Apollo is a personal assistant for neurodivergent users, built as a modular microservice with a focus on scalability and maintainability. The system leverages modern .NET patterns and practices:
 
-- **gRPC**: The API and Discord bot communicate with the microservice using gRPC calls.
-- **CQRS**: Apollo uses Command Query Responsibility Segregation to separate read and write operations, improving scalability and maintainability. We use **MediatR** and **FluentResults** to implement this pattern.
-- **Event Sourcing**: The way the user will interact with the system lends itself to using Event Sourcing as the source-of-truth. We accomplish this using **PostgreSQL** with **Marten**.
-- **Dependency Injection**: Apollo uses dependency injection to manage dependencies between components, making the system more modular and easier to test.
-- **Semantic Kernel**: We use Microsoft's Semantic Kernel to set up tooling and work with LLM providers.
+- **gRPC**: Inter-service communication between API, Discord bot, and backend service
+- **CQRS**: Command Query Responsibility Segregation using MediatR and FluentResults
+- **Event Sourcing**: Marten with PostgreSQL as the source of truth
+- **Semantic Kernel**: Microsoft's SDK for AI orchestration and LLM integration
+- **Dependency Injection**: Modular, testable architecture throughout
 
-## Environment Variables
+---
 
-The file `.env.example` contains everything you need to setup to run Apollo locally. Copy this file to `.env` and fill in the required values. Reference the Twitch and Discord Developer Portals in order to obtain the necessary API keys and credentials.
+## System Architecture
 
-## Architectural Overview
+Apollo uses a **hub-and-spoke architecture** where `Apollo.Service` acts as the central backend. Interface layers (`API`, `Discord`) communicate with it via gRPC.
 
-The solution is broken up into the following projects to help maintain modularity and provide a clear separation of concerns.
+```mermaid
+graph TD
+    subgraph Clients
+        User[User / Web Frontend]
+        DiscordPlatform[Discord Platform]
+    end
+
+    subgraph "Apollo System"
+        API[Apollo.API<br/>:5144]
+        Bot[Apollo.Discord]
+        
+        subgraph "Core Backend"
+            Service[Apollo.Service<br/>:5270]
+            DB[(PostgreSQL<br/>Marten)]
+            Redis[(Redis<br/>Cache)]
+            AI[LLM Provider]
+        end
+    end
+
+    User -->|HTTP/REST| API
+    DiscordPlatform -->|WebSocket| Bot
+    
+    API -->|gRPC| Service
+    Bot -->|gRPC| Service
+    
+    Service -->|Read/Write| DB
+    Service -->|Cache| Redis
+    Service -->|Prompts| AI
+```
+
+### Service Ports (Development)
+
+| Service | Port | Protocol | Description |
+|---------|------|----------|-------------|
+| Apollo.Service | 5270 | gRPC | Central backend host |
+| Apollo.API | 5144 | HTTP | REST gateway + Swagger UI |
+| Apollo.Discord | - | WebSocket | Discord bot (worker service) |
+| PostgreSQL | 5432 | TCP | Database |
+| Redis | 6379 | TCP | Distributed cache |
+
+---
+
+## Project Structure
+
+The solution follows Clean Architecture principles with pragmatic coupling where beneficial.
+
+```mermaid
+graph TD
+    classDef host fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    classDef app fill:#fff9c4,stroke:#fbc02d,stroke-width:2px
+    classDef domain fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    classDef infra fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    classDef core fill:#eeeeee,stroke:#616161,stroke-width:2px
+
+    subgraph Hosts [Presentation Layer]
+        Service[Apollo.Service]:::host
+        API[Apollo.API]:::host
+        Discord[Apollo.Discord]:::host
+    end
+
+    subgraph Infrastructure [Infrastructure Layer]
+        GRPC[Apollo.GRPC]:::infra
+        Database[Apollo.Database]:::infra
+        AI[Apollo.AI]:::infra
+        Cache[Apollo.Cache]:::infra
+        Notifications[Apollo.Notifications]:::infra
+    end
+
+    subgraph ApplicationLayer [Application Layer]
+        Application[Apollo.Application]:::app
+    end
+
+    subgraph Shared [Core & Domain]
+        Core[Apollo.Core]:::core
+        Domain[Apollo.Domain]:::domain
+    end
+
+    Service --> Application
+    Service --> Database
+    Service --> GRPC
+    Service --> Notifications
+    
+    API --> GRPC
+    Discord --> GRPC
+
+    GRPC --> Application
+    Application --> Domain
+    Application --> AI
+    Application --> Cache
+    
+    Database --> Domain
+    AI --> Core
+    Cache --> Core
+    Notifications --> Domain
+    Core --> Domain
+```
+
+### Layer Organization
+
+| Layer | Projects | Description |
+|-------|----------|-------------|
+| **Presentation** | `Apollo.Service`, `Apollo.API`, `Apollo.Discord` | Entry points and host applications |
+| **Transport** | `Apollo.GRPC` | Shared gRPC contracts, clients, and interceptors |
+| **Application** | `Apollo.Application` | Use cases, MediatR handlers, orchestration |
+| **Infrastructure** | `Apollo.Database`, `Apollo.AI`, `Apollo.Cache`, `Apollo.Notifications` | External concerns: persistence, LLMs, caching, notifications |
+| **Shared** | `Apollo.Core` | Common DTOs, logging utilities, extensions |
+| **Domain** | `Apollo.Domain` | Pure business entities and value objects |
+
+---
+
+## Request Flow
+
+This sequence shows how a Discord message flows through the system:
+
+```mermaid
+sequenceDiagram
+    participant D as Discord Bot
+    participant G as Apollo.Service<br/>(gRPC)
+    participant M as MediatR Handler
+    participant DB as PostgreSQL<br/>(Marten)
+    participant AI as AI Agent
+
+    Note over D: User sends "Remind me to buy milk"
+    D->>G: SendApolloMessageAsync(NewMessageRequest)
+    G->>M: Send(ProcessIncomingMessageCommand)
+    
+    M->>DB: GetOrCreatePerson()
+    M->>DB: AddMessageAsync(User Content)
+    
+    rect rgb(240, 248, 255)
+        Note right of M: AI Processing Loop
+        M->>AI: Plan Tools (History + Active ToDos)
+        AI-->>M: Tool Plan (CreateToDo)
+        M->>M: Execute Tool (Save ToDo to DB)
+        M->>AI: Generate Response (with Tool Results)
+        AI-->>M: "I've added that to your list."
+    end
+    
+    M->>DB: AddReplyAsync(AI Content)
+    M-->>G: Return Reply
+    G-->>D: Return GrpcResult
+    D->>D: Send Message to User
+```
+
+---
+
+## Message Processing Workflow (Detailed)
+
+This flowchart shows the complete ingress-to-egress flow for processing a user message:
+
+```mermaid
+flowchart TB
+    subgraph Ingress ["🔽 Ingress Layer"]
+        DM[Discord DM] --> IMH[IncomingMessageHandler]
+        SC[Slash Command] --> SCM[SlashCommandModule]
+        QC["Quick Command<br/>(todo/remind)"] --> QCP[QuickCommandParser]
+    end
+
+    subgraph Transport ["🔀 Transport Layer"]
+        IMH --> |gRPC| GRPC[ApolloGrpcService]
+        SCM --> |gRPC| GRPC
+        QCP --> |gRPC| GRPC
+    end
+
+    subgraph Orchestration ["⚙️ Application Layer"]
+        GRPC --> |MediatR| CMD[ProcessIncomingMessageCommand]
+        CMD --> Handler[ProcessIncomingMessageCommandHandler]
+
+        Handler --> VAL{Validate<br/>Request}
+        VAL -->|Invalid| ERR1[Return Error]
+        VAL -->|Valid| PERSON[PersonService.GetOrCreateAsync]
+
+        PERSON --> ACCESS{Has<br/>Access?}
+        ACCESS -->|No| ERR2[Return Access Denied]
+        ACCESS -->|Yes| CHANNEL[Capture NotificationChannel]
+
+        CHANNEL --> CONVO[Get/Create Conversation]
+        CONVO --> SAVE_MSG[Save User Message]
+    end
+
+    subgraph AIProcessing ["🤖 AI Processing (3-Phase)"]
+        SAVE_MSG --> CONTEXT[Build Context<br/>History + Active ToDos]
+
+        subgraph Phase1 ["Phase 1: Tool Planning"]
+            CONTEXT --> TP_REQ[CreateToolPlanningRequest]
+            TP_REQ --> |Semantic Kernel| LLM1[LLM]
+            LLM1 --> TP_JSON[Tool Plan JSON]
+            TP_JSON --> PARSER[ToolPlanParser]
+        end
+
+        subgraph Phase2 ["Phase 2: Validation & Execution"]
+            PARSER --> VALIDATOR[ToolPlanValidator]
+            VALIDATOR --> APPROVED[Approved Calls]
+            VALIDATOR --> BLOCKED[Blocked Calls]
+            APPROVED --> RESOLVER[ToolCallResolver]
+            RESOLVER --> EXECUTOR[ToolExecutionService]
+            EXECUTOR --> |Reflection| PLUGINS[Plugins<br/>ToDo/Reminders/Person]
+            PLUGINS --> RESULTS[ToolCallResults]
+        end
+
+        subgraph Phase3 ["Phase 3: Response Generation"]
+            RESULTS --> SUMMARY[Actions Summary]
+            BLOCKED --> SUMMARY
+            SUMMARY --> RESP_REQ[CreateResponseRequest]
+            RESP_REQ --> |Semantic Kernel| LLM2[LLM]
+            LLM2 --> RESPONSE[Natural Language Response]
+        end
+    end
+
+    subgraph Persistence ["💾 Persistence Layer"]
+        PLUGINS --> |Events| MARTEN[(Marten<br/>Event Store)]
+        MARTEN --> |Inline Projection| DOCS[(Document<br/>Read Models)]
+        RESPONSE --> SAVE_REPLY[Save Reply to Conversation]
+        SAVE_REPLY --> MARTEN
+    end
+
+    subgraph Egress ["🔼 Egress Layer"]
+        RESPONSE --> GRPC_RESP[GrpcResult]
+        GRPC_RESP --> DISCORD_SEND[Discord.SendAsync]
+        DISCORD_SEND --> USER[User Receives Response]
+    end
+
+    subgraph Background ["⏰ Background Jobs"]
+        PLUGINS --> |Schedule| QUARTZ[Quartz Scheduler]
+        QUARTZ --> |Trigger| JOB[ToDoReminderJob]
+        JOB --> NOTIFY[PersonNotificationClient]
+        NOTIFY --> |Discord DM| USER
+    end
+
+    style Ingress fill:#e3f2fd
+    style Transport fill:#f3e5f5
+    style Orchestration fill:#fff9c4
+    style AIProcessing fill:#e8f5e9
+    style Persistence fill:#fce4ec
+    style Egress fill:#e0f7fa
+    style Background fill:#fff3e0
+```
+
+### Workflow Summary
+
+| Phase | Component | Description |
+|-------|-----------|-------------|
+| **Ingress** | `IncomingMessageHandler`, `SlashCommandModule` | Receives Discord events, validates access via cache |
+| **Transport** | `ApolloGrpcService` | Translates gRPC requests to MediatR commands |
+| **Orchestration** | `ProcessIncomingMessageCommandHandler` | Validates, resolves person, manages conversation |
+| **AI Phase 1** | `ToolPlanParser` | LLM generates JSON tool plan |
+| **AI Phase 2** | `ToolPlanValidator` → `ToolExecutionService` | Validates and executes tool calls via reflection |
+| **AI Phase 3** | Response generation | LLM creates natural language response |
+| **Persistence** | Marten stores | Events appended, inline projections updated |
+| **Egress** | gRPC response → Discord | Reply sent back to user |
+| **Background** | Quartz → `ToDoReminderJob` | Scheduled reminders sent via notification channels |
+
+---
+
+## CQRS Pattern
+
+Apollo uses MediatR for command/query separation with a unified Store pattern wrapping Marten.
+
+```mermaid
+sequenceDiagram
+    participant Caller as API / Service
+    participant MediatR
+    participant Handler as CreateToDoHandler
+    participant Store as ToDoStore
+    participant Marten as Marten DB
+
+    Caller->>MediatR: Send(CreateToDoCommand)
+    MediatR->>Handler: Handle(Command)
+    Handler->>Store: CreateAsync(Details)
+    Store->>Store: new ToDoCreatedEvent()
+    Store->>Marten: Events.StartStream(id, event)
+    Marten-->>Marten: Append to mt_events
+    Marten-->>Marten: Update mt_doc_dbtodo<br/>(Inline Projection)
+    Marten-->>Store: Commit Success
+    Store-->>Handler: Result.Ok(ToDo)
+    Handler-->>MediatR: Result
+    MediatR-->>Caller: Result
+```
+
+### Command vs Query Flow
+
+- **Commands** change state: `CreateToDoCommand` → Handler → Store → Event → Marten
+- **Queries** read state: `GetToDoByIdQuery` → Handler → Store → Marten Document Query
+
+---
+
+## Event Sourcing
+
+Apollo uses Marten as both event store and document database. Events are the source of truth, with inline projections for read models.
+
+```mermaid
+flowchart LR
+    subgraph Write_Side [Write Model]
+        Cmd[Command] --> Handler
+        Handler -->|1. Create Event| Event[Event Object]
+        Event -->|2. Append| Stream[Event Stream]
+    end
+
+    subgraph Storage [PostgreSQL / Marten]
+        Stream -->|3. Insert| MT_Events[(mt_events)]
+        MT_Events -->|4. Inline Projection| MT_Doc[(mt_doc_dbtodo)]
+    end
+
+    subgraph Read_Side [Read Model]
+        MT_Doc -->|5. Query| Store[ToDoStore]
+        Store -->|6. Map to Domain| DTO[ToDo Object]
+        DTO --> QueryH[Query Handler]
+    end
+```
+
+### Key Concepts
+
+- **Events**: Immutable records in `Apollo.Database/*/Events/` (e.g., `ToDoCreatedEvent`, `ReminderCreatedEvent`)
+- **Aggregates**: `Db*` classes with `Apply()` methods:
+  - `DbPerson`, `DbNotificationChannel` - User management
+  - `DbConversation`, `DbMessage` - Chat history
+  - `DbToDo`, `DbReminder`, `DbToDoReminder` - Task and reminder management
+- **Projections**: `SnapshotLifecycle.Inline` - read models update synchronously
+- **Storage**: Events in `mt_events`, projections in `mt_doc_*` tables
+
+---
+
+## Projects
 
 ### Apollo.Domain
 
-The `Apollo.Domain` project contains the core domain entities, value objects, and domain services. It represents the business logic and rules of the system, independent of any external dependencies or infrastructure concerns. The domain is organized around key aggregates including `Conversations`, `People`, and `ToDos`.
+Core domain entities, value objects, and domain services. Pure business logic with no external dependencies.
+
+**Aggregates:**
+- `Conversations` - Chat history and messages
+- `People` - User profiles and notification preferences
+- `ToDos` - Tasks with priority, energy, and interest levels
+- `Reminders` - Standalone reminders (in `ToDos/Models/Reminder.cs`)
+
+**Common (Shared):**
+- `Common/Enums/` - Shared enums like `Level` (Blue/Green/Yellow/Red), `Platform`
+- `Common/ValueObjects/` - Shared value objects: `CreatedOn`, `UpdatedOn`, `Details`, `AcknowledgedOn`, `QuartzJobId`
 
 ---
 
 ### Apollo.Core
 
-The `Apollo.Core` project contains shared utilities, abstractions, and common functionality that can be used across other projects in the solution. This includes logging utilities, result extensions, time provider helpers, and common DTOs/contracts for API responses, notifications, and data operations. It defines shared abstractions for `Conversations`, `People`, and `ToDos` that other layers implement.
+Shared utilities, abstractions, and contracts used across all projects.
 
-**Notable NuGet Packages:**
+**Subdirectories:**
+- `Conversations/` - `IConversationStore` interface, DTOs
+- `People/` - `IPersonStore` interface, `IPersonCache`, DTOs
+- `ToDos/` - `IToDoStore`, `IReminderStore` interfaces, DTOs
+- `Reminders/` - Reminder request DTOs
+- `Notifications/` - `INotificationChannel`, `IPersonNotificationClient` interfaces
+- `Logging/` - Source-generated logging with `[LoggerMessage]` attributes
+- `API/` - API-specific DTOs
 
-- **FluentResults** - Provides a result pattern for error handling without exceptions
+**Key Packages:** `FluentResults`
 
 ---
 
 ### Apollo.Application
 
-The `Apollo.Application` project implements the application layer containing use-cases and business orchestration logic. It follows the CQRS pattern using MediatR for command/query handling. This layer coordinates between the domain, AI, cache, and infrastructure layers to fulfill business operations for `Conversations`, `People`, and `ToDos`.
+Application layer with use-cases and business orchestration. Implements CQRS pattern using MediatR.
 
-**Notable NuGet Packages:**
+**Subdirectories:**
+- `Conversations/` - Message processing orchestration
+- `People/` - Person management, `PersonPlugin`
+- `ToDos/` - Task management, `ToDoPlugin`
+- `Reminders/` - Reminder management, `RemindersPlugin`
 
-- **MediatR** - Mediator pattern implementation for CQRS commands and queries
+**Plugins:** Domain-specific AI plugins with `[KernelFunction]` decorated methods:
+- `ToDoPlugin` - 13+ tool functions for task management
+- `RemindersPlugin` - Reminder creation and management
+- `PersonPlugin` - User preference management
+
+**Key Packages:** `MediatR`
 
 ---
 
 ### Apollo.Database
 
-The `Apollo.Database` project handles all data persistence concerns. It provides both traditional Entity Framework Core support and event sourcing capabilities via Marten. Contains the `ApolloDbContext`, migrations, and repository implementations for `Conversations`, `People`, and `ToDos`.
+Data persistence using Marten for event sourcing and Entity Framework Core for migrations. Contains stores, events, and aggregate projections.
 
-**Notable NuGet Packages:**
+**Database Aggregates (Db* classes):**
+- `DbPerson` - Person aggregate with notification channels
+- `DbNotificationChannel` - Notification channel settings
+- `DbConversation` - Conversation aggregate
+- `DbMessage` - Individual messages in conversations
+- `DbToDo` - ToDo aggregate with inline projection
+- `DbReminder` - Standalone reminder aggregate
+- `DbToDoReminder` - Reminders linked to specific ToDos
 
-- **Marten** - Document database and event store for PostgreSQL (Event Sourcing)
-- **Microsoft.EntityFrameworkCore** - Core EF functionality
-- **Npgsql.EntityFrameworkCore.PostgreSQL** - PostgreSQL provider for EF Core
-- **Microsoft.EntityFrameworkCore.Tools** - EF Core CLI tools for migrations
+**Stores:**
+- `IPersonStore` / `PersonStore`
+- `IConversationStore` / `ConversationStore`
+- `IToDoStore` / `ToDoStore`
+- `IReminderStore` / `ReminderStore`
 
----
-
-### Apollo.Cache
-
-The `Apollo.Cache` project provides Redis-based caching infrastructure for the application. It contains helpers and service extensions for distributed caching operations.
-
-**Notable NuGet Packages:**
-
-- **StackExchange.Redis** - High-performance Redis client
+**Key Packages:** `Marten`, `Microsoft.EntityFrameworkCore`, `Npgsql`
 
 ---
 
 ### Apollo.AI
 
-The `Apollo.AI` project contains AI agent implementations powered by Microsoft Semantic Kernel. It provides the `IApolloAIAgent` interface for chat completions, plugin management, and LLM interactions. Includes extensible plugins (e.g., `TimePlugin`) and prompt management for AI-powered features.
+AI agent implementations powered by Microsoft Semantic Kernel. Provides `IApolloAIAgent` interface for chat completions, tool planning, and LLM interactions.
 
-**Notable NuGet Packages:**
+**Subdirectories:**
+- `Plugins/` - Infrastructure plugins (e.g., `TimePlugin`)
+- `Prompts/` - YAML prompt definitions:
+  - `ApolloToolPlanning.yml` - Tool planning phase prompts
+  - `ApolloToolCalling.yml` - Tool calling configuration
+  - `ApolloResponse.yml` - Response generation prompts
+  - `ApolloReminder.yml` - Reminder-specific prompts
+  - `ApolloDailyPlanning.yml` - Daily task selection prompts
+- `Tooling/` - Tool execution pipeline:
+  - `ToolPlanValidator` - Validates tool calls against available plugins
+  - `ToolCallResolver` - Resolves `[KernelFunction]` methods via reflection
+  - `ToolExecutionService` - Executes validated tool calls
+- `Planning/` - `ToolPlanParser` for JSON tool plan parsing
+- `Requests/` - `AIRequestBuilder` fluent builder for AI requests
 
-- **Microsoft.SemanticKernel** - Microsoft's SDK for AI orchestration and LLM integration
-- **FluentResults** - Result pattern for error handling
+**Key Packages:** `Microsoft.SemanticKernel`
+
+---
+
+### Apollo.Cache
+
+Redis-based distributed caching infrastructure.
+
+**Key Packages:** `StackExchange.Redis`
 
 ---
 
 ### Apollo.GRPC
 
-The `Apollo.GRPC` project provides gRPC communication infrastructure for inter-service communication. It contains both server-side services (`ApolloGrpcService`) and client-side stubs, along with contracts and interceptors. Supports gRPC services for `Conversations` and `People` management.
+Shared gRPC communication infrastructure. Contains code-first contracts, client stubs, server services, and interceptors.
 
-**Notable NuGet Packages:**
-
-- **Grpc.Net.Client** - gRPC client for .NET
-- **protobuf-net.Grpc** - Code-first gRPC implementation
-- **FluentResults** - Result pattern for error handling
+**Key Packages:** `protobuf-net.Grpc`, `Grpc.Net.Client`
 
 ---
 
 ### Apollo.Notifications
 
-The `Apollo.Notifications` project handles outbound notifications to users. It provides a `PersonNotificationClient` abstraction with implementations including `DiscordNotificationChannel` for Discord DM notifications and `NoOpPersonNotificationClient` for testing/disabled scenarios.
+Outbound notification system with channel abstractions. Includes `DiscordNotificationChannel` for Discord DMs.
 
-**Notable NuGet Packages:**
-
-- **NetCord** - Modern Discord API wrapper
-- **FluentResults** - Result pattern for error handling
+**Key Packages:** `NetCord`
 
 ---
 
 ### Apollo.Service
 
-The `Apollo.Service` project is the main background worker/host application. It orchestrates the database, cache, AI, notifications, and gRPC server components. Contains scheduled jobs using Quartz (e.g., `ToDoReminderJob` for ToDo reminders) and serves as the central processing hub.
+Main backend host application. Runs the gRPC server, Quartz scheduler (e.g., `ToDoReminderJob`), and orchestrates all backend components.
 
-**Notable NuGet Packages:**
-
-- **Quartz** - Enterprise job scheduler
-- **MediatR** - Mediator pattern for CQRS
-- **Grpc.AspNetCore** - gRPC server hosting
-- **NetCord** - Discord API client
+**Key Packages:** `Quartz`, `Grpc.AspNetCore`, `NetCord`
 
 ---
 
 ### Apollo.API
 
-The `Apollo.API` project is the HTTP/REST API host. It provides OpenAPI documentation, serves static files for the Client SPA, and acts as a lightweight gateway that communicates with the Service layer via gRPC.
+HTTP/REST gateway with OpenAPI documentation. Serves the Vue SPA and forwards requests to Apollo.Service via gRPC.
 
-**Notable NuGet Packages:**
-
-- **Microsoft.AspNetCore.OpenApi** - OpenAPI/Swagger support
-- **StackExchange.Redis** - Redis client for caching
+**Key Packages:** `Microsoft.AspNetCore.OpenApi`
 
 ---
 
 ### Apollo.Discord
 
-The `Apollo.Discord` project is the Discord bot host application. It handles Discord interactions, slash commands, and bot functionality using NetCord. Communicates with the backend via gRPC and uses the Application layer for business logic.
+Discord bot host using NetCord. Handles slash commands, interactions, and bot functionality.
 
-**Notable NuGet Packages:**
-
-- **NetCord** - Modern, high-performance Discord API wrapper
+**Key Packages:** `NetCord.Hosting`
 
 ---
 
 ### Client
 
-The `Client` project is a Vue 3 single-page application (SPA) built with Vite and TypeScript. It provides the web-based user interface for Apollo.
+Vue 3 single-page application built with Vite and TypeScript.
 
-**Notable npm Packages:**
-
-- **Vue** - Progressive JavaScript framework
-- **Vite** - Next-generation frontend build tool
-- **TypeScript** - Typed JavaScript
+**Key Packages:** `vue`, `vite`, `typescript`
 
 ---
 
@@ -149,175 +496,128 @@ The `Client` project is a Vue 3 single-page application (SPA) built with Vite an
 
 ### General
 
-- Use DTOs for records exchanged between services to ensure clear contracts and separation of concerns.
-- Follow `.editorconfig` settings: 2-space indentation, UTF-8, max 120 character line length, trim trailing whitespace.
-- Prefer file-scoped namespaces (`namespace X;`) over block-scoped namespaces.
-- Sort `using` directives with `System` namespaces first, then separate import groups.
+- Use DTOs for inter-service communication
+- Follow `.editorconfig`: 2-space indentation, UTF-8, max 120 character lines
+- Prefer file-scoped namespaces (`namespace X;`)
+- Sort `using` directives with `System` first
 
 ### Naming Conventions
 
-- **Classes/Records**: PascalCase (e.g., `ToDoStore`, `PersonNotificationClient`)
-- **Interfaces**: Prefix with `I` (e.g., `IToDoStore`, `IApolloAIAgent`)
-- **Value Objects**: Named after the concept they represent (e.g., `ToDoId`, `Description`, `Priority`)
-- **DTOs**: Suffix with `DTO` (e.g., `ToDoDTO`, `ChatCompletionRequestDTO`)
-- **Commands/Queries**: Suffix with `Command` or `Query` (e.g., `CreateToDoCommand`, `GetToDoByIdQuery`)
-- **Handlers**: Suffix with `Handler` matching the command/query (e.g., `CreateToDoCommandHandler`)
-- **Events**: Suffix with `Event` (e.g., `ToDoCreatedEvent`, `AccessGrantedEvent`)
+| Type | Convention | Example |
+|------|------------|---------|
+| Classes/Records | PascalCase | `ToDoStore`, `PersonNotificationClient` |
+| Interfaces | `I` prefix | `IToDoStore`, `IApolloAIAgent` |
+| Value Objects | Concept name | `ToDoId`, `Description`, `Priority` |
+| DTOs | `DTO` suffix | `ToDoDTO`, `ChatCompletionRequestDTO` |
+| Commands | `Command` suffix | `CreateToDoCommand` |
+| Queries | `Query` suffix | `GetToDoByIdQuery` |
+| Handlers | `Handler` suffix | `CreateToDoCommandHandler` |
+| Events | `Event` suffix | `ToDoCreatedEvent` |
 
 ### Type Design
 
-- Use `sealed` on classes and records that are not intended for inheritance.
-- Use `readonly record struct` for simple value objects wrapping a single value (e.g., `ToDoId`, `PersonId`).
-- Use `record` for domain models with multiple properties.
-- Use primary constructors for dependency injection in classes and handlers.
-- Mark all nullable reference types explicitly with `?`.
-
-### CQRS Pattern
-
-- Commands represent actions that change state (e.g., `CreateToDoCommand`, `DeleteToDoCommand`).
-- Queries represent read operations (e.g., `GetToDoByIdQuery`, `GetToDosByPersonIdQuery`).
-- Both commands and queries implement `IRequest<Result<T>>` or `IRequest<Result>` from MediatR.
-- Handlers implement `IRequestHandler<TRequest, TResult>` and are named to match their request.
+- Use `sealed` on classes/records not intended for inheritance
+- Use `readonly record struct` for single-value wrappers (e.g., `ToDoId`)
+- Use `record` for domain models with multiple properties
+- Use primary constructors for dependency injection
+- Mark nullable types explicitly with `?`
 
 ### Error Handling
 
-- Use FluentResults `Result<T>` and `Result` types instead of throwing exceptions for expected failures.
-- Return `Result.Ok(value)` for success and `Result.Fail(message)` for failures.
-- Wrap unexpected exceptions in try/catch blocks and return `Result.Fail(ex.Message)`.
-- Use `result.IsFailed` and `result.IsSuccess` for control flow.
-- Use extension methods like `GetErrorMessages()` for formatting error output.
+- Use FluentResults `Result<T>` instead of exceptions for expected failures
+- Return `Result.Ok(value)` for success, `Result.Fail(message)` for failures
+- Use `result.IsFailed` and `result.IsSuccess` for control flow
+- Always check `.IsFailed` before accessing `.Value`
 
 ### Async Patterns
 
-- All async methods should accept an optional `CancellationToken` parameter with a default value.
-- Suffix async methods with `Async` (e.g., `CreateAsync`, `GetByPersonIdAsync`).
-- Use `Task<Result<T>>` as return types for async operations that can fail.
+- Accept optional `CancellationToken` with default value
+- Suffix async methods with `Async`
+- Return `Task<Result<T>>` for operations that can fail
 
 ### Logging
 
-- Use source-generated logging with `[LoggerMessage]` attribute for high-performance structured logging.
-- Group related log messages in static partial classes (e.g., `ToDoLogs`).
-- Include Event IDs for each log message for easier filtering and monitoring.
+- Use source-generated logging with `[LoggerMessage]` attribute
+- Group related logs in static partial classes (e.g., `ToDoLogs`)
+- Include Event IDs for filtering
 
 ### Dependency Injection
 
-- Register services in `ServiceCollectionExtension` classes within each project.
-- Use extension methods on `IServiceCollection` for modular service registration.
-- Use `TryAdd*` methods when providing default implementations that can be overridden.
-- Prefer `AddScoped` for request-scoped services, `AddSingleton` for configuration, and `AddTransient` for stateless utilities.
+- Register services in `ServiceCollectionExtension` classes
+- Use `TryAdd*` for overridable defaults
+- Prefer `AddScoped` for request-scoped, `AddSingleton` for config
 
 ### Testing
 
-- Use xUnit as the testing framework.
-- Name test classes with `Tests` suffix matching the class under test (e.g., `CreateToDoCommandHandlerTests`).
-- Name test methods descriptively: `MethodName` + `Scenario` + `ExpectedResult` + `Async` suffix (e.g., `HandleWithReminderDateSchedulesJobAndPersistsJobIdAsync`).
-- Use Moq for mocking dependencies.
-- Use `MockSequence` when verifying ordered interactions.
-- Organize tests with Arrange/Act/Assert pattern.
+- Framework: xUnit with Moq
+- Name pattern: `MethodName` + `Scenario` + `ExpectedResult`
+- Use `MockSequence` for ordered verifications
+- Organize with Arrange/Act/Assert
 
 ### gRPC Contracts
 
-- Use `[DataContract]` and `[DataMember]` attributes for protobuf-net serialization.
-- Use `required` properties with `init` setters for required fields.
-- Order `[DataMember]` attributes explicitly with `Order` parameter.
+- Use `[DataContract]` and `[DataMember]` with explicit `Order`
+- Use `required` properties with `init` setters
 
 ### Event Sourcing
 
-- Events are immutable records representing facts that occurred.
-- Event streams are keyed by aggregate ID (e.g., `ToDoId.Value`).
-- Use Marten's `StartStream` for new aggregates and `Append` for existing ones.
-- Configure inline snapshot projections for read model updates.
+- Events are immutable records
+- Streams keyed by aggregate ID
+- Use `StartStream` for new, `Append` for existing
+- Configure inline snapshot projections
 
 ---
 
 ## Local Development
 
-This section explains how to run the Apollo services locally on your machine for development, debugging, and hot reloading, while running the database and cache in Docker containers.
-
 ### Prerequisites
-
-Ensure you have the following installed:
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/download)
 - [Docker Desktop](https://www.docker.com/products/docker-desktop)
 
 ### Start Backing Services
 
-Instead of running the full stack in Docker, we will only start PostgreSQL and Redis. These will be exposed to `localhost` on their default ports.
-
 ```bash
 docker-compose up -d pgsql redis
 ```
 
-Verify they are running:
+Verify: PostgreSQL on `localhost:5432`, Redis on `localhost:6379`
 
-- **Postgres:** `localhost:5432`
-- **Redis:** `localhost:6379`
+### Configuration
 
-### Configuration & Secrets
-
-The project is configured to use `appsettings.Development.json` for local defaults (connecting to localhost), but sensitive keys (API Tokens) must be set using **User Secrets** to avoid committing them to git.
-
-#### Set up Secrets
-
-Run the following commands in your terminal to set your personal API keys.
-
-**Apollo.API:**
+Copy `.env.example` to `.env` for Docker, or use User Secrets for local development:
 
 ```bash
-cd src/Apollo.API
-dotnet user-secrets set "Discord:Token" "YOUR_DISCORD_BOT_TOKEN"
-dotnet user-secrets set "ApolloAIConfig:ApiKey" "YOUR_OPENAI_OR_LLAMA_KEY"
-# Optional: Override Model Endpoint if not using local default
-# dotnet user-secrets set "ApolloAIConfig:Endpoint" "https://api.openai.com/v1"
-```
+# Apollo.Service
+cd src/Apollo.Service
+dotnet user-secrets set "ApolloAIConfig:ApiKey" "YOUR_API_KEY"
 
-**Apollo.Discord:**
-
-```bash
+# Apollo.Discord
 cd src/Apollo.Discord
 dotnet user-secrets set "Discord:Token" "YOUR_DISCORD_BOT_TOKEN"
 dotnet user-secrets set "Discord:PublicKey" "YOUR_DISCORD_PUBLIC_KEY"
 ```
 
-**Apollo.Service:**
+### Running Services
+
+Run each in a separate terminal:
 
 ```bash
-cd src/Apollo.Service
-dotnet user-secrets set "ApolloAIConfig:ApiKey" "YOUR_OPENAI_OR_LLAMA_KEY"
-```
-
-### Running Services Locally
-
-You can run each service in a separate terminal window to enable hot reloading (`dotnet watch`).
-
-**Terminal 1: Apollo Service (Backend Logic)**
-
-This is the core logic service.
-
-```bash
+# Terminal 1: Backend Service (gRPC + Scheduler)
 dotnet watch --project src/Apollo.Service/Apollo.Service.csproj
-```
 
-**Terminal 2: Apollo API (HTTP Endpoints)**
-
-This hosts the REST API.
-
-```bash
+# Terminal 2: HTTP API Gateway
 dotnet watch --project src/Apollo.API/Apollo.API.csproj
-```
 
-*Access Swagger UI at: <http://localhost:5144/swagger>*
-
-**Terminal 3: Apollo Discord (Bot)**
-
-This runs the Discord bot connection.
-
-```bash
+# Terminal 3: Discord Bot
 dotnet watch --project src/Apollo.Discord/Apollo.Discord.csproj
 ```
 
+- **Swagger UI:** http://localhost:5144/swagger
+- **gRPC:** localhost:5270
+
 ### Troubleshooting
 
-- **Database Connection Errors:** Ensure the Docker containers are running (`docker ps`) and that port 5432 is not occupied by a locally installed Postgres instance.
-- **gRPC Errors:** If the API or Discord bot cannot talk to the Service, ensure `Apollo.Service` is running and listening on port **5270**.
+- **Database errors:** Ensure Docker containers are running (`docker ps`)
+- **gRPC errors:** Verify Apollo.Service is running on port 5270
+- **Redis errors:** Check Redis connection string in appsettings

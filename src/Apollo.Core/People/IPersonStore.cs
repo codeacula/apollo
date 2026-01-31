@@ -16,6 +16,7 @@ public interface IPersonStore
   Task<Result> GrantAccessAsync(PersonId id, CancellationToken cancellationToken = default);
   Task<Result> RevokeAccessAsync(PersonId id, CancellationToken cancellationToken = default);
   Task<Result> RemoveNotificationChannelAsync(Person person, NotificationChannel channel, CancellationToken cancellationToken = default);
+  Task<Result> SetDailyTaskCountAsync(PersonId id, DailyTaskCount dailyTaskCount, CancellationToken cancellationToken = default);
   Task<Result> SetTimeZoneAsync(PersonId id, PersonTimeZoneId timeZoneId, CancellationToken cancellationToken = default);
   Task<Result> ToggleNotificationChannelAsync(Person person, NotificationChannel channel, CancellationToken cancellationToken = default);
 }

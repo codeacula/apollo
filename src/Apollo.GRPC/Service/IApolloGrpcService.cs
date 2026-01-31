@@ -14,10 +14,16 @@ public interface IApolloGrpcService
   Task<GrpcResult<ToDoDTO>> CreateToDoAsync(CreateToDoRequest request);
 
   [OperationContract]
+  Task<GrpcResult<ReminderDTO>> CreateReminderAsync(CreateReminderRequest request);
+
+  [OperationContract]
   Task<GrpcResult<ToDoDTO>> GetToDoAsync(GetToDoRequest request);
 
   [OperationContract]
   Task<GrpcResult<ToDoDTO[]>> GetPersonToDosAsync(GetPersonToDosRequest request);
+
+  [OperationContract]
+  Task<GrpcResult<DailyPlanDTO>> GetDailyPlanAsync(GetDailyPlanRequest request);
 
   [OperationContract]
   Task<GrpcResult<string>> UpdateToDoAsync(UpdateToDoRequest request);

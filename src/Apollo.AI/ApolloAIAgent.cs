@@ -3,29 +3,32 @@ using Apollo.AI.DTOs;
 using Apollo.AI.Prompts;
 using Apollo.AI.Requests;
 
+using Microsoft.Extensions.Logging;
+
 namespace Apollo.AI;
 
 public sealed class ApolloAIAgent(
   ApolloAIConfig config,
   IPromptLoader promptLoader,
-  IPromptTemplateProcessor templateProcessor) : IApolloAIAgent
+  IPromptTemplateProcessor templateProcessor,
+  ILogger<AIRequestBuilder> logger) : IApolloAIAgent
 {
-  private const string ToolCallingPromptName = "ApolloToolCalling";
+  private const string ToolPlanningPromptName = "ApolloToolPlanning";
   private const string ResponsePromptName = "ApolloResponse";
   private const string ReminderPromptName = "ApolloReminder";
+  private const string DailyPlanningPromptName = "ApolloDailyPlanning";
 
   public IAIRequestBuilder CreateRequest()
   {
-    return new AIRequestBuilder(config, templateProcessor);
+    return new AIRequestBuilder(config, templateProcessor, logger);
   }
 
-  public IAIRequestBuilder CreateToolCallingRequest(
+  public IAIRequestBuilder CreateToolPlanningRequest(
     IEnumerable<ChatMessageDTO> messages,
-    IDictionary<string, object> plugins,
     string userTimezone,
     string activeTodos)
   {
-    var prompt = promptLoader.Load(ToolCallingPromptName);
+    var prompt = promptLoader.Load(ToolPlanningPromptName);
     var currentDateTime = DateTimeOffset.Now.ToString("yyyy-MM-ddTHH:mm:sszzz", System.Globalization.CultureInfo.InvariantCulture);
 
     var variables = new Dictionary<string, string>
@@ -38,8 +41,8 @@ public sealed class ApolloAIAgent(
     return CreateRequest()
       .FromPromptDefinition(prompt)
       .WithMessages(messages)
-      .WithPlugins(plugins)
-      .WithToolCalling(enabled: true)
+      .WithToolCalling(enabled: false)
+      .WithJsonMode(enabled: true)
       .WithTemplateVariables(variables);
   }
 
@@ -79,6 +82,29 @@ public sealed class ApolloAIAgent(
 
     return CreateRequest()
       .FromPromptDefinition(prompt)
+      .WithTemplateVariables(variables);
+  }
+
+  public IAIRequestBuilder CreateDailyPlanRequest(
+    string userTimezone,
+    string currentTime,
+    string activeTodos,
+    int taskCount)
+  {
+    var prompt = promptLoader.Load(DailyPlanningPromptName);
+
+    var variables = new Dictionary<string, string>
+    {
+      ["user_timezone"] = userTimezone,
+      ["current_time"] = currentTime,
+      ["active_todos"] = activeTodos,
+      ["task_count"] = taskCount.ToString(System.Globalization.CultureInfo.InvariantCulture)
+    };
+
+    return CreateRequest()
+      .FromPromptDefinition(prompt)
+      .WithToolCalling(enabled: false)
+      .WithJsonMode(enabled: true)
       .WithTemplateVariables(variables);
   }
 }

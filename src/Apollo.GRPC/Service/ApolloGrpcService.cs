@@ -19,6 +19,8 @@ public sealed class ApolloGrpcService(
   IMediator mediator,
   IReminderStore reminderStore,
   IPersonStore personStore,
+  IFuzzyTimeParser fuzzyTimeParser,
+  TimeProvider timeProvider,
   SuperAdminConfig superAdminConfig
 ) : IApolloGrpcService
 {
@@ -67,8 +69,81 @@ public sealed class ApolloGrpcService(
       Description = todo.Description.Value,
       ReminderDate = request.ReminderDate,
       CreatedOn = todo.CreatedOn.Value,
-      UpdatedOn = todo.UpdatedOn.Value
+      UpdatedOn = todo.UpdatedOn.Value,
+      Priority = todo.Priority.Value,
+      Energy = todo.Energy.Value,
+      Interest = todo.Interest.Value
     };
+  }
+
+  public async Task<GrpcResult<ReminderDTO>> CreateReminderAsync(CreateReminderRequest request)
+  {
+    var platformId = request.ToPlatformId();
+    var personResult = await mediator.Send(new GetOrCreatePersonByPlatformIdQuery(platformId));
+
+    if (personResult.IsFailed)
+    {
+      return personResult.Errors.Select(e => new GrpcError(e.Message)).ToArray();
+    }
+
+    // Parse the reminder time using fuzzy time parser
+    var parsedTimeResult = ParseReminderTime(request.ReminderTime);
+    if (parsedTimeResult.IsFailed)
+    {
+      return parsedTimeResult.Errors.Select(e => new GrpcError(e.Message)).ToArray();
+    }
+
+    var command = new CreateReminderCommand(
+      personResult.Value.Id,
+      request.Message,
+      parsedTimeResult.Value
+    );
+
+    var result = await mediator.Send(command);
+
+    if (result.IsFailed)
+    {
+      return result.Errors.Select(e => new GrpcError(e.Message)).ToArray();
+    }
+
+    var reminder = result.Value;
+    return new ReminderDTO
+    {
+      Id = reminder.Id.Value,
+      PersonId = reminder.PersonId.Value,
+      Details = reminder.Details.Value,
+      ReminderTime = reminder.ReminderTime.Value,
+      CreatedOn = reminder.CreatedOn.Value,
+      UpdatedOn = reminder.UpdatedOn.Value
+    };
+  }
+
+  private FluentResults.Result<DateTime> ParseReminderTime(string reminderTime)
+  {
+    if (string.IsNullOrEmpty(reminderTime))
+    {
+      return FluentResults.Result.Fail<DateTime>("Reminder time is required.");
+    }
+
+    // First, try to parse as fuzzy time (e.g., "in 10 minutes")
+    var fuzzyResult = fuzzyTimeParser.TryParseFuzzyTime(reminderTime, timeProvider.GetUtcNow().UtcDateTime);
+    if (fuzzyResult.IsSuccess)
+    {
+      return FluentResults.Result.Ok(fuzzyResult.Value);
+    }
+
+    // Fall back to ISO 8601 parsing
+    if (!DateTime.TryParse(reminderTime, out var parsedDate))
+    {
+      return FluentResults.Result.Fail<DateTime>("Invalid reminder time format. Use fuzzy time like 'in 10 minutes' or ISO 8601 format like 2025-12-31T10:00:00.");
+    }
+
+    // Assume UTC if kind is unspecified
+    var utcDate = parsedDate.Kind == DateTimeKind.Unspecified
+      ? DateTime.SpecifyKind(parsedDate, DateTimeKind.Utc)
+      : parsedDate.ToUniversalTime();
+
+    return FluentResults.Result.Ok(utcDate);
   }
 
   public async Task<GrpcResult<ToDoDTO>> GetToDoAsync(GetToDoRequest request)
@@ -88,7 +163,10 @@ public sealed class ApolloGrpcService(
       PersonId = todo.PersonId.Value,
       Description = todo.Description.Value,
       CreatedOn = todo.CreatedOn.Value,
-      UpdatedOn = todo.UpdatedOn.Value
+      UpdatedOn = todo.UpdatedOn.Value,
+      Priority = todo.Priority.Value,
+      Energy = todo.Energy.Value,
+      Interest = todo.Interest.Value
     };
   }
 
@@ -135,11 +213,52 @@ public sealed class ApolloGrpcService(
         Description = t.Description.Value,
         ReminderDate = reminderDate,
         CreatedOn = t.CreatedOn.Value,
-        UpdatedOn = t.UpdatedOn.Value
+        UpdatedOn = t.UpdatedOn.Value,
+        Priority = t.Priority.Value,
+        Energy = t.Energy.Value,
+        Interest = t.Interest.Value
       };
     });
 
     return await Task.WhenAll(dtoTasks);
+  }
+
+  public async Task<GrpcResult<DailyPlanDTO>> GetDailyPlanAsync(GetDailyPlanRequest request)
+  {
+    // Resolve PlatformUserId to PersonId
+    var platformId = new PlatformId(request.Username, request.PlatformUserId, request.Platform);
+    var personResult = await mediator.Send(new GetOrCreatePersonByPlatformIdQuery(platformId));
+
+    if (personResult.IsFailed)
+    {
+      return personResult.Errors.Select(e => new GrpcError(e.Message)).ToArray();
+    }
+
+    var query = new GetDailyPlanQuery(personResult.Value.Id);
+    var result = await mediator.Send(query);
+
+    if (result.IsFailed)
+    {
+      return result.Errors.Select(e => new GrpcError(e.Message)).ToArray();
+    }
+
+    var plan = result.Value;
+    var taskDtos = plan.SuggestedTasks.Select(t => new DailyPlanTaskDTO
+    {
+      Id = t.Id.Value,
+      Description = t.Description,
+      Priority = (int)t.Priority.Value,
+      Energy = (int)t.Energy.Value,
+      Interest = (int)t.Interest.Value,
+      DueDate = t.DueDate
+    }).ToArray();
+
+    return new DailyPlanDTO
+    {
+      SuggestedTasks = taskDtos,
+      SelectionRationale = plan.SelectionRationale,
+      TotalActiveTodos = plan.TotalActiveTodos
+    };
   }
 
   public async Task<GrpcResult<string>> UpdateToDoAsync(UpdateToDoRequest request)

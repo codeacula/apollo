@@ -90,7 +90,7 @@ public class ToDoReminderJob(
           if (sendResult.IsFailed)
           {
             ToDoLogs.LogErrorProcessingReminder(logger, new InvalidOperationException(sendResult.GetErrorMessages()), personReminders[0].Id.Value);
-            return;
+            continue;
           }
 
           ToDoLogs.LogReminder(logger, person.Username.Value, reminderContent);

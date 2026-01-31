@@ -1,4 +1,3 @@
-using Apollo.Core.API;
 using Apollo.Domain.People.ValueObjects;
 
 using NetCord;

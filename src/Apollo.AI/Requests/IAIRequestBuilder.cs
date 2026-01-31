@@ -12,6 +12,7 @@ public interface IAIRequestBuilder
   IAIRequestBuilder WithPlugin(string pluginName, object plugin);
   IAIRequestBuilder WithPlugins(IDictionary<string, object> plugins);
   IAIRequestBuilder WithToolCalling(bool enabled = true);
+  IAIRequestBuilder WithJsonMode(bool enabled = true);
   IAIRequestBuilder FromPromptDefinition(PromptDefinition prompt);
   IAIRequestBuilder WithTemplateVariables(IDictionary<string, string> variables);
 

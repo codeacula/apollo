@@ -31,16 +31,23 @@ public class CreateToDoCommandHandlerTests
 
     _ = store
       .InSequence(sequence)
-      .Setup(x => x.CreateAsync(It.IsAny<ToDoId>(), personId, description, It.IsAny<CancellationToken>()))
-      .ReturnsAsync((ToDoId id, PersonId pId, Description desc, CancellationToken _) => Result.Ok(new ToDo
+      .Setup(x => x.CreateAsync(
+        It.IsAny<ToDoId>(),
+        personId,
+        description,
+        It.IsAny<Priority>(),
+        It.IsAny<Energy>(),
+        It.IsAny<Interest>(),
+        It.IsAny<CancellationToken>()))
+      .ReturnsAsync((ToDoId id, PersonId pId, Description desc, Priority priority, Energy energy, Interest interest, CancellationToken _) => Result.Ok(new ToDo
       {
         CreatedOn = new CreatedOn(DateTime.UtcNow),
         Description = desc,
-        Energy = new Energy(0),
+        Energy = energy,
         Id = id,
-        Interest = new Interest(0),
+        Interest = interest,
         PersonId = pId,
-        Priority = new Priority(0),
+        Priority = priority,
         UpdatedOn = new UpdatedOn(DateTime.UtcNow)
       }));
 
@@ -93,16 +100,23 @@ public class CreateToDoCommandHandlerTests
     var description = new Description("test");
 
     _ = store
-      .Setup(x => x.CreateAsync(It.IsAny<ToDoId>(), personId, description, It.IsAny<CancellationToken>()))
-      .ReturnsAsync((ToDoId id, PersonId pId, Description desc, CancellationToken _) => Result.Ok(new ToDo
+      .Setup(x => x.CreateAsync(
+        It.IsAny<ToDoId>(),
+        personId,
+        description,
+        It.IsAny<Priority>(),
+        It.IsAny<Energy>(),
+        It.IsAny<Interest>(),
+        It.IsAny<CancellationToken>()))
+      .ReturnsAsync((ToDoId id, PersonId pId, Description desc, Priority priority, Energy energy, Interest interest, CancellationToken _) => Result.Ok(new ToDo
       {
         CreatedOn = new CreatedOn(DateTime.UtcNow),
         Description = desc,
-        Energy = new Energy(0),
+        Energy = energy,
         Id = id,
-        Interest = new Interest(0),
+        Interest = interest,
         PersonId = pId,
-        Priority = new Priority(0),
+        Priority = priority,
         UpdatedOn = new UpdatedOn(DateTime.UtcNow)
       }));
 

@@ -50,6 +50,7 @@ public static class ServiceCollectionExtensions
         _ = options.Events.AddEventType<AccessRevokedEvent>();
         _ = options.Events.AddEventType<PersonUpdatedEvent>();
         _ = options.Events.AddEventType<PersonTimeZoneUpdatedEvent>();
+        _ = options.Events.AddEventType<PersonDailyTaskCountUpdatedEvent>();
 
         _ = options.Schema.For<DbConversation>()
           .Identity(x => x.Id)

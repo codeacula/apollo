@@ -58,3 +58,5 @@ apollo.pem
 
 # Frontend build output
 src/Apollo.API/wwwroot/
+
+.sisyphus

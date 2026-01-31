@@ -9,5 +9,8 @@ namespace Apollo.Application.ToDos.Commands;
 public sealed record CreateToDoCommand(
   PersonId PersonId,
   Description Description,
-  DateTime? ReminderDate = null
+  DateTime? ReminderDate = null,
+  Priority? Priority = null,
+  Energy? Energy = null,
+  Interest? Interest = null
 ) : IRequest<Result<ToDo>>;

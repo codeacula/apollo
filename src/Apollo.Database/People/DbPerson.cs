@@ -15,32 +15,40 @@ public sealed record DbPerson
   public required string Username { get; init; }
   public bool HasAccess { get; init; }
   public string? TimeZoneId { get; init; }
+  public int? DailyTaskCount { get; init; }
   public ICollection<DbNotificationChannel> NotificationChannels { get; init; } = [];
   public DateTime CreatedOn { get; init; }
   public DateTime UpdatedOn { get; init; }
 
-  public static explicit operator Person(DbPerson person)
+  public static explicit operator Person(DbPerson dbPerson)
   {
     PersonTimeZoneId? timeZoneId = null;
-    if (person.TimeZoneId is not null && PersonTimeZoneId.TryParse(person.TimeZoneId, out var parsedTimeZone, out _))
+    if (dbPerson.TimeZoneId is not null && PersonTimeZoneId.TryParse(dbPerson.TimeZoneId, out var parsedTimeZone, out _))
     {
       timeZoneId = parsedTimeZone;
     }
 
-    var notificationChannels = person.NotificationChannels
+    DailyTaskCount? dailyTaskCount = null;
+    if (dbPerson.DailyTaskCount.HasValue && Domain.People.ValueObjects.DailyTaskCount.TryParse(dbPerson.DailyTaskCount.Value, out var parsedCount, out _))
+    {
+      dailyTaskCount = parsedCount;
+    }
+
+    var notificationChannels = dbPerson.NotificationChannels
       .Select(c => new NotificationChannel(c.Type, c.Identifier, c.IsEnabled))
       .ToList();
 
     return new()
     {
-      Id = new(person.Id),
-      PlatformId = new(person.Username, person.PlatformUserId, person.Platform),
-      Username = new(person.Username),
-      HasAccess = new(person.HasAccess),
+      Id = new(dbPerson.Id),
+      PlatformId = new(dbPerson.Username, dbPerson.PlatformUserId, dbPerson.Platform),
+      Username = new(dbPerson.Username),
+      HasAccess = new(dbPerson.HasAccess),
       TimeZoneId = timeZoneId,
+      DailyTaskCount = dailyTaskCount,
       NotificationChannels = notificationChannels,
-      CreatedOn = new(person.CreatedOn),
-      UpdatedOn = new(person.UpdatedOn)
+      CreatedOn = new(dbPerson.CreatedOn),
+      UpdatedOn = new(dbPerson.UpdatedOn)
     };
   }
 
@@ -91,6 +99,15 @@ public sealed record DbPerson
     return person with
     {
       TimeZoneId = ev.Data.TimeZoneId,
+      UpdatedOn = ev.Data.UpdatedOn
+    };
+  }
+
+  public static DbPerson Apply(IEvent<PersonDailyTaskCountUpdatedEvent> ev, DbPerson person)
+  {
+    return person with
+    {
+      DailyTaskCount = ev.Data.DailyTaskCount,
       UpdatedOn = ev.Data.UpdatedOn
     };
   }

@@ -3,18 +3,21 @@ using Apollo.AI.DTOs;
 using Apollo.AI.Enums;
 using Apollo.AI.Plugins;
 using Apollo.AI.Prompts;
+using Apollo.Core.Logging;
 
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 
 namespace Apollo.AI.Requests;
 
-public sealed class AIRequestBuilder(ApolloAIConfig config, IPromptTemplateProcessor templateProcessor) : IAIRequestBuilder
+public sealed class AIRequestBuilder(ApolloAIConfig config, IPromptTemplateProcessor templateProcessor, ILogger<AIRequestBuilder> logger) : IAIRequestBuilder
 {
   private readonly ApolloAIConfig _config = config;
   private readonly IPromptTemplateProcessor _templateProcessor = templateProcessor;
+  private readonly ILogger<AIRequestBuilder> _logger = logger;
   private readonly List<ChatMessageDTO> _messages = [];
   private readonly Dictionary<string, object> _plugins = [];
   private readonly Dictionary<string, string> _templateVariables = [];
@@ -22,6 +25,7 @@ public sealed class AIRequestBuilder(ApolloAIConfig config, IPromptTemplateProce
   private string _systemPrompt = "";
   private double _temperature = 0.7;
   private bool _toolCallingEnabled = true;
+  private bool _jsonModeEnabled;
 
   public IAIRequestBuilder WithSystemPrompt(string systemPrompt)
   {
@@ -68,6 +72,12 @@ public sealed class AIRequestBuilder(ApolloAIConfig config, IPromptTemplateProce
     return this;
   }
 
+  public IAIRequestBuilder WithJsonMode(bool enabled = true)
+  {
+    _jsonModeEnabled = enabled;
+    return this;
+  }
+
   public IAIRequestBuilder FromPromptDefinition(PromptDefinition prompt)
   {
     _systemPrompt = prompt.SystemPrompt;
@@ -91,7 +101,7 @@ public sealed class AIRequestBuilder(ApolloAIConfig config, IPromptTemplateProce
     try
     {
       var startTime = DateTimeOffset.UtcNow;
-      Console.WriteLine($"[{startTime:HH:mm:ss.fff}] AI Request Started - ToolCalling: {_toolCallingEnabled}, Temp: {_temperature}");
+      AILogs.AIRequestStarted(_logger, _toolCallingEnabled, _temperature);
 
       var kernel = BuildKernel(toolCalls);
       var chatService = kernel.GetRequiredService<IChatCompletionService>();
@@ -99,10 +109,7 @@ public sealed class AIRequestBuilder(ApolloAIConfig config, IPromptTemplateProce
       var settings = BuildExecutionSettings();
 
       var beforeLLM = DateTimeOffset.UtcNow;
-      Console.WriteLine($"[{beforeLLM:HH:mm:ss.fff}] Calling LLM (setup took {(beforeLLM - startTime).TotalMilliseconds:F0}ms)");
-      Console.WriteLine($"  - Messages in history: {chatHistory.Count}");
-      Console.WriteLine($"  - Plugins available: {kernel.Plugins.Count}");
-      Console.WriteLine($"  - Tool calling enabled: {_toolCallingEnabled}");
+      AILogs.LLMCallStarted(_logger, (beforeLLM - startTime).TotalMilliseconds, chatHistory.Count, kernel.Plugins.Count, _toolCallingEnabled);
 
       var response = await chatService.GetChatMessageContentAsync(
         chatHistory,
@@ -111,7 +118,7 @@ public sealed class AIRequestBuilder(ApolloAIConfig config, IPromptTemplateProce
         cancellationToken: cancellationToken);
 
       var afterLLM = DateTimeOffset.UtcNow;
-      Console.WriteLine($"[{afterLLM:HH:mm:ss.fff}] LLM Response Received (took {(afterLLM - beforeLLM).TotalMilliseconds:F0}ms, {toolCalls.Count} tool calls)");
+      AILogs.LLMResponseReceived(_logger, (afterLLM - beforeLLM).TotalMilliseconds, toolCalls.Count);
 
       return new AIRequestResult
       {
@@ -123,8 +130,7 @@ public sealed class AIRequestBuilder(ApolloAIConfig config, IPromptTemplateProce
     catch (InvalidOperationException ex) when (ex.Message.Contains("Tool calling loop terminated"))
     {
       // Infinite loop detected and stopped - this is expected, not a failure
-      Console.WriteLine($"[{DateTimeOffset.UtcNow:HH:mm:ss.fff}] AI Request Terminated (infinite loop detected)");
-      Console.WriteLine($"  Tool calls that succeeded before termination: {toolCalls.Count}");
+      AILogs.AIRequestTerminatedLoopDetected(_logger, toolCalls.Count);
 
       // Return success with the tools that executed before the loop
       return new AIRequestResult
@@ -136,14 +142,7 @@ public sealed class AIRequestBuilder(ApolloAIConfig config, IPromptTemplateProce
     }
     catch (Exception ex)
     {
-      Console.WriteLine($"[{DateTimeOffset.UtcNow:HH:mm:ss.fff}] AI Request Failed: {ex.Message}");
-      Console.WriteLine($"  Exception Type: {ex.GetType().Name}");
-      Console.WriteLine($"  Tool calls that succeeded before failure: {toolCalls.Count}");
-      if (ex.InnerException != null)
-      {
-        Console.WriteLine($"  Inner Exception: {ex.InnerException.Message}");
-      }
-      Console.WriteLine($"  Stack Trace: {ex.StackTrace}");
+      AILogs.AIRequestFailed(_logger, ex.GetType().Name, toolCalls.Count, ex);
 
       // Return the tool calls that succeeded even though the request failed
       return new AIRequestResult
@@ -159,7 +158,7 @@ public sealed class AIRequestBuilder(ApolloAIConfig config, IPromptTemplateProce
   {
     var builder = Kernel.CreateBuilder();
     _ = builder.Services.AddOpenAIChatCompletion(_config.ModelId, new Uri(_config.Endpoint));
-    _ = builder.Services.AddSingleton<IFunctionInvocationFilter>(new FunctionInvocationFilter(toolCalls, maxToolCalls: 5));
+    _ = builder.Services.AddSingleton<IFunctionInvocationFilter>(new FunctionInvocationFilter(toolCalls, maxToolCalls: 5, _logger));
 
     var kernel = builder.Build();
 
@@ -200,7 +199,7 @@ public sealed class AIRequestBuilder(ApolloAIConfig config, IPromptTemplateProce
 
   private OpenAIPromptExecutionSettings BuildExecutionSettings()
   {
-    return new OpenAIPromptExecutionSettings
+    var settings = new OpenAIPromptExecutionSettings
     {
       Temperature = _temperature,
       FunctionChoiceBehavior = _toolCallingEnabled
@@ -212,5 +211,12 @@ public sealed class AIRequestBuilder(ApolloAIConfig config, IPromptTemplateProce
         : null,
       MaxTokens = 2000  // Limit response size to prevent massive requests
     };
+
+    if (_jsonModeEnabled)
+    {
+      settings.ResponseFormat = "json_object";
+    }
+
+    return settings;
   }
 }
