@@ -61,7 +61,7 @@ public sealed class ProcessIncomingMessageCommandHandler(
 
       await CaptureNotificationChannelAsync(request, person, cancellationToken);
 
-      var conversationResult = await GetOrCreateConversationAsync(person, request.Message.Content, cancellationToken);
+      var conversationResult = await GetOrCreateConversationWithMessageAsync(person, request.Message.Content, cancellationToken);
       if (conversationResult.IsFailed)
       {
         return conversationResult.ToResult<Reply>();
@@ -120,7 +120,7 @@ public sealed class ProcessIncomingMessageCommandHandler(
     }
   }
 
-  private async Task<Result<Conversation>> GetOrCreateConversationAsync(Person person, string messageContent, CancellationToken cancellationToken)
+  private async Task<Result<Conversation>> GetOrCreateConversationWithMessageAsync(Person person, string messageContent, CancellationToken cancellationToken)
   {
     var convoResult = await conversationStore.GetOrCreateConversationByPersonIdAsync(person.Id, cancellationToken);
 
