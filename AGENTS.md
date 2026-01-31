@@ -77,16 +77,29 @@ See `ARCHITECTURE.md` for comprehensive documentation on architecture, coding pr
 
 ## Commit & Pull Request Guidelines
 
-- Use [Conventional Commits](https://www.conventionalcommits.org/) format: `<type>(<scope>): <description>`
-- Common types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`, `ci`, `perf`
-- Optional scope in parentheses: `feat(todos): add reminder scheduling`
-- Keep description concise, imperative mood, lowercase: `fix(grpc): correct ToDo mapping`
+- Use [Conventional Commits](https://www.conventionalcommits.org/) format: `<emoji> <type>(<scope>): <description>`
+- Commit types with emojis:
+  | Type | Emoji | Description |
+  |------|-------|-------------|
+  | `feat` | ✨ | New feature |
+  | `fix` | 🐛 | Bug fix |
+  | `docs` | 📚 | Documentation |
+  | `style` | 💎 | Code style/formatting |
+  | `refactor` | ♻️ | Code refactoring |
+  | `test` | 🧪 | Tests |
+  | `chore` | 🔧 | Maintenance/tooling |
+  | `ci` | 👷 | CI/CD changes |
+  | `perf` | ⚡ | Performance |
+  | `build` | 📦 | Build system |
+  | `revert` | ⏪ | Revert changes |
+- Optional scope in parentheses: `✨ feat(todos): add reminder scheduling`
+- Keep description concise, imperative mood, lowercase
 - Examples:
-  - `feat: add OpenCode CI workflow`
-  - `fix(database): propagate result failures correctly`
-  - `docs: update ARCHITECTURE.md with Mermaid diagrams`
-  - `test(ai): add ToolCallMatchers unit tests`
-  - `refactor(domain): add required modifiers to Person`
+  - `✨ feat: add OpenCode CI workflow`
+  - `🐛 fix(database): propagate result failures correctly`
+  - `📚 docs: update ARCHITECTURE.md with Mermaid diagrams`
+  - `🧪 test(ai): add ToolCallMatchers unit tests`
+  - `♻️ refactor(domain): add required modifiers to Person`
 - Keep commits focused; include config/docs updates when behavior changes.
 - PRs should include: problem/solution summary, linked issue, test evidence, and screenshots for UI changes.
 - Update `ARCHITECTURE.md` when endpoints, env vars, or architecture change.
