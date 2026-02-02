@@ -6,8 +6,11 @@ using Apollo.Domain.People.ValueObjects;
 namespace Apollo.GRPC.Contracts;
 
 [DataContract]
-public sealed record ManageAccessRequest
+public sealed record ManageAccessRequest : IAuthenticatedRequest
 {
+  Platform IAuthenticatedRequest.Platform => AdminPlatform;
+  string IAuthenticatedRequest.PlatformUserId => AdminPlatformUserId;
+  string IAuthenticatedRequest.Username => AdminUsername;
   /// <summary>
   /// The platform of the admin making the request.
   /// </summary>
