@@ -283,14 +283,10 @@ public sealed class ToDoPlugin(
       {
         return $"Failed to set priority: {result.GetErrorMessages()}";
       }
-      else if (ids.Count == 0)
-      {
-        return $"Successfully set priority to {LevelToEmoji(levelResult.Value)} for all {result.Value} active todos.";
-      }
-      else
-      {
-        return $"Successfully set priority to {LevelToEmoji(levelResult.Value)} for {result.Value} todos.";
-      }
+
+      return ids.Count == 0
+        ? $"Successfully set priority to {LevelToEmoji(levelResult.Value)} for all {result.Value} active todos."
+        : $"Successfully set priority to {LevelToEmoji(levelResult.Value)} for {result.Value} todos.";
     }
     catch (Exception ex)
     {
@@ -328,14 +324,10 @@ public sealed class ToDoPlugin(
       {
         return $"Failed to set energy: {result.GetErrorMessages()}";
       }
-      else if (ids.Count == 0)
-      {
-        return $"Successfully set energy to {LevelToEmoji(levelResult.Value)} for all {result.Value} active todos.";
-      }
-      else
-      {
-        return $"Successfully set energy to {LevelToEmoji(levelResult.Value)} for {result.Value} todos.";
-      }
+
+      return ids.Count == 0
+        ? $"Successfully set energy to {LevelToEmoji(levelResult.Value)} for all {result.Value} active todos."
+        : $"Successfully set energy to {LevelToEmoji(levelResult.Value)} for {result.Value} todos.";
     }
     catch (Exception ex)
     {
@@ -373,14 +365,10 @@ public sealed class ToDoPlugin(
       {
         return $"Failed to set interest: {result.GetErrorMessages()}";
       }
-      else if (ids.Count == 0)
-      {
-        return $"Successfully set interest to {LevelToEmoji(levelResult.Value)} for all {result.Value} active todos.";
-      }
-      else
-      {
-        return $"Successfully set interest to {LevelToEmoji(levelResult.Value)} for {result.Value} todos.";
-      }
+
+      return ids.Count == 0
+        ? $"Successfully set interest to {LevelToEmoji(levelResult.Value)} for all {result.Value} active todos."
+        : $"Successfully set interest to {LevelToEmoji(levelResult.Value)} for {result.Value} todos.";
     }
     catch (Exception ex)
     {
@@ -401,8 +389,14 @@ public sealed class ToDoPlugin(
       {
         return $"Failed to retrieve todos: {(result.Errors.Count > 0 ? result.Errors[0].Message : "Unknown error")}";
       }
-
-      return !result.Value.Any() ? "You currently have no active todos." : FormatToDosAsTable(result.Value);
+      else if (!result.Value.Any())
+      {
+        return "You currently have no active todos.";
+      }
+      else
+      {
+        return FormatToDosAsTable(result.Value);
+      }
     }
     catch (Exception ex)
     {

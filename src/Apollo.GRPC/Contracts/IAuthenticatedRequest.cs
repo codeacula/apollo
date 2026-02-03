@@ -4,7 +4,7 @@ namespace Apollo.GRPC.Contracts;
 
 public interface IAuthenticatedRequest
 {
-    Platform Platform { get; }
-    string PlatformUserId { get; }
-    string Username { get; }
+  Platform Platform { get; }
+  string PlatformUserId { get; }
+  string Username { get; }
 }

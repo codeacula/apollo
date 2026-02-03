@@ -55,16 +55,16 @@ public static class ServiceCollectionExtension
 
   public static IServiceCollection AddGrpcServerServices(this IServiceCollection services)
   {
-    services.AddScoped<Context.IUserContext, Context.UserContext>();
-    services.AddSingleton<Interceptors.UserResolutionInterceptor>();
-    services.AddSingleton<Interceptors.AuthorizationInterceptor>();
+    _ = services.AddScoped<Context.IUserContext, Context.UserContext>();
+    _ = services.AddSingleton<UserResolutionInterceptor>();
+    _ = services.AddSingleton<AuthorizationInterceptor>();
 
     _ = services
-      .AddCodeFirstGrpc(config => 
+      .AddCodeFirstGrpc(config =>
       {
         config.ResponseCompressionLevel = System.IO.Compression.CompressionLevel.Optimal;
-        config.Interceptors.Add<Interceptors.UserResolutionInterceptor>();
-        config.Interceptors.Add<Interceptors.AuthorizationInterceptor>();
+        config.Interceptors.Add<UserResolutionInterceptor>();
+        config.Interceptors.Add<AuthorizationInterceptor>();
       });
 
     return services;

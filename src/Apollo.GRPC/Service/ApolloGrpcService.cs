@@ -5,7 +5,6 @@ using Apollo.Application.ToDos.Queries;
 using Apollo.Core.People;
 using Apollo.Core.ToDos;
 using Apollo.Domain.Common.Enums;
-using Apollo.Domain.People.ValueObjects;
 using Apollo.Domain.ToDos.Models;
 using Apollo.Domain.ToDos.ValueObjects;
 using Apollo.GRPC.Context;
@@ -36,12 +35,9 @@ public sealed class ApolloGrpcService(
     };
 
     var requestResult = await mediator.Send(new ProcessIncomingMessageCommand(coreRequest));
-    if (requestResult.IsFailed)
-    {
-      return requestResult.Errors.Select(e => new GrpcError(e.Message)).ToArray();
-    }
-    
-    return requestResult.Value.Content.Value;
+    return requestResult.IsFailed
+      ? (GrpcResult<string>)requestResult.Errors.Select(e => new GrpcError(e.Message)).ToArray()
+      : (GrpcResult<string>)requestResult.Value.Content.Value;
   }
 
   public async Task<GrpcResult<ToDoDTO>> CreateToDoAsync(CreateToDoRequest request)
@@ -182,7 +178,7 @@ public sealed class ApolloGrpcService(
       var remindersResult = await reminderStore.GetByToDoIdAsync(t.Id);
       if (remindersResult.IsFailed)
       {
-         return CreateDto(t, null);
+        return CreateDto(t, null);
       }
 
       var reminderTimes = remindersResult.Value
@@ -192,7 +188,7 @@ public sealed class ApolloGrpcService(
 
       var upcoming = reminderTimes.FirstOrDefault(d => d >= DateTime.UtcNow);
       var reminderDate = upcoming != default ? upcoming : reminderTimes.FirstOrDefault();
-      
+
       return CreateDto(t, reminderDate);
     });
 
@@ -254,12 +250,7 @@ public sealed class ApolloGrpcService(
     );
 
     var result = await mediator.Send(command);
-    if (result.IsFailed)
-    {
-      return result.Errors.Select(e => new GrpcError(e.Message)).ToArray();
-    }
-    
-    return "ToDo updated successfully";
+    return result.IsFailed ? (GrpcResult<string>)result.Errors.Select(e => new GrpcError(e.Message)).ToArray() : (GrpcResult<string>)"ToDo updated successfully";
   }
 
   public async Task<GrpcResult<string>> CompleteToDoAsync(CompleteToDoRequest request)
@@ -267,25 +258,15 @@ public sealed class ApolloGrpcService(
     var command = new CompleteToDoCommand(new ToDoId(request.ToDoId));
     var result = await mediator.Send(command);
 
-    if (result.IsFailed)
-    {
-       return result.Errors.Select(e => new GrpcError(e.Message)).ToArray();
-    }
-    
-    return "ToDo completed successfully";
+    return result.IsFailed ? (GrpcResult<string>)result.Errors.Select(e => new GrpcError(e.Message)).ToArray() : (GrpcResult<string>)"ToDo completed successfully";
   }
 
   public async Task<GrpcResult<string>> DeleteToDoAsync(DeleteToDoRequest request)
   {
     var command = new DeleteToDoCommand(new ToDoId(request.ToDoId));
     var result = await mediator.Send(command);
-    
-    if (result.IsFailed)
-    {
-      return result.Errors.Select(e => new GrpcError(e.Message)).ToArray();
-    }
 
-    return "ToDo deleted successfully";
+    return result.IsFailed ? (GrpcResult<string>)result.Errors.Select(e => new GrpcError(e.Message)).ToArray() : (GrpcResult<string>)"ToDo deleted successfully";
   }
 
   public async Task<GrpcResult<string>> GrantAccessAsync(ManageAccessRequest request)
@@ -302,12 +283,9 @@ public sealed class ApolloGrpcService(
     // Grant access to the target user
     var grantResult = await personStore.GrantAccessAsync(personResult.Value.Id);
 
-    if (grantResult.IsFailed)
-    {
-      return grantResult.Errors.Select(e => new GrpcError(e.Message)).ToArray();
-    }
-    
-    return $"Access granted to {request.TargetUsername}";
+    return grantResult.IsFailed
+      ? (GrpcResult<string>)grantResult.Errors.Select(e => new GrpcError(e.Message)).ToArray()
+      : (GrpcResult<string>)$"Access granted to {request.TargetUsername}";
   }
 
   public async Task<GrpcResult<string>> RevokeAccessAsync(ManageAccessRequest request)
@@ -330,12 +308,9 @@ public sealed class ApolloGrpcService(
     // Revoke access from the target user
     var revokeResult = await personStore.RevokeAccessAsync(personResult.Value.Id);
 
-    if (revokeResult.IsFailed)
-    {
-       return revokeResult.Errors.Select(e => new GrpcError(e.Message)).ToArray();
-    }
-
-    return $"Access revoked from {request.TargetUsername}";
+    return revokeResult.IsFailed
+      ? (GrpcResult<string>)revokeResult.Errors.Select(e => new GrpcError(e.Message)).ToArray()
+      : (GrpcResult<string>)$"Access revoked from {request.TargetUsername}";
   }
 
   private bool IsSuperAdmin(Platform platform, string platformUserId)

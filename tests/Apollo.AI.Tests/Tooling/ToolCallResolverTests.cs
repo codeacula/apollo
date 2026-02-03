@@ -125,13 +125,13 @@ public class ToolCallResolverTests
   private sealed class TestPluginStub
   {
     [KernelFunction("test_function")]
-    public Task<string> TestFunctionAsync(string input)
+    public static Task<string> TestFunctionAsync(string input)
     {
       return Task.FromResult(input);
     }
 
     [KernelFunction("custom_name")]
-    public Task<string> MethodWithCustomName()
+    public static Task<string> MethodWithCustomNameAsync()
     {
       return Task.FromResult("result");
     }

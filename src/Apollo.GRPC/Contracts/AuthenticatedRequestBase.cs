@@ -1,4 +1,5 @@
 using System.Runtime.Serialization;
+
 using Apollo.Domain.Common.Enums;
 using Apollo.Domain.People.ValueObjects;
 

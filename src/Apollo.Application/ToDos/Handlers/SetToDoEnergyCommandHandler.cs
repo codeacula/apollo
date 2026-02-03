@@ -17,10 +17,14 @@ public sealed class SetToDoEnergyCommandHandler(IToDoStore toDoStore) : IRequest
       {
         return Result.Fail("To-Do not found");
       }
-
-      return todoResult.Value.PersonId.Value != request.PersonId.Value
-        ? Result.Fail("You don't have permission to update this to-do")
-        : await toDoStore.UpdateEnergyAsync(request.ToDoId, request.Energy, cancellationToken);
+      else if (todoResult.Value.PersonId.Value != request.PersonId.Value)
+      {
+        return Result.Fail("You don't have permission to update this to-do");
+      }
+      else
+      {
+        return await toDoStore.UpdateEnergyAsync(request.ToDoId, request.Energy, cancellationToken);
+      }
     }
     catch (Exception ex)
     {

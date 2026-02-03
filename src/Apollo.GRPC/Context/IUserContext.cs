@@ -4,5 +4,5 @@ namespace Apollo.GRPC.Context;
 
 public interface IUserContext
 {
-    Person? Person { get; set; }
+  Person? Person { get; set; }
 }

@@ -1,7 +1,5 @@
 using Apollo.Core.API;
-using Apollo.Core.Reminders.Requests;
 using Apollo.Core.ToDos.Responses;
-using Apollo.Domain.Common.Enums;
 using Apollo.Domain.People.ValueObjects;
 using Apollo.Domain.ToDos.Models;
 using Apollo.GRPC.Interceptors;

@@ -10,9 +10,6 @@ public static partial class QuickCommandParser
   [GeneratedRegex(@"^remind(?:er)?\s+(?:me\s+)?(?:to\s+)?(.+?)\s+(?:in|at|on)\s+(.+)$", RegexOptions.IgnoreCase | RegexOptions.Singleline)]
   private static partial Regex ReminderWithTimePattern();
 
-  [GeneratedRegex(@"^remind(?:er)?\s+(?:me\s+)?(?:to\s+)?(.+)$", RegexOptions.IgnoreCase | RegexOptions.Singleline)]
-  private static partial Regex ReminderSimplePattern();
-
   public static bool TryParseToDo(string content, out string description)
   {
     description = string.Empty;

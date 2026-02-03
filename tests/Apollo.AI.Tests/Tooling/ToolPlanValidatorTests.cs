@@ -404,7 +404,7 @@ public class ToolPlanValidatorTests
   private sealed class PersonPluginStub
   {
     [KernelFunction("set_timezone")]
-    public Task<string> SetTimeZoneAsync(string timezone)
+    public static Task<string> SetTimeZoneAsync(string timezone)
     {
       return Task.FromResult(timezone);
     }
@@ -413,19 +413,19 @@ public class ToolPlanValidatorTests
   private sealed class ToDoPluginStub
   {
     [KernelFunction("create_todo")]
-    public Task<string> CreateToDoAsync(string description, string? reminderDate = null)
+    public static Task<string> CreateToDoAsync(string description, string? reminderDate = null)
     {
       return Task.FromResult(description + reminderDate);
     }
 
     [KernelFunction("delete_todo")]
-    public Task<string> DeleteToDoAsync(string todoId)
+    public static Task<string> DeleteToDoAsync(string todoId)
     {
       return Task.FromResult(todoId);
     }
 
     [KernelFunction("complete_todo")]
-    public Task<string> CompleteToDoAsync(string todoId)
+    public static Task<string> CompleteToDoAsync(string todoId)
     {
       return Task.FromResult(todoId);
     }

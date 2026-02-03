@@ -180,12 +180,7 @@ public sealed class GetDailyPlanQueryHandler(
         }
       }
 
-      if (tasks.Count == 0)
-      {
-        return Result.Fail<(List<DailyPlanItem>, string)>("AI returned no valid task IDs");
-      }
-
-      return Result.Ok((tasks, rationale));
+      return tasks.Count == 0 ? (Result<(List<DailyPlanItem> Tasks, string Rationale)>)Result.Fail<(List<DailyPlanItem>, string)>("AI returned no valid task IDs") : (Result<(List<DailyPlanItem> Tasks, string Rationale)>)Result.Ok((tasks, rationale));
     }
     catch (JsonException ex)
     {
