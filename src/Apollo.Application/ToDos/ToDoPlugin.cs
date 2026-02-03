@@ -2,8 +2,6 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Text;
 
-using Apollo.Application.ToDos.Commands;
-using Apollo.Application.ToDos.Queries;
 using Apollo.Core;
 using Apollo.Core.People;
 using Apollo.Core.ToDos;

@@ -59,7 +59,9 @@ public sealed class IncomingMessageHandler(
     {
       var newMessage = new NewMessageRequest
       {
-        PlatformId = platformId,
+        Platform = platformId.Platform,
+        PlatformUserId = platformId.PlatformUserId,
+        Username = platformId.Username,
         Content = content
       };
 

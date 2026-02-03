@@ -50,4 +50,7 @@
       "connectionTimeout": 30
     }
   ],
+  "chat.tools.terminal.autoApprove": {
+    "mv": true
+  },
 }

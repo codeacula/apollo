@@ -1,6 +1,6 @@
 using System.Runtime.Serialization;
 
-using Apollo.Domain.People.ValueObjects;
+using Apollo.Domain.Common.Enums;
 
 namespace Apollo.Core.Conversations;
 
@@ -8,8 +8,14 @@ namespace Apollo.Core.Conversations;
 public sealed record NewMessageRequest
 {
   [DataMember(Order = 1)]
-  public required PlatformId PlatformId { get; init; }
+  public required string Username { get; init; }
 
   [DataMember(Order = 2)]
+  public required string PlatformUserId { get; init; }
+
+  [DataMember(Order = 3)]
+  public required Platform Platform { get; init; }
+
+  [DataMember(Order = 4)]
   public required string Content { get; init; }
 }

@@ -1,7 +1,6 @@
 using System.ComponentModel;
 
-using Apollo.Application.Reminders.Commands;
-using Apollo.Application.ToDos.Commands;
+using Apollo.Application.ToDos;
 using Apollo.Core;
 using Apollo.Core.People;
 using Apollo.Core.ToDos;

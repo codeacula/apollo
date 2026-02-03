@@ -1,54 +1,38 @@
 using Apollo.Core.ToDos.Responses;
 
 using NetCord;
-using NetCord.Rest;
 
 namespace Apollo.Discord.Components;
 
-public class ToDoListComponent : ComponentContainerProperties
+/// <summary>
+/// Component builder for displaying a list of to-dos with edit and delete options.
+/// </summary>
+public sealed class ToDoListComponent
 {
-  public const string EditButtonCustomId = "todo_list_edit";
-  public const string DeleteButtonCustomId = "todo_list_delete";
+  public const string EditButtonCustomId = "todo_edit_button";
+  public const string DeleteButtonCustomId = "todo_delete_button";
 
-  public ToDoListComponent(IEnumerable<ToDoSummary> todos, bool includeCompleted)
+  private readonly ComponentContainerProperties _container;
+
+  public ToDoListComponent(IEnumerable<ToDoDTO> toDos, bool includeCompleted)
   {
-    AccentColor = Constants.Colors.ApolloGreen;
+    var todoList = string.Join("\n", toDos.Select(t => $"• **{t.Title}**"));
 
-    var components = new List<IComponentContainerComponentProperties>();
-    var listType = includeCompleted ? "all to-do(s)" : "active to-do(s)";
-    components.Add(new TextDisplayProperties($"# Your {listType}"));
-
-    var todoList = todos.ToList();
-    if (todoList.Count == 0)
+    _container = new ComponentContainerProperties
     {
-      var emptyMessage = includeCompleted
-        ? "You have no to-dos at all. 🎉"
-        : "You have no active to-dos. 🎉";
-      components.Add(new TextDisplayProperties(emptyMessage));
-      Components = components;
-      return;
-    }
-
-    // Create a table-like structure with each todo as a row
-    foreach (var todo in todoList)
-    {
-      var reminderText = todo.ReminderDate.HasValue
-        ? $" | 🔔 <t:{new DateTimeOffset(todo.ReminderDate.Value).ToUnixTimeSeconds()}:R>"
-        : string.Empty;
-
-      components.Add(new TextDisplayProperties($"**{todo.Description}**{reminderText}"));
-    }
-
-    // Add action buttons at the bottom
-    components.Add(new ActionRowProperties
-    {
+      AccentColor = new Color(0x3B82F6),
       Components =
       [
-        new ButtonProperties(EditButtonCustomId, "Edit Todo", ButtonStyle.Secondary),
-        new ButtonProperties(DeleteButtonCustomId, "Delete Todo", ButtonStyle.Danger),
+        new TextDisplayProperties($"### Your To-Dos\n\n{(string.IsNullOrEmpty(todoList) ? "No to-dos found." : todoList)}"),
       ]
-    });
+    };
+  }
 
-    Components = components;
+  public static implicit operator ComponentContainerProperties(ToDoListComponent component) => component._container;
+  public static implicit operator ToDoListComponent(ComponentContainerProperties container) => new(container);
+
+  private ToDoListComponent(ComponentContainerProperties container)
+  {
+    _container = container;
   }
 }

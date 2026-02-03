@@ -1,7 +1,6 @@
 using Apollo.Application.Conversations;
-using Apollo.Application.People.Queries;
-using Apollo.Application.ToDos.Commands;
-using Apollo.Application.ToDos.Queries;
+using Apollo.Application.People;
+using Apollo.Application.ToDos;
 using Apollo.Core.People;
 using Apollo.Core.ToDos;
 using Apollo.Domain.Common.Enums;
@@ -30,7 +29,9 @@ public sealed class ApolloGrpcService(
   {
     var coreRequest = new CoreNewMessageRequest
     {
-      PlatformId = message.ToPlatformId(),
+      Username = message.Username,
+      PlatformUserId = message.PlatformUserId,
+      Platform = message.Platform,
       Content = message.Content
     };
 

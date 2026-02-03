@@ -88,9 +88,9 @@ public class ApolloGrpcClient : IApolloGrpcClient, IApolloServiceClient, IDispos
   {
     var grpcRequest = new GrpcNewMessageRequest
     {
-      Platform = request.PlatformId.Platform,
-      PlatformUserId = request.PlatformId.PlatformUserId,
-      Username = request.PlatformId.Username,
+      Platform = request.Platform,
+      PlatformUserId = request.PlatformUserId,
+      Username = request.Username,
       Content = request.Content
     };
 

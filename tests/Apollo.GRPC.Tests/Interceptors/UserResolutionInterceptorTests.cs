@@ -1,4 +1,4 @@
-using Apollo.Application.People.Queries;
+using Apollo.Application.People;
 using Apollo.Domain.Common.Enums;
 using Apollo.Domain.Common.ValueObjects;
 using Apollo.Domain.People.Models;

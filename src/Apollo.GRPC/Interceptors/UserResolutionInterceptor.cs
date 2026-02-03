@@ -1,4 +1,4 @@
-using Apollo.Application.People.Queries;
+using Apollo.Application.People;
 using Apollo.Domain.People.ValueObjects;
 using Apollo.GRPC.Context;
 using Apollo.GRPC.Contracts;
