@@ -48,7 +48,10 @@ public class AuthorizationInterceptorTests
     _ = _userContextMock.Setup(x => x.Person).Returns(person);
 
     var context = new TestServerCallContext(_httpContext);
-    static Task<string> continuationAsync(string req, ServerCallContext ctx) => Task.FromResult("Response");
+    static Task<string> continuationAsync()
+    {
+      return Task.FromResult("Response");
+    }
 
     // Act
     var result = await _interceptor.UnaryServerHandler("Request", context, continuationAsync);
