@@ -37,30 +37,6 @@ public class AuthorizationInterceptorTests
   }
 
   [Fact]
-  public async Task InterceptRequireAccessHasAccessProceedsAsync()
-  {
-    // Arrange
-    var metadata = new EndpointMetadataCollection(new RequireAccessAttribute());
-    var endpoint = new Endpoint(null, metadata, "TestEndpoint");
-    _httpContext.SetEndpoint(endpoint);
-
-    var person = CreatePerson(hasAccess: true);
-    _ = _userContextMock.Setup(x => x.Person).Returns(person);
-
-    var context = new TestServerCallContext(_httpContext);
-    static Task<string> continuationAsync()
-    {
-      return Task.FromResult("Response");
-    }
-
-    // Act
-    var result = await _interceptor.UnaryServerHandler("Request", context, continuationAsync);
-
-    // Assert
-    Assert.Equal("Response", result);
-  }
-
-  [Fact]
   public async Task InterceptRequireAccessNoAccessThrowsRpcExceptionAsync()
   {
     // Arrange

@@ -5,7 +5,7 @@ using Apollo.Domain.Common.Enums;
 namespace Apollo.Core.Conversations;
 
 [DataContract]
-public sealed record NewMessageRequest
+public sealed record ProcessMessageRequest
 {
   [DataMember(Order = 1)]
   public required string Username { get; init; }

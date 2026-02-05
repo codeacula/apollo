@@ -15,10 +15,16 @@ public sealed class IncomingMessageHandler(
   IPersonCache personCache,
   ILogger<IncomingMessageHandler> logger) : IMessageCreateGatewayHandler
 {
-  private async Task AccessDeniedAsync(Message arg)
+  private async Task<bool> AccessIsDeniedAsync(Result<bool?> validationResult, Message arg)
   {
+    if (validationResult.IsSuccess && validationResult.Value is true)
+    {
+      return false;
+    }
     ValidationLogs.ValidationFailed(logger, arg.GetDiscordPlatformId().PlatformUserId, "Access denied");
     _ = await arg.SendAsync("Sorry, you do not have access to Apollo.");
+
+    return true;
   }
 
   public async ValueTask HandleAsync(Message arg)
@@ -30,15 +36,13 @@ public sealed class IncomingMessageHandler(
 
     var validationResult = await personCache.GetAccessAsync(arg.GetDiscordPlatformId());
 
-    if (validationResult.IsFailed)
+    if (await ValidationFailedAsync(arg, validationResult))
     {
-      await ValidationFailedAsync(arg, validationResult);
       return;
     }
 
-    if (validationResult.Value is false)
+    if (await AccessIsDeniedAsync(validationResult, arg))
     {
-      await AccessDeniedAsync(arg);
       return;
     }
 
@@ -57,7 +61,7 @@ public sealed class IncomingMessageHandler(
 
     try
     {
-      var newMessage = new NewMessageRequest
+      var processMessage = new ProcessMessageRequest
       {
         Platform = platformId.Platform,
         PlatformUserId = platformId.PlatformUserId,
@@ -65,7 +69,7 @@ public sealed class IncomingMessageHandler(
         Content = content
       };
 
-      var response = await apolloServiceClient.SendMessageAsync(newMessage, CancellationToken.None);
+      var response = await apolloServiceClient.SendMessageAsync(processMessage, CancellationToken.None);
 
       if (response.IsFailed)
       {
@@ -82,9 +86,15 @@ public sealed class IncomingMessageHandler(
     }
   }
 
-  private async Task ValidationFailedAsync(Message arg, Result<bool?> validationResult)
+  private async Task<bool> ValidationFailedAsync(Message arg, Result<bool?> validationResult)
   {
+    if (validationResult.IsSuccess)
+    {
+      return false;
+    }
+
     ValidationLogs.ValidationFailed(logger, arg.GetDiscordPlatformId().PlatformUserId, validationResult.GetErrorMessages());
     _ = await arg.SendAsync("Sorry, unable to verify your access at this time.");
+    return true;
   }
 }

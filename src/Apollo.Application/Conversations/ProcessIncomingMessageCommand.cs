@@ -26,7 +26,7 @@ namespace Apollo.Application.Conversations;
 /// </summary>
 /// <param name="Message">The message to process.</param>
 /// <seealso cref="ProcessIncomingMessageCommandHandler"/>
-public sealed record ProcessIncomingMessageCommand(NewMessageRequest Message) : IRequest<Result<Reply>>;
+public sealed record ProcessIncomingMessageCommand(ProcessMessageRequest Message) : IRequest<Result<Reply>>;
 
 public sealed class ProcessIncomingMessageCommandHandler(
   IApolloAIAgent apolloAIAgent,

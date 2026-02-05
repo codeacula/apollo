@@ -1,6 +1,7 @@
 using Apollo.Application.Conversations;
 using Apollo.Application.People;
 using Apollo.Application.ToDos;
+using Apollo.Core.Conversations;
 using Apollo.Core.People;
 using Apollo.Core.ToDos;
 using Apollo.Domain.Common.Enums;
@@ -10,8 +11,6 @@ using Apollo.GRPC.Context;
 using Apollo.GRPC.Contracts;
 
 using MediatR;
-
-using CoreNewMessageRequest = Apollo.Core.Conversations.NewMessageRequest;
 
 namespace Apollo.GRPC.Service;
 
@@ -27,7 +26,7 @@ public sealed class ApolloGrpcService(
 {
   public async Task<GrpcResult<string>> SendApolloMessageAsync(NewMessageRequest message)
   {
-    var coreRequest = new CoreNewMessageRequest
+    var coreRequest = new ProcessMessageRequest
     {
       Username = message.Username,
       PlatformUserId = message.PlatformUserId,

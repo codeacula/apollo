@@ -1,4 +1,5 @@
 using Apollo.Core.API;
+using Apollo.Core.Conversations;
 using Apollo.Core.ToDos.Responses;
 using Apollo.Domain.People.ValueObjects;
 using Apollo.Domain.ToDos.Models;
@@ -14,7 +15,6 @@ using ProtoBuf.Grpc.Client;
 
 using CoreCreateReminderRequest = Apollo.Core.Reminders.Requests.CreateReminderRequest;
 using CoreCreateToDoRequest = Apollo.Core.ToDos.Requests.CreateToDoRequest;
-using CoreNewMessageRequest = Apollo.Core.Conversations.NewMessageRequest;
 using GrpcCreateReminderRequest = Apollo.GRPC.Contracts.CreateReminderRequest;
 using GrpcCreateToDoRequest = Apollo.GRPC.Contracts.CreateToDoRequest;
 using GrpcGetDailyPlanRequest = Apollo.GRPC.Contracts.GetDailyPlanRequest;
@@ -84,7 +84,7 @@ public class ApolloGrpcClient : IApolloGrpcClient, IApolloServiceClient, IDispos
       : Result.Ok(MapReminderToDomain(grpcResponse.Value));
   }
 
-  public async Task<Result<string>> SendMessageAsync(CoreNewMessageRequest request, CancellationToken cancellationToken = default)
+  public async Task<Result<string>> SendMessageAsync(ProcessMessageRequest request, CancellationToken cancellationToken = default)
   {
     var grpcRequest = new GrpcNewMessageRequest
     {
