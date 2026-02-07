@@ -20,7 +20,6 @@ using GrpcCreateToDoRequest = Apollo.GRPC.Contracts.CreateToDoRequest;
 using GrpcGetDailyPlanRequest = Apollo.GRPC.Contracts.GetDailyPlanRequest;
 using GrpcGetPersonToDosRequest = Apollo.GRPC.Contracts.GetPersonToDosRequest;
 using GrpcManageAccessRequest = Apollo.GRPC.Contracts.ManageAccessRequest;
-using GrpcNewMessageRequest = Apollo.GRPC.Contracts.NewMessageRequest;
 using GrpcReminderDTO = Apollo.GRPC.Contracts.ReminderDTO;
 using GrpcToDoDTO = Apollo.GRPC.Contracts.ToDoDTO;
 
@@ -86,7 +85,7 @@ public class ApolloGrpcClient : IApolloGrpcClient, IApolloServiceClient, IDispos
 
   public async Task<Result<string>> SendMessageAsync(ProcessMessageRequest request, CancellationToken cancellationToken = default)
   {
-    var grpcRequest = new GrpcNewMessageRequest
+    var grpcRequest = new Contracts.NewMessageRequest
     {
       Platform = request.Platform,
       PlatformUserId = request.PlatformUserId,
