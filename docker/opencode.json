@@ -1,15 +1,19 @@
 {
   "$schema": "https://opencode.ai/config.json",
+  "plugin": [
+    "@mohak34/opencode-notifier@latest",
+    "@franlol/opencode-md-table-formatter@latest",
+    "opencode-gemini-auth@latest",
+    "opencode-agent-memory@latest"
+  ],
   "mcp": {
-    "memory": {
-      "type": "local",
-      "command": ["npx", "-y", "@modelcontextprotocol/server-memory"],
-      "enabled": true
-    },
     "sequential-thinking": {
       "type": "local",
-      "command": ["npx", "-y", "@modelcontextprotocol/server-sequential-thinking"],
-      "enabled": true
+      "command": ["npx", "-y", "@modelcontextprotocol/server-sequential-thinking"]
+    },
+    "memory": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-memory"]
     }
   }
 }
