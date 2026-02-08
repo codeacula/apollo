@@ -29,7 +29,8 @@ See `ARCHITECTURE.md` for comprehensive documentation on architecture, coding pr
 - Run Discord bot: `dotnet run --project src/Apollo.Discord/Apollo.Discord.csproj`
 - Front-end: `npm install --prefix src/Client && npm run dev --prefix src/Client`
 - Tests: `dotnet test Apollo.sln`
-- Full stack with deps: `docker-compose up --build` (brings up Postgres + Redis; uses `.env` for secrets)
+- Full stack with deps: `docker-compose up --build` (brings up API, Discord, Service, Postgres, and Redis; uses `.env` for secrets)
+- AI-assisted dev: `./start-dev.sh` (builds isolated container with OpenCode; starts Postgres + Redis via `compose.dev.yaml`)
 
 ## Coding Style & Naming Conventions
 

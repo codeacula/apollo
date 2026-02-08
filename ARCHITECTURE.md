@@ -50,7 +50,7 @@ graph TD
 |---------|------|----------|-------------|
 | Apollo.Service | 5270 | gRPC | Central backend host |
 | Apollo.API | 5144 | HTTP | REST gateway + Swagger UI |
-| Apollo.Discord | - | WebSocket | Discord bot (worker service) |
+| Apollo.Discord | 5145 | WebSocket | Discord bot (worker service, port exposed in Docker only) |
 | PostgreSQL | 5432 | TCP | Database |
 | Redis | 6379 | TCP | Distributed cache |
 
@@ -350,7 +350,7 @@ Core domain entities, value objects, and domain services. Pure business logic wi
 
 **Common (Shared):**
 - `Common/Enums/` - Shared enums like `Level` (Blue/Green/Yellow/Red), `Platform`
-- `Common/ValueObjects/` - Shared value objects: `CreatedOn`, `UpdatedOn`, `Details`, `AcknowledgedOn`, `QuartzJobId`
+- `Common/ValueObjects/` - Shared value objects: `Content`, `CreatedOn`, `DisplayName`, `UpdatedOn`, `UtcDateTime`
 
 ---
 
@@ -621,3 +621,103 @@ dotnet watch --project src/Apollo.Discord/Apollo.Discord.csproj
 - **Database errors:** Ensure Docker containers are running (`docker ps`)
 - **gRPC errors:** Verify Apollo.Service is running on port 5270
 - **Redis errors:** Check Redis connection string in appsettings
+
+---
+
+## AI-Assisted Development Container
+
+Apollo includes an isolated, containerized development environment designed for AI-assisted coding. The `start-dev.sh` script launches an [OpenCode](https://opencode.ai) session inside a Docker/Podman container with all dependencies pre-installed, so you can let AI agents build, test, and modify code freely without affecting your host machine.
+
+### How It Works
+
+Project files are **copied into the container** at build time. The container owns all files, so AI agents can read, write, build, and test without permission issues or risk to your local environment. Changes flow back to the host exclusively via `git push` from inside the container.
+
+```
+Host Machine                          Container (apollo-dev)
+┌─────────────────┐                  ┌──────────────────────────┐
+│ ~/Projects/apollo│── COPY ──────>  │ /workspace               │
+│ (your files)    │                  │   .NET 10 SDK            │
+│                 │                  │   Node.js 22             │
+│                 │<── git push ──  │   OpenCode + MCP servers  │
+│                 │                  │   GitHub CLI              │
+└─────────────────┘                  └──────┬───────────────────┘
+                                            │ network
+                                   ┌────────┴────────┐
+                                   │  Postgres + Redis │
+                                   │  (separate containers)│
+                                   └─────────────────────┘
+```
+
+### Prerequisites
+
+- Linux or WSL2
+- Docker or Podman installed
+- `~/.gitconfig` configured with your name and email
+- `~/.ssh/` with SSH keys for git operations
+
+### Quick Start
+
+```bash
+# Start on current branch
+./start-dev.sh
+
+# Start on a specific branch
+./start-dev.sh feature/my-branch
+```
+
+The script will:
+1. Auto-detect Docker or Podman
+2. Build the dev container image (tooling layers are cached; only the file copy layer rebuilds)
+3. Start Postgres and Redis via `compose.dev.yaml`
+4. Wait for Postgres to be healthy
+5. Launch OpenCode in an interactive container session
+
+### What's Inside the Container
+
+| Tool | Version | Purpose |
+|------|---------|---------|
+| .NET SDK | 10.0 | Build and test the solution |
+| Node.js | 22 LTS | Frontend build and tooling |
+| OpenCode | latest | AI coding assistant |
+| GitHub CLI | latest | PR creation and repo operations |
+| csharp-ls | latest | C# language server for LSP |
+
+**MCP Servers** (available to AI agents):
+- `memory` - Knowledge graph persistence across sessions
+- `sequential-thinking` - Step-by-step reasoning for complex tasks
+
+### File Layout
+
+| Path | Purpose |
+|------|---------|
+| `start-dev.sh` | Launcher script (run from repo root) |
+| `compose.dev.yaml` | Dev compose file (dev container + Postgres 16 + Redis 7) |
+| `docker/Dockerfile.dev` | Dev container image definition |
+| `docker/entrypoint.sh` | Container startup (branch checkout, dependency restore, OpenCode launch) |
+| `docker/opencode.json` | OpenCode MCP server configuration |
+
+### Stopping the Environment
+
+When you exit OpenCode, the container is removed but **Postgres and Redis keep running** so you can restart quickly. To stop everything:
+
+```bash
+docker compose -f compose.dev.yaml down    # or: podman compose -f compose.dev.yaml down
+```
+
+---
+
+## CI/CD
+
+Pull requests to `main` trigger the **Build and Test** GitHub Actions workflow (`.github/workflows/pr-build-test.yml`):
+
+| Step | Command |
+|------|---------|
+| .NET restore | `dotnet restore` |
+| .NET build | `dotnet build --no-restore` |
+| .NET tests | `dotnet test --no-build --no-restore` |
+| Frontend install | `npm ci` (in `src/Client`) |
+| Frontend build | `npm run build` (in `src/Client`) |
+
+**Runtime versions:** .NET 10.x, Node.js 20.x
+
+All checks must pass before a PR can be merged.

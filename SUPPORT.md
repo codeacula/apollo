@@ -14,7 +14,7 @@ Please follow the directions in [SECURITY](SECURITY.md).
 Please do the following first:
 
 - Search existing issues (open and closed) to avoid duplicates.
-- Check the docs: [README.md](README.md) and [Main Documentation](docs/Index.md).
+- Check the docs: [README.md](README.md) and [ARCHITECTURE.md](ARCHITECTURE.md).
 - Update to the latest release (or `main`, if you're developing) and retry.
 - Confirm it's not a local environment issue (try a clean clone, new environment, etc.).
 
