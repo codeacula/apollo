@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 using Apollo.AI.DTOs;
 using Apollo.AI.Enums;
 using Apollo.AI.Models;
@@ -401,31 +403,33 @@ public class ToolPlanValidatorTests
       []);
   }
 
+  [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "ToolCallResolver uses BindingFlags.Instance to match production plugin patterns")]
   private sealed class PersonPluginStub
   {
     [KernelFunction("set_timezone")]
-    public static Task<string> SetTimeZoneAsync(string timezone)
+    public Task<string> SetTimeZoneAsync(string timezone)
     {
       return Task.FromResult(timezone);
     }
   }
 
+  [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "ToolCallResolver uses BindingFlags.Instance to match production plugin patterns")]
   private sealed class ToDoPluginStub
   {
     [KernelFunction("create_todo")]
-    public static Task<string> CreateToDoAsync(string description, string? reminderDate = null)
+    public Task<string> CreateToDoAsync(string description, string? reminderDate = null)
     {
       return Task.FromResult(description + reminderDate);
     }
 
     [KernelFunction("delete_todo")]
-    public static Task<string> DeleteToDoAsync(string todoId)
+    public Task<string> DeleteToDoAsync(string todoId)
     {
       return Task.FromResult(todoId);
     }
 
     [KernelFunction("complete_todo")]
-    public static Task<string> CompleteToDoAsync(string todoId)
+    public Task<string> CompleteToDoAsync(string todoId)
     {
       return Task.FromResult(todoId);
     }
