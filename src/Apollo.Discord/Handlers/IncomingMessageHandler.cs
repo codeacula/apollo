@@ -36,12 +36,10 @@ public sealed class IncomingMessageHandler(
 
     var validationResult = await personCache.GetAccessAsync(arg.GetDiscordPlatformId());
 
-    if (await ValidationFailedAsync(arg, validationResult))
-    {
-      return;
-    }
-
-    if (await AccessIsDeniedAsync(validationResult, arg))
+    if (
+      await ValidationFailedAsync(arg, validationResult)
+      || await AccessIsDeniedAsync(validationResult, arg)
+    )
     {
       return;
     }

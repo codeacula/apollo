@@ -7,25 +7,25 @@
     "CSharp": {
       "tab_size": 2,
       "formatter": "language_server",
-      "format_on_save": "on"
+      "format_on_save": "on",
     },
     "TypeScript": {
       "tab_size": 2,
-      "formatter": "language_server"
+      "formatter": "language_server",
     },
-    "Vue": {
-      "tab_size": 2
+    "Vue.js": {
+      "tab_size": 2,
     },
     "JSON": {
-      "tab_size": 2
+      "tab_size": 2,
     },
     "YAML": {
-      "tab_size": 2
+      "tab_size": 2,
     },
     "Markdown": {
       "tab_size": 4,
-      "preferred_line_length": 120
-    }
+      "preferred_line_length": 120,
+    },
   },
   "auto_install_extensions": {
     "csharp": true,
@@ -33,6 +33,6 @@
     "dockerfile": true,
     "docker-compose": true,
     "toml": true,
-    "vue": true
-  }
+    "vue": true,
+  },
 }
