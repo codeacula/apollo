@@ -106,8 +106,12 @@ fi
 echo_info "Starting OpenCode..."
 echo ""
 
+if [ "$RUNTIME" = "docker" ]; then
+    $RUNTIME rm -f apollo-dev &> /dev/null || true
+fi
+
 RUN_ARGS=(
-    -it --rm --replace
+    -it --rm
     --name apollo-dev
     --network apollo-network
     -v "$HOME/.gitconfig:/home/developer/.gitconfig:ro"
@@ -118,6 +122,10 @@ RUN_ARGS=(
     -e "ConnectionStrings__Redis=apollo-redis:6379,password=apollo_redis"
     -e "ConnectionStrings__Quartz=Host=apollo-pgsql;Database=apollo_db;Username=apollo;Password=apollo"
 )
+
+if [ "$RUNTIME" = "podman" ]; then
+    RUN_ARGS+=(--replace)
+fi
 
 $RUNTIME run "${RUN_ARGS[@]}" apollo-dev:latest
 

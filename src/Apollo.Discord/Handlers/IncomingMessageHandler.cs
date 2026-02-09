@@ -17,14 +17,14 @@ public sealed class IncomingMessageHandler(
 {
   private async Task<bool> AccessIsDeniedAsync(Result<bool?> validationResult, Message arg)
   {
-    if (validationResult.IsSuccess && validationResult.Value is true)
+    if (validationResult.IsSuccess && validationResult.Value is false)
     {
-      return false;
+      ValidationLogs.ValidationFailed(logger, arg.GetDiscordPlatformId().PlatformUserId, "Access denied");
+      _ = await arg.SendAsync("Sorry, you do not have access to Apollo.");
+      return true;
     }
-    ValidationLogs.ValidationFailed(logger, arg.GetDiscordPlatformId().PlatformUserId, "Access denied");
-    _ = await arg.SendAsync("Sorry, you do not have access to Apollo.");
 
-    return true;
+    return false;
   }
 
   public async ValueTask HandleAsync(Message arg)

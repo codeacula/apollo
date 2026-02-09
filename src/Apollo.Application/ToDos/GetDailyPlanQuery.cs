@@ -183,22 +183,23 @@ public sealed class GetDailyPlanQueryHandler(
       var todoDict = allTodos.ToDictionary(t => t.Id.Value.ToString(), t => t);
 
       // Map task IDs to full DailyPlanItem objects, preserving AI's order
-      var tasks = new List<DailyPlanItem>();
-      foreach (var idElement in idsElement.EnumerateArray())
-      {
-        var idStr = idElement.GetString();
-        if (idStr != null && todoDict.TryGetValue(idStr, out var todo))
+      var tasks = idsElement
+        .EnumerateArray()
+        .Select(idElement => idElement.GetString())
+        .Where(idStr => idStr != null && todoDict.TryGetValue(idStr, out _))
+        .Select(idStr =>
         {
-          tasks.Add(new DailyPlanItem(
+          var todo = todoDict[idStr!];
+          return new DailyPlanItem(
             todo.Id,
             todo.Description.Value,
             todo.Priority,
             todo.Energy,
             todo.Interest,
             todo.DueDate?.Value
-          ));
-        }
-      }
+          );
+        })
+        .ToList();
 
       return tasks.Count == 0 ? (Result<(List<DailyPlanItem> Tasks, string Rationale)>)Result.Fail<(List<DailyPlanItem>, string)>("AI returned no valid task IDs") : (Result<(List<DailyPlanItem> Tasks, string Rationale)>)Result.Ok((tasks, rationale));
     }
