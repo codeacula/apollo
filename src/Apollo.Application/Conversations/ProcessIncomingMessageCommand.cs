@@ -11,7 +11,6 @@ using Apollo.Core.Conversations;
 using Apollo.Core.Logging;
 using Apollo.Core.People;
 using Apollo.Core.ToDos;
-using Apollo.Domain.Common.Enums;
 using Apollo.Domain.Common.ValueObjects;
 using Apollo.Domain.Conversations.Models;
 using Apollo.Domain.People.Models;
@@ -24,9 +23,10 @@ namespace Apollo.Application.Conversations;
 /// <summary>
 /// Tells the system to process an incoming message from a supported platform.
 /// </summary>
-/// <param name="Message">The message to process.</param>
+/// <param name="PersonId">The ID of the person sending the message.</param>
+/// <param name="Content">The message content.</param>
 /// <seealso cref="ProcessIncomingMessageCommandHandler"/>
-public sealed record ProcessIncomingMessageCommand(ProcessMessageRequest Message) : IRequest<Result<Reply>>;
+public sealed record ProcessIncomingMessageCommand(PersonId PersonId, Content Content) : IRequest<Result<Reply>>;
 
 public sealed class ProcessIncomingMessageCommandHandler(
   IApolloAIAgent apolloAIAgent,
@@ -34,7 +34,6 @@ public sealed class ProcessIncomingMessageCommandHandler(
   IFuzzyTimeParser fuzzyTimeParser,
   ILogger<ProcessIncomingMessageCommandHandler> logger,
   IMediator mediator,
-  IPersonService personService,
   IPersonStore personStore,
   IToDoStore toDoStore,
   PersonConfig personConfig,
@@ -45,34 +44,15 @@ public sealed class ProcessIncomingMessageCommandHandler(
   {
     try
     {
-      var validationResult = ValidateRequest(request);
-      if (validationResult.IsFailed)
-      {
-        return validationResult;
-      }
-
-      var platformId = new PlatformId(
-        request.Message.Username,
-        request.Message.PlatformUserId,
-        request.Message.Platform
-      );
-
-      var personResult = await personService.GetOrCreateAsync(platformId, cancellationToken);
+      var personResult = await personStore.GetAsync(request.PersonId, cancellationToken);
       if (personResult.IsFailed)
       {
-        return Result.Fail<Reply>($"Failed to get or create user {platformId.Username}: {personResult.GetErrorMessages()}");
+        return Result.Fail<Reply>($"Failed to load person {request.PersonId.Value}");
       }
 
       var person = personResult.Value;
 
-      if (!person.HasAccess.Value)
-      {
-        return Result.Fail<Reply>($"User {person.Username} does not have access.");
-      }
-
-      await CaptureNotificationChannelAsync(request, person, cancellationToken);
-
-      var conversationResult = await GetOrCreateConversationWithMessageAsync(person, request.Message.Content, cancellationToken);
+      var conversationResult = await GetOrCreateConversationWithMessageAsync(person, request.Content.Value, cancellationToken);
       if (conversationResult.IsFailed)
       {
         return conversationResult.ToResult<Reply>();
@@ -86,48 +66,8 @@ public sealed class ProcessIncomingMessageCommandHandler(
     }
     catch (Exception ex)
     {
-      DataAccessLogs.UnhandledMessageProcessingError(logger, ex, request.Message.Username ?? "unknown");
+      DataAccessLogs.UnhandledMessageProcessingError(logger, ex, request.PersonId.Value.ToString());
       return Result.Fail<Reply>(ex.Message);
-    }
-  }
-
-  [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0046:Convert to conditional expression", Justification = "Looks better this way.")]
-  private static Result<Reply> ValidateRequest(ProcessIncomingMessageCommand request)
-  {
-    if (string.IsNullOrWhiteSpace(request.Message.Username))
-    {
-      return Result.Fail<Reply>("No username was provided.");
-    }
-
-    if (string.IsNullOrWhiteSpace(request.Message.PlatformUserId))
-    {
-      return Result.Fail<Reply>("No platform id was provided.");
-    }
-
-    return string.IsNullOrWhiteSpace(request.Message.Content)
-      ? Result.Fail<Reply>("Message content is empty.")
-      : (Result<Reply>)Result.Ok();
-  }
-
-  private async Task CaptureNotificationChannelAsync(ProcessIncomingMessageCommand request, Person person, CancellationToken cancellationToken)
-  {
-    var channelType = request.Message.Platform switch
-    {
-      Platform.Discord => NotificationChannelType.Discord,
-      _ => (NotificationChannelType?)null
-    };
-
-    if (!channelType.HasValue)
-    {
-      return;
-    }
-
-    var channel = new NotificationChannel(channelType.Value, request.Message.PlatformUserId, isEnabled: true);
-    var channelResult = await personStore.EnsureNotificationChannelAsync(person, channel, cancellationToken);
-
-    if (channelResult.IsFailed)
-    {
-      DataAccessLogs.FailedToAddNotificationChannel(logger, person.Username.Value, channelResult.GetErrorMessages());
     }
   }
 
