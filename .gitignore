@@ -59,4 +59,17 @@ apollo.pem
 # Frontend build output
 src/Apollo.API/wwwroot/
 
+# Task runner state
 .sisyphus
+
+# Legacy editor/AI tool configs (user-specific)
+.vscode/
+.idea/
+.claude/
+.cursor/
+
+# OpenCode runtime data (not project config)
+.opencode/memory/
+.opencode/node_modules/
+.opencode/bun.lock
+.opencode/package.json

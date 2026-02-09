@@ -1,0 +1,38 @@
+{
+  "tab_size": 2,
+  "format_on_save": "on",
+  "ensure_final_newline_on_save": true,
+  "preferred_line_length": 120,
+  "languages": {
+    "CSharp": {
+      "tab_size": 2,
+      "formatter": "language_server",
+      "format_on_save": "on"
+    },
+    "TypeScript": {
+      "tab_size": 2,
+      "formatter": "language_server"
+    },
+    "Vue": {
+      "tab_size": 2
+    },
+    "JSON": {
+      "tab_size": 2
+    },
+    "YAML": {
+      "tab_size": 2
+    },
+    "Markdown": {
+      "tab_size": 4,
+      "preferred_line_length": 120
+    }
+  },
+  "auto_install_extensions": {
+    "csharp": true,
+    "html": true,
+    "dockerfile": true,
+    "docker-compose": true,
+    "toml": true,
+    "vue": true
+  }
+}
