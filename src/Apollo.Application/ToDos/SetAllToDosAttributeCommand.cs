@@ -24,108 +24,130 @@ public sealed class SetAllToDosAttributeCommandHandler(
   {
     try
     {
-      var todoIds = request.ToDoIds;
-
-      // If empty list, fetch all active todos for the person
-      if (todoIds.Count == 0)
+      var idsResult = await ResolveToDoIdsAsync(request.PersonId, request.ToDoIds, cancellationToken);
+      if (idsResult.IsFailed)
       {
-        var allTodosResult = await toDoStore.GetByPersonIdAsync(request.PersonId, includeCompleted: false, cancellationToken);
-        if (allTodosResult.IsFailed)
-        {
-          return Result.Fail<int>(allTodosResult.GetErrorMessages());
-        }
-
-        todoIds = [.. allTodosResult.Value.Select(t => t.Id)];
+        return idsResult.ToResult<int>();
       }
 
       var updatedCount = 0;
-      var errors = new List<string>();
+      var allErrors = new List<string>();
 
-      foreach (var todoId in todoIds)
+      foreach (var todoId in idsResult.Value)
       {
-        try
+        var ownershipResult = await VerifyOwnershipAsync(todoId, request.PersonId, cancellationToken);
+        if (ownershipResult.IsFailed)
         {
-          // Verify ownership
-          var todoResult = await toDoStore.GetAsync(todoId, cancellationToken);
-          if (todoResult.IsFailed)
-          {
-            errors.Add($"To-Do {todoId.Value}: Not found");
-            continue;
-          }
-
-          if (todoResult.Value.PersonId.Value != request.PersonId.Value)
-          {
-            errors.Add($"To-Do {todoId.Value}: Permission denied");
-            continue;
-          }
-
-          // Update each specified attribute
-          var todoUpdated = false;
-
-          if (request.Priority.HasValue)
-          {
-            var result = await toDoStore.UpdatePriorityAsync(todoId, request.Priority.Value, cancellationToken);
-            if (result.IsFailed)
-            {
-              errors.Add($"To-Do {todoId.Value} priority: {result.GetErrorMessages()}");
-            }
-            else
-            {
-              todoUpdated = true;
-            }
-          }
-
-          if (request.Energy.HasValue)
-          {
-            var result = await toDoStore.UpdateEnergyAsync(todoId, request.Energy.Value, cancellationToken);
-            if (result.IsFailed)
-            {
-              errors.Add($"To-Do {todoId.Value} energy: {result.GetErrorMessages()}");
-            }
-            else
-            {
-              todoUpdated = true;
-            }
-          }
-
-          if (request.Interest.HasValue)
-          {
-            var result = await toDoStore.UpdateInterestAsync(todoId, request.Interest.Value, cancellationToken);
-            if (result.IsFailed)
-            {
-              errors.Add($"To-Do {todoId.Value} interest: {result.GetErrorMessages()}");
-            }
-            else
-            {
-              todoUpdated = true;
-            }
-          }
-
-          if (todoUpdated)
-          {
-            updatedCount++;
-          }
+          allErrors.Add($"To-Do {todoId.Value}: {ownershipResult.GetErrorMessages()}");
+          continue;
         }
-        catch (Exception ex)
+
+        var (updated, errors) = await UpdateAttributesAsync(todoId, request, cancellationToken);
+        if (updated)
         {
-          errors.Add($"To-Do {todoId.Value}: {ex.Message}");
+          updatedCount++;
         }
+
+        allErrors.AddRange(errors);
       }
 
-      if (errors.Count > 0)
-      {
-        // Log errors but still return success with count
-        foreach (var error in errors)
-        {
-          ToDoLogs.LogBulkUpdateError(logger, error);
-        }
-      }
-
+      LogErrors(allErrors);
       return Result.Ok(updatedCount);
     }
     catch (Exception ex)
     {
       return Result.Fail<int>(ex.Message);
+    }
+  }
+
+  private async Task<Result<IReadOnlyList<ToDoId>>> ResolveToDoIdsAsync(
+    PersonId personId,
+    IReadOnlyList<ToDoId> toDoIds,
+    CancellationToken cancellationToken)
+  {
+    if (toDoIds.Count == 0)
+    {
+      var allTodosResult = await toDoStore.GetByPersonIdAsync(personId, includeCompleted: false, cancellationToken);
+      return allTodosResult.IsFailed
+        ? Result.Fail<IReadOnlyList<ToDoId>>(allTodosResult.GetErrorMessages())
+        : Result.Ok<IReadOnlyList<ToDoId>>([.. allTodosResult.Value.Select(t => t.Id)]);
+    }
+
+    return Result.Ok(toDoIds);
+  }
+
+  private async Task<Result> VerifyOwnershipAsync(
+    ToDoId toDoId,
+    PersonId personId,
+    CancellationToken cancellationToken)
+  {
+    var todoResult = await toDoStore.GetAsync(toDoId, cancellationToken);
+    if (todoResult.IsFailed)
+    {
+      return Result.Fail("Not found");
+    }
+
+    return todoResult.Value.PersonId.Value != personId.Value ? Result.Fail("Permission denied") : Result.Ok();
+  }
+
+  private async Task<(bool Updated, List<string> Errors)> UpdateAttributesAsync(
+    ToDoId toDoId,
+    SetAllToDosAttributeCommand request,
+    CancellationToken cancellationToken)
+  {
+    var updated = false;
+    var errors = new List<string>();
+
+    if (request.Priority.HasValue)
+    {
+      var result = await toDoStore.UpdatePriorityAsync(toDoId, request.Priority.Value, cancellationToken);
+      if (result.IsFailed)
+      {
+        errors.Add($"To-Do {toDoId.Value} priority: {result.GetErrorMessages()}");
+      }
+      else
+      {
+        updated = true;
+      }
+    }
+
+    if (request.Energy.HasValue)
+    {
+      var result = await toDoStore.UpdateEnergyAsync(toDoId, request.Energy.Value, cancellationToken);
+      if (result.IsFailed)
+      {
+        errors.Add($"To-Do {toDoId.Value} energy: {result.GetErrorMessages()}");
+      }
+      else
+      {
+        updated = true;
+      }
+    }
+
+    if (request.Interest.HasValue)
+    {
+      var result = await toDoStore.UpdateInterestAsync(toDoId, request.Interest.Value, cancellationToken);
+      if (result.IsFailed)
+      {
+        errors.Add($"To-Do {toDoId.Value} interest: {result.GetErrorMessages()}");
+      }
+      else
+      {
+        updated = true;
+      }
+    }
+
+    return (updated, errors);
+  }
+
+  private void LogErrors(List<string> errors)
+  {
+    if (errors.Count > 0)
+    {
+      foreach (var error in errors)
+      {
+        ToDoLogs.LogBulkUpdateError(logger, error);
+      }
     }
   }
 }

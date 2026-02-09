@@ -27,91 +27,109 @@ public sealed class GetDailyPlanQueryHandler(
   {
     try
     {
-      // Step 1: Fetch active todos
-      var todosResult = await toDoStore.GetByPersonIdAsync(request.PersonId, includeCompleted: false, cancellationToken);
+      var todosResult = await GetActiveToDosAsync(request.PersonId, cancellationToken);
       if (todosResult.IsFailed)
       {
-        return Result.Fail<DailyPlan>(todosResult.Errors);
+        return todosResult.ToResult<DailyPlan>();
       }
 
-      var todos = todosResult.Value.ToList();
-
-      // Step 2: Handle edge case - no todos
-      if (todos.Count == 0)
+      if (todosResult.Value.Count == 0)
       {
-        return Result.Ok(new DailyPlan(
-          [],
-          "You have no active todos! 🎉",
-          0
-        ));
+        return Result.Ok(new DailyPlan([], "You have no active todos! 🎉", 0));
       }
 
-      // Step 3: Get user's daily task count preference
-      var personResult = await personStore.GetAsync(request.PersonId, cancellationToken);
-      var dailyTaskCount = personResult.IsSuccess && personResult.Value.DailyTaskCount.HasValue
-        ? personResult.Value.DailyTaskCount.Value.Value
-        : personConfig.DefaultDailyTaskCount;
-
-      // Step 4: Handle edge case - fewer todos than requested count
-      if (todos.Count <= dailyTaskCount)
+      var dailyTaskCount = await GetDailyTaskCountAsync(request.PersonId, cancellationToken);
+      if (todosResult.Value.Count <= dailyTaskCount)
       {
-        var allItems = todos.ConvertAll(t => new DailyPlanItem(
-          t.Id,
-          t.Description.Value,
-          t.Priority,
-          t.Energy,
-          t.Interest,
-          t.DueDate?.Value
-        ));
-
-        return Result.Ok(new DailyPlan(
-          allItems,
-          $"You have {todos.Count} active todo{(todos.Count == 1 ? "" : "s")} - here they all are!",
-          todos.Count
-        ));
+        return Result.Ok(CreateAllTodosPlan(todosResult.Value));
       }
 
-      // Step 5: Get user's timezone
-      var timeZoneId = personResult.IsSuccess && personResult.Value.TimeZoneId.HasValue
-        ? personResult.Value.TimeZoneId.Value.Value
-        : personConfig.DefaultTimeZoneId;
-
-      var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
-      var utcNow = timeProvider.GetUtcNow().UtcDateTime;
-      var localTime = TimeZoneInfo.ConvertTimeFromUtc(utcNow, timeZoneInfo);
-
-      // Step 6: Format todos for AI
-      var todosFormatted = FormatToDosForAI(todos);
-
-      // Step 7: Call AI agent
-      var aiResult = await aiAgent
-        .CreateDailyPlanRequest(
-          timeZoneId,
-          localTime.ToString("yyyy-MM-ddTHH:mm:sszzz", CultureInfo.InvariantCulture),
-          todosFormatted,
-          dailyTaskCount
-        )
-        .ExecuteAsync(cancellationToken);
-
-      if (!aiResult.Success)
-      {
-        return Result.Fail<DailyPlan>($"Failed to generate daily plan: {aiResult.ErrorMessage}");
-      }
-
-      // Step 8: Parse JSON response
-      var parseResult = ParseAIResponse(aiResult.Content, todos);
-      return parseResult.IsFailed
-        ? Result.Fail<DailyPlan>(parseResult.Errors)
-        : Result.Ok(new DailyPlan(
-        parseResult.Value.Tasks,
-        parseResult.Value.Rationale,
-        todos.Count
-      ));
+      var (timeZoneId, localTime) = await GetUserTimeContextAsync(request.PersonId, cancellationToken);
+      return await GenerateAIPlanAsync(todosResult.Value, timeZoneId, localTime, dailyTaskCount, cancellationToken);
     }
     catch (Exception ex)
     {
       return Result.Fail<DailyPlan>($"An error occurred while generating daily plan: {ex.Message}");
     }
+  }
+
+  private async Task<Result<List<ToDo>>> GetActiveToDosAsync(PersonId personId, CancellationToken cancellationToken)
+  {
+    var todosResult = await toDoStore.GetByPersonIdAsync(personId, includeCompleted: false, cancellationToken);
+    return todosResult.IsFailed ? Result.Fail<List<ToDo>>(todosResult.Errors) : Result.Ok(todosResult.Value.ToList());
+  }
+
+  private async Task<int> GetDailyTaskCountAsync(PersonId personId, CancellationToken cancellationToken)
+  {
+    var personResult = await personStore.GetAsync(personId, cancellationToken);
+    return personResult.IsSuccess && personResult.Value.DailyTaskCount.HasValue
+      ? personResult.Value.DailyTaskCount.Value.Value
+      : personConfig.DefaultDailyTaskCount;
+  }
+
+  private static DailyPlan CreateAllTodosPlan(List<ToDo> todos)
+  {
+    var allItems = todos.ConvertAll(t => new DailyPlanItem(
+      t.Id,
+      t.Description.Value,
+      t.Priority,
+      t.Energy,
+      t.Interest,
+      t.DueDate?.Value
+    ));
+
+    return new DailyPlan(
+      allItems,
+      $"You have {todos.Count} active todo{(todos.Count == 1 ? "" : "s")} - here they all are!",
+      todos.Count
+    );
+  }
+
+  private async Task<(string TimeZoneId, string LocalTime)> GetUserTimeContextAsync(
+    PersonId personId,
+    CancellationToken cancellationToken)
+  {
+    var personResult = await personStore.GetAsync(personId, cancellationToken);
+    var timeZoneId = personResult.IsSuccess && personResult.Value.TimeZoneId.HasValue
+      ? personResult.Value.TimeZoneId.Value.Value
+      : personConfig.DefaultTimeZoneId;
+
+    var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+    var utcNow = timeProvider.GetUtcNow().UtcDateTime;
+    var localTime = TimeZoneInfo.ConvertTimeFromUtc(utcNow, timeZoneInfo);
+
+    return (timeZoneId, localTime.ToString("yyyy-MM-ddTHH:mm:sszzz", CultureInfo.InvariantCulture));
+  }
+
+  private async Task<Result<DailyPlan>> GenerateAIPlanAsync(List<ToDo> todos, string timeZoneId, string localTime, int dailyTaskCount, CancellationToken cancellationToken)
+  {
+    // Format todos for AI
+    var todosFormatted = FormatToDosForAI(todos);
+
+    // Call AI agent
+    var aiResult = await aiAgent
+      .CreateDailyPlanRequest(
+        timeZoneId,
+        localTime,
+        todosFormatted,
+        dailyTaskCount
+      )
+      .ExecuteAsync(cancellationToken);
+
+    if (!aiResult.Success)
+    {
+      return Result.Fail<DailyPlan>($"Failed to generate daily plan: {aiResult.ErrorMessage}");
+    }
+
+    // Parse JSON response
+    var parseResult = ParseAIResponse(aiResult.Content, todos);
+    return parseResult.IsFailed
+      ? Result.Fail<DailyPlan>(parseResult.Errors)
+      : Result.Ok(new DailyPlan(
+        parseResult.Value.Tasks,
+        parseResult.Value.Rationale,
+        todos.Count
+      ));
   }
 
   private static string FormatToDosForAI(List<ToDo> todos)

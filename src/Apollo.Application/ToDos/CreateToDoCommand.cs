@@ -28,65 +28,92 @@ public sealed class CreateToDoCommandHandler(
     try
     {
       var toDoId = new ToDoId(Guid.NewGuid());
+      var (priority, energy, interest) = ResolveDefaults(request.Priority, request.Energy, request.Interest);
 
-      // Default to Green (Level.Green = 1) if not specified
-      var priority = request.Priority ?? new Priority(Level.Green);
-      var energy = request.Energy ?? new Energy(Level.Green);
-      var interest = request.Interest ?? new Interest(Level.Green);
-
-      var result = await toDoStore.CreateAsync(toDoId, request.PersonId, request.Description, priority, energy, interest, cancellationToken);
-
-      if (result.IsFailed)
+      var createResult = await CreateToDoEntityAsync(toDoId, request.PersonId, request.Description, priority, energy, interest, cancellationToken);
+      if (createResult.IsFailed)
       {
-        return result;
+        return createResult;
       }
 
       if (request.ReminderDate.HasValue)
       {
-        var jobResult = await toDoReminderScheduler.GetOrCreateJobAsync(request.ReminderDate.Value, cancellationToken);
-        if (jobResult.IsFailed)
+        var reminderResult = await ScheduleReminderForToDoAsync(toDoId, request.PersonId, request.Description, request.ReminderDate.Value, cancellationToken);
+        if (reminderResult.IsFailed)
         {
-          return Result.Fail<ToDo>($"To-Do created but failed to schedule reminder job: {jobResult.GetErrorMessages()}");
-        }
-
-        var reminderId = new ReminderId(Guid.NewGuid());
-        var reminderDetails = new Details(request.Description.Value);
-        var reminderTime = new ReminderTime(request.ReminderDate.Value);
-
-        var createReminderResult = await reminderStore.CreateAsync(
-          reminderId,
-          request.PersonId,
-          reminderDetails,
-          reminderTime,
-          jobResult.Value,
-          cancellationToken);
-
-        if (createReminderResult.IsFailed)
-        {
-          return Result.Ok(result.Value)
-            .WithError($"To-Do created but failed to create reminder: {createReminderResult.GetErrorMessages()}");
-        }
-
-        var linkResult = await reminderStore.LinkToToDoAsync(reminderId, toDoId, cancellationToken);
-        if (linkResult.IsFailed)
-        {
-          return Result.Ok(result.Value)
-            .WithError($"To-Do and reminder created but failed to link them: {linkResult.GetErrorMessages()}");
-        }
-
-        // Ensure the job exists *after* the reminder is persisted to avoid a delete/create race.
-        var ensureJobResult = await toDoReminderScheduler.GetOrCreateJobAsync(request.ReminderDate.Value, cancellationToken);
-        if (ensureJobResult.IsFailed)
-        {
-          return Result.Fail<ToDo>($"To-Do created but failed to ensure reminder job exists: {ensureJobResult.GetErrorMessages()}");
+          return Result.Ok(createResult.Value).WithError(reminderResult.GetErrorMessages());
         }
       }
 
-      return result.Value;
+      return createResult.Value;
     }
     catch (Exception ex)
     {
       return Result.Fail(ex.Message);
     }
+  }
+
+  private static (Priority, Energy, Interest) ResolveDefaults(Priority? priority, Energy? energy, Interest? interest)
+  {
+    return (
+      priority ?? new Priority(Level.Green),
+      energy ?? new Energy(Level.Green),
+      interest ?? new Interest(Level.Green)
+    );
+  }
+
+  private async Task<Result<ToDo>> CreateToDoEntityAsync(
+    ToDoId id,
+    PersonId personId,
+    Description description,
+    Priority priority,
+    Energy energy,
+    Interest interest,
+    CancellationToken cancellationToken)
+  {
+    return await toDoStore.CreateAsync(id, personId, description, priority, energy, interest, cancellationToken);
+  }
+
+  private async Task<Result> ScheduleReminderForToDoAsync(
+    ToDoId toDoId,
+    PersonId personId,
+    Description description,
+    DateTime reminderDate,
+    CancellationToken cancellationToken)
+  {
+    var jobResult = await toDoReminderScheduler.GetOrCreateJobAsync(reminderDate, cancellationToken);
+    if (jobResult.IsFailed)
+    {
+      return Result.Fail($"To-Do created but failed to schedule reminder job: {jobResult.GetErrorMessages()}");
+    }
+
+    var reminderId = new ReminderId(Guid.NewGuid());
+    var reminderDetails = new Details(description.Value);
+    var reminderTime = new ReminderTime(reminderDate);
+
+    var createReminderResult = await reminderStore.CreateAsync(
+      reminderId,
+      personId,
+      reminderDetails,
+      reminderTime,
+      jobResult.Value,
+      cancellationToken);
+
+    if (createReminderResult.IsFailed)
+    {
+      return Result.Fail($"To-Do created but failed to create reminder: {createReminderResult.GetErrorMessages()}");
+    }
+
+    var linkResult = await reminderStore.LinkToToDoAsync(reminderId, toDoId, cancellationToken);
+    if (linkResult.IsFailed)
+    {
+      return Result.Fail($"To-Do and reminder created but failed to link them: {linkResult.GetErrorMessages()}");
+    }
+
+    // Ensure the job exists *after* the reminder is persisted to avoid a delete/create race.
+    var ensureJobResult = await toDoReminderScheduler.GetOrCreateJobAsync(reminderDate, cancellationToken);
+    return ensureJobResult.IsFailed
+      ? Result.Fail($"To-Do created but failed to ensure reminder job exists: {ensureJobResult.GetErrorMessages()}")
+      : Result.Ok();
   }
 }

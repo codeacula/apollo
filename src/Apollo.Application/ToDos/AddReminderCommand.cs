@@ -21,49 +21,78 @@ public sealed class AddReminderCommandHandler(
   {
     try
     {
-      var toDoResult = await toDoStore.GetAsync(request.ToDoId, cancellationToken);
+      var toDoResult = await GetToDoAsync(request.ToDoId, cancellationToken);
       if (toDoResult.IsFailed)
       {
-        return Result.Fail<Reminder>(toDoResult.GetErrorMessages());
+        return toDoResult.ToResult<Reminder>();
       }
 
-      var jobResult = await toDoReminderScheduler.GetOrCreateJobAsync(request.ReminderDate, cancellationToken);
+      var jobResult = await ScheduleJobAsync(request.ReminderDate, cancellationToken);
       if (jobResult.IsFailed)
       {
-        return Result.Fail<Reminder>($"Failed to schedule reminder job: {jobResult.GetErrorMessages()}");
+        return jobResult.ToResult<Reminder>();
       }
 
-      var reminderId = new ReminderId(Guid.NewGuid());
-      var reminderDetails = new Details(toDoResult.Value.Description.Value);
-      var reminderTime = new ReminderTime(request.ReminderDate);
-
-      var createReminderResult = await reminderStore.CreateAsync(
-        reminderId,
-        toDoResult.Value.PersonId,
-        reminderDetails,
-        reminderTime,
-        jobResult.Value,
-        cancellationToken);
-
-      if (createReminderResult.IsFailed)
+      var createResult = await CreateAndLinkReminderAsync(toDoResult.Value, request.ReminderDate, jobResult.Value, cancellationToken);
+      if (createResult.IsFailed)
       {
-        return Result.Fail<Reminder>($"Failed to create reminder: {createReminderResult.GetErrorMessages()}");
+        return createResult;
       }
 
-      var linkResult = await reminderStore.LinkToToDoAsync(reminderId, request.ToDoId, cancellationToken);
-      if (linkResult.IsFailed)
-      {
-        return Result.Fail<Reminder>($"Reminder created but failed to link to ToDo: {linkResult.GetErrorMessages()}");
-      }
-
-      var ensureJobResult = await toDoReminderScheduler.GetOrCreateJobAsync(request.ReminderDate, cancellationToken);
-      return ensureJobResult.IsFailed
-        ? Result.Fail<Reminder>($"Reminder created but failed to ensure job exists: {ensureJobResult.GetErrorMessages()}")
-        : (Result<Reminder>)createReminderResult.Value;
+      var ensureResult = await EnsureJobExistsAsync(request.ReminderDate, cancellationToken);
+      return ensureResult.IsFailed
+        ? Result.Fail<Reminder>($"Reminder created but failed to ensure job exists: {ensureResult.GetErrorMessages()}")
+        : createResult;
     }
     catch (Exception ex)
     {
       return Result.Fail(ex.Message);
     }
+  }
+
+  private async Task<Result<ToDo>> GetToDoAsync(ToDoId toDoId, CancellationToken cancellationToken)
+  {
+    return await toDoStore.GetAsync(toDoId, cancellationToken);
+  }
+
+  private async Task<Result<QuartzJobId>> ScheduleJobAsync(DateTime reminderDate, CancellationToken cancellationToken)
+  {
+    var jobResult = await toDoReminderScheduler.GetOrCreateJobAsync(reminderDate, cancellationToken);
+    return jobResult.IsFailed
+      ? Result.Fail<QuartzJobId>($"Failed to schedule reminder job: {jobResult.GetErrorMessages()}")
+      : jobResult;
+  }
+
+  private async Task<Result<Reminder>> CreateAndLinkReminderAsync(ToDo todo, DateTime reminderDate, QuartzJobId jobId, CancellationToken cancellationToken)
+  {
+    var reminderId = new ReminderId(Guid.NewGuid());
+    var reminderDetails = new Details(todo.Description.Value);
+    var reminderTime = new ReminderTime(reminderDate);
+
+    var createReminderResult = await reminderStore.CreateAsync(
+      reminderId,
+      todo.PersonId,
+      reminderDetails,
+      reminderTime,
+      jobId,
+      cancellationToken);
+
+    if (createReminderResult.IsFailed)
+    {
+      return Result.Fail<Reminder>($"Failed to create reminder: {createReminderResult.GetErrorMessages()}");
+    }
+
+    var linkResult = await reminderStore.LinkToToDoAsync(reminderId, todo.Id, cancellationToken);
+    return linkResult.IsFailed
+      ? Result.Fail<Reminder>($"Reminder created but failed to link to ToDo: {linkResult.GetErrorMessages()}")
+      : createReminderResult;
+  }
+
+  private async Task<Result> EnsureJobExistsAsync(DateTime reminderDate, CancellationToken cancellationToken)
+  {
+    var ensureJobResult = await toDoReminderScheduler.GetOrCreateJobAsync(reminderDate, cancellationToken);
+    return ensureJobResult.IsFailed
+      ? Result.Fail(ensureJobResult.GetErrorMessages())
+      : Result.Ok();
   }
 }

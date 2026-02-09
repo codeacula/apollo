@@ -1,6 +1,7 @@
 using Apollo.Core;
 using Apollo.Core.ToDos;
 using Apollo.Domain.People.ValueObjects;
+using Apollo.Domain.ToDos.Models;
 using Apollo.Domain.ToDos.ValueObjects;
 
 using FluentResults;
@@ -20,58 +21,75 @@ public sealed class CancelReminderCommandHandler(
   {
     try
     {
-      // Get the reminder to verify ownership and get its QuartzJobId
-      var reminderResult = await reminderStore.GetAsync(request.ReminderId, cancellationToken);
-
+      var reminderResult = await GetReminderAsync(request.ReminderId, cancellationToken);
       if (reminderResult.IsFailed)
       {
-        return Result.Fail(reminderResult.GetErrorMessages());
+        return reminderResult.ToResult();
       }
 
-      var reminder = reminderResult.Value;
-
-      // Verify the reminder belongs to the requesting person
-      if (reminder.PersonId != request.PersonId)
+      var ownershipResult = VerifyOwnership(reminderResult.Value, request.PersonId);
+      if (ownershipResult.IsFailed)
       {
-        return Result.Fail("You do not have permission to cancel this reminder.");
+        return ownershipResult;
       }
 
-      // Check if this reminder is linked to any ToDos
-      var linkedToDosResult = await reminderStore.GetLinkedToDoIdsAsync(request.ReminderId, cancellationToken);
-      var linkedToDos = linkedToDosResult.IsSuccess ? linkedToDosResult.Value.ToList() : [];
-
-      // If the reminder is linked to ToDos, only unlink it (don't delete)
-      // This is for reminders that were created via ToDos.create_todo
-      if (linkedToDos.Count > 0)
+      var linkedResult = await EnsureNotLinkedToToDosAsync(request.ReminderId, cancellationToken);
+      if (linkedResult.IsFailed)
       {
-        return Result.Fail("This reminder is linked to a todo. Please remove the reminder from the todo instead.");
+        return linkedResult;
       }
 
-      // Delete the reminder (standalone reminder created via Reminders.create_reminder)
-      var deleteResult = await reminderStore.DeleteAsync(request.ReminderId, cancellationToken);
-      if (deleteResult.IsFailed)
-      {
-        return Result.Fail($"Failed to delete reminder: {deleteResult.GetErrorMessages()}");
-      }
-
-      // Clean up the Quartz job if no other reminders share it
-      if (reminder.QuartzJobId is not null)
-      {
-        var remainingRemindersResult = await reminderStore.GetByQuartzJobIdAsync(reminder.QuartzJobId.Value, cancellationToken);
-        var remainingReminders = remainingRemindersResult.IsSuccess ? remainingRemindersResult.Value.ToList() : [];
-
-        // Only delete the job if no other reminders are using it
-        if (remainingReminders.Count == 0)
-        {
-          _ = await toDoReminderScheduler.DeleteJobAsync(reminder.QuartzJobId.Value, cancellationToken);
-        }
-      }
-
-      return Result.Ok();
+      return await DeleteReminderAndCleanupJobAsync(reminderResult.Value, cancellationToken);
     }
     catch (Exception ex)
     {
       return Result.Fail(ex.Message);
     }
+  }
+
+  private async Task<Result<Reminder>> GetReminderAsync(ReminderId reminderId, CancellationToken cancellationToken)
+  {
+    return await reminderStore.GetAsync(reminderId, cancellationToken);
+  }
+
+  private static Result VerifyOwnership(Reminder reminder, PersonId personId)
+  {
+    return reminder.PersonId != personId
+      ? Result.Fail("You do not have permission to cancel this reminder.")
+      : Result.Ok();
+  }
+
+  private async Task<Result> EnsureNotLinkedToToDosAsync(ReminderId reminderId, CancellationToken cancellationToken)
+  {
+    var linkedToDosResult = await reminderStore.GetLinkedToDoIdsAsync(reminderId, cancellationToken);
+    var linkedToDos = linkedToDosResult.IsSuccess ? linkedToDosResult.Value.ToList() : [];
+
+    return linkedToDos.Count > 0
+      ? Result.Fail("This reminder is linked to a todo. Please remove the reminder from the todo instead.")
+      : Result.Ok();
+  }
+
+  private async Task<Result> DeleteReminderAndCleanupJobAsync(Reminder reminder, CancellationToken cancellationToken)
+  {
+    var deleteResult = await reminderStore.DeleteAsync(reminder.Id, cancellationToken);
+    if (deleteResult.IsFailed)
+    {
+      return Result.Fail($"Failed to delete reminder: {deleteResult.GetErrorMessages()}");
+    }
+
+    // Clean up the Quartz job if no other reminders share it
+    if (reminder.QuartzJobId is not null)
+    {
+      var remainingRemindersResult = await reminderStore.GetByQuartzJobIdAsync(reminder.QuartzJobId.Value, cancellationToken);
+      var remainingReminders = remainingRemindersResult.IsSuccess ? remainingRemindersResult.Value.ToList() : [];
+
+      // Only delete the job if no other reminders are using it
+      if (remainingReminders.Count == 0)
+      {
+        _ = await toDoReminderScheduler.DeleteJobAsync(reminder.QuartzJobId.Value, cancellationToken);
+      }
+    }
+
+    return Result.Ok();
   }
 }
