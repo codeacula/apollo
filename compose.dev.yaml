@@ -1,0 +1,83 @@
+# Apollo AI Development Environment
+# Full stack compose file with dev container, Postgres, and Redis
+#
+# Usage:
+#   ./start-dev.sh [branch-name]    - Recommended launcher script
+#   docker compose -f compose.dev.yaml up -d pgsql redis  - Start dependencies only
+#   docker compose -f compose.dev.yaml down               - Stop all services
+
+services:
+  dev:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.dev
+    image: apollo-dev:latest
+    container_name: apollo-dev
+    volumes:
+      # Mount git config for identity
+      - ~/.gitconfig:/home/developer/.gitconfig:ro
+      # Mount SSH keys for git operations (read-only)
+      - ~/.ssh:/home/developer/.ssh:ro
+      # Persist OpenCode data (auth, history, etc.)
+      - opencode-data:/home/developer/.local/share/opencode
+    environment:
+      - BRANCH
+      # Database connection for .NET apps
+      - ConnectionStrings__Apollo=Host=pgsql;Database=apollo_db;Username=apollo;Password=apollo
+      - ConnectionStrings__Redis=redis:6379,password=apollo_redis
+      - ConnectionStrings__Quartz=Host=pgsql;Database=apollo_db;Username=apollo;Password=apollo
+      # gRPC config
+      - GrpcHostConfig__Host=localhost
+      - GrpcHostConfig__Port=5270
+    stdin_open: true
+    tty: true
+    depends_on:
+      pgsql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - apollo
+
+  pgsql:
+    image: postgres:16
+    container_name: apollo-pgsql
+    environment:
+      POSTGRES_USER: apollo
+      POSTGRES_PASSWORD: apollo
+      POSTGRES_DB: apollo_db
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U apollo -d apollo_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - apollo
+
+  redis:
+    image: redis:7
+    container_name: apollo-redis
+    command: redis-server --requirepass apollo_redis
+    volumes:
+      - redis-data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - apollo
+
+volumes:
+  postgres-data:
+    name: apollo-postgres-data
+  redis-data:
+    name: apollo-redis-data
+  opencode-data:
+    name: apollo-opencode-data
+
+networks:
+  apollo:
+    name: apollo-network
+    driver: bridge

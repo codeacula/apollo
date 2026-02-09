@@ -1,7 +1,6 @@
 using Apollo.Core.API;
-using Apollo.Core.Reminders.Requests;
+using Apollo.Core.Conversations;
 using Apollo.Core.ToDos.Responses;
-using Apollo.Domain.Common.Enums;
 using Apollo.Domain.People.ValueObjects;
 using Apollo.Domain.ToDos.Models;
 using Apollo.GRPC.Interceptors;
@@ -16,13 +15,11 @@ using ProtoBuf.Grpc.Client;
 
 using CoreCreateReminderRequest = Apollo.Core.Reminders.Requests.CreateReminderRequest;
 using CoreCreateToDoRequest = Apollo.Core.ToDos.Requests.CreateToDoRequest;
-using CoreNewMessageRequest = Apollo.Core.Conversations.NewMessageRequest;
 using GrpcCreateReminderRequest = Apollo.GRPC.Contracts.CreateReminderRequest;
 using GrpcCreateToDoRequest = Apollo.GRPC.Contracts.CreateToDoRequest;
 using GrpcGetDailyPlanRequest = Apollo.GRPC.Contracts.GetDailyPlanRequest;
 using GrpcGetPersonToDosRequest = Apollo.GRPC.Contracts.GetPersonToDosRequest;
 using GrpcManageAccessRequest = Apollo.GRPC.Contracts.ManageAccessRequest;
-using GrpcNewMessageRequest = Apollo.GRPC.Contracts.NewMessageRequest;
 using GrpcReminderDTO = Apollo.GRPC.Contracts.ReminderDTO;
 using GrpcToDoDTO = Apollo.GRPC.Contracts.ToDoDTO;
 
@@ -86,13 +83,13 @@ public class ApolloGrpcClient : IApolloGrpcClient, IApolloServiceClient, IDispos
       : Result.Ok(MapReminderToDomain(grpcResponse.Value));
   }
 
-  public async Task<Result<string>> SendMessageAsync(CoreNewMessageRequest request, CancellationToken cancellationToken = default)
+  public async Task<Result<string>> SendMessageAsync(ProcessMessageRequest request, CancellationToken cancellationToken = default)
   {
-    var grpcRequest = new GrpcNewMessageRequest
+    var grpcRequest = new Contracts.NewMessageRequest
     {
-      Platform = request.PlatformId.Platform,
-      PlatformUserId = request.PlatformId.PlatformUserId,
-      Username = request.PlatformId.Username,
+      Platform = request.Platform,
+      PlatformUserId = request.PlatformUserId,
+      Username = request.Username,
       Content = request.Content
     };
 

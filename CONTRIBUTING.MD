@@ -16,16 +16,16 @@ You can either join our community over at [Codeacula's Workshop](https://discord
 
 ## Environment Setup
 
-Follow the directions in [Environment](docs/Environment.md) to set up your local development environment.
+Follow the directions in the [Local Development](ARCHITECTURE.md#local-development) section of `ARCHITECTURE.md` to set up your local development environment. For AI-assisted development using an isolated container, see the [AI-Assisted Development](ARCHITECTURE.md#ai-assisted-development-container) section.
 
 ## Architecture
 
-To gain an understanding of the project's architecture, please refer to [Architecture](docs/Architecture.md).
+To gain an understanding of the project's architecture, please refer to [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Coding Standard & Philosophy
 
-When contributing code, please adhere to the coding standards and philosophies outlined in [Coding Standards](docs/Coding Standards.md).
+When contributing code, please adhere to the coding standards and philosophies outlined in the [Coding Practices](ARCHITECTURE.md#coding-practices) section of `ARCHITECTURE.md`.
 
-## Pull requests
+## Pull Requests
 
-When you're ready to submit a Pull Request, please follow the instructions outlined in [Pull Requests](docs/Pull%20Requests.md).
+When you're ready to submit a Pull Request, please follow the [Commit & Pull Request Guidelines](AGENTS.md#commit--pull-request-guidelines) in `AGENTS.md`.

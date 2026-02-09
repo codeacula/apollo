@@ -1,17 +1,16 @@
 using Apollo.Application.Conversations;
-using Apollo.Application.People.Queries;
-using Apollo.Application.ToDos.Commands;
-using Apollo.Application.ToDos.Queries;
+using Apollo.Application.People;
+using Apollo.Application.ToDos;
+using Apollo.Core.Conversations;
 using Apollo.Core.People;
 using Apollo.Core.ToDos;
 using Apollo.Domain.Common.Enums;
-using Apollo.Domain.People.ValueObjects;
+using Apollo.Domain.ToDos.Models;
 using Apollo.Domain.ToDos.ValueObjects;
+using Apollo.GRPC.Context;
 using Apollo.GRPC.Contracts;
 
 using MediatR;
-
-using CoreNewMessageRequest = Apollo.Core.Conversations.NewMessageRequest;
 
 namespace Apollo.GRPC.Service;
 
@@ -21,35 +20,32 @@ public sealed class ApolloGrpcService(
   IPersonStore personStore,
   IFuzzyTimeParser fuzzyTimeParser,
   TimeProvider timeProvider,
-  SuperAdminConfig superAdminConfig
+  SuperAdminConfig superAdminConfig,
+  IUserContext userContext
 ) : IApolloGrpcService
 {
   public async Task<GrpcResult<string>> SendApolloMessageAsync(NewMessageRequest message)
   {
-    var coreRequest = new CoreNewMessageRequest
+    var coreRequest = new ProcessMessageRequest
     {
-      PlatformId = message.ToPlatformId(),
+      Username = message.Username,
+      PlatformUserId = message.PlatformUserId,
+      Platform = message.Platform,
       Content = message.Content
     };
 
     var requestResult = await mediator.Send(new ProcessIncomingMessageCommand(coreRequest));
-    return requestResult.IsSuccess ?
-      requestResult.Value.Content.Value :
-      requestResult.Errors.Select(e => new GrpcError(e.Message)).ToArray();
+    return requestResult.IsFailed
+      ? (GrpcResult<string>)requestResult.Errors.Select(e => new GrpcError(e.Message)).ToArray()
+      : (GrpcResult<string>)requestResult.Value.Content.Value;
   }
 
   public async Task<GrpcResult<ToDoDTO>> CreateToDoAsync(CreateToDoRequest request)
   {
-    var platformId = request.ToPlatformId();
-    var personResult = await mediator.Send(new GetOrCreatePersonByPlatformIdQuery(platformId));
-
-    if (personResult.IsFailed)
-    {
-      return personResult.Errors.Select(e => new GrpcError(e.Message)).ToArray();
-    }
+    var person = userContext.Person!;
 
     var command = new CreateToDoCommand(
-      personResult.Value.Id,
+      person.Id,
       new Description(request.Description),
       request.ReminderDate
     );
@@ -78,13 +74,7 @@ public sealed class ApolloGrpcService(
 
   public async Task<GrpcResult<ReminderDTO>> CreateReminderAsync(CreateReminderRequest request)
   {
-    var platformId = request.ToPlatformId();
-    var personResult = await mediator.Send(new GetOrCreatePersonByPlatformIdQuery(platformId));
-
-    if (personResult.IsFailed)
-    {
-      return personResult.Errors.Select(e => new GrpcError(e.Message)).ToArray();
-    }
+    var person = userContext.Person!;
 
     // Parse the reminder time using fuzzy time parser
     var parsedTimeResult = ParseReminderTime(request.ReminderTime);
@@ -94,7 +84,7 @@ public sealed class ApolloGrpcService(
     }
 
     var command = new CreateReminderCommand(
-      personResult.Value.Id,
+      person.Id,
       request.Message,
       parsedTimeResult.Value
     );
@@ -172,16 +162,9 @@ public sealed class ApolloGrpcService(
 
   public async Task<GrpcResult<ToDoDTO[]>> GetPersonToDosAsync(GetPersonToDosRequest request)
   {
-    // First, resolve PlatformUserId to PersonId
-    var platformId = new PlatformId(request.Username, request.PlatformUserId, request.Platform);
-    var personResult = await mediator.Send(new GetOrCreatePersonByPlatformIdQuery(platformId));
+    var person = userContext.Person!;
 
-    if (personResult.IsFailed)
-    {
-      return personResult.Errors.Select(e => new GrpcError(e.Message)).ToArray();
-    }
-
-    var query = new GetToDosByPersonIdQuery(personResult.Value.Id, request.IncludeCompleted);
+    var query = new GetToDosByPersonIdQuery(person.Id, request.IncludeCompleted);
     var result = await mediator.Send(query);
 
     if (result.IsFailed)
@@ -192,49 +175,47 @@ public sealed class ApolloGrpcService(
     var toDos = result.Value;
     var dtoTasks = toDos.Select(async t =>
     {
-      DateTime? reminderDate = null;
       var remindersResult = await reminderStore.GetByToDoIdAsync(t.Id);
-
-      if (remindersResult.IsSuccess)
+      if (remindersResult.IsFailed)
       {
-        var reminderTimes = remindersResult.Value
-          .Select(r => r.ReminderTime.Value)
-          .Order()
-          .ToList();
-
-        var upcoming = reminderTimes.FirstOrDefault(d => d >= DateTime.UtcNow);
-        reminderDate = upcoming != default ? upcoming : reminderTimes.FirstOrDefault();
+        return CreateDto(t, null);
       }
 
-      return new ToDoDTO
-      {
-        Id = t.Id.Value,
-        PersonId = t.PersonId.Value,
-        Description = t.Description.Value,
-        ReminderDate = reminderDate,
-        CreatedOn = t.CreatedOn.Value,
-        UpdatedOn = t.UpdatedOn.Value,
-        Priority = t.Priority.Value,
-        Energy = t.Energy.Value,
-        Interest = t.Interest.Value
-      };
+      var reminderTimes = remindersResult.Value
+        .Select(r => r.ReminderTime.Value)
+        .Order()
+        .ToList();
+
+      var upcoming = reminderTimes.FirstOrDefault(d => d >= DateTime.UtcNow);
+      var reminderDate = upcoming != default ? upcoming : reminderTimes.FirstOrDefault();
+
+      return CreateDto(t, reminderDate);
     });
 
     return await Task.WhenAll(dtoTasks);
   }
 
+  private static ToDoDTO CreateDto(ToDo t, DateTime? reminderDate)
+  {
+    return new ToDoDTO
+    {
+      Id = t.Id.Value,
+      PersonId = t.PersonId.Value,
+      Description = t.Description.Value,
+      ReminderDate = reminderDate,
+      CreatedOn = t.CreatedOn.Value,
+      UpdatedOn = t.UpdatedOn.Value,
+      Priority = t.Priority.Value,
+      Energy = t.Energy.Value,
+      Interest = t.Interest.Value
+    };
+  }
+
   public async Task<GrpcResult<DailyPlanDTO>> GetDailyPlanAsync(GetDailyPlanRequest request)
   {
-    // Resolve PlatformUserId to PersonId
-    var platformId = new PlatformId(request.Username, request.PlatformUserId, request.Platform);
-    var personResult = await mediator.Send(new GetOrCreatePersonByPlatformIdQuery(platformId));
+    var person = userContext.Person!;
 
-    if (personResult.IsFailed)
-    {
-      return personResult.Errors.Select(e => new GrpcError(e.Message)).ToArray();
-    }
-
-    var query = new GetDailyPlanQuery(personResult.Value.Id);
+    var query = new GetDailyPlanQuery(person.Id);
     var result = await mediator.Send(query);
 
     if (result.IsFailed)
@@ -269,7 +250,6 @@ public sealed class ApolloGrpcService(
     );
 
     var result = await mediator.Send(command);
-
     return result.IsFailed ? (GrpcResult<string>)result.Errors.Select(e => new GrpcError(e.Message)).ToArray() : (GrpcResult<string>)"ToDo updated successfully";
   }
 
@@ -291,12 +271,6 @@ public sealed class ApolloGrpcService(
 
   public async Task<GrpcResult<string>> GrantAccessAsync(ManageAccessRequest request)
   {
-    // Verify the requester is a super admin
-    if (!IsSuperAdmin(request.AdminPlatform, request.AdminPlatformUserId))
-    {
-      return new GrpcError("Only super admins can grant access", "UNAUTHORIZED");
-    }
-
     // Get or create the target user
     var targetPlatformId = request.ToTargetPlatformId();
     var personResult = await mediator.Send(new GetOrCreatePersonByPlatformIdQuery(targetPlatformId));
@@ -316,12 +290,6 @@ public sealed class ApolloGrpcService(
 
   public async Task<GrpcResult<string>> RevokeAccessAsync(ManageAccessRequest request)
   {
-    // Verify the requester is a super admin
-    if (!IsSuperAdmin(request.AdminPlatform, request.AdminPlatformUserId))
-    {
-      return new GrpcError("Only super admins can revoke access", "UNAUTHORIZED");
-    }
-
     // Get the target user
     var targetPlatformId = request.ToTargetPlatformId();
     var personResult = await personStore.GetByPlatformIdAsync(targetPlatformId);

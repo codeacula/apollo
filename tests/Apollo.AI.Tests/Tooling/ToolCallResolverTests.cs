@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 using Apollo.AI.Tooling;
 
 using Microsoft.SemanticKernel;
@@ -119,9 +121,10 @@ public class ToolCallResolverTests
     var result = ToolCallResolver.TryResolve(plugins, "TestPlugin", "custom_name", out var resolved, out _);
 
     Assert.True(result);
-    Assert.Equal("MethodWithCustomName", resolved.Method.Name);
+    Assert.Equal("MethodWithCustomNameAsync", resolved.Method.Name);
   }
 
+  [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "ToolCallResolver uses BindingFlags.Instance to match production plugin patterns")]
   private sealed class TestPluginStub
   {
     [KernelFunction("test_function")]
@@ -131,7 +134,7 @@ public class ToolCallResolverTests
     }
 
     [KernelFunction("custom_name")]
-    public Task<string> MethodWithCustomName()
+    public Task<string> MethodWithCustomNameAsync()
     {
       return Task.FromResult("result");
     }

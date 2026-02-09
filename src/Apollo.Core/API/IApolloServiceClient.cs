@@ -17,5 +17,5 @@ public interface IApolloServiceClient
   Task<Result<DailyPlanResponse>> GetDailyPlanAsync(PlatformId platformId, CancellationToken cancellationToken = default);
   Task<Result<string>> GrantAccessAsync(PlatformId adminPlatformId, PlatformId targetPlatformId, CancellationToken cancellationToken = default);
   Task<Result<string>> RevokeAccessAsync(PlatformId adminPlatformId, PlatformId targetPlatformId, CancellationToken cancellationToken = default);
-  Task<Result<string>> SendMessageAsync(NewMessageRequest request, CancellationToken cancellationToken = default);
+  Task<Result<string>> SendMessageAsync(ProcessMessageRequest request, CancellationToken cancellationToken = default);
 }

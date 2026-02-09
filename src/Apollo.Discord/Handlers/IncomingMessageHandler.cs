@@ -1,157 +1,73 @@
 using Apollo.Core.Conversations;
 using Apollo.Core.Logging;
 using Apollo.Core.People;
-using Apollo.Core.Reminders.Requests;
-using Apollo.Core.ToDos.Requests;
-using Apollo.Discord.Components;
-using Apollo.Domain.People.ValueObjects;
+using Apollo.Discord.Extensions;
 
-using NetCord;
+using FluentResults;
+
 using NetCord.Gateway;
 using NetCord.Hosting.Gateway;
-using NetCord.Rest;
-
-using ApolloPlatform = Apollo.Domain.Common.Enums.Platform;
 
 namespace Apollo.Discord.Handlers;
 
-public class IncomingMessageHandler(
+public sealed class IncomingMessageHandler(
   IApolloServiceClient apolloServiceClient,
   IPersonCache personCache,
   ILogger<IncomingMessageHandler> logger) : IMessageCreateGatewayHandler
 {
+  private async Task<bool> AccessIsDeniedAsync(Result<bool?> validationResult, Message arg)
+  {
+    if (validationResult.IsSuccess && validationResult.Value is false)
+    {
+      ValidationLogs.ValidationFailed(logger, arg.GetDiscordPlatformId().PlatformUserId, "Access denied");
+      _ = await arg.SendAsync("Sorry, you do not have access to Apollo.");
+      return true;
+    }
+
+    return false;
+  }
+
   public async ValueTask HandleAsync(Message arg)
   {
-    if (arg.GuildId != null || arg.Author.IsBot)
+    if (!IsDirectMessage(arg))
     {
       return;
     }
 
-    var platformId = new PlatformId(arg.Author.Username, arg.Author.Id.ToString(CultureInfo.InvariantCulture), ApolloPlatform.Discord);
+    var validationResult = await personCache.GetAccessAsync(arg.GetDiscordPlatformId());
 
-    var validationResult = await personCache.GetAccessAsync(platformId);
-
-    if (validationResult.IsFailed)
+    if (
+      await ValidationFailedAsync(arg, validationResult)
+      || await AccessIsDeniedAsync(validationResult, arg)
+    )
     {
-      ValidationLogs.ValidationFailed(logger, platformId.PlatformUserId, validationResult.GetErrorMessages());
-      _ = await arg.SendAsync("Sorry, unable to verify your access at this time.");
-      return;
-    }
-
-    if (validationResult.Value is false)
-    {
-      ValidationLogs.ValidationFailed(logger, platformId.PlatformUserId, "Access denied");
-      _ = await arg.SendAsync("Sorry, you do not have access to Apollo.");
       return;
     }
 
     var content = arg.Content;
-
-    if (QuickCommandParser.IsToDoCommand(content))
-    {
-      await HandleToDoCommandAsync(arg, platformId, content);
-      return;
-    }
-
-    if (QuickCommandParser.IsReminderCommand(content))
-    {
-      await HandleReminderCommandAsync(arg, platformId, content);
-      return;
-    }
-
-    await HandleLlmMessageAsync(arg, platformId, content);
+    await SendToServiceAsync(content, arg);
   }
 
-  private async Task HandleToDoCommandAsync(Message arg, PlatformId platformId, string content)
+  private static bool IsDirectMessage(Message message)
   {
-    if (!QuickCommandParser.TryParseToDo(content, out var description))
-    {
-      _ = await arg.SendAsync("To create a todo, use: `todo <description>`\nExample: `todo Buy groceries`");
-      return;
-    }
+    return message.GuildId == null && !message.Author.IsBot;
+  }
+
+  private async Task SendToServiceAsync(string content, Message arg)
+  {
+    var platformId = arg.GetDiscordPlatformId();
 
     try
     {
-      var createRequest = new CreateToDoRequest
+      var processMessage = new ProcessMessageRequest
       {
-        PlatformId = platformId,
-        Title = description,
-        Description = description,
-        ReminderDate = null,
-      };
-
-      var result = await apolloServiceClient.CreateToDoAsync(createRequest, CancellationToken.None);
-
-      if (result.IsFailed)
-      {
-        _ = await arg.SendAsync($"Unable to create your to-do: {result.GetErrorMessages(", ")}");
-        return;
-      }
-
-      var container = new ToDoQuickCreateComponent(result.Value, createRequest.ReminderDate);
-      _ = await arg.SendAsync(new MessageProperties
-      {
-        Components = [container],
-        Flags = MessageFlags.IsComponentsV2
-      });
-    }
-    catch (Exception ex)
-    {
-      DiscordLogs.MessageProcessingFailed(logger, arg.Author.Username, platformId.PlatformUserId, ex.Message, ex);
-      _ = await arg.SendAsync("Sorry, an unexpected error occurred while creating your to-do.");
-    }
-  }
-
-  private async Task HandleReminderCommandAsync(Message arg, PlatformId platformId, string content)
-  {
-    if (!QuickCommandParser.TryParseReminder(content, out var message, out var time))
-    {
-      _ = await arg.SendAsync("To set a reminder, use: `remind <message> in <time>`\nExamples:\n- `remind take a break in 30 minutes`\n- `remind check the oven in 1 hour`\n- `remind me to call mom in 2 hours`");
-      return;
-    }
-
-    try
-    {
-      var createRequest = new CreateReminderRequest
-      {
-        PlatformId = platformId,
-        Message = message,
-        ReminderTime = $"in {time}",
-      };
-
-      var result = await apolloServiceClient.CreateReminderAsync(createRequest, CancellationToken.None);
-
-      if (result.IsFailed)
-      {
-        _ = await arg.SendAsync($"Unable to set your reminder: {result.GetErrorMessages(", ")}");
-        return;
-      }
-
-      var container = new ReminderCreatedComponent(result.Value);
-      _ = await arg.SendAsync(new MessageProperties
-      {
-        Components = [container],
-        Flags = MessageFlags.IsComponentsV2
-      });
-    }
-    catch (Exception ex)
-    {
-      DiscordLogs.MessageProcessingFailed(logger, arg.Author.Username, platformId.PlatformUserId, ex.Message, ex);
-      _ = await arg.SendAsync("Sorry, an unexpected error occurred while setting your reminder.");
-    }
-  }
-
-  private async Task HandleLlmMessageAsync(Message arg, PlatformId platformId, string content)
-  {
-    try
-    {
-      var newMessage = new NewMessageRequest
-      {
-        PlatformId = platformId,
+        Platform = platformId.Platform,
+        PlatformUserId = platformId.PlatformUserId,
+        Username = platformId.Username,
         Content = content
       };
 
-      var response = await apolloServiceClient.SendMessageAsync(newMessage, CancellationToken.None);
+      var response = await apolloServiceClient.SendMessageAsync(processMessage, CancellationToken.None);
 
       if (response.IsFailed)
       {
@@ -166,5 +82,17 @@ public class IncomingMessageHandler(
       DiscordLogs.MessageProcessingFailed(logger, arg.Author.Username, platformId.PlatformUserId, ex.Message, ex);
       _ = await arg.SendAsync("Sorry, an unexpected error occurred while processing your message. Please try again later.");
     }
+  }
+
+  private async Task<bool> ValidationFailedAsync(Message arg, Result<bool?> validationResult)
+  {
+    if (validationResult.IsSuccess)
+    {
+      return false;
+    }
+
+    ValidationLogs.ValidationFailed(logger, arg.GetDiscordPlatformId().PlatformUserId, validationResult.GetErrorMessages());
+    _ = await arg.SendAsync("Sorry, unable to verify your access at this time.");
+    return true;
   }
 }

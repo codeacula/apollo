@@ -2,3 +2,29 @@
 //
 // For more documentation on how to configure debug tasks,
 // see: https://zed.dev/docs/debugger
+[
+  {
+    "label": "Apollo.Service",
+    "adapter": "coreclr",
+    "request": "launch",
+    "program": "${workspaceFolder}/src/Apollo.Service/bin/Debug/net10.0/Apollo.Service.dll",
+    "cwd": "${workspaceFolder}/src/Apollo.Service",
+    "preLaunchTask": "dotnet build src/Apollo.Service/Apollo.Service.csproj"
+  },
+  {
+    "label": "Apollo.API",
+    "adapter": "coreclr",
+    "request": "launch",
+    "program": "${workspaceFolder}/src/Apollo.API/bin/Debug/net10.0/Apollo.API.dll",
+    "cwd": "${workspaceFolder}/src/Apollo.API",
+    "preLaunchTask": "dotnet build src/Apollo.API/Apollo.API.csproj"
+  },
+  {
+    "label": "Apollo.Discord",
+    "adapter": "coreclr",
+    "request": "launch",
+    "program": "${workspaceFolder}/src/Apollo.Discord/bin/Debug/net10.0/Apollo.Discord.dll",
+    "cwd": "${workspaceFolder}/src/Apollo.Discord",
+    "preLaunchTask": "dotnet build src/Apollo.Discord/Apollo.Discord.csproj"
+  }
+]

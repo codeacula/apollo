@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 using Apollo.AI.DTOs;
 using Apollo.AI.Enums;
 using Apollo.AI.Models;
@@ -401,6 +403,7 @@ public class ToolPlanValidatorTests
       []);
   }
 
+  [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "ToolCallResolver uses BindingFlags.Instance to match production plugin patterns")]
   private sealed class PersonPluginStub
   {
     [KernelFunction("set_timezone")]
@@ -410,6 +413,7 @@ public class ToolPlanValidatorTests
     }
   }
 
+  [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "ToolCallResolver uses BindingFlags.Instance to match production plugin patterns")]
   private sealed class ToDoPluginStub
   {
     [KernelFunction("create_todo")]

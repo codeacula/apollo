@@ -29,7 +29,8 @@ See `ARCHITECTURE.md` for comprehensive documentation on architecture, coding pr
 - Run Discord bot: `dotnet run --project src/Apollo.Discord/Apollo.Discord.csproj`
 - Front-end: `npm install --prefix src/Client && npm run dev --prefix src/Client`
 - Tests: `dotnet test Apollo.sln`
-- Full stack with deps: `docker-compose up --build` (brings up Postgres + Redis; uses `.env` for secrets)
+- Full stack with deps: `docker-compose up --build` (brings up API, Discord, Service, Postgres, and Redis; uses `.env` for secrets)
+- AI-assisted dev: `./start-dev.sh` (builds isolated container with OpenCode; starts Postgres + Redis via `compose.dev.yaml`)
 
 ## Coding Style & Naming Conventions
 
@@ -103,6 +104,51 @@ See `ARCHITECTURE.md` for comprehensive documentation on architecture, coding pr
 - Keep commits focused; include config/docs updates when behavior changes.
 - PRs should include: problem/solution summary, linked issue, test evidence, and screenshots for UI changes.
 - Update `ARCHITECTURE.md` when endpoints, env vars, or architecture change.
+
+## AI Tooling & Editor Configuration
+
+This project uses **OpenCode** as the AI coding agent and **Zed** as the primary editor.
+
+### OpenCode Setup
+
+- Configuration: `opencode.json` (project root) and `docker/opencode.json` (container)
+- Authenticate with `/connect` on first run
+- `ARCHITECTURE.md` is auto-loaded as context via the `instructions` config
+- C# files are auto-formatted with `dotnet format` after edits
+
+### Custom Commands
+
+| Command | Description |
+|---------|-------------|
+| `/build` | Build the .NET solution |
+| `/test` | Run all tests and analyze failures |
+| `/check` | Full pipeline: format, build, test |
+| `/review` | Review staged/unstaged changes against coding standards |
+
+### Custom Agents
+
+| Agent | Invoke | Description |
+|-------|--------|-------------|
+| `plan` | `@plan` | Research-only agent that creates actionable implementation plans |
+| `tdd` | `@tdd` | TDD execution agent: writes tests first, then implements |
+
+### Skills (on-demand context)
+
+| Skill | Description |
+|-------|-------------|
+| `csharp-conventions` | C# naming, typing, and structural conventions |
+| `event-sourcing` | Marten event sourcing patterns |
+| `cqrs-patterns` | CQRS/MediatR command/query/handler patterns |
+| `grpc-contracts` | gRPC/protobuf-net contract conventions |
+
+When you need to search documentation for external libraries, use `context7` MCP tools.
+
+### Zed Editor
+
+- Project settings: `.zed/settings.json`
+- Debug configs: `.zed/debug.json` (Apollo.Service, Apollo.API, Apollo.Discord)
+- Extensions auto-installed: C#, HTML, Dockerfile, Docker Compose, TOML, Vue
+- Zed reads this `AGENTS.md` file as AI assistant rules automatically
 
 ## Security & Configuration Tips
 

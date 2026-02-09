@@ -3,7 +3,7 @@ using System.Runtime.Serialization;
 namespace Apollo.GRPC.Contracts;
 
 [DataContract]
-public sealed record UpdateToDoRequest
+public sealed record UpdateToDoRequest : AuthenticatedRequestBase
 {
   [DataMember(Order = 1)]
   public required Guid ToDoId { get; init; }

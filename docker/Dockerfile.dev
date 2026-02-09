@@ -1,0 +1,96 @@
+# Apollo AI Development Container
+# Provides an isolated environment for AI-assisted development with OpenCode
+#
+# Build context: repository root (not ./docker)
+# Project files are COPIED in so the container owns them (no permission issues).
+# Changes flow back to the host via git push from inside the container.
+#
+# Features:
+# - Ubuntu 24.04 LTS base
+# - .NET 10 SDK
+# - Node.js 22 LTS
+# - OpenCode with MCP servers (memory, sequential-thinking)
+# - C# Language Server for LSP support
+# - GitHub CLI for repository operations
+
+FROM ubuntu:24.04
+
+ARG DOTNET_VERSION=10.0
+ARG NODE_VERSION=22
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
+ENV DOTNET_NOLOGO=1
+
+# Install base dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    wget \
+    git \
+    ca-certificates \
+    gnupg \
+    sudo \
+    openssh-client \
+    libicu-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install .NET SDK 10
+RUN wget https://dot.net/v1/dotnet-install.sh -O /tmp/dotnet-install.sh \
+    && chmod +x /tmp/dotnet-install.sh \
+    && /tmp/dotnet-install.sh --channel $DOTNET_VERSION --install-dir /usr/share/dotnet \
+    && ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet \
+    && rm /tmp/dotnet-install.sh
+
+ENV DOTNET_ROOT=/usr/share/dotnet
+ENV PATH="$PATH:/usr/share/dotnet"
+
+# Install Node.js LTS
+RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - \
+    && apt-get install -y nodejs \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install OpenCode and MCP servers globally
+RUN npm install -g \
+    opencode-ai \
+    @modelcontextprotocol/server-memory \
+    @modelcontextprotocol/server-sequential-thinking
+
+# Install GitHub CLI
+RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+    | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
+    | tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+    && apt-get update && apt-get install -y gh \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user with sudo access
+RUN useradd -m -s /bin/bash developer \
+    && echo "developer ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+# Switch to developer user for remaining setup
+USER developer
+
+# Install C# language server
+RUN dotnet tool install -g csharp-ls
+
+# Add dotnet tools to PATH
+ENV PATH="$PATH:/home/developer/.dotnet/tools"
+
+# Create config directories
+RUN mkdir -p /home/developer/.config/opencode \
+    && mkdir -p /home/developer/.local/share/opencode
+
+# Set up workspace
+WORKDIR /workspace
+
+# Copy OpenCode configuration (includes MCP servers)
+COPY --chown=developer:developer docker/opencode.json /home/developer/.config/opencode/opencode.json
+
+# Copy entrypoint script
+COPY --chown=developer:developer docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN sudo chmod +x /usr/local/bin/entrypoint.sh
+
+# Copy project files into container (developer owns everything)
+COPY --chown=developer:developer . /workspace
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

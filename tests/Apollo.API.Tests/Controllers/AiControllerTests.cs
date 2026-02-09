@@ -2,14 +2,9 @@ using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace Apollo.API.Tests.Controllers;
 
-public class AiControllerTests : IClassFixture<WebApplicationFactory<IApolloAPI>>
+public class AiControllerTests(WebApplicationFactory<IApolloAPI> factory) : IClassFixture<WebApplicationFactory<IApolloAPI>>
 {
-  private readonly WebApplicationFactory<IApolloAPI> _factory;
-
-  public AiControllerTests(WebApplicationFactory<IApolloAPI> factory)
-  {
-    _factory = factory;
-  }
+  private readonly WebApplicationFactory<IApolloAPI> _factory = factory;
 
   [Fact]
   public async Task GetRootReturnsNotFoundAsync()
