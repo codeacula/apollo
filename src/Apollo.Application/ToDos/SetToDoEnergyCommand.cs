@@ -19,12 +19,9 @@ public sealed class SetToDoEnergyCommandHandler(IToDoStore toDoStore) : IRequest
     try
     {
       var ownershipResult = await VerifyOwnershipAsync(request.ToDoId, request.PersonId, cancellationToken);
-      if (ownershipResult.IsFailed)
-      {
-        return ownershipResult;
-      }
-
-      return await toDoStore.UpdateEnergyAsync(request.ToDoId, request.Energy, cancellationToken);
+      return ownershipResult.IsFailed
+        ? ownershipResult
+        : await toDoStore.UpdateEnergyAsync(request.ToDoId, request.Energy, cancellationToken);
     }
     catch (Exception ex)
     {
@@ -40,11 +37,8 @@ public sealed class SetToDoEnergyCommandHandler(IToDoStore toDoStore) : IRequest
       return Result.Fail("To-Do not found");
     }
 
-    if (todoResult.Value.PersonId.Value != personId.Value)
-    {
-      return Result.Fail("You don't have permission to update this to-do");
-    }
-
-    return Result.Ok();
+    return todoResult.Value.PersonId.Value != personId.Value
+      ? Result.Fail("You don't have permission to update this to-do")
+      : Result.Ok();
   }
 }

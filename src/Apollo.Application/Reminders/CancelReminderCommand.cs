@@ -34,12 +34,7 @@ public sealed class CancelReminderCommandHandler(
       }
 
       var linkedResult = await EnsureNotLinkedToToDosAsync(request.ReminderId, cancellationToken);
-      if (linkedResult.IsFailed)
-      {
-        return linkedResult;
-      }
-
-      return await DeleteReminderAndCleanupJobAsync(reminderResult.Value, cancellationToken);
+      return linkedResult.IsFailed ? linkedResult : await DeleteReminderAndCleanupJobAsync(reminderResult.Value, cancellationToken);
     }
     catch (Exception ex)
     {

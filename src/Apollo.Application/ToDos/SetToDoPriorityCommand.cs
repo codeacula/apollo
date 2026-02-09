@@ -19,12 +19,9 @@ public sealed class SetToDoPriorityCommandHandler(IToDoStore toDoStore) : IReque
     try
     {
       var ownershipResult = await VerifyOwnershipAsync(request.ToDoId, request.PersonId, cancellationToken);
-      if (ownershipResult.IsFailed)
-      {
-        return ownershipResult;
-      }
-
-      return await toDoStore.UpdatePriorityAsync(request.ToDoId, request.Priority, cancellationToken);
+      return ownershipResult.IsFailed
+        ? ownershipResult
+        : await toDoStore.UpdatePriorityAsync(request.ToDoId, request.Priority, cancellationToken);
     }
     catch (Exception ex)
     {
@@ -40,11 +37,8 @@ public sealed class SetToDoPriorityCommandHandler(IToDoStore toDoStore) : IReque
       return Result.Fail("To-Do not found");
     }
 
-    if (todoResult.Value.PersonId.Value != personId.Value)
-    {
-      return Result.Fail("You don't have permission to update this to-do");
-    }
-
-    return Result.Ok();
+    return todoResult.Value.PersonId.Value != personId.Value
+      ? Result.Fail("You don't have permission to update this to-do")
+      : Result.Ok();
   }
 }

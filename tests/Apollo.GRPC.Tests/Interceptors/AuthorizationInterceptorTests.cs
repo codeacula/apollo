@@ -48,7 +48,10 @@ public class AuthorizationInterceptorTests
     _ = _userContextMock.Setup(x => x.Person).Returns(person);
 
     var context = new TestServerCallContext(_httpContext);
-    Task<string> continuationAsync(string req, ServerCallContext ctx) => Task.FromResult("Response");
+    static Task<string> continuationAsync(string req, ServerCallContext ctx)
+    {
+      return Task.FromResult("Response");
+    }
 
     // Act & Assert
     var ex = await Assert.ThrowsAsync<RpcException>(() =>
@@ -70,7 +73,10 @@ public class AuthorizationInterceptorTests
     _ = _userContextMock.Setup(x => x.Person).Returns(person);
 
     var context = new TestServerCallContext(_httpContext);
-    static Task<string> continuationAsync(string req, ServerCallContext ctx) => Task.FromResult("Response");
+    static Task<string> continuationAsync(string req, ServerCallContext ctx)
+    {
+      return Task.FromResult("Response");
+    }
 
     // Act
     var result = await _interceptor.UnaryServerHandler("Request", context, continuationAsync);
@@ -92,7 +98,10 @@ public class AuthorizationInterceptorTests
     _ = _userContextMock.Setup(x => x.Person).Returns(person);
 
     var context = new TestServerCallContext(_httpContext);
-    Task<string> continuationAsync(string req, ServerCallContext ctx) => Task.FromResult("Response");
+    static Task<string> continuationAsync(string req, ServerCallContext ctx)
+    {
+      return Task.FromResult("Response");
+    }
 
     // Act & Assert
     var ex = await Assert.ThrowsAsync<RpcException>(() =>
@@ -110,7 +119,10 @@ public class AuthorizationInterceptorTests
     _httpContext.SetEndpoint(endpoint);
 
     var context = new TestServerCallContext(_httpContext);
-    static Task<string> continuationAsync(string req, ServerCallContext ctx) => Task.FromResult("Response");
+    static Task<string> continuationAsync(string req, ServerCallContext ctx)
+    {
+      return Task.FromResult("Response");
+    }
 
     // Act
     var result = await _interceptor.UnaryServerHandler("Request", context, continuationAsync);

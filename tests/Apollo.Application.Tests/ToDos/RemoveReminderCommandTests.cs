@@ -8,7 +8,7 @@ using FluentResults;
 
 using Moq;
 
-namespace Apollo.Application.Tests.ToDos.Handlers;
+namespace Apollo.Application.Tests.ToDos;
 
 public class RemoveReminderCommandHandlerTests
 {

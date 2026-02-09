@@ -15,7 +15,7 @@ namespace Apollo.Application.Tests.ToDos;
 public class GetToDosByPersonIdQueryHandlerTests
 {
   [Fact]
-    public async Task HandleReturnsAllToDosForPersonAsync()
+  public async Task HandleReturnsAllToDosForPersonAsync()
   {
     // Arrange
     var toDoStore = new Mock<IToDoStore>();

@@ -68,7 +68,10 @@ public class UserResolutionInterceptorTests
 
     var context = new TestServerCallContext(_httpContext);
 
-    Task<string> continuationAsync(NewMessageRequest req, ServerCallContext ctx) => Task.FromResult("Response");
+    static Task<string> continuationAsync(NewMessageRequest req, ServerCallContext ctx)
+    {
+      return Task.FromResult("Response");
+    }
 
     // Act
     _ = await _interceptor.UnaryServerHandler(request, context, continuationAsync);
@@ -85,7 +88,10 @@ public class UserResolutionInterceptorTests
     // Arrange
     const string request = "NotAuthenticated"; // Just a string, doesn't implement IAuthenticatedRequest
     var context = new TestServerCallContext(_httpContext);
-    static Task<string> continuationAsync(string req, ServerCallContext ctx) => Task.FromResult("Response");
+    static Task<string> continuationAsync(string req, ServerCallContext ctx)
+    {
+      return Task.FromResult("Response");
+    }
 
     // Act
     _ = await _interceptor.UnaryServerHandler(request, context, continuationAsync);

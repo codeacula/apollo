@@ -33,36 +33,24 @@ public static class ToolCallMatchers
     "unlink_reminder"
   };
 
-  /// <summary>Check if a tool call is creating a ToDo</summary>
-  /// <param name="pluginName"></param>
-  /// <param name="functionName"></param>
   public static bool IsCreateToDo(string? pluginName, string? functionName)
   {
     return string.Equals(pluginName, ToDoPluginName, StringComparison.OrdinalIgnoreCase)
       && string.Equals(functionName, CreateToDoFunction, StringComparison.OrdinalIgnoreCase);
   }
 
-  /// <summary>Check if a tool call is blocked after creating a ToDo</summary>
-  /// <param name="pluginName"></param>
-  /// <param name="functionName"></param>
   public static bool IsBlockedAfterCreateToDo(string? pluginName, string? functionName)
   {
     return string.Equals(pluginName, ToDoPluginName, StringComparison.OrdinalIgnoreCase)
       && BlockedAfterCreateToDo.Contains(functionName ?? "");
   }
 
-  /// <summary>Check if a tool call is blocked after creating a reminder</summary>
-  /// <param name="pluginName"></param>
-  /// <param name="functionName"></param>
   public static bool IsBlockedAfterCreateReminder(string? pluginName, string? functionName)
   {
     return string.Equals(pluginName, RemindersPluginName, StringComparison.OrdinalIgnoreCase)
       && BlockedAfterCreateReminder.Contains(functionName ?? "");
   }
 
-  /// <summary>Check if a tool call is setting the timezone</summary>
-  /// <param name="pluginName"></param>
-  /// <param name="functionName"></param>
   public static bool IsSetTimezone(string? pluginName, string? functionName)
   {
     return string.Equals(pluginName, PersonPluginName, StringComparison.OrdinalIgnoreCase)
