@@ -1,7 +1,11 @@
 using Apollo.Application.ToDos.Models;
+using Apollo.Core.People;
+using Apollo.Core.ToDos;
 using Apollo.GRPC.Context;
 using Apollo.GRPC.Contracts;
 using Apollo.GRPC.Service;
+
+using FluentResults;
 
 using MediatR;
 
@@ -19,11 +23,11 @@ public sealed class ApolloGrpcServiceTests
     var userContext = new Mock<IUserContext>();
 
     // Return a DailyPlan with null SuggestedTasks from the mediator
-    mediator.Setup(m => m.Send(It.IsAny<IRequest<Result<DailyPlan>>>(), default))
+    _ = mediator.Setup(m => m.Send(It.IsAny<IRequest<Result<DailyPlan>>>(), default))
       .ReturnsAsync(Result.Ok(new DailyPlan(null!, "Rationale", 0)));
 
     // Provide a dummy Person on the user context so the service doesn't NRE
-    userContext.Object.Person = new Domain.People.Models.Person
+    var dummyPerson = new Domain.People.Models.Person
     {
       Id = new Domain.People.ValueObjects.PersonId(Guid.NewGuid()),
       PlatformId = new Domain.People.ValueObjects.PlatformId("user", "1", Domain.Common.Enums.Platform.Discord),
@@ -32,6 +36,7 @@ public sealed class ApolloGrpcServiceTests
       CreatedOn = new Domain.Common.ValueObjects.CreatedOn(DateTime.UtcNow),
       UpdatedOn = new Domain.Common.ValueObjects.UpdatedOn(DateTime.UtcNow)
     };
+    _ = userContext.SetupGet(u => u.Person).Returns(dummyPerson);
 
     var service = new ApolloGrpcService(
       mediator.Object,
@@ -39,7 +44,7 @@ public sealed class ApolloGrpcServiceTests
       Mock.Of<IPersonStore>(),
       Mock.Of<IFuzzyTimeParser>(),
       TimeProvider.System,
-      new Core.People.SuperAdminConfig(),
+      new SuperAdminConfig(),
       userContext.Object
     );
 
