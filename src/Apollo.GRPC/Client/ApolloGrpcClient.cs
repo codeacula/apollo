@@ -148,7 +148,11 @@ public class ApolloGrpcClient : IApolloGrpcClient, IApolloServiceClient, IDispos
     }
 
     var dto = grpcResponse.Data;
-    var tasks = dto.SuggestedTasks.Select(t => new DailyPlanTaskResponse
+    // Defensive: SuggestedTasks may be null due to serialization edge-cases across the gRPC boundary.
+    // Treat null as empty to provide failsafe behavior for callers.
+    var suggestedTasks = (Contracts.DailyPlanTaskDTO[]?)dto.SuggestedTasks ?? [];
+
+    var tasks = suggestedTasks.Select(t => new DailyPlanTaskResponse
     {
       Id = t.Id,
       Description = t.Description,

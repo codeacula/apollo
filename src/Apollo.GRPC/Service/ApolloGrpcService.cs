@@ -218,7 +218,11 @@ public sealed class ApolloGrpcService(
     }
 
     var plan = result.Value;
-    var taskDtos = plan.SuggestedTasks.Select(t => new DailyPlanTaskDTO
+    // Defensive: ensure SuggestedTasks is non-null to avoid serialization edge-cases where
+    // an empty array might deserialize as null on the client.
+    var safeSuggested = (IReadOnlyList<Application.ToDos.Models.DailyPlanItem>?)plan.SuggestedTasks ?? Array.Empty<Application.ToDos.Models.DailyPlanItem>();
+
+    var taskDtos = safeSuggested.Select(t => new DailyPlanTaskDTO
     {
       Id = t.Id.Value,
       Description = t.Description,

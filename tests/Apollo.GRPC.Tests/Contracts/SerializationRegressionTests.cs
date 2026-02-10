@@ -180,10 +180,10 @@ public class NewMessageRequestSerializationTests
     // Arrange
     const string expectedUsername = "codeacula";
     const string expectedPlatformUserId = "244273250144747523";
-    
+
 
     // Act: Multiple round-trips
-    NewMessageRequest current = new NewMessageRequest
+    NewMessageRequest current = new()
     {
       Username = expectedUsername,
       PlatformUserId = expectedPlatformUserId,
