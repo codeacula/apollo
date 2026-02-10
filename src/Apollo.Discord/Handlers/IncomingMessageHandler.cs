@@ -1,12 +1,17 @@
 using Apollo.Core.Conversations;
 using Apollo.Core.Logging;
 using Apollo.Core.People;
+using Apollo.Core.Reminders.Requests;
+using Apollo.Core.ToDos.Requests;
+using Apollo.Discord.Components;
 using Apollo.Discord.Extensions;
 
 using FluentResults;
 
+using NetCord;
 using NetCord.Gateway;
 using NetCord.Hosting.Gateway;
+using NetCord.Rest;
 
 namespace Apollo.Discord.Handlers;
 
@@ -45,6 +50,19 @@ public sealed class IncomingMessageHandler(
     }
 
     var content = arg.Content;
+
+    if (QuickCommandParser.IsToDoCommand(content))
+    {
+      await HandleToDoCommandAsync(arg, content);
+      return;
+    }
+
+    if (QuickCommandParser.IsReminderCommand(content))
+    {
+      await HandleReminderCommandAsync(arg, content);
+      return;
+    }
+
     await SendToServiceAsync(content, arg);
   }
 
@@ -81,6 +99,89 @@ public sealed class IncomingMessageHandler(
     {
       DiscordLogs.MessageProcessingFailed(logger, arg.Author.Username, platformId.PlatformUserId, ex.Message, ex);
       _ = await arg.SendAsync("Sorry, an unexpected error occurred while processing your message. Please try again later.");
+    }
+  }
+
+  private async Task HandleToDoCommandAsync(Message arg, string content)
+  {
+    if (!QuickCommandParser.TryParseToDo(content, out var description))
+    {
+      _ = await arg.SendAsync("To create a todo, use: `todo <description>`\nExample: `todo Buy groceries`");
+      return;
+    }
+
+    var platformId = arg.GetDiscordPlatformId();
+
+    try
+    {
+      var createRequest = new CreateToDoRequest
+      {
+        PlatformId = platformId,
+        Title = description,
+        Description = description,
+        ReminderDate = null,
+      };
+
+      var result = await apolloServiceClient.CreateToDoAsync(createRequest, CancellationToken.None);
+
+      if (result.IsFailed)
+      {
+        _ = await arg.SendAsync($"Unable to create your to-do: {result.GetErrorMessages(", ")}");
+        return;
+      }
+
+      var container = new ToDoQuickCreateComponent(result.Value, createRequest.ReminderDate);
+      _ = await arg.SendAsync(new MessageProperties
+      {
+        Components = [container],
+        Flags = MessageFlags.IsComponentsV2
+      });
+    }
+    catch (Exception ex)
+    {
+      DiscordLogs.MessageProcessingFailed(logger, arg.Author.Username, platformId.PlatformUserId, ex.Message, ex);
+      _ = await arg.SendAsync("Sorry, an unexpected error occurred while creating your to-do.");
+    }
+  }
+
+  private async Task HandleReminderCommandAsync(Message arg, string content)
+  {
+    if (!QuickCommandParser.TryParseReminder(content, out var message, out var time))
+    {
+      _ = await arg.SendAsync("To set a reminder, use: `remind <message> in <time>`\nExamples:\n- `remind take a break in 30 minutes`\n- `remind check the oven in 1 hour`\n- `remind me to call mom in 2 hours`");
+      return;
+    }
+
+    var platformId = arg.GetDiscordPlatformId();
+
+    try
+    {
+      var createRequest = new CreateReminderRequest
+      {
+        PlatformId = platformId,
+        Message = message,
+        ReminderTime = $"in {time}",
+      };
+
+      var result = await apolloServiceClient.CreateReminderAsync(createRequest, CancellationToken.None);
+
+      if (result.IsFailed)
+      {
+        _ = await arg.SendAsync($"Unable to set your reminder: {result.GetErrorMessages(", ")}");
+        return;
+      }
+
+      var container = new ReminderCreatedComponent(result.Value);
+      _ = await arg.SendAsync(new MessageProperties
+      {
+        Components = [container],
+        Flags = MessageFlags.IsComponentsV2
+      });
+    }
+    catch (Exception ex)
+    {
+      DiscordLogs.MessageProcessingFailed(logger, arg.Author.Username, platformId.PlatformUserId, ex.Message, ex);
+      _ = await arg.SendAsync("Sorry, an unexpected error occurred while setting your reminder.");
     }
   }
 

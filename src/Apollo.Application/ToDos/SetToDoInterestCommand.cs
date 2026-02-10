@@ -36,13 +36,9 @@ public sealed class SetToDoInterestCommandHandler(IToDoStore toDoStore) : IReque
     {
       return Result.Fail("To-Do not found");
     }
-    else if (todoResult.Value.PersonId.Value != personId.Value)
-    {
-      return Result.Fail("You don't have permission to update this to-do");
-    }
-    else
-    {
-      return Result.Ok();
-    }
+
+    return todoResult.Value.PersonId.Value != personId.Value
+      ? Result.Fail("You don't have permission to update this to-do")
+      : Result.Ok();
   }
 }
