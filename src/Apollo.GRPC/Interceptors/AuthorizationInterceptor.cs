@@ -41,16 +41,16 @@ public class AuthorizationInterceptor(SuperAdminConfig superAdminConfig) : Inter
 
     if (requireAccess && person?.HasAccess.Value != true)
     {
-      return throw new RpcException(new Status(StatusCode.PermissionDenied, "Access denied."));
+      throw new RpcException(new Status(StatusCode.PermissionDenied, "Access denied."));
     }
-    else if (requireSuperAdmin && (person == null || !IsSuperAdmin(person)))
+
+    if (requireSuperAdmin && (person == null || !IsSuperAdmin(person)))
     {
-      return throw new RpcException(new Status(StatusCode.PermissionDenied, "Super Admin access required."));
+      throw new RpcException(new Status(StatusCode.PermissionDenied, "Super Admin access required."));
     }
-    else
-    {
-      return await continuation(request, context);
-    }
+
+    return await continuation(request, context);
+
   }
 
   private bool IsSuperAdmin(Person person)
