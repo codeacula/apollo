@@ -1,7 +1,6 @@
 using Apollo.Application.Conversations;
 using Apollo.Application.People;
 using Apollo.Application.ToDos;
-using Apollo.Core.Conversations;
 using Apollo.Core.People;
 using Apollo.Core.ToDos;
 using Apollo.Domain.Common.Enums;
@@ -26,15 +25,10 @@ public sealed class ApolloGrpcService(
 {
   public async Task<GrpcResult<string>> SendApolloMessageAsync(NewMessageRequest message)
   {
-    var coreRequest = new ProcessMessageRequest
-    {
-      Username = message.Username,
-      PlatformUserId = message.PlatformUserId,
-      Platform = message.Platform,
-      Content = message.Content
-    };
+    var person = userContext.Person!;
+    var command = new ProcessIncomingMessageCommand(person.Id, new Domain.Common.ValueObjects.Content(message.Content));
 
-    var requestResult = await mediator.Send(new ProcessIncomingMessageCommand(coreRequest));
+    var requestResult = await mediator.Send(command);
     return requestResult.IsFailed
       ? (GrpcResult<string>)requestResult.Errors.Select(e => new GrpcError(e.Message)).ToArray()
       : (GrpcResult<string>)requestResult.Value.Content.Value;

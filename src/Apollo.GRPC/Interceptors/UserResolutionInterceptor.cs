@@ -1,4 +1,7 @@
 using Apollo.Application.People;
+using Apollo.Core.People;
+using Apollo.Domain.Common.Enums;
+using Apollo.Domain.People.Models;
 using Apollo.Domain.People.ValueObjects;
 using Apollo.GRPC.Context;
 using Apollo.GRPC.Contracts;
@@ -42,8 +45,30 @@ public class UserResolutionInterceptor : Interceptor
     if (result.IsSuccess)
     {
       userContext.Person = result.Value;
+      await EnsureNotificationChannelAsync(services, authRequest, result.Value);
     }
 
     return await continuation(request, context);
+  }
+
+  private static async Task EnsureNotificationChannelAsync(
+    IServiceProvider services,
+    IAuthenticatedRequest request,
+    Person person)
+  {
+    var channelType = request.Platform switch
+    {
+      Platform.Discord => NotificationChannelType.Discord,
+      _ => (NotificationChannelType?)null
+    };
+
+    if (!channelType.HasValue)
+    {
+      return;
+    }
+
+    var personStore = services.GetRequiredService<IPersonStore>();
+    var channel = new NotificationChannel(channelType.Value, request.PlatformUserId, isEnabled: true);
+    _ = await personStore.EnsureNotificationChannelAsync(person, channel);
   }
 }

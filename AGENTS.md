@@ -131,6 +131,7 @@ This project uses **OpenCode** as the AI coding agent and **Zed** as the primary
 |-------|--------|-------------|
 | `plan` | `@plan` | Research-only agent that creates actionable implementation plans |
 | `tdd` | `@tdd` | TDD execution agent: writes tests first, then implements |
+| `pair-programmer` | `@pair-programmer` | Rapid pair programming: user architects, agent codes with TDD Red-Green |
 
 ### Skills (on-demand context)
 
