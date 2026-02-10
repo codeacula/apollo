@@ -39,17 +39,18 @@ public class AuthorizationInterceptor(SuperAdminConfig superAdminConfig) : Inter
     var userContext = httpContext!.RequestServices.GetService<IUserContext>();
     var person = userContext?.Person;
 
-     if (requireAccess && person?.HasAccess.Value != true)
-     {
-       throw new RpcException(new Status(StatusCode.PermissionDenied, "Access denied."));
-     }
-
-     if (requireSuperAdmin && (person == null || !IsSuperAdmin(person)))
-     {
-       throw new RpcException(new Status(StatusCode.PermissionDenied, "Super Admin access required."));
-     }
-
-     return await continuation(request, context);
+    if (requireAccess && person?.HasAccess.Value != true)
+    {
+      return throw new RpcException(new Status(StatusCode.PermissionDenied, "Access denied."));
+    }
+    else if (requireSuperAdmin && (person == null || !IsSuperAdmin(person)))
+    {
+      return throw new RpcException(new Status(StatusCode.PermissionDenied, "Super Admin access required."));
+    }
+    else
+    {
+      return await continuation(request, context);
+    }
   }
 
   private bool IsSuperAdmin(Person person)
