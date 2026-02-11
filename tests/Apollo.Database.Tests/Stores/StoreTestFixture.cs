@@ -30,12 +30,10 @@ public sealed class StoreTestFixture : IAsyncLifetime
 {
   private IDocumentStore? _store;
   private Mock<IPersonCache>? _personCacheMock;
-  private Mock<TimeProvider>? _timeProviderMock;
-  private readonly DateTimeOffset _fixedTime = new(2025, 12, 25, 10, 30, 0, TimeSpan.Zero);
 
   public IDocumentSession DocumentSession { get; private set; } = null!;
   public IPersonCache PersonCache => _personCacheMock!.Object;
-  public TimeProvider TimeProvider => _timeProviderMock!.Object;
+  public TimeProvider TimeProvider => TimeProvider.System;
   public SuperAdminConfig SuperAdminConfig { get => field!; private set; }
 
   public async Task InitializeAsync()
@@ -48,10 +46,7 @@ public sealed class StoreTestFixture : IAsyncLifetime
       .Setup(c => c.InvalidateAccessAsync(It.IsAny<PersonId>()))
       .ReturnsAsync(Result.Ok());
 
-    _timeProviderMock = new Mock<TimeProvider>();
-    _ = _timeProviderMock
-      .Setup(t => t.GetUtcDateTime())
-      .Returns(_fixedTime.UtcDateTime);
+
 
     SuperAdminConfig = new SuperAdminConfig();
 
@@ -157,7 +152,6 @@ public sealed class StoreTestFixture : IAsyncLifetime
   /// </summary>
   /// <param name="username"></param>
   /// <param name="platform"></param>
-  /// <returns></returns>
   public static PlatformId CreateTestPlatformId(string username = "testuser", Platform platform = Platform.Discord)
   {
     return new PlatformId(username, Guid.NewGuid().ToString(), platform);

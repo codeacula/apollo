@@ -1,8 +1,10 @@
 using Apollo.Core.API;
 using Apollo.Core.Conversations;
 using Apollo.Core.ToDos.Responses;
+using Apollo.Domain.Common.Enums;
 using Apollo.Domain.People.ValueObjects;
 using Apollo.Domain.ToDos.Models;
+using Apollo.GRPC.Contracts;
 using Apollo.GRPC.Interceptors;
 using Apollo.GRPC.Service;
 
@@ -21,6 +23,7 @@ using GrpcGetDailyPlanRequest = Apollo.GRPC.Contracts.GetDailyPlanRequest;
 using GrpcGetPersonToDosRequest = Apollo.GRPC.Contracts.GetPersonToDosRequest;
 using GrpcManageAccessRequest = Apollo.GRPC.Contracts.ManageAccessRequest;
 using GrpcReminderDTO = Apollo.GRPC.Contracts.ReminderDTO;
+using GrpcSetToDoEnergyRequest = Apollo.GRPC.Contracts.SetToDoEnergyRequest;
 using GrpcToDoDTO = Apollo.GRPC.Contracts.ToDoDTO;
 
 namespace Apollo.GRPC.Client;
@@ -85,7 +88,7 @@ public class ApolloGrpcClient : IApolloGrpcClient, IApolloServiceClient, IDispos
 
   public async Task<Result<string>> SendMessageAsync(ProcessMessageRequest request, CancellationToken cancellationToken = default)
   {
-    var grpcRequest = new Contracts.NewMessageRequest
+    var grpcRequest = new NewMessageRequest
     {
       Platform = request.Platform,
       PlatformUserId = request.PlatformUserId,
@@ -150,7 +153,7 @@ public class ApolloGrpcClient : IApolloGrpcClient, IApolloServiceClient, IDispos
     var dto = grpcResponse.Data;
     // Defensive: SuggestedTasks may be null due to serialization edge-cases across the gRPC boundary.
     // Treat null as empty to provide failsafe behavior for callers.
-    var suggestedTasks = (Contracts.DailyPlanTaskDTO[]?)dto.SuggestedTasks ?? [];
+    var suggestedTasks = (DailyPlanTaskDTO[]?)dto.SuggestedTasks ?? [];
 
     var tasks = suggestedTasks.Select(t => new DailyPlanTaskResponse
     {
@@ -170,6 +173,24 @@ public class ApolloGrpcClient : IApolloGrpcClient, IApolloServiceClient, IDispos
     };
 
     return Result.Ok(response);
+  }
+
+  public async Task<Result<string>> SetToDoEnergyAsync(PlatformId platformId, Guid toDoId, Level energy, CancellationToken cancellationToken = default)
+  {
+    var grpcRequest = new GrpcSetToDoEnergyRequest
+    {
+      Platform = platformId.Platform,
+      PlatformUserId = platformId.PlatformUserId,
+      Username = platformId.Username,
+      ToDoId = toDoId,
+      Energy = energy
+    };
+
+    GrpcResult<string> grpcResponse = await ApolloGrpcService.SetToDoEnergyAsync(grpcRequest);
+
+    return grpcResponse.IsSuccess
+      ? Result.Ok(grpcResponse.Data ?? string.Empty)
+      : Result.Fail(string.Join("; ", grpcResponse.Errors.Select(e => e.Message)));
   }
 
   public async Task<Result<string>> GrantAccessAsync(PlatformId adminPlatformId, PlatformId targetPlatformId, CancellationToken cancellationToken = default)

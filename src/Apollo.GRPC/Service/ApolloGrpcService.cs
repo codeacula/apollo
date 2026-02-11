@@ -251,6 +251,20 @@ public sealed class ApolloGrpcService(
     return result.IsFailed ? (GrpcResult<string>)result.Errors.Select(e => new GrpcError(e.Message)).ToArray() : (GrpcResult<string>)"ToDo updated successfully";
   }
 
+  public async Task<GrpcResult<string>> SetToDoEnergyAsync(SetToDoEnergyRequest request)
+  {
+    var person = userContext.Person!;
+
+    var command = new SetToDoEnergyCommand(
+      person.Id,
+      new ToDoId(request.ToDoId),
+      new Energy(request.Energy)
+    );
+
+    var result = await mediator.Send(command);
+    return result.IsFailed ? (GrpcResult<string>)result.Errors.Select(e => new GrpcError(e.Message)).ToArray() : (GrpcResult<string>)"Energy updated successfully";
+  }
+
   public async Task<GrpcResult<string>> CompleteToDoAsync(CompleteToDoRequest request)
   {
     var command = new CompleteToDoCommand(new ToDoId(request.ToDoId));

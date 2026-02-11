@@ -38,6 +38,10 @@ public interface IApolloGrpcService
 
   [OperationContract]
   [RequireAccess]
+  Task<GrpcResult<string>> SetToDoEnergyAsync(SetToDoEnergyRequest request);
+
+  [OperationContract]
+  [RequireAccess]
   Task<GrpcResult<string>> CompleteToDoAsync(CompleteToDoRequest request);
 
   [OperationContract]
