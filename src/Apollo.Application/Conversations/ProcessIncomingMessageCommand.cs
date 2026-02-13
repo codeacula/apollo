@@ -16,6 +16,8 @@ using Apollo.Domain.Conversations.Models;
 using Apollo.Domain.People.Models;
 using Apollo.Domain.People.ValueObjects;
 
+using System.Text.RegularExpressions;
+
 using FluentResults;
 
 namespace Apollo.Application.Conversations;
@@ -52,18 +54,72 @@ public sealed class ProcessIncomingMessageCommandHandler(
 
       var person = personResult.Value;
 
-      var conversationResult = await GetOrCreateConversationWithMessageAsync(person, request.Content.Value, cancellationToken);
-      if (conversationResult.IsFailed)
+      // Short-circuit quick commands (todo/remind) — do not record the message in conversation history.
+      var content = request.Content.Value ?? string.Empty;
+      var trimmed = content.TrimStart();
+
+      // Quick todo/task commands: "todo <description>" or "task <description>"
+      if (trimmed.StartsWith("todo ", StringComparison.OrdinalIgnoreCase) || trimmed.StartsWith("task ", StringComparison.OrdinalIgnoreCase))
       {
-        return conversationResult.ToResult<Reply>();
-      }
+        var firstSpace = trimmed.IndexOf(' ');
+        var description = firstSpace >= 0 ? trimmed.Substring(firstSpace + 1).Trim() : string.Empty;
+        if (string.IsNullOrWhiteSpace(description))
+        {
+          return CreateReplyToUser("To create a todo, use: `todo <description>`\nExample: `todo Buy groceries`");
+        }
 
-      var response = await ProcessWithAIAsync(conversationResult.Value, person, cancellationToken);
+        var createResult = await mediator.Send(new CreateToDoCommand(person.Id, new Description(description), null), cancellationToken);
+        if (createResult.IsFailed)
+        {
+          return CreateReplyToUser($"Unable to create your to-do: {createResult.GetErrorMessages(\", \")}");
+        }
 
-      await SaveReplyAsync(conversationResult.Value, response, cancellationToken);
+        return CreateReplyToUser($"Successfully created todo '{createResult.Value.Description.Value}'.");
+        }
 
-      return CreateReplyToUser(response);
-    }
+        // Quick reminder commands — pattern mirrors Discord-side parser:
+        // "remind <message> in <time>" (also supports "reminder" and optional "me to")
+        var reminderPattern = new Regex(@"^remind(?:er)?\s+(?:me\s+)?(?:to\s+)?(.+?)\s+(?:in|at|on)\s+(.+)$", RegexOptions.IgnoreCase | RegexOptions.Singleline);
+        var match = reminderPattern.Match(trimmed);
+        if (match.Success)
+        {
+          var message = match.Groups[1].Value.Trim();
+          var timeStr = match.Groups[2].Value.Trim();
+
+          if (string.IsNullOrWhiteSpace(message) || string.IsNullOrWhiteSpace(timeStr))
+          {
+            return CreateReplyToUser("To set a reminder, use: `remind <message> in <time>`\nExamples:\n- `remind take a break in 30 minutes`\n- `remind check the oven in 1 hour`\n- `remind me to call mom in 2 hours`");
+          }
+
+          var parsedTimeResult = fuzzyTimeParser.TryParseFuzzyTime(timeStr, timeProvider.GetUtcDateTime());
+          if (parsedTimeResult.IsFailed)
+          {
+            return CreateReplyToUser($"Unable to parse reminder time: {parsedTimeResult.GetErrorMessages(\", \")}");
+        }
+  
+
+          var createReminderResult = await mediator.Send(new CreateReminderCommand(person.Id, message, parsedTimeResult.Value), cancellationToken);
+            if (createReminderResult.IsFailed)
+            {
+              return CreateReplyToUser($"Unable to set your reminder: {createReminderResult.GetErrorMessages(\", \")}");
+        }
+    
+        return CreateReplyToUser($"Reminder set for {parsedTimeResult.Value:yyyy-MM-dd HH:mm:ss} UTC.");
+            }
+
+            // Default flow: persist message to conversation and run AI processing.
+            var conversationResult = await GetOrCreateConversationWithMessageAsync(person, request.Content.Value, cancellationToken);
+            if (conversationResult.IsFailed)
+            {
+              return conversationResult.ToResult<Reply>();
+            }
+
+            var response = await ProcessWithAIAsync(conversationResult.Value, person, cancellationToken);
+
+            await SaveReplyAsync(conversationResult.Value, response, cancellationToken);
+
+            return CreateReplyToUser(response);
+          }
     catch (Exception ex)
     {
       DataAccessLogs.UnhandledMessageProcessingError(logger, ex, request.PersonId.Value.ToString());
