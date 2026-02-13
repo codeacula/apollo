@@ -20,7 +20,7 @@ public class ApiResponseTests
   public void ApiResponseWithErrorIsNotSuccess()
   {
     // Arrange
-    var error = new APIError("ERR001", "Test error");
+    var error = new ApiError("ERR001", "Test error");
 
     // Act
     var response = new ApiResponse<string>(error);
@@ -35,7 +35,7 @@ public class ApiResponseTests
   public void ApiResponseErrorPropertiesAreAccessible()
   {
     // Arrange
-    var error = new APIError("ERR001", "Test error");
+    var error = new ApiError("ERR001", "Test error");
     var response = new ApiResponse<string>(error);
 
     // Act & Assert

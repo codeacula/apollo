@@ -25,10 +25,4 @@ public static partial class GrpcLogs
       Level = LogLevel.Error,
       Message = "Call failed. Host: {Host} Type/Method: {Type} / {Method}")]
   public static partial void LogCallFailed(ILogger logger, string host, string type, string method, Exception incException);
-
-  [LoggerMessage(
-      EventId = 1003,
-      Level = LogLevel.Error,
-      Message = "Server exception occurred. Host: {Host} Type/Method: {Method}")]
-  public static partial void LogServerException(ILogger logger, string host, string method, Exception exception);
 }
