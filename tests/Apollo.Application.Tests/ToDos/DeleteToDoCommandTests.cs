@@ -1,6 +1,7 @@
 using Apollo.Application.ToDos;
 using Apollo.Core.ToDos;
 using Apollo.Domain.Common.ValueObjects;
+using Apollo.Domain.People.ValueObjects;
 using Apollo.Domain.ToDos.Models;
 using Apollo.Domain.ToDos.ValueObjects;
 
@@ -319,6 +320,7 @@ public class DeleteToDoCommandTests
       CreatedOn = new CreatedOn(DateTime.UtcNow),
       Details = new Details("test"),
       Id = new ReminderId(Guid.NewGuid()),
+      PersonId = new PersonId(Guid.NewGuid()),
       QuartzJobId = quartzJobId,
       ReminderTime = new ReminderTime(DateTime.UtcNow.AddMinutes(5)),
       UpdatedOn = new UpdatedOn(DateTime.UtcNow)

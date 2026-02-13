@@ -1,6 +1,7 @@
 using Apollo.Application.ToDos;
 using Apollo.Core.ToDos;
 using Apollo.Domain.Common.ValueObjects;
+using Apollo.Domain.People.ValueObjects;
 using Apollo.Domain.ToDos.Models;
 using Apollo.Domain.ToDos.ValueObjects;
 
@@ -110,6 +111,7 @@ public class RemoveReminderCommandHandlerTests
     return new Reminder
     {
       Id = reminderId,
+      PersonId = new PersonId(Guid.NewGuid()),
       Details = new Details("test"),
       ReminderTime = new ReminderTime(DateTime.UtcNow.AddMinutes(30)),
       QuartzJobId = quartzJobId,
