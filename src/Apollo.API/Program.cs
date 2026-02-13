@@ -19,9 +19,9 @@ if (app.Environment.IsDevelopment())
   _ = app.MapOpenApi();
 }
 
-_ = app.MapControllers();
 _ = app.UseHttpsRedirection();
 _ = app.UseDefaultFiles();
 _ = app.UseStaticFiles();
+_ = app.MapControllers();
 
 await app.RunAsync();

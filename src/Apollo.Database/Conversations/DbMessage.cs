@@ -9,6 +9,7 @@ public sealed record DbMessage
 {
   public required Guid Id { get; init; }
   public required Guid ConversationId { get; init; }
+  public required Guid PersonId { get; init; }
   public required string Content { get; init; }
   public required bool FromUser { get; init; }
   public DateTime CreatedOn { get; init; }
@@ -19,13 +20,14 @@ public sealed record DbMessage
     {
       Id = new(message.Id),
       ConversationId = new(message.ConversationId),
+      PersonId = new(message.PersonId),
       Content = new(message.Content),
       CreatedOn = new(message.CreatedOn),
       FromUser = new(message.FromUser)
     };
   }
 
-  public static DbMessage Create(IEvent<UserSentMessageEvent> ev)
+  public static DbMessage Create(IEvent<UserSentMessageEvent> ev, Guid personId)
   {
     var eventData = ev.Data;
 
@@ -33,13 +35,14 @@ public sealed record DbMessage
     {
       Id = Guid.NewGuid(),
       ConversationId = eventData.Id,
+      PersonId = personId,
       Content = eventData.Message,
       FromUser = true,
       CreatedOn = eventData.CreatedOn
     };
   }
 
-  public static DbMessage Create(IEvent<ApolloRepliedEvent> ev)
+  public static DbMessage Create(IEvent<ApolloRepliedEvent> ev, Guid personId)
   {
     var eventData = ev.Data;
 
@@ -47,6 +50,7 @@ public sealed record DbMessage
     {
       Id = Guid.NewGuid(),
       ConversationId = eventData.Id,
+      PersonId = personId,
       Content = eventData.Message,
       FromUser = false,
       CreatedOn = eventData.CreatedOn

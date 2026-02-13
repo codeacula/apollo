@@ -25,7 +25,7 @@ public static partial class ValidationLogs
   [LoggerMessage(
     EventId = 3101,
     Level = LogLevel.Debug,
-    Message = "Cache hit for person id {PersonPlatformId} on {Platform}: : {HasAccess}")]
+    Message = "Cache hit for person id {PersonPlatformId} on {Platform}: {HasAccess}")]
   public static partial void CacheHit(ILogger logger, string personPlatformId, Platform platform, bool hasAccess);
 
   [LoggerMessage(

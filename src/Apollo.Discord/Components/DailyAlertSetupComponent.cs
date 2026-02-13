@@ -3,7 +3,7 @@ using NetCord.Rest;
 
 namespace Apollo.Discord.Components;
 
-public class DailyAlertSetupComponent : ComponentContainerProperties
+public sealed class DailyAlertSetupComponent : ComponentContainerProperties
 {
   public const string ChannelSelectCustomId = "daily_alert_setup_channel";
   public const string RoleSelectCustomId = "daily_alert_setup_role";

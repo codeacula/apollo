@@ -6,6 +6,11 @@ public readonly record struct DailyTaskCount
 
   public DailyTaskCount(int value)
   {
+    if (value is < 1 or > 20)
+    {
+      throw new ArgumentOutOfRangeException(nameof(value), "Value must be between 1 and 20");
+    }
+
     Value = value;
   }
 

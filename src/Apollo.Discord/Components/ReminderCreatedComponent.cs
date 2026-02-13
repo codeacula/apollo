@@ -4,7 +4,7 @@ using NetCord.Rest;
 
 namespace Apollo.Discord.Components;
 
-public class ReminderCreatedComponent : ComponentContainerProperties
+public sealed class ReminderCreatedComponent : ComponentContainerProperties
 {
   public ReminderCreatedComponent(Reminder reminder)
   {

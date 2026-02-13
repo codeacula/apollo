@@ -1,3 +1,3 @@
 namespace Apollo.Core.API;
 
-public sealed record APIError(string Code, string Message);
+public sealed record ApiError(string Code, string Message);

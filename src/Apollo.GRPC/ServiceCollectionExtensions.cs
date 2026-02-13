@@ -13,7 +13,7 @@ using ProtoBuf.Grpc.Server;
 
 namespace Apollo.GRPC;
 
-public static class ServiceCollectionExtension
+public static class ServiceCollectionExtensions
 {
   public static IServiceCollection AddGrpcClientServices(this IServiceCollection services)
   {

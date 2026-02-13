@@ -5,7 +5,7 @@ using NetCord.Rest;
 
 namespace Apollo.Discord.Components;
 
-public class ToDoListComponent : ComponentContainerProperties
+public sealed class ToDoListComponent : ComponentContainerProperties
 {
   public const string EditButtonCustomId = "todo_list_edit";
   public const string DeleteButtonCustomId = "todo_list_delete";

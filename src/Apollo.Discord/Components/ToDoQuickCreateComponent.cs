@@ -5,7 +5,7 @@ using NetCord.Rest;
 
 namespace Apollo.Discord.Components;
 
-public class ToDoQuickCreateComponent : ComponentContainerProperties
+public sealed class ToDoQuickCreateComponent : ComponentContainerProperties
 {
   public const string PrioritySelectPrefix = "todo_priority_select";
   public const string EnergySelectPrefix = "todo_energy_select";

@@ -4,7 +4,7 @@ using Apollo.Domain.Conversations.Models;
 
 namespace Apollo.Application.Conversations;
 
-public sealed class ConversationHistoryBuilder
+public static class ConversationHistoryBuilder
 {
   private const int DefaultMaxMessages = 15;
   private const int DefaultMinMessages = 6;

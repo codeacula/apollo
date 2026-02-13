@@ -28,15 +28,15 @@ using GrpcToDoDTO = Apollo.GRPC.Contracts.ToDoDTO;
 
 namespace Apollo.GRPC.Client;
 
-public class ApolloGrpcClient : IApolloGrpcClient, IApolloServiceClient, IDisposable
+public sealed class ApolloGrpcClient : IApolloGrpcClient, IApolloServiceClient, IDisposable
 {
   public IApolloGrpcService ApolloGrpcService { get; }
   private readonly GrpcChannel _channel;
 
-  public ApolloGrpcClient(GrpcChannel channel, GrpcClientLoggingInterceptor GrpcClientLoggingInterceptor, GrpcHostConfig grpcHostConfig)
+  public ApolloGrpcClient(GrpcChannel channel, GrpcClientLoggingInterceptor grpcClientLoggingInterceptor, GrpcHostConfig grpcHostConfig)
   {
     _channel = channel;
-    var invoker = _channel.Intercept(GrpcClientLoggingInterceptor)
+    var invoker = _channel.Intercept(grpcClientLoggingInterceptor)
       .Intercept(metadata =>
       {
         metadata.Add("X-API-Token", grpcHostConfig.ApiToken);

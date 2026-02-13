@@ -1,6 +1,6 @@
 namespace Apollo.AI.Config;
 
-public record ApolloAIConfig
+public sealed record ApolloAIConfig
 {
   public string ModelId { get; init; } = "";
   public string Endpoint { get; init; } = "";

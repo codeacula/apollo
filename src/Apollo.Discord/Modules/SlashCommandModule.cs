@@ -11,7 +11,7 @@ using ApolloPlatform = Apollo.Domain.Common.Enums.Platform;
 
 namespace Apollo.Discord.Modules;
 
-public class SlashCommandModule(IApolloServiceClient apolloServiceClient) : ApplicationCommandModule<ApplicationCommandContext>
+public sealed class SlashCommandModule(IApolloServiceClient apolloServiceClient) : ApplicationCommandModule<ApplicationCommandContext>
 {
   [SlashCommand("config", "Allows you to configure your Apollo settings.")]
   public async Task ConfigAsync()

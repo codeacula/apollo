@@ -8,7 +8,7 @@ using Microsoft.SemanticKernel;
 
 namespace Apollo.Application.People;
 
-public class PersonPlugin(IPersonStore personStore, PersonConfig personConfig, PersonId personId)
+public sealed class PersonPlugin(IPersonStore personStore, PersonConfig personConfig, PersonId personId)
 {
   public const string PluginName = "Person";
   [KernelFunction("set_timezone")]

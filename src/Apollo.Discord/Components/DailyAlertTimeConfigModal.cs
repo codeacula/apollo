@@ -2,7 +2,7 @@ using NetCord.Rest;
 
 namespace Apollo.Discord.Components;
 
-public class DailyAlertTimeConfigModal : ModalProperties
+public sealed class DailyAlertTimeConfigModal : ModalProperties
 {
   public new const string CustomId = "daily_alert_time_config_modal";
   public const string TimeInputCustomId = "daily_alert_time_input";

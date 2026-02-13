@@ -4,14 +4,14 @@ using Apollo.Domain.ToDos.ValueObjects;
 
 namespace Apollo.Domain.ToDos.Models;
 
-public record Reminder
+public sealed record Reminder
 {
-  public ReminderId Id { get; init; }
-  public PersonId PersonId { get; init; }
-  public Details Details { get; init; }
+  public required ReminderId Id { get; init; }
+  public required PersonId PersonId { get; init; }
+  public required Details Details { get; init; }
   public QuartzJobId? QuartzJobId { get; init; }
-  public ReminderTime ReminderTime { get; init; }
+  public required ReminderTime ReminderTime { get; init; }
   public AcknowledgedOn? AcknowledgedOn { get; init; }
-  public CreatedOn CreatedOn { get; init; }
-  public UpdatedOn UpdatedOn { get; init; }
+  public required CreatedOn CreatedOn { get; init; }
+  public required UpdatedOn UpdatedOn { get; init; }
 }

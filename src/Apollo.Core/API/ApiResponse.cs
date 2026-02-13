@@ -3,7 +3,7 @@ namespace Apollo.Core.API;
 public sealed record ApiResponse<T>
 {
   public T? Data { get; set; }
-  public APIError? Error { get; set; }
+  public ApiError? Error { get; set; }
   public bool IsSuccess => Error == null;
 
   public ApiResponse(T data)
@@ -12,7 +12,7 @@ public sealed record ApiResponse<T>
     Error = null;
   }
 
-  public ApiResponse(APIError error)
+  public ApiResponse(ApiError error)
   {
     Data = default;
     Error = error;

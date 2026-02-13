@@ -51,6 +51,9 @@ public static class ServiceCollectionExtensions
         _ = options.Events.AddEventType<PersonUpdatedEvent>();
         _ = options.Events.AddEventType<PersonTimeZoneUpdatedEvent>();
         _ = options.Events.AddEventType<PersonDailyTaskCountUpdatedEvent>();
+        _ = options.Events.AddEventType<NotificationChannelAddedEvent>();
+        _ = options.Events.AddEventType<NotificationChannelRemovedEvent>();
+        _ = options.Events.AddEventType<NotificationChannelToggledEvent>();
 
         _ = options.Schema.For<DbConversation>()
           .Identity(x => x.Id)
@@ -68,8 +71,9 @@ public static class ServiceCollectionExtensions
         _ = options.Events.AddEventType<ToDoUpdatedEvent>();
         _ = options.Events.AddEventType<ToDoCompletedEvent>();
         _ = options.Events.AddEventType<ToDoDeletedEvent>();
-        _ = options.Events.AddEventType<ToDoReminderScheduledEvent>();
-        _ = options.Events.AddEventType<ToDoReminderSetEvent>();
+        _ = options.Events.AddEventType<ToDoPriorityUpdatedEvent>();
+        _ = options.Events.AddEventType<ToDoEnergyUpdatedEvent>();
+        _ = options.Events.AddEventType<ToDoInterestUpdatedEvent>();
 
         _ = options.Schema.For<DbReminder>()
           .Identity(x => x.Id);

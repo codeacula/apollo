@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Builder;
 
 namespace Apollo.GRPC;
 
-public static class WebApplicationExtension
+public static class WebApplicationExtensions
 {
   public static WebApplication AddGrpcServerServices(this WebApplication app)
   {

@@ -10,7 +10,7 @@ using Quartz;
 namespace Apollo.Service.Jobs;
 
 [DisallowConcurrentExecution]
-public class ToDoReminderJob(
+public sealed class ToDoReminderJob(
   IReminderStore reminderStore,
   IPersonStore personStore,
   IPersonNotificationClient notificationClient,

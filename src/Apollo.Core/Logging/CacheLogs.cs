@@ -11,54 +11,6 @@ namespace Apollo.Core.Logging;
 public static partial class CacheLogs
 {
   [LoggerMessage(
-    EventId = 3000,
-    Level = LogLevel.Debug,
-    Message = "Cache miss for: {PlatformUserId}, platform id: {Platform}")]
-  public static partial void CacheMiss(ILogger logger, string platformUserId, Platform platform);
-
-  [LoggerMessage(
-    EventId = 3001,
-    Level = LogLevel.Debug,
-    Message = "Cache hit: {PlatformUserId}, platform id: {Platform}, access: {HasAccess}")]
-  public static partial void CacheHit(ILogger logger, string platformUserId, Platform platform, bool hasAccess);
-
-  [LoggerMessage(
-    EventId = 3002,
-    Level = LogLevel.Debug,
-    Message = "Cache set: {PlatformUserId}, platform id: {Platform}, access: {HasAccess}")]
-  public static partial void CacheSet(ILogger logger, string platformUserId, Platform platform, bool hasAccess);
-
-  [LoggerMessage(
-    EventId = 3003,
-    Level = LogLevel.Information,
-    Message = "Cache invalidated for: {PlatformUserId}, platform id: {Platform}")]
-  public static partial void CacheInvalidated(ILogger logger, string platformUserId, Platform platform);
-
-  [LoggerMessage(
-    EventId = 3004,
-    Level = LogLevel.Error,
-    Message = "Error reading from cache for: {PlatformUserId}, platform id: {Platform}")]
-  public static partial void CacheReadError(ILogger logger, Exception exception, string platformUserId, Platform platform);
-
-  [LoggerMessage(
-    EventId = 3005,
-    Level = LogLevel.Error,
-    Message = "Error writing to cache for: {PlatformUserId}, platform id: {Platform}")]
-  public static partial void CacheWriteError(ILogger logger, Exception exception, string platformUserId, Platform platform);
-
-  [LoggerMessage(
-    EventId = 3006,
-    Level = LogLevel.Error,
-    Message = "Error deleting from cache for: {PlatformUserId}, platform id: {Platform}")]
-  public static partial void CacheDeleteError(ILogger logger, Exception exception, string platformUserId, Platform platform);
-
-  [LoggerMessage(
-    EventId = 3007,
-    Level = LogLevel.Error,
-    Message = "Unable to set value to cache: {ErrorMessage}")]
-  public static partial void UnableToSetToCache(ILogger logger, string errorMessage);
-
-  [LoggerMessage(
     EventId = 3010,
     Level = LogLevel.Debug,
     Message = "Cache miss for person id: {PersonPlatformId} on {Platform}")]

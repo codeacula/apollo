@@ -56,7 +56,7 @@ public sealed class HealthCheckEndpointTests(WebApplicationFactory<IApolloAPI> f
     if (response.StatusCode == System.Net.HttpStatusCode.OK)
     {
       Assert.NotEmpty(content);
-      var doc = JsonDocument.Parse(content);
+      _ = JsonDocument.Parse(content);
     }
   }
 
@@ -95,7 +95,7 @@ public sealed class HealthCheckEndpointTests(WebApplicationFactory<IApolloAPI> f
       var content = await response.Content.ReadAsStringAsync();
       Assert.NotEmpty(content);
       // The content should be JSON with health details
-      var doc = JsonDocument.Parse(content);
+      _ = JsonDocument.Parse(content);
     }
   }
 

@@ -17,7 +17,7 @@ public sealed class ReminderStoreTests(StoreTestFixture fixture) : IClassFixture
     var details = StoreTestFixture.CreateTestDetails("Remind me to take medication");
     var reminderTime = StoreTestFixture.CreateTestReminderTime();
     var quartzJobId = StoreTestFixture.CreateTestQuartzJobId();
-    var store = new ReminderStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ReminderStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
 
     // Act
     var result = await store.CreateAsync(reminderId, personId, details, reminderTime, quartzJobId);
@@ -38,7 +38,7 @@ public sealed class ReminderStoreTests(StoreTestFixture fixture) : IClassFixture
     var details = StoreTestFixture.CreateTestDetails();
     var reminderTime = StoreTestFixture.CreateTestReminderTime();
     var quartzJobId = StoreTestFixture.CreateTestQuartzJobId();
-    var store = new ReminderStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ReminderStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
 
     // Act
     _ = await store.CreateAsync(reminderId, personId, details, reminderTime, quartzJobId);
@@ -57,7 +57,7 @@ public sealed class ReminderStoreTests(StoreTestFixture fixture) : IClassFixture
     var personId = StoreTestFixture.CreateTestPersonId();
     var reminderTime = StoreTestFixture.CreateTestReminderTime();
     var quartzJobId = StoreTestFixture.CreateTestQuartzJobId();
-    var store = new ReminderStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ReminderStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
 
     // Act & Assert
     _ = await Assert.ThrowsAsync<ArgumentException>(() =>
@@ -77,7 +77,7 @@ public sealed class ReminderStoreTests(StoreTestFixture fixture) : IClassFixture
     var details = StoreTestFixture.CreateTestDetails("Test reminder");
     var reminderTime = StoreTestFixture.CreateTestReminderTime();
     var quartzJobId = StoreTestFixture.CreateTestQuartzJobId();
-    var store = new ReminderStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ReminderStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
     _ = await store.CreateAsync(reminderId, personId, details, reminderTime, quartzJobId);
 
     // Act
@@ -93,7 +93,7 @@ public sealed class ReminderStoreTests(StoreTestFixture fixture) : IClassFixture
   {
     // Arrange
     var invalidReminderId = StoreTestFixture.CreateTestReminderId();
-    var store = new ReminderStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ReminderStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
 
     // Act
     var result = await store.GetAsync(invalidReminderId);
@@ -111,7 +111,7 @@ public sealed class ReminderStoreTests(StoreTestFixture fixture) : IClassFixture
     var details = StoreTestFixture.CreateTestDetails();
     var reminderTime = StoreTestFixture.CreateTestReminderTime();
     var quartzJobId = StoreTestFixture.CreateTestQuartzJobId();
-    var store = new ReminderStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ReminderStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
     _ = await store.CreateAsync(reminderId, personId, details, reminderTime, quartzJobId);
     _ = await store.DeleteAsync(reminderId);
 
@@ -136,7 +136,7 @@ public sealed class ReminderStoreTests(StoreTestFixture fixture) : IClassFixture
     var personId = StoreTestFixture.CreateTestPersonId();
     var details = StoreTestFixture.CreateTestDetails();
     var reminderTime = StoreTestFixture.CreateTestReminderTime();
-    var store = new ReminderStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ReminderStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
 
     // Act
     _ = await store.CreateAsync(reminderId1, personId, details, reminderTime, quartzJobId);
@@ -153,7 +153,7 @@ public sealed class ReminderStoreTests(StoreTestFixture fixture) : IClassFixture
   {
     // Arrange
     var invalidQuartzJobId = StoreTestFixture.CreateTestQuartzJobId();
-    var store = new ReminderStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ReminderStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
 
     // Act
     var result = await store.GetByQuartzJobIdAsync(invalidQuartzJobId);
@@ -177,7 +177,7 @@ public sealed class ReminderStoreTests(StoreTestFixture fixture) : IClassFixture
     var details = StoreTestFixture.CreateTestDetails();
     var reminderTime = StoreTestFixture.CreateTestReminderTime();
     var quartzJobId = StoreTestFixture.CreateTestQuartzJobId();
-    var store = new ReminderStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ReminderStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
     _ = await store.CreateAsync(reminderId, personId, details, reminderTime, quartzJobId);
 
     // Act
@@ -199,7 +199,7 @@ public sealed class ReminderStoreTests(StoreTestFixture fixture) : IClassFixture
     var reminderTime = StoreTestFixture.CreateTestReminderTime();
     var quartzJobId1 = StoreTestFixture.CreateTestQuartzJobId();
     var quartzJobId2 = StoreTestFixture.CreateTestQuartzJobId();
-    var store = new ReminderStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ReminderStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
     _ = await store.CreateAsync(reminderId1, personId, details, reminderTime, quartzJobId1);
     _ = await store.CreateAsync(reminderId2, personId, details, reminderTime, quartzJobId2);
 
@@ -218,7 +218,7 @@ public sealed class ReminderStoreTests(StoreTestFixture fixture) : IClassFixture
   {
     // Arrange
     var invalidToDoId = StoreTestFixture.CreateTestToDoId();
-    var store = new ReminderStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ReminderStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
 
     // Act
     var result = await store.GetByToDoIdAsync(invalidToDoId);
@@ -242,7 +242,7 @@ public sealed class ReminderStoreTests(StoreTestFixture fixture) : IClassFixture
     var details = StoreTestFixture.CreateTestDetails();
     var reminderTime = StoreTestFixture.CreateTestReminderTime();
     var quartzJobId = StoreTestFixture.CreateTestQuartzJobId();
-    var store = new ReminderStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ReminderStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
     _ = await store.CreateAsync(reminderId, personId, details, reminderTime, quartzJobId);
     _ = await store.LinkToToDoAsync(reminderId, toDoId);
 
@@ -262,7 +262,7 @@ public sealed class ReminderStoreTests(StoreTestFixture fixture) : IClassFixture
     // Arrange
     var reminderId = StoreTestFixture.CreateTestReminderId();
     var toDoId = StoreTestFixture.CreateTestToDoId();
-    var store = new ReminderStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ReminderStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
 
     // Act
     var result = await store.UnlinkFromToDoAsync(reminderId, toDoId);
@@ -284,7 +284,7 @@ public sealed class ReminderStoreTests(StoreTestFixture fixture) : IClassFixture
     var details = StoreTestFixture.CreateTestDetails();
     var reminderTime = StoreTestFixture.CreateTestReminderTime();
     var quartzJobId = StoreTestFixture.CreateTestQuartzJobId();
-    var store = new ReminderStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ReminderStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
     _ = await store.CreateAsync(reminderId, personId, details, reminderTime, quartzJobId);
 
     // Act
@@ -299,7 +299,7 @@ public sealed class ReminderStoreTests(StoreTestFixture fixture) : IClassFixture
   {
     // Arrange
     var invalidReminderId = StoreTestFixture.CreateTestReminderId();
-    var store = new ReminderStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ReminderStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
 
     // Act
     var result = await store.MarkAsSentAsync(invalidReminderId);
@@ -321,7 +321,7 @@ public sealed class ReminderStoreTests(StoreTestFixture fixture) : IClassFixture
     var details = StoreTestFixture.CreateTestDetails();
     var reminderTime = StoreTestFixture.CreateTestReminderTime();
     var quartzJobId = StoreTestFixture.CreateTestQuartzJobId();
-    var store = new ReminderStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ReminderStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
     _ = await store.CreateAsync(reminderId, personId, details, reminderTime, quartzJobId);
 
     // Act
@@ -336,7 +336,7 @@ public sealed class ReminderStoreTests(StoreTestFixture fixture) : IClassFixture
   {
     // Arrange
     var invalidReminderId = StoreTestFixture.CreateTestReminderId();
-    var store = new ReminderStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ReminderStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
 
     // Act
     var result = await store.AcknowledgeAsync(invalidReminderId);
@@ -358,7 +358,7 @@ public sealed class ReminderStoreTests(StoreTestFixture fixture) : IClassFixture
     var details = StoreTestFixture.CreateTestDetails();
     var reminderTime = StoreTestFixture.CreateTestReminderTime();
     var quartzJobId = StoreTestFixture.CreateTestQuartzJobId();
-    var store = new ReminderStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ReminderStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
     _ = await store.CreateAsync(reminderId, personId, details, reminderTime, quartzJobId);
 
     // Act
@@ -375,7 +375,7 @@ public sealed class ReminderStoreTests(StoreTestFixture fixture) : IClassFixture
   {
     // Arrange
     var invalidReminderId = StoreTestFixture.CreateTestReminderId();
-    var store = new ReminderStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ReminderStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
 
     // Act
     var result = await store.DeleteAsync(invalidReminderId);
@@ -399,7 +399,7 @@ public sealed class ReminderStoreTests(StoreTestFixture fixture) : IClassFixture
     var details = StoreTestFixture.CreateTestDetails();
     var reminderTime = StoreTestFixture.CreateTestReminderTime();
     var quartzJobId = StoreTestFixture.CreateTestQuartzJobId();
-    var store = new ReminderStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ReminderStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
     _ = await store.CreateAsync(reminderId, personId, details, reminderTime, quartzJobId);
 
     // Act
@@ -417,7 +417,7 @@ public sealed class ReminderStoreTests(StoreTestFixture fixture) : IClassFixture
   {
     // Arrange
     var invalidReminderId = StoreTestFixture.CreateTestReminderId();
-    var store = new ReminderStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ReminderStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
 
     // Act
     var result = await store.GetLinkedToDoIdsAsync(invalidReminderId);
@@ -443,7 +443,7 @@ public sealed class ReminderStoreTests(StoreTestFixture fixture) : IClassFixture
     var reminderTime = StoreTestFixture.CreateTestReminderTime();
     var quartzJobId1 = StoreTestFixture.CreateTestQuartzJobId();
     var quartzJobId2 = StoreTestFixture.CreateTestQuartzJobId();
-    var store = new ReminderStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ReminderStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
     _ = await store.CreateAsync(reminderId1, personId, details, reminderTime, quartzJobId1);
     _ = await store.CreateAsync(reminderId2, personId, details, reminderTime, quartzJobId2);
 
@@ -462,7 +462,7 @@ public sealed class ReminderStoreTests(StoreTestFixture fixture) : IClassFixture
   {
     // Arrange
     var invalidToDoId = StoreTestFixture.CreateTestToDoId();
-    var store = new ReminderStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ReminderStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
 
     // Act
     var result = await store.GetLinkedReminderIdsAsync(invalidToDoId);
@@ -484,7 +484,7 @@ public sealed class ReminderStoreTests(StoreTestFixture fixture) : IClassFixture
     var details = StoreTestFixture.CreateTestDetails();
     var reminderTime = StoreTestFixture.CreateTestReminderTime();
     const int reminderCount = 5;
-    var store = new ReminderStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ReminderStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
 
     // Act
     for (int i = 0; i < reminderCount; i++)
@@ -510,7 +510,7 @@ public sealed class ReminderStoreTests(StoreTestFixture fixture) : IClassFixture
     var details = StoreTestFixture.CreateTestDetails();
     var reminderTime = StoreTestFixture.CreateTestReminderTime();
     var quartzJobId = StoreTestFixture.CreateTestQuartzJobId();
-    var store = new ReminderStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ReminderStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
 
     // Act - Full lifecycle
     var createResult = await store.CreateAsync(reminderId, personId, details, reminderTime, quartzJobId);
@@ -546,7 +546,7 @@ public sealed class ReminderStoreTests(StoreTestFixture fixture) : IClassFixture
     var details = StoreTestFixture.CreateTestDetails();
     var reminderTime = StoreTestFixture.CreateTestReminderTime();
     var quartzJobId = StoreTestFixture.CreateTestQuartzJobId();
-    var store = new ReminderStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ReminderStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
     _ = await store.CreateAsync(reminderId, personId, details, reminderTime, quartzJobId);
 
     // Act

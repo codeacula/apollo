@@ -41,25 +41,25 @@ public static partial class ToDoLogs
   public static partial void LogReminder(ILogger logger, string username, string description);
 
   [LoggerMessage(
-      EventId = 5009,
+      EventId = 5006,
       Level = LogLevel.Information,
       Message = "Sending reminder for {Count} To-Do items to user {Username}.")]
   public static partial void LogSendingGroupedReminder(ILogger logger, int count, string username);
 
   [LoggerMessage(
-      EventId = 5006,
+      EventId = 5007,
       Level = LogLevel.Error,
       Message = "Error processing reminder for To-Do {ToDoId}")]
   public static partial void LogErrorProcessingReminder(ILogger logger, Exception ex, Guid toDoId);
 
   [LoggerMessage(
-      EventId = 5007,
+      EventId = 5008,
       Level = LogLevel.Information,
       Message = "To-Do Reminder Job completed at {Time}.")]
   public static partial void LogJobCompleted(ILogger logger, DateTimeOffset time);
 
   [LoggerMessage(
-      EventId = 5008,
+      EventId = 5009,
       Level = LogLevel.Error,
       Message = "To-Do Reminder Job failed with exception:")]
   public static partial void LogJobFailed(ILogger logger, Exception ex);

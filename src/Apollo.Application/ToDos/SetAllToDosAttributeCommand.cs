@@ -86,14 +86,8 @@ public sealed class SetAllToDosAttributeCommandHandler(
     {
       return Result.Fail("Not found");
     }
-    else if (todoResult.Value.PersonId.Value != personId.Value)
-    {
-      return Result.Fail("Permission denied");
-    }
-    else
-    {
-      return Result.Ok();
-    }
+
+    return todoResult.Value.PersonId.Value != personId.Value ? Result.Fail("Permission denied") : Result.Ok();
   }
 
   private async Task<(bool Updated, List<string> Errors)> UpdateAttributesAsync(

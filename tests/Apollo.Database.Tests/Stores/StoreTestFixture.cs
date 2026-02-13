@@ -1,4 +1,3 @@
-using Apollo.Core;
 using Apollo.Core.People;
 using Apollo.Database.Conversations;
 using Apollo.Database.Conversations.Events;
@@ -33,7 +32,7 @@ public sealed class StoreTestFixture : IAsyncLifetime
 
   public IDocumentSession DocumentSession { get; private set; } = null!;
   public IPersonCache PersonCache => _personCacheMock!.Object;
-  public TimeProvider TimeProvider => TimeProvider.System;
+  public static TimeProvider TimeProvider => TimeProvider.System;
   public SuperAdminConfig SuperAdminConfig { get => field!; private set; }
 
   public async Task InitializeAsync()
@@ -150,8 +149,6 @@ public sealed class StoreTestFixture : IAsyncLifetime
   /// <summary>
   /// Test data builders
   /// </summary>
-  /// <param name="username"></param>
-  /// <param name="platform"></param>
   public static PlatformId CreateTestPlatformId(string username = "testuser", Platform platform = Platform.Discord)
   {
     return new PlatformId(username, Guid.NewGuid().ToString(), platform);

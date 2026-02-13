@@ -8,7 +8,7 @@ using ApolloPlatform = Apollo.Domain.Common.Enums.Platform;
 
 namespace Apollo.Discord.Modules;
 
-public class AdminCommandModule(IApolloServiceClient apolloServiceClient) : ApplicationCommandModule<ApplicationCommandContext>
+public sealed class AdminCommandModule(IApolloServiceClient apolloServiceClient) : ApplicationCommandModule<ApplicationCommandContext>
 {
   [SlashCommand("grant-access", "Grant a user access to Apollo (Admin only)")]
   public async Task GrantAccessAsync(

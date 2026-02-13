@@ -16,7 +16,7 @@ public sealed class PersonStoreTests(StoreTestFixture fixture) : IClassFixture<S
   {
     // Arrange
     var platformId = StoreTestFixture.CreateTestPlatformId();
-    var store = new PersonStore(_fixture.SuperAdminConfig, _fixture.DocumentSession, _fixture.TimeProvider, _fixture.PersonCache);
+    var store = new PersonStore(_fixture.SuperAdminConfig, _fixture.DocumentSession, StoreTestFixture.TimeProvider, _fixture.PersonCache);
 
     // Act
     var result = await store.CreateByPlatformIdAsync(platformId);
@@ -32,7 +32,7 @@ public sealed class PersonStoreTests(StoreTestFixture fixture) : IClassFixture<S
   {
     // Arrange
     var platformId = StoreTestFixture.CreateTestPlatformId("alice");
-    var store = new PersonStore(_fixture.SuperAdminConfig, _fixture.DocumentSession, _fixture.TimeProvider, _fixture.PersonCache);
+    var store = new PersonStore(_fixture.SuperAdminConfig, _fixture.DocumentSession, StoreTestFixture.TimeProvider, _fixture.PersonCache);
 
     // Act
     var createResult = await store.CreateByPlatformIdAsync(platformId);
@@ -48,7 +48,7 @@ public sealed class PersonStoreTests(StoreTestFixture fixture) : IClassFixture<S
   public async Task CreateByPlatformIdAsyncWithNullPlatformIdThrowsExceptionAsync()
   {
     // Arrange
-    var store = new PersonStore(_fixture.SuperAdminConfig, _fixture.DocumentSession, _fixture.TimeProvider, _fixture.PersonCache);
+    var store = new PersonStore(_fixture.SuperAdminConfig, _fixture.DocumentSession, StoreTestFixture.TimeProvider, _fixture.PersonCache);
 
     // Act & Assert
     _ = await Assert.ThrowsAsync<ArgumentException>(() =>
@@ -62,7 +62,7 @@ public sealed class PersonStoreTests(StoreTestFixture fixture) : IClassFixture<S
     const string superAdminId = "123456789";
     var superAdminConfig = new SuperAdminConfig { DiscordUserId = superAdminId };
     var platformId = new PlatformId("superadmin", superAdminId, Platform.Discord);
-    var store = new PersonStore(superAdminConfig, _fixture.DocumentSession, _fixture.TimeProvider, _fixture.PersonCache);
+    var store = new PersonStore(superAdminConfig, _fixture.DocumentSession, StoreTestFixture.TimeProvider, _fixture.PersonCache);
 
     // Act
     var result = await store.CreateByPlatformIdAsync(platformId);
@@ -77,7 +77,7 @@ public sealed class PersonStoreTests(StoreTestFixture fixture) : IClassFixture<S
   {
     // Arrange
     var platformId = StoreTestFixture.CreateTestPlatformId();
-    var store = new PersonStore(_fixture.SuperAdminConfig, _fixture.DocumentSession, _fixture.TimeProvider, _fixture.PersonCache);
+    var store = new PersonStore(_fixture.SuperAdminConfig, _fixture.DocumentSession, StoreTestFixture.TimeProvider, _fixture.PersonCache);
 
     // Act
     var result = await store.CreateByPlatformIdAsync(platformId);
@@ -96,7 +96,7 @@ public sealed class PersonStoreTests(StoreTestFixture fixture) : IClassFixture<S
   {
     // Arrange
     var platformId = StoreTestFixture.CreateTestPlatformId();
-    var store = new PersonStore(_fixture.SuperAdminConfig, _fixture.DocumentSession, _fixture.TimeProvider, _fixture.PersonCache);
+    var store = new PersonStore(_fixture.SuperAdminConfig, _fixture.DocumentSession, StoreTestFixture.TimeProvider, _fixture.PersonCache);
     var createResult = await store.CreateByPlatformIdAsync(platformId);
     var personId = createResult.Value.Id;
 
@@ -113,7 +113,7 @@ public sealed class PersonStoreTests(StoreTestFixture fixture) : IClassFixture<S
   {
     // Arrange
     var invalidId = new PersonId(Guid.NewGuid());
-    var store = new PersonStore(_fixture.SuperAdminConfig, _fixture.DocumentSession, _fixture.TimeProvider, _fixture.PersonCache);
+    var store = new PersonStore(_fixture.SuperAdminConfig, _fixture.DocumentSession, StoreTestFixture.TimeProvider, _fixture.PersonCache);
 
     // Act
     var result = await store.GetAsync(invalidId);
@@ -131,7 +131,7 @@ public sealed class PersonStoreTests(StoreTestFixture fixture) : IClassFixture<S
   {
     // Arrange
     var platformId = StoreTestFixture.CreateTestPlatformId("bob");
-    var store = new PersonStore(_fixture.SuperAdminConfig, _fixture.DocumentSession, _fixture.TimeProvider, _fixture.PersonCache);
+    var store = new PersonStore(_fixture.SuperAdminConfig, _fixture.DocumentSession, StoreTestFixture.TimeProvider, _fixture.PersonCache);
     _ = await store.CreateByPlatformIdAsync(platformId);
 
     // Act
@@ -147,7 +147,7 @@ public sealed class PersonStoreTests(StoreTestFixture fixture) : IClassFixture<S
   {
     // Arrange
     var invalidPlatformId = StoreTestFixture.CreateTestPlatformId("nonexistent");
-    var store = new PersonStore(_fixture.SuperAdminConfig, _fixture.DocumentSession, _fixture.TimeProvider, _fixture.PersonCache);
+    var store = new PersonStore(_fixture.SuperAdminConfig, _fixture.DocumentSession, StoreTestFixture.TimeProvider, _fixture.PersonCache);
 
     // Act
     var result = await store.GetByPlatformIdAsync(invalidPlatformId);
@@ -162,7 +162,7 @@ public sealed class PersonStoreTests(StoreTestFixture fixture) : IClassFixture<S
     // Arrange
     var discordId = new PlatformId("user1", "discord123", Platform.Discord);
     var twitchId = new PlatformId("user1", "twitch456", Platform.Twitch);
-    var store = new PersonStore(_fixture.SuperAdminConfig, _fixture.DocumentSession, _fixture.TimeProvider, _fixture.PersonCache);
+    var store = new PersonStore(_fixture.SuperAdminConfig, _fixture.DocumentSession, StoreTestFixture.TimeProvider, _fixture.PersonCache);
     _ = await store.CreateByPlatformIdAsync(discordId);
     _ = await store.CreateByPlatformIdAsync(twitchId);
 
@@ -185,7 +185,7 @@ public sealed class PersonStoreTests(StoreTestFixture fixture) : IClassFixture<S
   {
     // Arrange
     var platformId = StoreTestFixture.CreateTestPlatformId();
-    var store = new PersonStore(_fixture.SuperAdminConfig, _fixture.DocumentSession, _fixture.TimeProvider, _fixture.PersonCache);
+    var store = new PersonStore(_fixture.SuperAdminConfig, _fixture.DocumentSession, StoreTestFixture.TimeProvider, _fixture.PersonCache);
     var createResult = await store.CreateByPlatformIdAsync(platformId);
     var personId = createResult.Value.Id;
     Assert.False(createResult.Value.HasAccess.Value);
@@ -205,7 +205,7 @@ public sealed class PersonStoreTests(StoreTestFixture fixture) : IClassFixture<S
   {
     // Arrange
     var invalidId = new PersonId(Guid.NewGuid());
-    var store = new PersonStore(_fixture.SuperAdminConfig, _fixture.DocumentSession, _fixture.TimeProvider, _fixture.PersonCache);
+    var store = new PersonStore(_fixture.SuperAdminConfig, _fixture.DocumentSession, StoreTestFixture.TimeProvider, _fixture.PersonCache);
 
     // Act
     var result = await store.GrantAccessAsync(invalidId);
@@ -226,7 +226,7 @@ public sealed class PersonStoreTests(StoreTestFixture fixture) : IClassFixture<S
     const string superAdminId = "revoke_test_admin";
     var superAdminConfig = new SuperAdminConfig { DiscordUserId = superAdminId };
     var platformId = new PlatformId("admin", superAdminId, Platform.Discord);
-    var store = new PersonStore(superAdminConfig, _fixture.DocumentSession, _fixture.TimeProvider, _fixture.PersonCache);
+    var store = new PersonStore(superAdminConfig, _fixture.DocumentSession, StoreTestFixture.TimeProvider, _fixture.PersonCache);
     var createResult = await store.CreateByPlatformIdAsync(platformId);
     var personId = createResult.Value.Id;
     Assert.True(createResult.Value.HasAccess.Value);
@@ -246,7 +246,7 @@ public sealed class PersonStoreTests(StoreTestFixture fixture) : IClassFixture<S
   {
     // Arrange
     var invalidId = new PersonId(Guid.NewGuid());
-    var store = new PersonStore(_fixture.SuperAdminConfig, _fixture.DocumentSession, _fixture.TimeProvider, _fixture.PersonCache);
+    var store = new PersonStore(_fixture.SuperAdminConfig, _fixture.DocumentSession, StoreTestFixture.TimeProvider, _fixture.PersonCache);
 
     // Act
     var result = await store.RevokeAccessAsync(invalidId);
@@ -264,7 +264,7 @@ public sealed class PersonStoreTests(StoreTestFixture fixture) : IClassFixture<S
   {
     // Arrange
     var platformId = StoreTestFixture.CreateTestPlatformId();
-    var store = new PersonStore(_fixture.SuperAdminConfig, _fixture.DocumentSession, _fixture.TimeProvider, _fixture.PersonCache);
+    var store = new PersonStore(_fixture.SuperAdminConfig, _fixture.DocumentSession, StoreTestFixture.TimeProvider, _fixture.PersonCache);
     var createResult = await store.CreateByPlatformIdAsync(platformId);
     var personId = createResult.Value.Id;
 
@@ -281,7 +281,7 @@ public sealed class PersonStoreTests(StoreTestFixture fixture) : IClassFixture<S
   {
     // Arrange
     var invalidId = new PersonId(Guid.NewGuid());
-    var store = new PersonStore(_fixture.SuperAdminConfig, _fixture.DocumentSession, _fixture.TimeProvider, _fixture.PersonCache);
+    var store = new PersonStore(_fixture.SuperAdminConfig, _fixture.DocumentSession, StoreTestFixture.TimeProvider, _fixture.PersonCache);
 
     // Act
     var result = await store.GetAccessAsync(invalidId);
@@ -299,7 +299,7 @@ public sealed class PersonStoreTests(StoreTestFixture fixture) : IClassFixture<S
   {
     // Arrange
     var platformId = StoreTestFixture.CreateTestPlatformId();
-    var store = new PersonStore(_fixture.SuperAdminConfig, _fixture.DocumentSession, _fixture.TimeProvider, _fixture.PersonCache);
+    var store = new PersonStore(_fixture.SuperAdminConfig, _fixture.DocumentSession, StoreTestFixture.TimeProvider, _fixture.PersonCache);
     var createResult = await store.CreateByPlatformIdAsync(platformId);
     var personId = createResult.Value.Id;
     var newTimeZoneId = StoreTestFixture.CreateTestPersonTimeZoneId();
@@ -320,7 +320,7 @@ public sealed class PersonStoreTests(StoreTestFixture fixture) : IClassFixture<S
     // Arrange
     var invalidId = new PersonId(Guid.NewGuid());
     var timeZoneId = StoreTestFixture.CreateTestPersonTimeZoneId();
-    var store = new PersonStore(_fixture.SuperAdminConfig, _fixture.DocumentSession, _fixture.TimeProvider, _fixture.PersonCache);
+    var store = new PersonStore(_fixture.SuperAdminConfig, _fixture.DocumentSession, StoreTestFixture.TimeProvider, _fixture.PersonCache);
 
     // Act
     var result = await store.SetTimeZoneAsync(invalidId, timeZoneId);
@@ -338,7 +338,7 @@ public sealed class PersonStoreTests(StoreTestFixture fixture) : IClassFixture<S
   {
     // Arrange
     var platformId = StoreTestFixture.CreateTestPlatformId();
-    var store = new PersonStore(_fixture.SuperAdminConfig, _fixture.DocumentSession, _fixture.TimeProvider, _fixture.PersonCache);
+    var store = new PersonStore(_fixture.SuperAdminConfig, _fixture.DocumentSession, StoreTestFixture.TimeProvider, _fixture.PersonCache);
     var createResult = await store.CreateByPlatformIdAsync(platformId);
     var personId = createResult.Value.Id;
     var dailyTaskCount = new DailyTaskCount(10);
@@ -359,7 +359,7 @@ public sealed class PersonStoreTests(StoreTestFixture fixture) : IClassFixture<S
     // Arrange
     var invalidId = new PersonId(Guid.NewGuid());
     var dailyTaskCount = new DailyTaskCount(5);
-    var store = new PersonStore(_fixture.SuperAdminConfig, _fixture.DocumentSession, _fixture.TimeProvider, _fixture.PersonCache);
+    var store = new PersonStore(_fixture.SuperAdminConfig, _fixture.DocumentSession, StoreTestFixture.TimeProvider, _fixture.PersonCache);
 
     // Act
     var result = await store.SetDailyTaskCountAsync(invalidId, dailyTaskCount);
@@ -377,7 +377,7 @@ public sealed class PersonStoreTests(StoreTestFixture fixture) : IClassFixture<S
   {
     // Arrange
     var platformId = StoreTestFixture.CreateTestPlatformId();
-    var store = new PersonStore(_fixture.SuperAdminConfig, _fixture.DocumentSession, _fixture.TimeProvider, _fixture.PersonCache);
+    var store = new PersonStore(_fixture.SuperAdminConfig, _fixture.DocumentSession, StoreTestFixture.TimeProvider, _fixture.PersonCache);
     var createResult = await store.CreateByPlatformIdAsync(platformId);
     var person = createResult.Value;
     var channel = new NotificationChannel(NotificationChannelType.Discord, person.PlatformId.PlatformUserId, true);
@@ -397,7 +397,7 @@ public sealed class PersonStoreTests(StoreTestFixture fixture) : IClassFixture<S
   {
     // Arrange
     var platformId = StoreTestFixture.CreateTestPlatformId();
-    var store = new PersonStore(_fixture.SuperAdminConfig, _fixture.DocumentSession, _fixture.TimeProvider, _fixture.PersonCache);
+    var store = new PersonStore(_fixture.SuperAdminConfig, _fixture.DocumentSession, StoreTestFixture.TimeProvider, _fixture.PersonCache);
     var createResult = await store.CreateByPlatformIdAsync(platformId);
     var person = createResult.Value;
     var channel = new NotificationChannel(NotificationChannelType.Discord, person.PlatformId.PlatformUserId, true);
@@ -415,7 +415,7 @@ public sealed class PersonStoreTests(StoreTestFixture fixture) : IClassFixture<S
   {
     // Arrange
     var platformId = StoreTestFixture.CreateTestPlatformId();
-    var store = new PersonStore(_fixture.SuperAdminConfig, _fixture.DocumentSession, _fixture.TimeProvider, _fixture.PersonCache);
+    var store = new PersonStore(_fixture.SuperAdminConfig, _fixture.DocumentSession, StoreTestFixture.TimeProvider, _fixture.PersonCache);
     var createResult = await store.CreateByPlatformIdAsync(platformId);
     var person = createResult.Value;
     var channel = new NotificationChannel(NotificationChannelType.Discord, person.PlatformId.PlatformUserId, true);
@@ -435,7 +435,7 @@ public sealed class PersonStoreTests(StoreTestFixture fixture) : IClassFixture<S
   {
     // Arrange
     var platformId = StoreTestFixture.CreateTestPlatformId();
-    var store = new PersonStore(_fixture.SuperAdminConfig, _fixture.DocumentSession, _fixture.TimeProvider, _fixture.PersonCache);
+    var store = new PersonStore(_fixture.SuperAdminConfig, _fixture.DocumentSession, StoreTestFixture.TimeProvider, _fixture.PersonCache);
     var createResult = await store.CreateByPlatformIdAsync(platformId);
     var person = createResult.Value;
     var channel = new NotificationChannel(NotificationChannelType.Discord, person.PlatformId.PlatformUserId, true);
@@ -455,7 +455,7 @@ public sealed class PersonStoreTests(StoreTestFixture fixture) : IClassFixture<S
   {
     // Arrange
     var platformId = StoreTestFixture.CreateTestPlatformId();
-    var store = new PersonStore(_fixture.SuperAdminConfig, _fixture.DocumentSession, _fixture.TimeProvider, _fixture.PersonCache);
+    var store = new PersonStore(_fixture.SuperAdminConfig, _fixture.DocumentSession, StoreTestFixture.TimeProvider, _fixture.PersonCache);
     var createResult = await store.CreateByPlatformIdAsync(platformId);
     var person = createResult.Value;
     var oldChannel = new NotificationChannel(NotificationChannelType.Discord, "old_identifier", true);

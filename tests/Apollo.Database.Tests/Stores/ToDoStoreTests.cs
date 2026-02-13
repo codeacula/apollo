@@ -19,7 +19,7 @@ public sealed class ToDoStoreTests(StoreTestFixture fixture) : IClassFixture<Sto
     var priority = StoreTestFixture.CreateTestPriority(Level.Red);
     var energy = StoreTestFixture.CreateTestEnergy(Level.Green);
     var interest = StoreTestFixture.CreateTestInterest(Level.Yellow);
-    var store = new ToDoStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ToDoStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
 
     // Act
     var result = await store.CreateAsync(toDoId, personId, description, priority, energy, interest);
@@ -41,7 +41,7 @@ public sealed class ToDoStoreTests(StoreTestFixture fixture) : IClassFixture<Sto
     var priority = StoreTestFixture.CreateTestPriority();
     var energy = StoreTestFixture.CreateTestEnergy();
     var interest = StoreTestFixture.CreateTestInterest();
-    var store = new ToDoStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ToDoStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
 
     // Act
     _ = await store.CreateAsync(toDoId, personId, description, priority, energy, interest);
@@ -58,7 +58,7 @@ public sealed class ToDoStoreTests(StoreTestFixture fixture) : IClassFixture<Sto
     // Arrange
     var personId = StoreTestFixture.CreateTestPersonId();
     var toDoId = StoreTestFixture.CreateTestToDoId();
-    var store = new ToDoStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ToDoStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
 
     // Act & Assert
     _ = await Assert.ThrowsAsync<ArgumentException>(() =>
@@ -79,7 +79,7 @@ public sealed class ToDoStoreTests(StoreTestFixture fixture) : IClassFixture<Sto
     var priority = StoreTestFixture.CreateTestPriority();
     var energy = StoreTestFixture.CreateTestEnergy();
     var interest = StoreTestFixture.CreateTestInterest();
-    var store = new ToDoStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ToDoStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
     _ = await store.CreateAsync(toDoId, personId, description, priority, energy, interest);
 
     // Act
@@ -95,7 +95,7 @@ public sealed class ToDoStoreTests(StoreTestFixture fixture) : IClassFixture<Sto
   {
     // Arrange
     var invalidToDoId = StoreTestFixture.CreateTestToDoId();
-    var store = new ToDoStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ToDoStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
 
     // Act
     var result = await store.GetAsync(invalidToDoId);
@@ -114,7 +114,7 @@ public sealed class ToDoStoreTests(StoreTestFixture fixture) : IClassFixture<Sto
     var priority = StoreTestFixture.CreateTestPriority();
     var energy = StoreTestFixture.CreateTestEnergy();
     var interest = StoreTestFixture.CreateTestInterest();
-    var store = new ToDoStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ToDoStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
     _ = await store.CreateAsync(toDoId, personId, description, priority, energy, interest);
     _ = await store.DeleteAsync(toDoId);
 
@@ -140,7 +140,7 @@ public sealed class ToDoStoreTests(StoreTestFixture fixture) : IClassFixture<Sto
     var priority = StoreTestFixture.CreateTestPriority();
     var energy = StoreTestFixture.CreateTestEnergy();
     var interest = StoreTestFixture.CreateTestInterest();
-    var store = new ToDoStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ToDoStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
     _ = await store.CreateAsync(toDoId1, personId, description, priority, energy, interest);
     _ = await store.CreateAsync(toDoId2, personId, description, priority, energy, interest);
 
@@ -163,7 +163,7 @@ public sealed class ToDoStoreTests(StoreTestFixture fixture) : IClassFixture<Sto
     var priority = StoreTestFixture.CreateTestPriority();
     var energy = StoreTestFixture.CreateTestEnergy();
     var interest = StoreTestFixture.CreateTestInterest();
-    var store = new ToDoStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ToDoStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
     _ = await store.CreateAsync(toDoId1, personId, description, priority, energy, interest);
     _ = await store.CreateAsync(toDoId2, personId, description, priority, energy, interest);
     _ = await store.CompleteAsync(toDoId1);
@@ -187,7 +187,7 @@ public sealed class ToDoStoreTests(StoreTestFixture fixture) : IClassFixture<Sto
     var priority = StoreTestFixture.CreateTestPriority();
     var energy = StoreTestFixture.CreateTestEnergy();
     var interest = StoreTestFixture.CreateTestInterest();
-    var store = new ToDoStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ToDoStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
     _ = await store.CreateAsync(toDoId1, personId, description, priority, energy, interest);
     _ = await store.CreateAsync(toDoId2, personId, description, priority, energy, interest);
     _ = await store.CompleteAsync(toDoId1);
@@ -211,7 +211,7 @@ public sealed class ToDoStoreTests(StoreTestFixture fixture) : IClassFixture<Sto
     var priority = StoreTestFixture.CreateTestPriority();
     var energy = StoreTestFixture.CreateTestEnergy();
     var interest = StoreTestFixture.CreateTestInterest();
-    var store = new ToDoStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ToDoStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
     _ = await store.CreateAsync(toDoId1, personId, description, priority, energy, interest);
     _ = await store.CreateAsync(toDoId2, personId, description, priority, energy, interest);
     _ = await store.DeleteAsync(toDoId1);
@@ -239,7 +239,7 @@ public sealed class ToDoStoreTests(StoreTestFixture fixture) : IClassFixture<Sto
     var priority = StoreTestFixture.CreateTestPriority();
     var energy = StoreTestFixture.CreateTestEnergy();
     var interest = StoreTestFixture.CreateTestInterest();
-    var store = new ToDoStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ToDoStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
     _ = await store.CreateAsync(toDoId, personId, oldDescription, priority, energy, interest);
 
     // Act
@@ -258,7 +258,7 @@ public sealed class ToDoStoreTests(StoreTestFixture fixture) : IClassFixture<Sto
     // Arrange
     var invalidToDoId = StoreTestFixture.CreateTestToDoId();
     var description = StoreTestFixture.CreateTestDescription();
-    var store = new ToDoStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ToDoStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
 
     // Act
     var result = await store.UpdateAsync(invalidToDoId, description);
@@ -281,7 +281,7 @@ public sealed class ToDoStoreTests(StoreTestFixture fixture) : IClassFixture<Sto
     var priority = StoreTestFixture.CreateTestPriority();
     var energy = StoreTestFixture.CreateTestEnergy();
     var interest = StoreTestFixture.CreateTestInterest();
-    var store = new ToDoStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ToDoStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
     _ = await store.CreateAsync(toDoId, personId, description, priority, energy, interest);
 
     // Act
@@ -298,7 +298,7 @@ public sealed class ToDoStoreTests(StoreTestFixture fixture) : IClassFixture<Sto
   {
     // Arrange
     var invalidToDoId = StoreTestFixture.CreateTestToDoId();
-    var store = new ToDoStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ToDoStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
 
     // Act
     var result = await store.CompleteAsync(invalidToDoId);
@@ -321,7 +321,7 @@ public sealed class ToDoStoreTests(StoreTestFixture fixture) : IClassFixture<Sto
     var priority = StoreTestFixture.CreateTestPriority();
     var energy = StoreTestFixture.CreateTestEnergy();
     var interest = StoreTestFixture.CreateTestInterest();
-    var store = new ToDoStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ToDoStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
     _ = await store.CreateAsync(toDoId, personId, description, priority, energy, interest);
 
     // Act
@@ -338,7 +338,7 @@ public sealed class ToDoStoreTests(StoreTestFixture fixture) : IClassFixture<Sto
   {
     // Arrange
     var invalidToDoId = StoreTestFixture.CreateTestToDoId();
-    var store = new ToDoStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ToDoStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
 
     // Act
     var result = await store.DeleteAsync(invalidToDoId);
@@ -362,7 +362,7 @@ public sealed class ToDoStoreTests(StoreTestFixture fixture) : IClassFixture<Sto
     var newPriority = StoreTestFixture.CreateTestPriority(Level.Red);
     var energy = StoreTestFixture.CreateTestEnergy();
     var interest = StoreTestFixture.CreateTestInterest();
-    var store = new ToDoStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ToDoStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
     _ = await store.CreateAsync(toDoId, personId, description, priority, energy, interest);
 
     // Act
@@ -390,7 +390,7 @@ public sealed class ToDoStoreTests(StoreTestFixture fixture) : IClassFixture<Sto
     var energy = StoreTestFixture.CreateTestEnergy(Level.Blue);
     var newEnergy = StoreTestFixture.CreateTestEnergy(Level.Red);
     var interest = StoreTestFixture.CreateTestInterest();
-    var store = new ToDoStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ToDoStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
     _ = await store.CreateAsync(toDoId, personId, description, priority, energy, interest);
 
     // Act
@@ -418,7 +418,7 @@ public sealed class ToDoStoreTests(StoreTestFixture fixture) : IClassFixture<Sto
     var energy = StoreTestFixture.CreateTestEnergy();
     var interest = StoreTestFixture.CreateTestInterest(Level.Blue);
     var newInterest = StoreTestFixture.CreateTestInterest(Level.Yellow);
-    var store = new ToDoStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ToDoStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
     _ = await store.CreateAsync(toDoId, personId, description, priority, energy, interest);
 
     // Act
@@ -447,7 +447,7 @@ public sealed class ToDoStoreTests(StoreTestFixture fixture) : IClassFixture<Sto
     var priority = StoreTestFixture.CreateTestPriority();
     var energy = StoreTestFixture.CreateTestEnergy();
     var interest = StoreTestFixture.CreateTestInterest();
-    var store = new ToDoStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ToDoStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
 
     // Act
     _ = await store.CreateAsync(toDoId1, personId, description, priority, energy, interest);
@@ -470,7 +470,7 @@ public sealed class ToDoStoreTests(StoreTestFixture fixture) : IClassFixture<Sto
     var priority = StoreTestFixture.CreateTestPriority();
     var energy = StoreTestFixture.CreateTestEnergy();
     var interest = StoreTestFixture.CreateTestInterest();
-    var store = new ToDoStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ToDoStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
     _ = await store.CreateAsync(toDoId, personId, description, priority, energy, interest);
 
     // Act

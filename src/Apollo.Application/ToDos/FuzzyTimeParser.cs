@@ -17,7 +17,7 @@ namespace Apollo.Application.ToDos;
 /// - "tomorrow"
 /// - "next week"
 /// </summary>
-public partial class FuzzyTimeParser : IFuzzyTimeParser
+public sealed partial class FuzzyTimeParser : IFuzzyTimeParser
 {
   // Pattern: "in N unit" where unit can be minutes, hours, days, weeks with various abbreviations
   [GeneratedRegex(

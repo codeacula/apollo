@@ -1,4 +1,4 @@
 namespace Apollo.GRPC.Attributes;
 
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
-public class RequireSuperAdminAttribute : Attribute;
+public sealed class RequireSuperAdminAttribute : Attribute;

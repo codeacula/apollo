@@ -43,7 +43,7 @@ public sealed record DbConversation
   {
     return conversation with
     {
-      Messages = [.. conversation.Messages, DbMessage.Create(ev)],
+      Messages = [.. conversation.Messages, DbMessage.Create(ev, conversation.PersonId)],
       UpdatedOn = ev.Data.CreatedOn
     };
   }
@@ -52,7 +52,7 @@ public sealed record DbConversation
   {
     return conversation with
     {
-      Messages = [.. conversation.Messages, DbMessage.Create(ev)],
+      Messages = [.. conversation.Messages, DbMessage.Create(ev, conversation.PersonId)],
       UpdatedOn = ev.Data.CreatedOn
     };
   }

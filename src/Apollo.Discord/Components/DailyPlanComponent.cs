@@ -5,7 +5,7 @@ using NetCord.Rest;
 
 namespace Apollo.Discord.Components;
 
-public class DailyPlanComponent : ComponentContainerProperties
+public sealed class DailyPlanComponent : ComponentContainerProperties
 {
   public DailyPlanComponent(DailyPlanResponse dailyPlan)
   {

@@ -3,7 +3,7 @@ using NetCord.Rest;
 
 namespace Apollo.Discord.Components;
 
-public class DailyAlertTimeConfigComponent : ComponentContainerProperties
+public sealed class DailyAlertTimeConfigComponent : ComponentContainerProperties
 {
   public const string ButtonCustomId = "daily_alert_time_config_button";
 

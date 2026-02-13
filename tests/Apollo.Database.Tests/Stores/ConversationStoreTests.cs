@@ -14,7 +14,7 @@ public sealed class ConversationStoreTests(StoreTestFixture fixture) : IClassFix
   {
     // Arrange
     var personId = StoreTestFixture.CreateTestPersonId();
-    var store = new ConversationStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ConversationStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
 
     // Act
     var result = await store.CreateAsync(personId);
@@ -30,7 +30,7 @@ public sealed class ConversationStoreTests(StoreTestFixture fixture) : IClassFix
   {
     // Arrange
     var personId = StoreTestFixture.CreateTestPersonId();
-    var store = new ConversationStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ConversationStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
 
     // Act
     var createResult = await store.CreateAsync(personId);
@@ -47,7 +47,7 @@ public sealed class ConversationStoreTests(StoreTestFixture fixture) : IClassFix
   public async Task CreateAsyncWithNullPersonIdThrowsExceptionAsync()
   {
     // Arrange
-    var store = new ConversationStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ConversationStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
 
     // Act & Assert
     _ = await Assert.ThrowsAsync<ArgumentException>(() =>
@@ -63,7 +63,7 @@ public sealed class ConversationStoreTests(StoreTestFixture fixture) : IClassFix
   {
     // Arrange
     var personId = StoreTestFixture.CreateTestPersonId();
-    var store = new ConversationStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ConversationStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
     var createResult = await store.CreateAsync(personId);
     var conversationId = createResult.Value.Id;
 
@@ -80,7 +80,7 @@ public sealed class ConversationStoreTests(StoreTestFixture fixture) : IClassFix
   {
     // Arrange
     var invalidConversationId = new ConversationId(Guid.NewGuid());
-    var store = new ConversationStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ConversationStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
 
     // Act
     var result = await store.GetAsync(invalidConversationId);
@@ -98,7 +98,7 @@ public sealed class ConversationStoreTests(StoreTestFixture fixture) : IClassFix
   {
     // Arrange
     var personId = StoreTestFixture.CreateTestPersonId();
-    var store = new ConversationStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ConversationStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
     var createResult = await store.CreateAsync(personId);
 
     // Act
@@ -114,7 +114,7 @@ public sealed class ConversationStoreTests(StoreTestFixture fixture) : IClassFix
   {
     // Arrange
     var invalidPersonId = StoreTestFixture.CreateTestPersonId();
-    var store = new ConversationStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ConversationStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
 
     // Act
     var result = await store.GetConversationByPersonIdAsync(invalidPersonId);
@@ -128,7 +128,7 @@ public sealed class ConversationStoreTests(StoreTestFixture fixture) : IClassFix
   {
     // Arrange
     var personId = StoreTestFixture.CreateTestPersonId();
-    var store = new ConversationStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ConversationStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
     // Create a conversation (will be overwritten by second create in current implementation)
     _ = await store.CreateAsync(personId);
 
@@ -149,7 +149,7 @@ public sealed class ConversationStoreTests(StoreTestFixture fixture) : IClassFix
   {
     // Arrange
     var personId = StoreTestFixture.CreateTestPersonId();
-    var store = new ConversationStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ConversationStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
     var createResult = await store.CreateAsync(personId);
     var conversationId = createResult.Value.Id;
 
@@ -166,7 +166,7 @@ public sealed class ConversationStoreTests(StoreTestFixture fixture) : IClassFix
   {
     // Arrange
     var personId = StoreTestFixture.CreateTestPersonId();
-    var store = new ConversationStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ConversationStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
 
     // Act
     var result = await store.GetOrCreateConversationByPersonIdAsync(personId);
@@ -181,7 +181,7 @@ public sealed class ConversationStoreTests(StoreTestFixture fixture) : IClassFix
   {
     // Arrange
     var personId = StoreTestFixture.CreateTestPersonId();
-    var store = new ConversationStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ConversationStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
 
     // Act
     var result1 = await store.GetOrCreateConversationByPersonIdAsync(personId);
@@ -202,7 +202,7 @@ public sealed class ConversationStoreTests(StoreTestFixture fixture) : IClassFix
   {
     // Arrange
     var personId = StoreTestFixture.CreateTestPersonId();
-    var store = new ConversationStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ConversationStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
     var createResult = await store.CreateAsync(personId);
     var conversationId = createResult.Value.Id;
     var messageContent = StoreTestFixture.CreateTestContent("User message");
@@ -220,7 +220,7 @@ public sealed class ConversationStoreTests(StoreTestFixture fixture) : IClassFix
   {
     // Arrange
     var invalidConversationId = new ConversationId(Guid.NewGuid());
-    var store = new ConversationStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ConversationStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
     var messageContent = StoreTestFixture.CreateTestContent();
 
     // Act
@@ -235,7 +235,7 @@ public sealed class ConversationStoreTests(StoreTestFixture fixture) : IClassFix
   {
     // Arrange
     var personId = StoreTestFixture.CreateTestPersonId();
-    var store = new ConversationStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ConversationStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
     var createResult = await store.CreateAsync(personId);
     var conversationId = createResult.Value.Id;
     var message1 = StoreTestFixture.CreateTestContent("Message 1");
@@ -262,7 +262,7 @@ public sealed class ConversationStoreTests(StoreTestFixture fixture) : IClassFix
   {
     // Arrange
     var personId = StoreTestFixture.CreateTestPersonId();
-    var store = new ConversationStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ConversationStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
     var createResult = await store.CreateAsync(personId);
     var conversationId = createResult.Value.Id;
     var userMessage = StoreTestFixture.CreateTestContent("User message");
@@ -282,7 +282,7 @@ public sealed class ConversationStoreTests(StoreTestFixture fixture) : IClassFix
   {
     // Arrange
     var invalidConversationId = new ConversationId(Guid.NewGuid());
-    var store = new ConversationStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ConversationStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
     var reply = StoreTestFixture.CreateTestContent();
 
     // Act
@@ -297,7 +297,7 @@ public sealed class ConversationStoreTests(StoreTestFixture fixture) : IClassFix
   {
     // Arrange
     var personId = StoreTestFixture.CreateTestPersonId();
-    var store = new ConversationStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ConversationStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
     var createResult = await store.CreateAsync(personId);
     var conversationId = createResult.Value.Id;
     var message1 = StoreTestFixture.CreateTestContent("User message 1");
@@ -328,7 +328,7 @@ public sealed class ConversationStoreTests(StoreTestFixture fixture) : IClassFix
     var personId1 = StoreTestFixture.CreateTestPersonId();
     var personId2 = StoreTestFixture.CreateTestPersonId();
     var personId3 = StoreTestFixture.CreateTestPersonId();
-    var store = new ConversationStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ConversationStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
 
     // Act
     var conversation1 = await store.CreateAsync(personId1);
@@ -349,7 +349,7 @@ public sealed class ConversationStoreTests(StoreTestFixture fixture) : IClassFix
   {
     // Arrange
     var personId = StoreTestFixture.CreateTestPersonId();
-    var store = new ConversationStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ConversationStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
     var createResult = await store.CreateAsync(personId);
     var conversationId = createResult.Value.Id;
     const int messageCount = 20;
@@ -372,7 +372,7 @@ public sealed class ConversationStoreTests(StoreTestFixture fixture) : IClassFix
   {
     // Arrange
     var personId = StoreTestFixture.CreateTestPersonId();
-    var store = new ConversationStore(_fixture.DocumentSession, _fixture.TimeProvider);
+    var store = new ConversationStore(_fixture.DocumentSession, StoreTestFixture.TimeProvider);
     var createResult = await store.CreateAsync(personId);
     var conversationId = createResult.Value.Id;
 

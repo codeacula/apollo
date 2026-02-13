@@ -12,7 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Apollo.GRPC.Interceptors;
 
-public class AuthorizationInterceptor(SuperAdminConfig superAdminConfig) : Interceptor
+public sealed class AuthorizationInterceptor(SuperAdminConfig superAdminConfig) : Interceptor
 {
   public override async Task<TResponse> UnaryServerHandler<TRequest, TResponse>(
       TRequest request,
