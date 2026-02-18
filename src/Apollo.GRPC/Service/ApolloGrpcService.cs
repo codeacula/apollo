@@ -17,8 +17,7 @@ public sealed class ApolloGrpcService(
   IMediator mediator,
   IReminderStore reminderStore,
   IPersonStore personStore,
-  IFuzzyTimeParser fuzzyTimeParser,
-  TimeProvider timeProvider,
+  ITimeParsingService timeParsingService,
   SuperAdminConfig superAdminConfig,
   IUserContext userContext
 ) : IApolloGrpcService
@@ -70,8 +69,8 @@ public sealed class ApolloGrpcService(
   {
     var person = userContext.Person!;
 
-    // Parse the reminder time using fuzzy time parser
-    var parsedTimeResult = ParseReminderTime(request.ReminderTime);
+    // Parse the reminder time using the consolidated time parsing service
+    var parsedTimeResult = await timeParsingService.ParseTimeAsync(request.ReminderTime);
     if (parsedTimeResult.IsFailed)
     {
       return parsedTimeResult.Errors.Select(e => new GrpcError(e.Message)).ToArray();
@@ -100,34 +99,6 @@ public sealed class ApolloGrpcService(
       CreatedOn = reminder.CreatedOn.Value,
       UpdatedOn = reminder.UpdatedOn.Value
     };
-  }
-
-  private FluentResults.Result<DateTime> ParseReminderTime(string reminderTime)
-  {
-    if (string.IsNullOrEmpty(reminderTime))
-    {
-      return FluentResults.Result.Fail<DateTime>("Reminder time is required.");
-    }
-
-    // First, try to parse as fuzzy time (e.g., "in 10 minutes")
-    var fuzzyResult = fuzzyTimeParser.TryParseFuzzyTime(reminderTime, timeProvider.GetUtcNow().UtcDateTime);
-    if (fuzzyResult.IsSuccess)
-    {
-      return FluentResults.Result.Ok(fuzzyResult.Value);
-    }
-
-    // Fall back to ISO 8601 parsing
-    if (!DateTime.TryParse(reminderTime, out var parsedDate))
-    {
-      return FluentResults.Result.Fail<DateTime>("Invalid reminder time format. Use fuzzy time like 'in 10 minutes' or ISO 8601 format like 2025-12-31T10:00:00.");
-    }
-
-    // Assume UTC if kind is unspecified
-    var utcDate = parsedDate.Kind == DateTimeKind.Unspecified
-      ? DateTime.SpecifyKind(parsedDate, DateTimeKind.Utc)
-      : parsedDate.ToUniversalTime();
-
-    return FluentResults.Result.Ok(utcDate);
   }
 
   public async Task<GrpcResult<ToDoDTO>> GetToDoAsync(GetToDoRequest request)

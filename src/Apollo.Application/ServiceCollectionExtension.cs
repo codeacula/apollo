@@ -18,6 +18,8 @@ public static class ServiceCollectionExtension
 
     _ = services.AddSingleton<IFuzzyTimeParser, FuzzyTimeParser>();
 
+    _ = services.AddScoped<ITimeParsingService, TimeParsingService>();
+
     return services;
   }
 }

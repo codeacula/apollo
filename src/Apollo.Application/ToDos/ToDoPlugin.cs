@@ -19,19 +19,18 @@ namespace Apollo.Application.ToDos;
 public sealed class ToDoPlugin(
   IMediator mediator,
   IPersonStore personStore,
-  IFuzzyTimeParser fuzzyTimeParser,
-  TimeProvider timeProvider,
+  ITimeParsingService timeParsingService,
   PersonConfig personConfig,
   PersonId personId)
 {
   public const string PluginName = "ToDos";
 
   [KernelFunction("create_todo")]
-  [Description("Creates a new todo with an optional reminder. Supports fuzzy times like 'in 10 minutes', 'in 2 hours', 'tomorrow', or ISO 8601 format.")]
+  [Description("Creates a new todo with an optional reminder. Supports a wide range of time expressions including 'in 10 minutes', 'tomorrow at 3pm', 'tonight', 'next Monday', 'noon', 'end of day', or ISO 8601 format.")]
   [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0046:Convert to conditional expression", Justification = "Maintains better code readability")]
   public async Task<string> CreateToDoAsync(
     [Description("The todo description")] string description,
-    [Description("Optional reminder time. Supports fuzzy formats like 'in 10 minutes', 'in 2 hours', 'tomorrow', 'next week', or ISO 8601 format (e.g., 2025-12-31T10:00:00).")] string? reminderDate = null,
+    [Description("Optional reminder time. Supports: 'in 10 minutes', 'in 2 hours', 'in half an hour', 'in an hour', 'tomorrow', 'tomorrow at 3pm', 'at 3pm', 'tonight', 'this morning', 'this afternoon', 'this evening', 'noon', 'midnight', 'next Monday', 'on Friday', 'next week', 'end of day', 'eod', 'end of week', or ISO 8601 (e.g., 2025-12-31T10:00:00).")] string? reminderDate = null,
     [Description("Optional priority level. Accepts: 'blue'/'low' (0), 'green'/'medium' (1, default), 'yellow'/'high' (2), 'red'/'urgent' (3), or color emojis.")] string? priority = null,
     [Description("Optional energy level. Accepts: 'blue'/'low' (0), 'green'/'medium' (1, default), 'yellow'/'high' (2), 'red'/'urgent' (3), or color emojis.")] string? energy = null,
     [Description("Optional interest level. Accepts: 'blue'/'low' (0), 'green'/'medium' (1, default), 'yellow'/'high' (2), 'red'/'urgent' (3), or color emojis.")] string? interest = null,
@@ -39,10 +38,16 @@ public sealed class ToDoPlugin(
   {
     try
     {
-      var reminder = await ParseReminderDateAsync(reminderDate, cancellationToken);
-      if (reminder.IsFailed)
+      DateTime? reminder = null;
+      if (!string.IsNullOrEmpty(reminderDate))
       {
-        return $"Failed to create todo: {reminder.GetErrorMessages()}";
+        var userTimeZoneId = await GetUserTimeZoneIdAsync(cancellationToken);
+        var parsedResult = await timeParsingService.ParseTimeAsync(reminderDate, userTimeZoneId, cancellationToken);
+        if (parsedResult.IsFailed)
+        {
+          return $"Failed to create todo: {parsedResult.GetErrorMessages()}";
+        }
+        reminder = parsedResult.Value;
       }
 
       var priorityResult = ParseLevel(priority);
@@ -52,7 +57,7 @@ public sealed class ToDoPlugin(
       var command = new CreateToDoCommand(
         personId,
         new Description(description),
-        reminder.Value,
+        reminder,
         priorityResult.IsSuccess ? new Priority(priorityResult.Value) : null,
         energyResult.IsSuccess ? new Energy(energyResult.Value) : null,
         interestResult.IsSuccess ? new Interest(interestResult.Value) : null
@@ -65,8 +70,8 @@ public sealed class ToDoPlugin(
         return $"Failed to create todo: {result.GetErrorMessages()}";
       }
 
-      return reminder.Value.HasValue
-        ? $"Successfully created todo '{result.Value.Description.Value}' with a reminder set for {reminder.Value.Value:yyyy-MM-dd HH:mm:ss} UTC."
+      return reminder.HasValue
+        ? $"Successfully created todo '{result.Value.Description.Value}' with a reminder set for {reminder.Value:yyyy-MM-dd HH:mm:ss} UTC."
         : $"Successfully created todo '{result.Value.Description.Value}'.";
     }
     catch (Exception ex)
@@ -549,44 +554,11 @@ public sealed class ToDoPlugin(
     return sb.ToString();
   }
 
-  private async Task<Result<DateTime?>> ParseReminderDateAsync(string? reminderDate, CancellationToken cancellationToken)
+  private async Task<string> GetUserTimeZoneIdAsync(CancellationToken cancellationToken)
   {
-    if (string.IsNullOrEmpty(reminderDate))
-    {
-      return Result.Ok<DateTime?>(null);
-    }
-
-    // First, try to parse as fuzzy time (e.g., "in 10 minutes")
-    var fuzzyResult = fuzzyTimeParser.TryParseFuzzyTime(reminderDate, timeProvider.GetUtcNow().UtcDateTime);
-    if (fuzzyResult.IsSuccess)
-    {
-      return Result.Ok<DateTime?>(fuzzyResult.Value);
-    }
-
-    // Fall back to ISO 8601 parsing
-    return !DateTime.TryParse(reminderDate, out var parsedDate)
-      ? Result.Fail<DateTime?>("Invalid reminder format. Use fuzzy time like 'in 10 minutes' or ISO 8601 format like 2025-12-31T10:00:00.")
-      : await ConvertToUtcAsync(parsedDate, cancellationToken);
-  }
-
-  private async Task<Result<DateTime?>> ConvertToUtcAsync(DateTime parsedDate, CancellationToken cancellationToken)
-  {
-    // Get user's timezone or use default
     var personResult = await personStore.GetAsync(personId, cancellationToken);
-    var timeZoneId = personResult.IsSuccess && personResult.Value.TimeZoneId.HasValue
+    return personResult.IsSuccess && personResult.Value.TimeZoneId.HasValue
       ? personResult.Value.TimeZoneId.Value.Value
       : personConfig.DefaultTimeZoneId;
-
-    var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
-
-    // Convert from user's local time to UTC
-    var reminder = parsedDate.Kind switch
-    {
-      DateTimeKind.Unspecified => TimeZoneInfo.ConvertTimeToUtc(parsedDate, timeZoneInfo),
-      DateTimeKind.Local => parsedDate.ToUniversalTime(),
-      _ => parsedDate
-    };
-
-    return Result.Ok<DateTime?>(reminder);
   }
 }

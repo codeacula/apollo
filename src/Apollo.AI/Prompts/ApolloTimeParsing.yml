@@ -1,0 +1,19 @@
+temperature: 0.0
+systemPrompt: >
+  Convert the time expression to ISO 8601 format (yyyy-MM-ddTHH:mm:ss).
+
+  Current datetime: {current_datetime}
+  User timezone: {user_timezone}
+
+  Rules:
+  - Output ONLY the ISO 8601 string, nothing else.
+  - Interpret the expression relative to the current datetime.
+  - If the expression cannot be interpreted as a date/time, output exactly: UNPARSEABLE
+  - Use the user's timezone for interpretation, output in that timezone.
+
+  Examples:
+  "next thursday" -> 2025-01-02T09:00:00
+  "day after tomorrow at 5pm" -> 2025-12-28T17:00:00
+  "this coming saturday morning" -> 2025-12-27T09:00:00
+  "two weeks from now" -> 2026-01-09T14:30:00
+  "buy groceries" -> UNPARSEABLE

@@ -1,0 +1,324 @@
+using Apollo.AI;
+using Apollo.AI.Requests;
+using Apollo.Application.ToDos;
+using Apollo.Core.ToDos;
+
+using FluentResults;
+
+using Moq;
+
+namespace Apollo.Application.Tests.ToDos;
+
+public sealed class TimeParsingServiceTests
+{
+  private readonly Mock<IFuzzyTimeParser> _fuzzyTimeParser = new();
+  private readonly Mock<IApolloAIAgent> _aiAgent = new();
+  private readonly Mock<TimeProvider> _timeProvider = new();
+  private readonly TimeParsingService _service;
+
+  private static readonly DateTime ReferenceTime = new(2025, 12, 30, 14, 30, 0, DateTimeKind.Utc);
+
+  public TimeParsingServiceTests()
+  {
+    _timeProvider.Setup(tp => tp.GetUtcNow()).Returns(new DateTimeOffset(ReferenceTime));
+    _service = new TimeParsingService(_fuzzyTimeParser.Object, _aiAgent.Object, _timeProvider.Object);
+  }
+
+  [Fact]
+  public async Task ParseTimeAsyncWithFuzzyTimeReturnsParsedUtcDateTime()
+  {
+    // Arrange
+    var expected = ReferenceTime.AddMinutes(10);
+    _fuzzyTimeParser
+      .Setup(p => p.TryParseFuzzyTime("in 10 minutes", ReferenceTime))
+      .Returns(Result.Ok(expected));
+
+    // Act
+    var result = await _service.ParseTimeAsync("in 10 minutes");
+
+    // Assert
+    Assert.True(result.IsSuccess);
+    Assert.Equal(expected, result.Value);
+    _fuzzyTimeParser.Verify(p => p.TryParseFuzzyTime("in 10 minutes", ReferenceTime), Times.Once);
+  }
+
+  [Theory]
+  [InlineData("2025-12-31T10:00:00")]
+  [InlineData("2025-12-31 10:00:00")]
+  [InlineData("2025-12-31 10:00")]
+  public async Task ParseTimeAsyncWithIso8601ReturnsUtcDateTime(string input)
+  {
+    // Arrange - fuzzy parser fails
+    _fuzzyTimeParser
+      .Setup(p => p.TryParseFuzzyTime(input, ReferenceTime))
+      .Returns(Result.Fail<DateTime>("Not fuzzy"));
+
+    // Act
+    var result = await _service.ParseTimeAsync(input);
+
+    // Assert
+    Assert.True(result.IsSuccess);
+    Assert.Equal(new DateTime(2025, 12, 31, 10, 0, 0, DateTimeKind.Utc), result.Value);
+  }
+
+  [Theory]
+  [InlineData("3:00 PM", 15, 0)]
+  [InlineData("9:30 AM", 9, 30)]
+  public async Task ParseTimeAsyncWithCommonTimeFormatReturnsUtcDateTime(
+    string input, int expectedHour, int expectedMinute)
+  {
+    // Arrange - fuzzy parser fails
+    _fuzzyTimeParser
+      .Setup(p => p.TryParseFuzzyTime(input, ReferenceTime))
+      .Returns(Result.Fail<DateTime>("Not fuzzy"));
+
+    // Act
+    var result = await _service.ParseTimeAsync(input);
+
+    // Assert
+    Assert.True(result.IsSuccess);
+    Assert.Equal(expectedHour, result.Value.Hour);
+    Assert.Equal(expectedMinute, result.Value.Minute);
+  }
+
+  [Theory]
+  [InlineData("December 31, 2025")]
+  [InlineData("Dec 31, 2025")]
+  public async Task ParseTimeAsyncWithDateTimeReturnsParsedDateTime(string input)
+  {
+    // Arrange - fuzzy parser fails
+    _fuzzyTimeParser
+      .Setup(p => p.TryParseFuzzyTime(input, ReferenceTime))
+      .Returns(Result.Fail<DateTime>("Not fuzzy"));
+
+    // Act
+    var result = await _service.ParseTimeAsync(input);
+
+    // Assert
+    Assert.True(result.IsSuccess);
+    Assert.Equal(2025, result.Value.Year);
+    Assert.Equal(12, result.Value.Month);
+    Assert.Equal(31, result.Value.Day);
+  }
+
+  [Fact]
+  public async Task ParseTimeAsyncWithInvalidInputCallsLlmFallback()
+  {
+    // Arrange - fuzzy parser fails, C# parsing fails, LLM returns UNPARSEABLE
+    const string input = "not a time at all";
+    _fuzzyTimeParser
+      .Setup(p => p.TryParseFuzzyTime(input, ReferenceTime))
+      .Returns(Result.Fail<DateTime>("Not fuzzy"));
+
+    var mockBuilder = new Mock<IAIRequestBuilder>();
+    _ = _aiAgent.Setup(a => a.CreateTimeParsingRequest(input, "UTC", It.IsAny<string>()))
+      .Returns(mockBuilder.Object);
+    _ = mockBuilder.Setup(b => b.ExecuteAsync(default))
+      .ReturnsAsync(AIRequestResult.SuccessWithContent("UNPARSEABLE"));
+
+    // Act
+    var result = await _service.ParseTimeAsync(input);
+
+    // Assert
+    Assert.True(result.IsFailed);
+    Assert.Contains("Invalid time format", result.Errors[0].Message);
+  }
+
+  [Fact]
+  public async Task ParseTimeAsyncWithUserTimeZoneConvertsToUtc()
+  {
+    // Arrange - fuzzy parser fails, falls through to C# parsing
+    const string input = "2025-12-31T10:00:00";
+    _fuzzyTimeParser
+      .Setup(p => p.TryParseFuzzyTime(input, ReferenceTime))
+      .Returns(Result.Fail<DateTime>("Not fuzzy"));
+
+    // Act - America/Chicago is UTC-6
+    var result = await _service.ParseTimeAsync(input, "America/Chicago");
+
+    // Assert
+    Assert.True(result.IsSuccess);
+    // 10:00 CST = 16:00 UTC
+    Assert.Equal(new DateTime(2025, 12, 31, 16, 0, 0, DateTimeKind.Utc), result.Value);
+  }
+
+  [Fact]
+  public async Task ParseTimeAsyncWithoutUserTimeZoneAssumesUtc()
+  {
+    // Arrange - fuzzy parser fails
+    const string input = "2025-12-31T10:00:00";
+    _fuzzyTimeParser
+      .Setup(p => p.TryParseFuzzyTime(input, ReferenceTime))
+      .Returns(Result.Fail<DateTime>("Not fuzzy"));
+
+    // Act - no timezone specified
+    var result = await _service.ParseTimeAsync(input);
+
+    // Assert
+    Assert.True(result.IsSuccess);
+    // Should treat as UTC since no timezone given
+    Assert.Equal(new DateTime(2025, 12, 31, 10, 0, 0, DateTimeKind.Utc), result.Value);
+  }
+
+  [Fact]
+  public async Task ParseTimeAsyncWithUnspecifiedKindTreatsAsUserLocal()
+  {
+    // Arrange - fuzzy parser fails, a date without explicit kind
+    const string input = "Dec 31, 2025";
+    _fuzzyTimeParser
+      .Setup(p => p.TryParseFuzzyTime(input, ReferenceTime))
+      .Returns(Result.Fail<DateTime>("Not fuzzy"));
+
+    // Act - with timezone
+    var result = await _service.ParseTimeAsync(input, "America/New_York");
+
+    // Assert
+    Assert.True(result.IsSuccess);
+    // Dec 31 midnight EST = Dec 31 05:00 UTC
+    Assert.Equal(new DateTime(2025, 12, 31, 5, 0, 0, DateTimeKind.Utc), result.Value);
+  }
+
+  [Theory]
+  [InlineData("")]
+  [InlineData("   ")]
+  [InlineData(null)]
+  public async Task ParseTimeAsyncWithEmptyInputReturnsFailure(string? input)
+  {
+    // Act
+    var result = await _service.ParseTimeAsync(input!);
+
+    // Assert
+    Assert.True(result.IsFailed);
+    _fuzzyTimeParser.Verify(p => p.TryParseFuzzyTime(It.IsAny<string>(), It.IsAny<DateTime>()), Times.Never);
+  }
+
+  [Fact]
+  public async Task ParseTimeAsyncDoesNotCallLlmWhenFuzzyParserSucceeds()
+  {
+    // Arrange
+    var expected = ReferenceTime.AddHours(1);
+    _fuzzyTimeParser
+      .Setup(p => p.TryParseFuzzyTime("in an hour", ReferenceTime))
+      .Returns(Result.Ok(expected));
+
+    // Act
+    var result = await _service.ParseTimeAsync("in an hour");
+
+    // Assert
+    Assert.True(result.IsSuccess);
+    Assert.Equal(expected, result.Value);
+    _fuzzyTimeParser.Verify(p => p.TryParseFuzzyTime("in an hour", ReferenceTime), Times.Once);
+    _aiAgent.Verify(a => a.CreateTimeParsingRequest(It.IsAny<string>(), It.IsAny<string>(),
+      It.IsAny<string>()), Times.Never);
+  }
+
+  [Fact]
+  public async Task ParseTimeAsyncDoesNotCallLlmWhenCSharpParseSucceeds()
+  {
+    // Arrange - fuzzy parser fails, but C# parsing succeeds
+    const string input = "2025-12-31T10:00:00";
+    _fuzzyTimeParser
+      .Setup(p => p.TryParseFuzzyTime(input, ReferenceTime))
+      .Returns(Result.Fail<DateTime>("Not fuzzy"));
+
+    // Act
+    var result = await _service.ParseTimeAsync(input);
+
+    // Assert
+    Assert.True(result.IsSuccess);
+    _aiAgent.Verify(a => a.CreateTimeParsingRequest(It.IsAny<string>(), It.IsAny<string>(),
+      It.IsAny<string>()), Times.Never);
+  }
+
+  [Fact]
+  public async Task ParseTimeAsyncWhenAllParsersFallsBackToLlmReturnsUtcDateTime()
+  {
+    // Arrange - fuzzy and C# parsers fail, LLM succeeds
+    const string input = "day after tomorrow at 5pm";
+    _fuzzyTimeParser
+      .Setup(p => p.TryParseFuzzyTime(input, ReferenceTime))
+      .Returns(Result.Fail<DateTime>("Not fuzzy"));
+
+    var mockBuilder = new Mock<IAIRequestBuilder>();
+    _ = _aiAgent.Setup(a => a.CreateTimeParsingRequest(input, "UTC", It.IsAny<string>()))
+      .Returns(mockBuilder.Object);
+    _ = mockBuilder.Setup(b => b.ExecuteAsync(default))
+      .ReturnsAsync(AIRequestResult.SuccessWithContent("2026-01-01T17:00:00"));
+
+    // Act
+    var result = await _service.ParseTimeAsync(input);
+
+    // Assert
+    Assert.True(result.IsSuccess);
+    Assert.Equal(new DateTime(2026, 1, 1, 17, 0, 0, DateTimeKind.Utc), result.Value);
+  }
+
+  [Fact]
+  public async Task ParseTimeAsyncWhenLlmReturnsUnparseableReturnsFailure()
+  {
+    // Arrange
+    const string input = "buy groceries";
+    _fuzzyTimeParser
+      .Setup(p => p.TryParseFuzzyTime(input, ReferenceTime))
+      .Returns(Result.Fail<DateTime>("Not fuzzy"));
+
+    var mockBuilder = new Mock<IAIRequestBuilder>();
+    _ = _aiAgent.Setup(a => a.CreateTimeParsingRequest(input, "UTC", It.IsAny<string>()))
+      .Returns(mockBuilder.Object);
+    _ = mockBuilder.Setup(b => b.ExecuteAsync(default))
+      .ReturnsAsync(AIRequestResult.SuccessWithContent("UNPARSEABLE"));
+
+    // Act
+    var result = await _service.ParseTimeAsync(input);
+
+    // Assert
+    Assert.True(result.IsFailed);
+    Assert.Contains("Invalid time format", result.Errors[0].Message);
+  }
+
+  [Fact]
+  public async Task ParseTimeAsyncWhenLlmReturnsInvalidFormatReturnsFailure()
+  {
+    // Arrange
+    const string input = "some weird expression";
+    _fuzzyTimeParser
+      .Setup(p => p.TryParseFuzzyTime(input, ReferenceTime))
+      .Returns(Result.Fail<DateTime>("Not fuzzy"));
+
+    var mockBuilder = new Mock<IAIRequestBuilder>();
+    _ = _aiAgent.Setup(a => a.CreateTimeParsingRequest(input, "UTC", It.IsAny<string>()))
+      .Returns(mockBuilder.Object);
+    _ = mockBuilder.Setup(b => b.ExecuteAsync(default))
+      .ReturnsAsync(AIRequestResult.SuccessWithContent("not a valid date either"));
+
+    // Act
+    var result = await _service.ParseTimeAsync(input);
+
+    // Assert
+    Assert.True(result.IsFailed);
+    Assert.Contains("Invalid time format", result.Errors[0].Message);
+  }
+
+  [Fact]
+  public async Task ParseTimeAsyncWhenLlmFailsReturnsFailure()
+  {
+    // Arrange
+    const string input = "something complex";
+    _fuzzyTimeParser
+      .Setup(p => p.TryParseFuzzyTime(input, ReferenceTime))
+      .Returns(Result.Fail<DateTime>("Not fuzzy"));
+
+    var mockBuilder = new Mock<IAIRequestBuilder>();
+    _ = _aiAgent.Setup(a => a.CreateTimeParsingRequest(input, "UTC", It.IsAny<string>()))
+      .Returns(mockBuilder.Object);
+    _ = mockBuilder.Setup(b => b.ExecuteAsync(default))
+      .ReturnsAsync(AIRequestResult.Failure("LLM error"));
+
+    // Act
+    var result = await _service.ParseTimeAsync(input);
+
+    // Assert
+    Assert.True(result.IsFailed);
+    Assert.Contains("Invalid time format", result.Errors[0].Message);
+  }
+}

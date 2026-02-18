@@ -42,8 +42,7 @@ public sealed class ApolloGrpcServiceTests
       mediator.Object,
       Mock.Of<IReminderStore>(),
       Mock.Of<IPersonStore>(),
-      Mock.Of<IFuzzyTimeParser>(),
-      TimeProvider.System,
+      Mock.Of<ITimeParsingService>(),
       new SuperAdminConfig(),
       userContext.Object
     );

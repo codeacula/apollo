@@ -17,6 +17,7 @@ public sealed class ApolloAIAgent(
   private const string ResponsePromptName = "ApolloResponse";
   private const string ReminderPromptName = "ApolloReminder";
   private const string DailyPlanningPromptName = "ApolloDailyPlanning";
+  private const string TimeParsingPromptName = "ApolloTimeParsing";
 
   public IAIRequestBuilder CreateRequest()
   {
@@ -105,6 +106,26 @@ public sealed class ApolloAIAgent(
       .FromPromptDefinition(prompt)
       .WithToolCalling(enabled: false)
       .WithJsonMode(enabled: true)
+      .WithTemplateVariables(variables);
+  }
+
+  public IAIRequestBuilder CreateTimeParsingRequest(
+    string timeExpression,
+    string userTimezone,
+    string currentDateTime)
+  {
+    var prompt = promptLoader.Load(TimeParsingPromptName);
+
+    var variables = new Dictionary<string, string>
+    {
+      ["current_datetime"] = currentDateTime,
+      ["user_timezone"] = userTimezone
+    };
+
+    return CreateRequest()
+      .FromPromptDefinition(prompt)
+      .WithMessage(new DTOs.ChatMessageDTO(Enums.ChatRole.User, timeExpression, DateTime.UtcNow))
+      .WithToolCalling(enabled: false)
       .WithTemplateVariables(variables);
   }
 }

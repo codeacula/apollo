@@ -25,7 +25,7 @@ public class ProcessIncomingMessageCommandHandlerTests
 {
   private readonly Mock<IApolloAIAgent> _mockAIAgent;
   private readonly Mock<IConversationStore> _mockConversationStore;
-  private readonly Mock<IFuzzyTimeParser> _mockFuzzyTimeParser;
+  private readonly Mock<ITimeParsingService> _mockTimeParsingService;
   private readonly Mock<ILogger<ProcessIncomingMessageCommandHandler>> _mockLogger;
   private readonly Mock<IMediator> _mockMediator;
   private readonly Mock<IPersonStore> _mockPersonStore;
@@ -39,7 +39,7 @@ public class ProcessIncomingMessageCommandHandlerTests
   {
     _mockAIAgent = new Mock<IApolloAIAgent>();
     _mockConversationStore = new Mock<IConversationStore>();
-    _mockFuzzyTimeParser = new Mock<IFuzzyTimeParser>();
+    _mockTimeParsingService = new Mock<ITimeParsingService>();
     _mockLogger = new Mock<ILogger<ProcessIncomingMessageCommandHandler>>();
     _mockMediator = new Mock<IMediator>();
     _mockPersonStore = new Mock<IPersonStore>();
@@ -51,7 +51,7 @@ public class ProcessIncomingMessageCommandHandlerTests
     _handler = new ProcessIncomingMessageCommandHandler(
       _mockAIAgent.Object,
       _mockConversationStore.Object,
-      _mockFuzzyTimeParser.Object,
+      _mockTimeParsingService.Object,
       _mockLogger.Object,
       _mockMediator.Object,
       _mockPersonStore.Object,

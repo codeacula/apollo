@@ -38,23 +38,49 @@ systemPrompt: >
       get_timezone: Use when user asks what their current timezone is
     </tools_guidance>
 
+    <time_formats>
+      When specifying a time for reminders or todos, pass it as-is in natural language. Supported formats include:
+      - Relative: "in 10 minutes", "in 2 hours", "in half an hour", "in an hour", "in 3 days"
+      - Bare durations: "5 minutes", "2 hours"
+      - Day references: "tomorrow", "tomorrow at 3pm", "tomorrow morning"
+      - Time of day: "at 3pm", "at 9:00 AM", "at 14:30"
+      - Named times: "tonight", "this morning", "this afternoon", "this evening", "noon", "midnight"
+      - Day of week: "next Monday", "on Friday", "next week"
+      - End of period: "end of day", "eod", "end of week"
+      - ISO 8601: "2025-12-31T10:00:00"
+      Prefer simple, parseable formats over complex natural language. If the user's phrasing is unusual,
+      simplify it to one of the forms above rather than passing it verbatim.
+    </time_formats>
+
     <examples>
       <example>
         <user_input>Remind me to brush my teeth in 10 minutes</user_input>
         <explanation>User wants a simple reminder notification</explanation>
-        <action>create_reminder with text "Brush my teeth" and time 10 minutes from now</action>
+        <action>create_reminder with text "Brush my teeth" and time "in 10 minutes"</action>
       </example>
 
       <example>
-        <user_input>I have a doctor's appointment on the 3rd</user_input>
+        <user_input>Remind me to check the oven at noon</user_input>
+        <explanation>User wants a reminder at a named time</explanation>
+        <action>create_reminder with text "Check the oven" and time "noon"</action>
+      </example>
+
+      <example>
+        <user_input>Remind me to call back tonight</user_input>
+        <explanation>User wants a reminder this evening</explanation>
+        <action>create_reminder with text "Call back" and time "tonight"</action>
+      </example>
+
+      <example>
+        <user_input>I have a doctor's appointment next Monday</user_input>
         <explanation>User has an appointment (a task with a deadline)</explanation>
-        <action>create_todo with text "Doctor's appointment" and due date on the next 3rd, plus a reminder</action>
+        <action>create_todo with text "Doctor's appointment" and reminderDate "next Monday"</action>
       </example>
 
       <example>
         <user_input>I have a paper that's due in a month, but I want to get started on it next week</user_input>
         <explanation>User has a task with a due date and wants a reminder to start early</explanation>
-        <action>create_todo with text "Complete paper" and due date 1 month from now, plus reminder "Start on paper" for 1 week from now</action>
+        <action>create_todo with text "Complete paper" and due date "in a month", plus reminder "Start on paper" for "next week"</action>
       </example>
 
       <example>

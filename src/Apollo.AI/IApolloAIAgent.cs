@@ -30,4 +30,9 @@ public interface IApolloAIAgent
     string currentTime,
     string activeTodos,
     int taskCount);
+
+  IAIRequestBuilder CreateTimeParsingRequest(
+    string timeExpression,
+    string userTimezone,
+    string currentDateTime);
 }

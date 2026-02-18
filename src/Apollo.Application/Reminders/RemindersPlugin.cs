@@ -16,24 +16,29 @@ namespace Apollo.Application.Reminders;
 public sealed class RemindersPlugin(
   IMediator mediator,
   IPersonStore personStore,
-  IFuzzyTimeParser fuzzyTimeParser,
-  TimeProvider timeProvider,
+  ITimeParsingService timeParsingService,
   PersonConfig personConfig,
   PersonId personId)
 {
   public const string PluginName = "Reminders";
 
   [KernelFunction("create_reminder")]
-  [Description("Creates a one-time reminder notification. Use this for ephemeral reminders like 'take a break', 'check the oven', 'stand up and stretch' - things that don't need to be tracked as tasks. For persistent tasks that should appear in a todo list, use ToDos.create_todo instead. Supports fuzzy times like 'in 10 minutes', 'in 2 hours', 'tomorrow', or ISO 8601 format.")]
+  [Description("Creates a one-time reminder notification. Use this for ephemeral reminders like 'take a break', 'check the oven', 'stand up and stretch' - things that don't need to be tracked as tasks. For persistent tasks that should appear in a todo list, use ToDos.create_todo instead. Supports a wide range of time expressions including 'in 10 minutes', 'tomorrow at 3pm', 'tonight', 'next Monday', 'noon', 'end of day', or ISO 8601 format.")]
   [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0046:Convert to conditional expression", Justification = "Maintains better code readability")]
   public async Task<string> CreateReminderAsync(
     [Description("What to remind the user about (e.g., 'take a break', 'check the oven')")] string message,
-    [Description("When to send the reminder. Supports fuzzy formats like 'in 10 minutes', 'in 2 hours', 'tomorrow', 'next week', or ISO 8601 format (e.g., 2025-12-31T10:00:00).")] string reminderTime,
+    [Description("When to send the reminder. Supports: 'in 10 minutes', 'in 2 hours', 'in half an hour', 'in an hour', 'tomorrow', 'tomorrow at 3pm', 'at 3pm', 'tonight', 'this morning', 'this afternoon', 'this evening', 'noon', 'midnight', 'next Monday', 'on Friday', 'next week', 'end of day', 'eod', 'end of week', or ISO 8601 (e.g., 2025-12-31T10:00:00).")] string reminderTime,
     CancellationToken cancellationToken = default)
   {
     try
     {
-      var parsedTime = await ParseReminderTimeAsync(reminderTime, cancellationToken);
+      if (string.IsNullOrEmpty(reminderTime))
+      {
+        return "Failed to create reminder: Reminder time is required.";
+      }
+
+      var userTimeZoneId = await GetUserTimeZoneIdAsync(cancellationToken);
+      var parsedTime = await timeParsingService.ParseTimeAsync(reminderTime, userTimeZoneId, cancellationToken);
       if (parsedTime.IsFailed)
       {
         return $"Failed to create reminder: {parsedTime.GetErrorMessages()}";
@@ -94,44 +99,11 @@ public sealed class RemindersPlugin(
       : Result.Ok(reminderGuid);
   }
 
-  private async Task<Result<DateTime>> ParseReminderTimeAsync(string? reminderTime, CancellationToken cancellationToken)
+  private async Task<string> GetUserTimeZoneIdAsync(CancellationToken cancellationToken)
   {
-    if (string.IsNullOrEmpty(reminderTime))
-    {
-      return Result.Fail<DateTime>("Reminder time is required.");
-    }
-
-    // First, try to parse as fuzzy time (e.g., "in 10 minutes")
-    var fuzzyResult = fuzzyTimeParser.TryParseFuzzyTime(reminderTime, timeProvider.GetUtcNow().UtcDateTime);
-    if (fuzzyResult.IsSuccess)
-    {
-      return Result.Ok(fuzzyResult.Value);
-    }
-
-    // Fall back to ISO 8601 parsing
-    return !DateTime.TryParse(reminderTime, out var parsedDate)
-      ? Result.Fail<DateTime>("Invalid reminder time format. Use fuzzy time like 'in 10 minutes' or ISO 8601 format like 2025-12-31T10:00:00.")
-      : await ConvertToUtcAsync(parsedDate, cancellationToken);
-  }
-
-  private async Task<Result<DateTime>> ConvertToUtcAsync(DateTime parsedDate, CancellationToken cancellationToken)
-  {
-    // Get user's timezone or use default
     var personResult = await personStore.GetAsync(personId, cancellationToken);
-    var timeZoneId = personResult.IsSuccess && personResult.Value.TimeZoneId.HasValue
+    return personResult.IsSuccess && personResult.Value.TimeZoneId.HasValue
       ? personResult.Value.TimeZoneId.Value.Value
       : personConfig.DefaultTimeZoneId;
-
-    var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
-
-    // Convert from user's local time to UTC
-    var reminder = parsedDate.Kind switch
-    {
-      DateTimeKind.Unspecified => TimeZoneInfo.ConvertTimeToUtc(parsedDate, timeZoneInfo),
-      DateTimeKind.Local => parsedDate.ToUniversalTime(),
-      _ => parsedDate
-    };
-
-    return Result.Ok(reminder);
   }
 }
