@@ -7,8 +7,8 @@ using FluentResults;
 namespace Apollo.Application.ToDos.Parsers;
 
 /// <summary>
-/// Handles "tomorrow" and "tomorrow at TIME" expressions.
-/// Examples: "tomorrow", "tomorrow at 3pm", "tomorrow at 15:00".
+/// Handles "tomorrow", "tomorrow at TIME", and "tomorrow morning/afternoon/evening" expressions.
+/// Examples: "tomorrow", "tomorrow at 3pm", "tomorrow at 15:00", "tomorrow morning".
 /// </summary>
 [TimeExpressionParser]
 public sealed partial class TomorrowParser : ITimeExpressionParser
@@ -17,6 +17,11 @@ public sealed partial class TomorrowParser : ITimeExpressionParser
     @"^\s*tomorrow\s+at\s+(?<time>\d{1,2}(?::\d{2})?\s*(?:am|pm)?)\s*$",
     RegexOptions.IgnoreCase | RegexOptions.Compiled)]
   private static partial Regex TomorrowAtTimePattern();
+
+  [GeneratedRegex(
+    @"^\s*tomorrow\s+(?<period>morning|afternoon|evening)\s*$",
+    RegexOptions.IgnoreCase | RegexOptions.Compiled)]
+  private static partial Regex TomorrowPeriodPattern();
 
   [GeneratedRegex(@"^\s*tomorrow\s*$", RegexOptions.IgnoreCase | RegexOptions.Compiled)]
   private static partial Regex TomorrowPattern();
@@ -34,10 +39,25 @@ public sealed partial class TomorrowParser : ITimeExpressionParser
       }
     }
 
-    return TomorrowPattern().IsMatch(input) switch
+    var periodMatch = TomorrowPeriodPattern().Match(input);
+    if (periodMatch.Success)
     {
-      true => Result.Ok(TimeParserHelpers.EnsureUtc(referenceTimeUtc.AddDays(1))),
-      false => Result.Fail<DateTime>($"'{input}' is not a tomorrow expression")
-    };
+      var hours = periodMatch.Groups["period"].Value.ToLowerInvariant() switch
+      {
+        "morning" => 9,
+        "afternoon" => 14,
+        "evening" => 18,
+        _ => 9
+      };
+      var dt = referenceTimeUtc.Date.AddDays(1).AddHours(hours);
+      return Result.Ok(TimeParserHelpers.EnsureUtc(dt));
+    }
+
+    if (TomorrowPattern().IsMatch(input))
+    {
+      return Result.Ok(TimeParserHelpers.EnsureUtc(referenceTimeUtc.AddDays(1)));
+    }
+
+    return Result.Fail<DateTime>($"'{input}' is not a tomorrow expression");
   }
 }

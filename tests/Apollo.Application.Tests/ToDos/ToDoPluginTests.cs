@@ -137,6 +137,24 @@ public sealed class ToDoPluginTests
     _timeParsingService.Verify(x => x.ParseTimeAsync("at 3pm", "Europe/London", It.IsAny<CancellationToken>()), Times.Once);
   }
 
+  [Fact]
+  public async Task CreateToDoAsyncWithWhitespaceReminderDateDoesNotCallTimeParsingServiceAsync()
+  {
+    // Arrange
+    var plugin = CreatePlugin();
+
+    _ = _mediator.Setup(m => m.Send(It.IsAny<CreateToDoCommand>(), It.IsAny<CancellationToken>()))
+      .ReturnsAsync(Result.Ok(CreateToDo("Buy milk")));
+
+    // Act
+    var result = await plugin.CreateToDoAsync("Buy milk", "   ");
+
+    // Assert — whitespace-only reminderDate should be treated as no reminder
+    Assert.Contains("Successfully created todo", result);
+    Assert.DoesNotContain("UTC", result);
+    _timeParsingService.Verify(x => x.ParseTimeAsync(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
+  }
+
   private Person CreatePerson(string? timeZoneId = null)
   {
     PersonTimeZoneId? parsedTimeZoneId = null;

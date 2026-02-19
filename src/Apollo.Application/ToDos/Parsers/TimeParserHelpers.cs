@@ -1,14 +1,20 @@
 using System.Globalization;
+using System.Text.RegularExpressions;
 
 using FluentResults;
 
 namespace Apollo.Application.ToDos.Parsers;
 
 /// <summary>
-/// Shared helpers used by multiple <see cref="Core.ToDos.ITimeExpressionParser"/> implementations.
+/// Shared helpers used by multiple <see cref="Apollo.Core.ToDos.ITimeExpressionParser"/> implementations.
 /// </summary>
-internal static class TimeParserHelpers
+internal static partial class TimeParserHelpers
 {
+  [GeneratedRegex(
+    @"(?<hour>\d{1,2})(?::(?<minute>\d{2}))?\s*(?<ampm>am|pm)?",
+    RegexOptions.IgnoreCase | RegexOptions.Compiled)]
+  private static partial Regex TimeComponentPattern();
+
   internal static Result<TimeSpan> ParseTimeOfDay(string timeStr)
   {
     var normalized = timeStr.Trim().ToLowerInvariant();
@@ -28,10 +34,13 @@ internal static class TimeParserHelpers
       return Result.Ok(parsed24.TimeOfDay);
     }
 
-    // Try bare hour (e.g., "15" as 15:00 — only for 24h values >= 0)
-    return int.TryParse(normalized, CultureInfo.InvariantCulture, out var hour) && hour is >= 0 and <= 23
-      ? Result.Ok(TimeSpan.FromHours(hour))
-      : Result.Fail<TimeSpan>($"Could not parse '{timeStr}' as a time of day");
+    // Try bare hour (e.g., "15" as 15:00 — only for unambiguous 24h values >= 13)
+    if (int.TryParse(normalized, CultureInfo.InvariantCulture, out var hour) && hour is >= 13 and <= 23)
+    {
+      return Result.Ok(TimeSpan.FromHours(hour));
+    }
+
+    return Result.Fail<TimeSpan>($"Could not parse '{timeStr}' as a time of day");
   }
 
   internal static DayOfWeek ParseDayOfWeek(string dayStr)

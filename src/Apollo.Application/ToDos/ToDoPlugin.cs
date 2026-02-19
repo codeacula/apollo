@@ -38,7 +38,7 @@ public sealed class ToDoPlugin(
     try
     {
       DateTime? reminder = null;
-      if (!string.IsNullOrEmpty(reminderDate))
+      if (!string.IsNullOrWhiteSpace(reminderDate))
       {
         var userTimeZoneId = await GetUserTimeZoneIdAsync(cancellationToken);
         var parsedResult = await timeParsingService.ParseTimeAsync(reminderDate, userTimeZoneId, cancellationToken);

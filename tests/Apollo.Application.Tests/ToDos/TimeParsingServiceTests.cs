@@ -321,4 +321,107 @@ public sealed class TimeParsingServiceTests
     Assert.True(result.IsFailed);
     Assert.Contains("Invalid time format", result.Errors[0].Message);
   }
+
+  [Fact]
+  public async Task ParseTimeAsyncWithFuzzyTimeAndUserTimezoneConvertsToUtc()
+  {
+    // Arrange — fuzzy parser returns a time that should be treated as user-local
+    // "tomorrow at 3pm" → fuzzy returns 2025-12-31T15:00:00 with Unspecified kind
+    var fuzzyParsed = new DateTime(2025, 12, 31, 15, 0, 0, DateTimeKind.Unspecified);
+    _fuzzyTimeParser
+      .Setup(p => p.TryParseFuzzyTime("tomorrow at 3pm", ReferenceTime))
+      .Returns(Result.Ok(fuzzyParsed));
+
+    // Act — America/Chicago is UTC-6 in winter
+    var result = await _service.ParseTimeAsync("tomorrow at 3pm", "America/Chicago");
+
+    // Assert — 15:00 CST should convert to 21:00 UTC
+    Assert.True(result.IsSuccess);
+    Assert.Equal(new DateTime(2025, 12, 31, 21, 0, 0, DateTimeKind.Utc), result.Value);
+  }
+
+  [Fact]
+  public async Task ParseTimeAsyncWithFuzzyTimeAndNoTimezoneReturnsUtcDirectly()
+  {
+    // Arrange — fuzzy parser returns UTC time (relative durations)
+    var expected = new DateTime(2025, 12, 30, 14, 40, 0, DateTimeKind.Utc);
+    _fuzzyTimeParser
+      .Setup(p => p.TryParseFuzzyTime("in 10 minutes", ReferenceTime))
+      .Returns(Result.Ok(expected));
+
+    // Act — no timezone provided
+    var result = await _service.ParseTimeAsync("in 10 minutes");
+
+    // Assert — UTC time should pass through unchanged
+    Assert.True(result.IsSuccess);
+    Assert.Equal(expected, result.Value);
+  }
+
+  [Fact]
+  public async Task ParseTimeAsyncWithIso8601ZSuffixReturnsUtcKind()
+  {
+    // Arrange — fuzzy parser fails
+    const string input = "2025-12-31T10:00:00Z";
+    _fuzzyTimeParser
+      .Setup(p => p.TryParseFuzzyTime(input, ReferenceTime))
+      .Returns(Result.Fail<DateTime>("Not fuzzy"));
+
+    // Act
+    var result = await _service.ParseTimeAsync(input);
+
+    // Assert — Z suffix means UTC; should NOT be re-converted via timezone
+    Assert.True(result.IsSuccess);
+    Assert.Equal(new DateTime(2025, 12, 31, 10, 0, 0, DateTimeKind.Utc), result.Value);
+  }
+
+  [Fact]
+  public async Task ParseTimeAsyncWithIso8601OffsetConvertsToUtc()
+  {
+    // Arrange — fuzzy parser fails
+    const string input = "2025-12-31T10:00:00-05:00";
+    _fuzzyTimeParser
+      .Setup(p => p.TryParseFuzzyTime(input, ReferenceTime))
+      .Returns(Result.Fail<DateTime>("Not fuzzy"));
+
+    // Act
+    var result = await _service.ParseTimeAsync(input);
+
+    // Assert — 10:00 at -05:00 should convert to 15:00 UTC
+    Assert.True(result.IsSuccess);
+    Assert.Equal(new DateTime(2025, 12, 31, 15, 0, 0, DateTimeKind.Utc), result.Value);
+  }
+
+  [Fact]
+  public async Task ParseTimeAsyncWithInvalidTimezoneIdFallsBackToUtc()
+  {
+    // Arrange — fuzzy parser fails, C# parsing succeeds with Unspecified kind
+    const string input = "2025-12-31T10:00:00";
+    _fuzzyTimeParser
+      .Setup(p => p.TryParseFuzzyTime(input, ReferenceTime))
+      .Returns(Result.Fail<DateTime>("Not fuzzy"));
+
+    // Act — invalid timezone should not throw, should fallback to UTC
+    var result = await _service.ParseTimeAsync(input, "Invalid/Timezone");
+
+    // Assert — should succeed, treating as UTC since timezone is invalid
+    Assert.True(result.IsSuccess);
+    Assert.Equal(new DateTime(2025, 12, 31, 10, 0, 0, DateTimeKind.Utc), result.Value);
+  }
+
+  [Fact]
+  public async Task ParseTimeAsyncWithEmptyTimezoneIdTreatsAsUtc()
+  {
+    // Arrange — fuzzy parser fails, C# parsing succeeds
+    const string input = "2025-12-31T10:00:00";
+    _fuzzyTimeParser
+      .Setup(p => p.TryParseFuzzyTime(input, ReferenceTime))
+      .Returns(Result.Fail<DateTime>("Not fuzzy"));
+
+    // Act — empty string timezone should behave like null
+    var result = await _service.ParseTimeAsync(input, "   ");
+
+    // Assert
+    Assert.True(result.IsSuccess);
+    Assert.Equal(new DateTime(2025, 12, 31, 10, 0, 0, DateTimeKind.Utc), result.Value);
+  }
 }

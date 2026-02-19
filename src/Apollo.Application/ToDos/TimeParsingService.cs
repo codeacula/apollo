@@ -14,20 +14,13 @@ public sealed class TimeParsingService(
 {
   private static readonly string[] ExactFormats =
   [
-    // ISO 8601 variants
+    // ISO 8601 variants (K handles Z, +00:00, -05:00 etc.)
+    "yyyy-MM-ddTHH:mm:ssK",
+    "yyyy-MM-ddTHH:mm:ss.fffffffK",
     "yyyy-MM-ddTHH:mm:ss",
-    "yyyy-MM-ddTHH:mm:ssZ",
-    "yyyy-MM-ddTHH:mm:ss.fffffffZ",
-    "yyyy-MM-ddTHH:mm:sszzz",
     "yyyy-MM-dd HH:mm:ss",
     "yyyy-MM-dd HH:mm",
     "yyyy-MM-dd",
-
-    // Time-only formats
-    "h:mm tt",
-    "hh:mm tt",
-    "HH:mm",
-    "h tt",
 
     // US date formats
     "M/d/yyyy h:mm tt",
@@ -61,12 +54,13 @@ public sealed class TimeParsingService(
     var fuzzyResult = fuzzyTimeParser.TryParseFuzzyTime(input, now);
     if (fuzzyResult.IsSuccess)
     {
-      return Result.Ok(fuzzyResult.Value);
+      var utcFuzzy = ConvertToUtc(fuzzyResult.Value, userTimeZoneId);
+      return Result.Ok(utcFuzzy);
     }
 
     // Step 2: Try DateTime.TryParseExact with common formats
     if (DateTime.TryParseExact(input.Trim(), ExactFormats, CultureInfo.InvariantCulture,
-      DateTimeStyles.None, out var exactParsed))
+      DateTimeStyles.RoundtripKind, out var exactParsed))
     {
       var utcExact = ConvertToUtc(exactParsed, userTimeZoneId);
       return Result.Ok(utcExact);
@@ -142,7 +136,18 @@ public sealed class TimeParsingService(
       return DateTime.SpecifyKind(parsedDate, DateTimeKind.Utc);
     }
 
-    var timeZone = TimeZoneInfo.FindSystemTimeZoneById(userTimeZoneId);
-    return TimeZoneInfo.ConvertTimeToUtc(parsedDate, timeZone);
+    try
+    {
+      var timeZone = TimeZoneInfo.FindSystemTimeZoneById(userTimeZoneId);
+      return TimeZoneInfo.ConvertTimeToUtc(parsedDate, timeZone);
+    }
+    catch (TimeZoneNotFoundException)
+    {
+      return DateTime.SpecifyKind(parsedDate, DateTimeKind.Utc);
+    }
+    catch (InvalidTimeZoneException)
+    {
+      return DateTime.SpecifyKind(parsedDate, DateTimeKind.Utc);
+    }
   }
 }

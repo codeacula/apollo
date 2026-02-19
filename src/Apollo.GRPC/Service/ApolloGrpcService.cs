@@ -70,7 +70,8 @@ public sealed class ApolloGrpcService(
     var person = userContext.Person!;
 
     // Parse the reminder time using the consolidated time parsing service
-    var parsedTimeResult = await timeParsingService.ParseTimeAsync(request.ReminderTime);
+    var userTimeZoneId = person.TimeZoneId.HasValue ? person.TimeZoneId.Value.Value : null;
+    var parsedTimeResult = await timeParsingService.ParseTimeAsync(request.ReminderTime, userTimeZoneId);
     if (parsedTimeResult.IsFailed)
     {
       return parsedTimeResult.Errors.Select(e => new GrpcError(e.Message)).ToArray();
