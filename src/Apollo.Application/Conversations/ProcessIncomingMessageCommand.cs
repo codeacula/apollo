@@ -31,7 +31,7 @@ public sealed record ProcessIncomingMessageCommand(PersonId PersonId, Content Co
 public sealed class ProcessIncomingMessageCommandHandler(
   IApolloAIAgent apolloAIAgent,
   IConversationStore conversationStore,
-  IFuzzyTimeParser fuzzyTimeParser,
+  ITimeParsingService timeParsingService,
   ILogger<ProcessIncomingMessageCommandHandler> logger,
   IMediator mediator,
   IPersonStore personStore,
@@ -96,8 +96,8 @@ public sealed class ProcessIncomingMessageCommandHandler(
     var toolPlanningMessages = ConversationHistoryBuilder.BuildForToolPlanning(conversation, activeTodosSnapshot.TodoIds);
 
     // Phase 1: Tool Planning (JSON output)
-    var toolPlanResult = await apolloAIAgent
-      .CreateToolPlanningRequest(toolPlanningMessages, userTimezone, activeTodosSnapshot.Summary)
+    var toolPlanResult = await (await apolloAIAgent
+      .CreateToolPlanningRequestAsync(toolPlanningMessages, userTimezone, activeTodosSnapshot.Summary))
       .ExecuteAsync(cancellationToken);
 
     var toolPlan = new ToolPlan();
@@ -148,8 +148,8 @@ public sealed class ProcessIncomingMessageCommandHandler(
 
     ConversationLogs.ActionsTaken(logger, person.Id.Value, [actionsSummary]);
 
-    var responseResult = await apolloAIAgent
-      .CreateResponseRequest(responseMessages, actionsSummary, userTimezone)
+    var responseResult = await (await apolloAIAgent
+      .CreateResponseRequestAsync(responseMessages, actionsSummary, userTimezone))
       .ExecuteAsync(cancellationToken);
 
     return !responseResult.Success
@@ -159,8 +159,8 @@ public sealed class ProcessIncomingMessageCommandHandler(
 
   private Dictionary<string, object> CreatePlugins(Person person)
   {
-    var toDoPlugin = new ToDoPlugin(mediator, personStore, fuzzyTimeParser, timeProvider, personConfig, person.Id);
-    var remindersPlugin = new RemindersPlugin(mediator, personStore, fuzzyTimeParser, timeProvider, personConfig, person.Id);
+    var toDoPlugin = new ToDoPlugin(mediator, personStore, timeParsingService, personConfig, person.Id);
+    var remindersPlugin = new RemindersPlugin(mediator, personStore, timeParsingService, personConfig, person.Id);
     var personPlugin = new PersonPlugin(personStore, personConfig, person.Id);
 
     return new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)

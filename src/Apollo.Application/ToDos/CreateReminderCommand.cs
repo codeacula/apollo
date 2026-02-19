@@ -34,6 +34,7 @@ public sealed class CreateReminderCommandHandler(
         request.ReminderDate,
         jobResult.Value,
         cancellationToken);
+
       if (createResult.IsFailed)
       {
         return createResult;

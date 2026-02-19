@@ -86,6 +86,19 @@ systemPrompt: >
       A todo CAN have a reminder attached, but a reminder does NOT create a todo unless the user explicitly wants task tracking.
     </choosing_reminders_vs_todos>
 
+    <time_formats>
+      When specifying reminderDate or reminderTime, use any of the following supported formats:
+      - Relative durations: "in 10 minutes", "in 2 hours", "in 3 days", "in half an hour", "in an hour"
+      - Bare durations: "5 minutes", "2 hours", "3 days"
+      - Day references: "tomorrow", "tomorrow at 3pm", "tomorrow morning"
+      - Time of day: "at 3pm", "at 14:30", "at 9:00 AM"
+      - Named times: "tonight", "this morning", "this afternoon", "this evening", "noon", "midnight"
+      - Day of week: "next Monday", "on Friday", "next week"
+      - End of period: "end of day", "eod", "end of week"
+      - ISO 8601: "2025-12-31T10:00:00"
+      Prefer simple parseable formats. Never guess a time if the user has not specified one.
+    </time_formats>
+
     <schema>
       {
         "tool_calls": [
@@ -115,6 +128,31 @@ systemPrompt: >
       <example>
         <user_input>Remind me to call mom tomorrow at 3pm and add it to my tasks</user_input>
         <output>{"tool_calls":[{"plugin_name":"ToDos","function_name":"create_todo","arguments":{"description":"Call mom","reminderDate":"tomorrow at 3pm"}}]}</output>
+      </example>
+
+      <example>
+        <user_input>Remind me to take my meds tonight</user_input>
+        <output>{"tool_calls":[{"plugin_name":"Reminders","function_name":"create_reminder","arguments":{"message":"Take meds","reminderTime":"tonight"}}]}</output>
+      </example>
+
+      <example>
+        <user_input>Add "submit report" to my todos with a reminder at noon</user_input>
+        <output>{"tool_calls":[{"plugin_name":"ToDos","function_name":"create_todo","arguments":{"description":"Submit report","reminderDate":"noon"}}]}</output>
+      </example>
+
+      <example>
+        <user_input>Remind me to call the dentist next Monday</user_input>
+        <output>{"tool_calls":[{"plugin_name":"Reminders","function_name":"create_reminder","arguments":{"message":"Call the dentist","reminderTime":"next Monday"}}]}</output>
+      </example>
+
+      <example>
+        <user_input>Remind me to check email in an hour</user_input>
+        <output>{"tool_calls":[{"plugin_name":"Reminders","function_name":"create_reminder","arguments":{"message":"Check email","reminderTime":"in an hour"}}]}</output>
+      </example>
+
+      <example>
+        <user_input>Add "wrap up weekly review" with a reminder end of day</user_input>
+        <output>{"tool_calls":[{"plugin_name":"ToDos","function_name":"create_todo","arguments":{"description":"Wrap up weekly review","reminderDate":"end of day"}}]}</output>
       </example>
 
       <example>

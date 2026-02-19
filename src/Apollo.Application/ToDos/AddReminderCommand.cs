@@ -34,15 +34,12 @@ public sealed class AddReminderCommandHandler(
       }
 
       var createResult = await CreateAndLinkReminderAsync(toDoResult.Value, request.ReminderDate, jobResult.Value, cancellationToken);
-      if (createResult.IsFailed)
+      return (await EnsureJobExistsAsync(request.ReminderDate, cancellationToken), createResult) switch
       {
-        return createResult;
-      }
-
-      var ensureResult = await EnsureJobExistsAsync(request.ReminderDate, cancellationToken);
-      return ensureResult.IsFailed
-        ? Result.Fail<Reminder>($"Reminder created but failed to ensure job exists: {ensureResult.GetErrorMessages()}")
-        : createResult;
+        (_, { IsFailed: true } createFailed) => createFailed,
+        ({ IsFailed: true } ensureFailed, _) => Result.Fail<Reminder>($"Reminder created but failed to ensure job exists: {ensureFailed.GetErrorMessages()}"),
+        _ => createResult
+      };
     }
     catch (Exception ex)
     {

@@ -14,6 +14,7 @@ namespace Apollo.GRPC.Interceptors;
 
 public class AuthorizationInterceptor(SuperAdminConfig superAdminConfig) : Interceptor
 {
+
   public override async Task<TResponse> UnaryServerHandler<TRequest, TResponse>(
       TRequest request,
       ServerCallContext context,
@@ -39,20 +40,23 @@ public class AuthorizationInterceptor(SuperAdminConfig superAdminConfig) : Inter
     var userContext = httpContext!.RequestServices.GetService<IUserContext>();
     var person = userContext?.Person;
 
-    if (requireAccess && person?.HasAccess.Value != true)
+    _ = (requireAccess, requireSuperAdmin) switch
     {
-      throw new RpcException(new Status(StatusCode.PermissionDenied, "Access denied."));
-    }
+      (true, _) when person?.HasAccess.Value != true => throw new RpcException(new Status(StatusCode.PermissionDenied, "Access denied.")),
+      (_, true) when person == null || !IsSuperAdmin(person) => throw new RpcException(new Status(StatusCode.PermissionDenied, "Super Admin access required.")),
+      _ => 0
+    };
 
-    return requireSuperAdmin && (person == null || !IsSuperAdmin(person))
-      ? throw new RpcException(new Status(StatusCode.PermissionDenied, "Super Admin access required."))
-      : await continuation(request, context);
+    return await continuation(request, context);
   }
 
   private bool IsSuperAdmin(Person person)
   {
-    return !string.IsNullOrWhiteSpace(superAdminConfig.DiscordUserId)
-        && person.PlatformId.Platform == Platform.Discord
-        && string.Equals(person.PlatformId.PlatformUserId, superAdminConfig.DiscordUserId, StringComparison.OrdinalIgnoreCase);
+    return person.PlatformId.Platform switch
+    {
+      Platform.Discord when !string.IsNullOrWhiteSpace(superAdminConfig.DiscordUserId)
+        => string.Equals(person.PlatformId.PlatformUserId, superAdminConfig.DiscordUserId, StringComparison.OrdinalIgnoreCase),
+      _ => false
+    };
   }
 }

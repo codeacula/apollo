@@ -83,9 +83,12 @@ public sealed class ToolPlanValidator
   private static bool HasRequiredArguments(MethodInfo method, IDictionary<string, string?> arguments, out List<string> missing)
   {
     missing = [];
-    var argumentLookup = arguments is null
-      ? new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase)
-      : new Dictionary<string, string?>(arguments, StringComparer.OrdinalIgnoreCase);
+    var argumentLookup = arguments switch
+    {
+      null => new(StringComparer.OrdinalIgnoreCase),
+      _ => new Dictionary<string, string?>(arguments, StringComparer.OrdinalIgnoreCase)
+    };
+
     foreach (var parameter in method.GetParameters())
     {
       if (parameter.ParameterType == typeof(CancellationToken))

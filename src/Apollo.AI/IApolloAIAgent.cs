@@ -10,24 +10,29 @@ public interface IApolloAIAgent
   /// </summary>
   IAIRequestBuilder CreateRequest();
 
-  IAIRequestBuilder CreateToolPlanningRequest(
+  Task<IAIRequestBuilder> CreateToolPlanningRequestAsync(
     IEnumerable<ChatMessageDTO> messages,
     string userTimezone,
     string activeTodos);
 
-  IAIRequestBuilder CreateResponseRequest(
+  Task<IAIRequestBuilder> CreateResponseRequestAsync(
     IEnumerable<ChatMessageDTO> messages,
     string actionsSummary,
     string userTimezone);
 
-  IAIRequestBuilder CreateReminderRequest(
+  Task<IAIRequestBuilder> CreateReminderRequestAsync(
     string userTimezone,
     string currentTime,
     string reminderItems);
 
-  IAIRequestBuilder CreateDailyPlanRequest(
+  Task<IAIRequestBuilder> CreateDailyPlanRequestAsync(
     string userTimezone,
     string currentTime,
     string activeTodos,
     int taskCount);
+
+  Task<IAIRequestBuilder> CreateTimeParsingRequestAsync(
+    string timeExpression,
+    string userTimezone,
+    string currentDateTime);
 }

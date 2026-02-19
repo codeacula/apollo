@@ -17,18 +17,19 @@ public sealed class ApolloAIAgent(
   private const string ResponsePromptName = "ApolloResponse";
   private const string ReminderPromptName = "ApolloReminder";
   private const string DailyPlanningPromptName = "ApolloDailyPlanning";
+  private const string TimeParsingPromptName = "ApolloTimeParsing";
 
   public IAIRequestBuilder CreateRequest()
   {
     return new AIRequestBuilder(config, templateProcessor, logger);
   }
 
-  public IAIRequestBuilder CreateToolPlanningRequest(
+  public async Task<IAIRequestBuilder> CreateToolPlanningRequestAsync(
     IEnumerable<ChatMessageDTO> messages,
     string userTimezone,
     string activeTodos)
   {
-    var prompt = promptLoader.Load(ToolPlanningPromptName);
+    var prompt = await promptLoader.LoadAsync(ToolPlanningPromptName);
     var currentDateTime = DateTimeOffset.Now.ToString("yyyy-MM-ddTHH:mm:sszzz", System.Globalization.CultureInfo.InvariantCulture);
 
     var variables = new Dictionary<string, string>
@@ -46,12 +47,12 @@ public sealed class ApolloAIAgent(
       .WithTemplateVariables(variables);
   }
 
-  public IAIRequestBuilder CreateResponseRequest(
+  public async Task<IAIRequestBuilder> CreateResponseRequestAsync(
     IEnumerable<ChatMessageDTO> messages,
     string actionsSummary,
     string userTimezone)
   {
-    var prompt = promptLoader.Load(ResponsePromptName);
+    var prompt = await promptLoader.LoadAsync(ResponsePromptName);
 
     var variables = new Dictionary<string, string>
     {
@@ -66,12 +67,12 @@ public sealed class ApolloAIAgent(
       .WithTemplateVariables(variables);
   }
 
-  public IAIRequestBuilder CreateReminderRequest(
+  public async Task<IAIRequestBuilder> CreateReminderRequestAsync(
     string userTimezone,
     string currentTime,
     string reminderItems)
   {
-    var prompt = promptLoader.Load(ReminderPromptName);
+    var prompt = await promptLoader.LoadAsync(ReminderPromptName);
 
     var variables = new Dictionary<string, string>
     {
@@ -85,13 +86,13 @@ public sealed class ApolloAIAgent(
       .WithTemplateVariables(variables);
   }
 
-  public IAIRequestBuilder CreateDailyPlanRequest(
+  public async Task<IAIRequestBuilder> CreateDailyPlanRequestAsync(
     string userTimezone,
     string currentTime,
     string activeTodos,
     int taskCount)
   {
-    var prompt = promptLoader.Load(DailyPlanningPromptName);
+    var prompt = await promptLoader.LoadAsync(DailyPlanningPromptName);
 
     var variables = new Dictionary<string, string>
     {
@@ -105,6 +106,26 @@ public sealed class ApolloAIAgent(
       .FromPromptDefinition(prompt)
       .WithToolCalling(enabled: false)
       .WithJsonMode(enabled: true)
+      .WithTemplateVariables(variables);
+  }
+
+  public async Task<IAIRequestBuilder> CreateTimeParsingRequestAsync(
+    string timeExpression,
+    string userTimezone,
+    string currentDateTime)
+  {
+    var prompt = await promptLoader.LoadAsync(TimeParsingPromptName);
+
+    var variables = new Dictionary<string, string>
+    {
+      ["current_datetime"] = currentDateTime,
+      ["user_timezone"] = userTimezone
+    };
+
+    return CreateRequest()
+      .FromPromptDefinition(prompt)
+      .WithMessage(new ChatMessageDTO(Enums.ChatRole.User, timeExpression, DateTime.UtcNow))
+      .WithToolCalling(enabled: false)
       .WithTemplateVariables(variables);
   }
 }

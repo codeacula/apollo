@@ -107,13 +107,13 @@ public sealed class GetDailyPlanQueryHandler(
     var todosFormatted = FormatToDosForAI(todos);
 
     // Call AI agent
-    var aiResult = await aiAgent
-      .CreateDailyPlanRequest(
+    var aiResult = await (await aiAgent
+      .CreateDailyPlanRequestAsync(
         timeZoneId,
         localTime,
         todosFormatted,
         dailyTaskCount
-      )
+      ))
       .ExecuteAsync(cancellationToken);
 
     if (!aiResult.Success)

@@ -72,7 +72,7 @@ public class UserResolutionInterceptorTests
 
     var context = new TestServerCallContext(_httpContext);
 
-    static Task<string> continuationAsync(NewMessageRequest req, ServerCallContext ctx)
+    static Task<string> continuationAsync(NewMessageRequest _, ServerCallContext __)
     {
       return Task.FromResult("Response");
     }
@@ -92,7 +92,7 @@ public class UserResolutionInterceptorTests
     // Arrange
     const string request = "NotAuthenticated"; // Just a string, doesn't implement IAuthenticatedRequest
     var context = new TestServerCallContext(_httpContext);
-    static Task<string> continuationAsync(string req, ServerCallContext ctx)
+    static Task<string> continuationAsync(string _, ServerCallContext __)
     {
       return Task.FromResult("Response");
     }
@@ -139,7 +139,7 @@ public class UserResolutionInterceptorTests
 
     var context = new TestServerCallContext(_httpContext);
 
-    static Task<string> continuationAsync(NewMessageRequest req, ServerCallContext ctx)
+    static Task<string> continuationAsync(NewMessageRequest _, ServerCallContext __)
     {
       return Task.FromResult("Response");
     }
@@ -174,7 +174,7 @@ public class UserResolutionInterceptorTests
 
     var context = new TestServerCallContext(_httpContext);
 
-    static Task<string> continuationAsync(NewMessageRequest req, ServerCallContext ctx)
+    static Task<string> continuationAsync(NewMessageRequest _, ServerCallContext __)
     {
       return Task.FromResult("Response");
     }
@@ -217,7 +217,7 @@ public class UserResolutionInterceptorTests
 
     var context = new TestServerCallContext(_httpContext);
 
-    static Task<string> continuationAsync(NewMessageRequest req, ServerCallContext ctx)
+    static Task<string> continuationAsync(NewMessageRequest _, ServerCallContext __)
     {
       return Task.FromResult("Response");
     }
@@ -266,7 +266,7 @@ public class UserResolutionInterceptorTests
 
     var context = new TestServerCallContext(_httpContext);
 
-    static Task<string> continuationAsync(NewMessageRequest req, ServerCallContext ctx)
+    static Task<string> continuationAsync(NewMessageRequest _, ServerCallContext __)
     {
       return Task.FromResult("Response");
     }
@@ -282,7 +282,6 @@ public class UserResolutionInterceptorTests
 
 public class TestServerCallContext : ServerCallContext
 {
-  private readonly HttpContext _httpContext;
   private readonly Metadata _requestHeaders;
   private readonly CancellationToken _cancellationToken;
   private readonly Metadata _responseTrailers;
@@ -293,7 +292,6 @@ public class TestServerCallContext : ServerCallContext
 
   public TestServerCallContext(HttpContext httpContext)
   {
-    _httpContext = httpContext;
     _requestHeaders = [];
     _cancellationToken = CancellationToken.None;
     _responseTrailers = [];
@@ -316,10 +314,28 @@ public class TestServerCallContext : ServerCallContext
   protected override CancellationToken CancellationTokenCore => _cancellationToken;
   protected override Metadata ResponseTrailersCore => _responseTrailers;
   protected override Status StatusCore { get => _status; set => _status = value; }
-  protected override WriteOptions WriteOptionsCore { get => _writeOptions; set => _writeOptions = value; }
+  protected override WriteOptions? WriteOptionsCore
+  {
+    get => _writeOptions;
+    set
+    {
+      if (value is null)
+      {
+        ArgumentNullException argumentNullException = new(nameof(value));
+        throw argumentNullException;
+      }
+
+      _writeOptions = value;
+    }
+  }
   protected override AuthContext AuthContextCore => _authContext;
 
-  protected override ContextPropagationToken CreatePropagationTokenCore(ContextPropagationOptions options) => null;
   protected override Task WriteResponseHeadersAsyncCore(Metadata responseHeaders) => Task.CompletedTask;
+
+  protected override ContextPropagationToken CreatePropagationTokenCore(ContextPropagationOptions? options)
+  {
+    throw new NotImplementedException();
+  }
+
   protected override IDictionary<object, object> UserStateCore => _userState;
 }

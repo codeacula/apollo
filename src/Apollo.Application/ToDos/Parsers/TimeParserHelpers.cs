@@ -1,0 +1,72 @@
+using System.Globalization;
+
+using FluentResults;
+
+namespace Apollo.Application.ToDos.Parsers;
+
+/// <summary>
+/// Shared helpers used by multiple <see cref="Core.ToDos.ITimeExpressionParser"/> implementations.
+/// </summary>
+internal static class TimeParserHelpers
+{
+  internal static Result<TimeSpan> ParseTimeOfDay(string timeStr)
+  {
+    var normalized = timeStr.Trim().ToLowerInvariant();
+
+    // Try parsing with AM/PM formats
+    string[] formats = ["h:mm tt", "hh:mm tt", "htt", "hhtt", "h:mmtt", "hh:mmtt", "h tt", "hh tt"];
+    if (DateTime.TryParseExact(normalized, formats, CultureInfo.InvariantCulture, DateTimeStyles.None,
+      out var parsed))
+    {
+      return Result.Ok(parsed.TimeOfDay);
+    }
+
+    // Try 24-hour format (e.g., "15:00")
+    if (DateTime.TryParseExact(normalized, ["HH:mm", "H:mm"], CultureInfo.InvariantCulture,
+      DateTimeStyles.None, out var parsed24))
+    {
+      return Result.Ok(parsed24.TimeOfDay);
+    }
+
+    // Try bare hour (e.g., "15" as 15:00 — only for unambiguous 24h values >= 13)
+    return int.TryParse(normalized, CultureInfo.InvariantCulture, out var hour) && hour is >= 13 and <= 23
+      ? Result.Ok(TimeSpan.FromHours(hour))
+      : Result.Fail<TimeSpan>($"Could not parse '{timeStr}' as a time of day");
+  }
+
+  internal static DayOfWeek ParseDayOfWeek(string dayStr)
+  {
+    return dayStr.Trim().ToLowerInvariant() switch
+    {
+      "monday" => DayOfWeek.Monday,
+      "tuesday" => DayOfWeek.Tuesday,
+      "wednesday" => DayOfWeek.Wednesday,
+      "thursday" => DayOfWeek.Thursday,
+      "friday" => DayOfWeek.Friday,
+      "saturday" => DayOfWeek.Saturday,
+      "sunday" => DayOfWeek.Sunday,
+      _ => DayOfWeek.Monday
+    };
+  }
+
+  internal static DateTime GetNextDayOfWeek(DateTime reference, DayOfWeek target)
+  {
+    var daysUntil = ((int)target - (int)reference.DayOfWeek + 7) % 7;
+    if (daysUntil == 0)
+    {
+      daysUntil = 7;
+    }
+    return reference.Date.AddDays(daysUntil);
+  }
+
+  internal static DateTime EnsureUtc(DateTime dt)
+  {
+    return dt.Kind switch
+    {
+      DateTimeKind.Utc => dt,
+      DateTimeKind.Local => dt.ToUniversalTime(),
+      DateTimeKind.Unspecified => dt,
+      _ => dt
+    };
+  }
+}

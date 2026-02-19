@@ -23,17 +23,15 @@ public static class ServiceCollectionExtensions
 {
   public static IServiceCollection AddDatabaseServices(this IServiceCollection services, IConfiguration configuration)
   {
-    const string connectionKey = "Apollo";
-    var connectionString = configuration.GetConnectionString(connectionKey) ?? throw new MissingDatabaseStringException(connectionKey);
+    var connectionString = configuration.GetConnectionString("Apollo") ?? throw new MissingDatabaseStringException("Apollo");
     var superAdminConfig = configuration.GetSection(nameof(SuperAdminConfig)).Get<SuperAdminConfig>() ?? new SuperAdminConfig();
     var personConfig = configuration.GetSection(nameof(PersonConfig)).Get<PersonConfig>() ?? new PersonConfig();
 
     _ = services.AddDbContextPool<ApolloDbContext>(options => options.UseNpgsql(connectionString));
-    _ = services.AddSingleton(new ApolloConnectionString(connectionString));
-    _ = services.AddSingleton(superAdminConfig);
-    _ = services.AddSingleton(personConfig);
-    _ = services.AddScoped<IApolloDbContext, ApolloDbContext>();
-
+    _ = services.AddSingleton(new ApolloConnectionString(connectionString))
+      .AddSingleton(superAdminConfig)
+      .AddSingleton(personConfig)
+      .AddScoped<IApolloDbContext, ApolloDbContext>();
 
     _ = services
       .AddMarten(options =>

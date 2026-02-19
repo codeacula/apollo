@@ -82,18 +82,13 @@ public sealed class SetAllToDosAttributeCommandHandler(
     CancellationToken cancellationToken)
   {
     var todoResult = await toDoStore.GetAsync(toDoId, cancellationToken);
-    if (todoResult.IsFailed)
+
+    return todoResult switch
     {
-      return Result.Fail("Not found");
-    }
-    else if (todoResult.Value.PersonId.Value != personId.Value)
-    {
-      return Result.Fail("Permission denied");
-    }
-    else
-    {
-      return Result.Ok();
-    }
+      { IsFailed: true } => Result.Fail("Not found"),
+      _ when todoResult.Value.PersonId.Value != personId.Value => Result.Fail("Permission denied"),
+      _ => Result.Ok()
+    };
   }
 
   private async Task<(bool Updated, List<string> Errors)> UpdateAttributesAsync(
