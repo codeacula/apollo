@@ -59,6 +59,14 @@ internal static class TimeParserHelpers
     return reference.Date.AddDays(daysUntil);
   }
 
-  internal static DateTime EnsureUtc(DateTime dt) =>
-    dt.Kind == DateTimeKind.Utc ? dt : DateTime.SpecifyKind(dt, DateTimeKind.Utc);
+  internal static DateTime EnsureUtc(DateTime dt)
+  {
+    return dt.Kind switch
+    {
+      DateTimeKind.Utc => dt,
+      DateTimeKind.Local => dt.ToUniversalTime(),
+      DateTimeKind.Unspecified => dt,
+      _ => dt
+    };
+  }
 }
