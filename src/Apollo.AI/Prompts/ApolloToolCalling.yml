@@ -42,7 +42,7 @@ systemPrompt: >
       When specifying a time for reminders or todos, pass it as-is in natural language. Supported formats include:
       - Relative: "in 10 minutes", "in 2 hours", "in half an hour", "in an hour", "in 3 days"
       - Bare durations: "5 minutes", "2 hours"
-      - Day references: "tomorrow", "tomorrow at 3pm", "tomorrow morning"
+      - Day references: "tomorrow", "tomorrow at 3pm"
       - Time of day: "at 3pm", "at 9:00 AM", "at 14:30"
       - Named times: "tonight", "this morning", "this afternoon", "this evening", "noon", "midnight"
       - Day of week: "next Monday", "on Friday", "next week"
