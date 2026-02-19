@@ -428,4 +428,106 @@ public class FuzzyTimeParserTests
     var expected = new DateTime(2026, 1, 6, 0, 0, 0, DateTimeKind.Utc);
     Assert.Equal(expected, result.Value);
   }
+
+  // ===== TOMORROW MORNING/AFTERNOON/EVENING TESTS =====
+
+  [Fact]
+  public void TryParseFuzzyTimeWithTomorrowMorningReturnsNextDay9Am()
+  {
+    var result = _parser.TryParseFuzzyTime("tomorrow morning", _referenceTime);
+
+    Assert.True(result.IsSuccess);
+    // tomorrow = 2025-12-31, morning = 9am
+    var expected = new DateTime(2025, 12, 31, 9, 0, 0, DateTimeKind.Utc);
+    Assert.Equal(expected, result.Value);
+    Assert.Equal(DateTimeKind.Utc, result.Value.Kind);
+  }
+
+  [Fact]
+  public void TryParseFuzzyTimeWithTomorrowAfternoonReturnsNextDay2Pm()
+  {
+    var result = _parser.TryParseFuzzyTime("tomorrow afternoon", _referenceTime);
+
+    Assert.True(result.IsSuccess);
+    // tomorrow = 2025-12-31, afternoon = 2pm
+    var expected = new DateTime(2025, 12, 31, 14, 0, 0, DateTimeKind.Utc);
+    Assert.Equal(expected, result.Value);
+    Assert.Equal(DateTimeKind.Utc, result.Value.Kind);
+  }
+
+  [Fact]
+  public void TryParseFuzzyTimeWithTomorrowEveningReturnsNextDay6Pm()
+  {
+    var result = _parser.TryParseFuzzyTime("tomorrow evening", _referenceTime);
+
+    Assert.True(result.IsSuccess);
+    // tomorrow = 2025-12-31, evening = 6pm
+    var expected = new DateTime(2025, 12, 31, 18, 0, 0, DateTimeKind.Utc);
+    Assert.Equal(expected, result.Value);
+    Assert.Equal(DateTimeKind.Utc, result.Value.Kind);
+  }
+
+  [Theory]
+  [InlineData("TOMORROW MORNING", 9)]
+  [InlineData("  tomorrow afternoon  ", 14)]
+  [InlineData("Tomorrow Evening", 18)]
+  public void TryParseFuzzyTimeWithTomorrowPeriodIsCaseInsensitive(string input, int expectedHour)
+  {
+    var result = _parser.TryParseFuzzyTime(input, _referenceTime);
+
+    Assert.True(result.IsSuccess);
+    Assert.Equal(new DateTime(2025, 12, 31, expectedHour, 0, 0, DateTimeKind.Utc), result.Value);
+  }
+
+  // ===== BARE HOUR RESTRICTION TESTS =====
+
+  [Theory]
+  [InlineData("at 3")]
+  [InlineData("at 7")]
+  [InlineData("at 12")]
+  public void TryParseFuzzyTimeWithBareAmbiguousHourFailsToParse(string input)
+  {
+    // Bare hours 0-12 are ambiguous (AM or PM?) and should NOT be parsed
+    var result = _parser.TryParseFuzzyTime(input, _referenceTime);
+
+    Assert.True(result.IsFailed);
+  }
+
+  [Theory]
+  [InlineData("at 15", 15, 0)]
+  [InlineData("at 20", 20, 0)]
+  [InlineData("at 13", 13, 0)]
+  public void TryParseFuzzyTimeWithBareUnambiguousHourParsesCorrectly(
+    string input, int expectedHour, int expectedMinute)
+  {
+    // Bare hours 13-23 are unambiguous 24-hour values and should parse
+    var result = _parser.TryParseFuzzyTime(input, _referenceTime);
+
+    Assert.True(result.IsSuccess);
+    var expected = new DateTime(2025, 12, 30, expectedHour, expectedMinute, 0, DateTimeKind.Utc);
+    Assert.Equal(expected, result.Value);
+    Assert.Equal(DateTimeKind.Utc, result.Value.Kind);
+  }
+
+  [Theory]
+  [InlineData("tomorrow at 3")]
+  [InlineData("tomorrow at 7")]
+  public void TryParseFuzzyTimeWithTomorrowAtBareAmbiguousHourFailsToParse(string input)
+  {
+    // "tomorrow at 3" with bare hour < 13 should fail (ambiguous)
+    var result = _parser.TryParseFuzzyTime(input, _referenceTime);
+
+    Assert.True(result.IsFailed);
+  }
+
+  [Fact]
+  public void TryParseFuzzyTimeWithTomorrowAtBareUnambiguousHourParsesCorrectly()
+  {
+    // "tomorrow at 15" with bare hour >= 13 should succeed
+    var result = _parser.TryParseFuzzyTime("tomorrow at 15", _referenceTime);
+
+    Assert.True(result.IsSuccess);
+    var expected = new DateTime(2025, 12, 31, 15, 0, 0, DateTimeKind.Utc);
+    Assert.Equal(expected, result.Value);
+  }
 }

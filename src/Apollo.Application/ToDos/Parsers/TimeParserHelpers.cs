@@ -34,8 +34,8 @@ internal static partial class TimeParserHelpers
       return Result.Ok(parsed24.TimeOfDay);
     }
 
-    // Try bare hour (e.g., "15" as 15:00 — only for 24h values >= 0)
-    if (int.TryParse(normalized, CultureInfo.InvariantCulture, out var hour) && hour is >= 0 and <= 23)
+    // Try bare hour (e.g., "15" as 15:00 — only for unambiguous 24h values >= 13)
+    if (int.TryParse(normalized, CultureInfo.InvariantCulture, out var hour) && hour is >= 13 and <= 23)
     {
       return Result.Ok(TimeSpan.FromHours(hour));
     }

@@ -137,6 +137,21 @@ public sealed class RemindersPluginTests
     _timeParsingService.Verify(x => x.ParseTimeAsync("in 30 minutes", "America/Chicago", It.IsAny<CancellationToken>()), Times.Once);
   }
 
+  [Fact]
+  public async Task CreateReminderAsyncWithWhitespaceTimeReturnsErrorAsync()
+  {
+    // Arrange
+    var plugin = CreatePlugin();
+
+    // Act
+    var result = await plugin.CreateReminderAsync("Take a break", "   ");
+
+    // Assert — whitespace-only reminderTime should be treated as missing
+    Assert.Contains("Failed to create reminder", result);
+    Assert.Contains("Reminder time is required.", result);
+    _timeParsingService.Verify(x => x.ParseTimeAsync(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
+  }
+
   private Person CreatePerson(string? timeZoneId = null)
   {
     PersonTimeZoneId? parsedTimeZoneId = null;

@@ -32,7 +32,7 @@ public sealed class RemindersPlugin(
   {
     try
     {
-      if (string.IsNullOrEmpty(reminderTime))
+      if (string.IsNullOrWhiteSpace(reminderTime))
       {
         return "Failed to create reminder: Reminder time is required.";
       }
