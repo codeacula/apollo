@@ -78,6 +78,10 @@ public sealed class TimeParsingService(
     return await ParseWithLlmAsync(input, userTimeZoneId, now, cancellationToken);
   }
 
+  private const string InvalidTimeFormatMessage =
+    "Invalid time format. Supported formats include: 'in 10 minutes', 'tomorrow at 3pm', " +
+    "'next Monday', 'tonight', 'at noon', 'end of day', or ISO 8601 (e.g., 2025-12-31T10:00:00).";
+
   private async Task<Result<DateTime>> ParseWithLlmAsync(
     string input,
     string? userTimeZoneId,
@@ -93,25 +97,15 @@ public sealed class TimeParsingService(
 
     if (!result.Success || string.IsNullOrWhiteSpace(result.Content))
     {
-      return Result.Fail<DateTime>(
-        "Invalid time format. Supported formats include: 'in 10 minutes', 'tomorrow at 3pm', " +
-        "'next Monday', 'tonight', 'at noon', 'end of day', or ISO 8601 (e.g., 2025-12-31T10:00:00).");
+      return Result.Fail<DateTime>(InvalidTimeFormatMessage);
     }
 
     var content = result.Content.Trim();
 
-    if (content.Equals("UNPARSEABLE", StringComparison.OrdinalIgnoreCase))
+    if (content.Equals("UNPARSEABLE", StringComparison.OrdinalIgnoreCase) ||
+        !DateTime.TryParse(content, CultureInfo.InvariantCulture, DateTimeStyles.None, out var llmParsed))
     {
-      return Result.Fail<DateTime>(
-        "Invalid time format. Supported formats include: 'in 10 minutes', 'tomorrow at 3pm', " +
-        "'next Monday', 'tonight', 'at noon', 'end of day', or ISO 8601 (e.g., 2025-12-31T10:00:00).");
-    }
-
-    if (!DateTime.TryParse(content, CultureInfo.InvariantCulture, DateTimeStyles.None, out var llmParsed))
-    {
-      return Result.Fail<DateTime>(
-        "Invalid time format. Supported formats include: 'in 10 minutes', 'tomorrow at 3pm', " +
-        "'next Monday', 'tonight', 'at noon', 'end of day', or ISO 8601 (e.g., 2025-12-31T10:00:00).");
+      return Result.Fail<DateTime>(InvalidTimeFormatMessage);
     }
 
     var utcResult = ConvertToUtc(llmParsed, userTimeZoneId);
