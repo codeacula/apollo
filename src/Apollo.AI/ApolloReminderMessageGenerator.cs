@@ -45,8 +45,8 @@ public sealed class ApolloReminderMessageGenerator(
       var offset = timeZoneInfo.GetUtcOffset(utcNow);
       var localTime = new DateTimeOffset(utcNow, TimeSpan.Zero).ToOffset(offset);
 
-      var requestBuilder = apolloAIAgent
-        .CreateReminderRequest(
+      var requestBuilder = await apolloAIAgent
+        .CreateReminderRequestAsync(
           timeZoneId,
           localTime.ToString("yyyy-MM-ddTHH:mm:sszzz", CultureInfo.InvariantCulture),
           taskList

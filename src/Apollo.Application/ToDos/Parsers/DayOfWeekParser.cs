@@ -20,14 +20,9 @@ public sealed partial class DayOfWeekParser : ITimeExpressionParser
     @"(?:\s+at\s+(?<time>\d{1,2}(?::\d{2})?\s*(?:am|pm)?))?";
 
   [GeneratedRegex(
-    $@"^\s*next\s+(?<day>{DayGroup}){OptionalTime}\s*$",
+    $@"^\s*(?:next|on)\s+(?<day>{DayGroup}){OptionalTime}\s*$",
     RegexOptions.IgnoreCase | RegexOptions.Compiled)]
-  private static partial Regex NextDayPattern();
-
-  [GeneratedRegex(
-    $@"^\s*on\s+(?<day>{DayGroup}){OptionalTime}\s*$",
-    RegexOptions.IgnoreCase | RegexOptions.Compiled)]
-  private static partial Regex OnDayPattern();
+  private static partial Regex DayPattern();
 
   [GeneratedRegex(@"^\s*next\s+week\s*$", RegexOptions.IgnoreCase | RegexOptions.Compiled)]
   private static partial Regex NextWeekPattern();
@@ -39,19 +34,12 @@ public sealed partial class DayOfWeekParser : ITimeExpressionParser
       return Result.Ok(TimeParserHelpers.EnsureUtc(referenceTimeUtc.AddDays(7)));
     }
 
-    var nextMatch = NextDayPattern().Match(input);
-    if (nextMatch.Success)
+    var dayMatch = DayPattern().Match(input);
+    return dayMatch.Success switch
     {
-      return ResolveDayMatch(nextMatch, referenceTimeUtc);
-    }
-
-    var onMatch = OnDayPattern().Match(input);
-    if (onMatch.Success)
-    {
-      return ResolveDayMatch(onMatch, referenceTimeUtc);
-    }
-
-    return Result.Fail<DateTime>($"'{input}' is not a day-of-week expression");
+      true => ResolveDayMatch(dayMatch, referenceTimeUtc),
+      false => Result.Fail<DateTime>($"'{input}' is not a day-of-week expression")
+    };
   }
 
   private static Result<DateTime> ResolveDayMatch(Match match, DateTime reference)

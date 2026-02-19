@@ -30,12 +30,11 @@ public sealed partial class ClockTimeParser : ITimeExpressionParser
     }
 
     var standaloneMatch = StandaloneAliasPattern().Match(input);
-    if (standaloneMatch.Success)
+    return standaloneMatch.Success switch
     {
-      return ResolveTimeAlias(standaloneMatch.Groups["alias"].Value.ToLowerInvariant(), referenceTimeUtc);
-    }
-
-    return Result.Fail<DateTime>($"'{input}' is not a clock-time expression");
+      true => ResolveTimeAlias(standaloneMatch.Groups["alias"].Value.ToLowerInvariant(), referenceTimeUtc),
+      false => Result.Fail<DateTime>($"'{input}' is not a clock-time expression")
+    };
   }
 
   private static Result<DateTime> ResolveTimeAlias(string timeStr, DateTime reference)

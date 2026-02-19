@@ -14,21 +14,6 @@ public sealed class PromptLoader(string? promptsDirectory = null) : IPromptLoade
       .WithNamingConvention(CamelCaseNamingConvention.Instance)
       .Build();
 
-  public PromptDefinition Load(string promptName)
-  {
-    return _cache.GetOrAdd(promptName, name =>
-    {
-      var filePath = Path.Combine(_promptsDirectory, $"{name}.yml");
-      if (!File.Exists(filePath))
-      {
-        throw new FileNotFoundException($"Prompt file not found: {filePath}");
-      }
-
-      var yaml = File.ReadAllText(filePath);
-      return _deserializer.Deserialize<PromptDefinition>(yaml);
-    });
-  }
-
   public async Task<PromptDefinition> LoadAsync(string promptName, CancellationToken ct = default)
   {
     if (_cache.TryGetValue(promptName, out var cached))

@@ -5,7 +5,10 @@ namespace Apollo.Application.Tests.ToDos.Parsers;
 public class DayOfWeekParserTests
 {
   private readonly DayOfWeekParser _parser = new();
-  private readonly DateTime _ref = new(2025, 12, 30, 14, 30, 0, DateTimeKind.Utc); // Reference: Tuesday, Dec 30, 2025
+  /// <summary>
+  /// Reference: Tuesday, Dec 30, 2025
+  /// </summary>
+  private readonly DateTime _ref = new(2025, 12, 30, 14, 30, 0, DateTimeKind.Utc);
 
   [Fact]
   public void TryParseWithNextWeekReturnsSevenDaysFromNow()

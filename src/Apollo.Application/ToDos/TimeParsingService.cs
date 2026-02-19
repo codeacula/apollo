@@ -7,14 +7,6 @@ using FluentResults;
 
 namespace Apollo.Application.ToDos;
 
-/// <summary>
-/// Consolidated time parsing service that implements a multi-strategy pipeline:
-/// 1. FuzzyTimeParser (natural language patterns)
-/// 2. DateTime.TryParseExact with common format strings
-/// 3. DateTime.TryParse with InvariantCulture fallback
-/// 4. LLM fallback (last resort for complex natural language)
-/// Results are converted to UTC using the user's timezone when available.
-/// </summary>
 public sealed class TimeParsingService(
   IFuzzyTimeParser fuzzyTimeParser,
   IApolloAIAgent aiAgent,
@@ -101,9 +93,9 @@ public sealed class TimeParsingService(
     var currentDateTime = now.ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
     var timezone = userTimeZoneId ?? "UTC";
 
-    var result = await aiAgent
-      .CreateTimeParsingRequest(input, timezone, currentDateTime)
-      .ExecuteAsync(cancellationToken);
+    var parser = await aiAgent
+      .CreateTimeParsingRequestAsync(input, timezone, currentDateTime);
+    var result = await parser.ExecuteAsync(cancellationToken);
 
     if (!result.Success || string.IsNullOrWhiteSpace(result.Content))
     {

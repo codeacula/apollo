@@ -53,13 +53,13 @@ public class ApolloReminderMessageGeneratorTests
     string capturedTimezone = null!;
 
     _ = _mockAIAgent
-      .Setup(x => x.CreateReminderRequest(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+      .Setup(x => x.CreateReminderRequestAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
       .Callback<string, string, string>((tz, time, _) =>
       {
         capturedTimezone = tz;
         capturedTime = time;
       })
-      .Returns(_mockRequestBuilder.Object);
+      .ReturnsAsync(_mockRequestBuilder.Object);
 
     _ = _mockRequestBuilder
       .Setup(x => x.ExecuteAsync(It.IsAny<CancellationToken>()))
@@ -97,13 +97,13 @@ public class ApolloReminderMessageGeneratorTests
     string capturedTimezone = null!;
 
     _ = _mockAIAgent
-      .Setup(x => x.CreateReminderRequest(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+      .Setup(x => x.CreateReminderRequestAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
       .Callback<string, string, string>((tz, time, _) =>
       {
         capturedTimezone = tz;
         capturedTime = time;
       })
-      .Returns(_mockRequestBuilder.Object);
+      .ReturnsAsync(_mockRequestBuilder.Object);
 
     _ = _mockRequestBuilder
       .Setup(x => x.ExecuteAsync(It.IsAny<CancellationToken>()))
@@ -141,9 +141,9 @@ public class ApolloReminderMessageGeneratorTests
     string capturedTime = null!;
 
     _ = _mockAIAgent
-      .Setup(x => x.CreateReminderRequest(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+      .Setup(x => x.CreateReminderRequestAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
       .Callback<string, string, string>((_, time, _) => capturedTime = time)
-      .Returns(_mockRequestBuilder.Object);
+      .ReturnsAsync(_mockRequestBuilder.Object);
 
     _ = _mockRequestBuilder
       .Setup(x => x.ExecuteAsync(It.IsAny<CancellationToken>()))

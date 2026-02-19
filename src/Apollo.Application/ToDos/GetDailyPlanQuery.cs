@@ -108,7 +108,7 @@ public sealed class GetDailyPlanQueryHandler(
 
     // Call AI agent
     var aiResult = await aiAgent
-      .CreateDailyPlanRequest(
+      .CreateDailyPlanRequestAsync(
         timeZoneId,
         localTime,
         todosFormatted,

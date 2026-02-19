@@ -83,14 +83,14 @@ public class ProcessIncomingMessageCommandHandlerTests
     _ = _mockToDoStore.Setup(x => x.GetByPersonIdAsync(personId, false, It.IsAny<CancellationToken>()))
         .ReturnsAsync(Result.Ok<IEnumerable<Domain.ToDos.Models.ToDo>>([]));
 
-    _ = _mockAIAgent.Setup(x => x.CreateToolPlanningRequest(It.IsAny<IEnumerable<ChatMessageDTO>>(), It.IsAny<string>(), It.IsAny<string>()))
-        .Returns(_mockRequestBuilder.Object);
+    _ = _mockAIAgent.Setup(x => x.CreateToolPlanningRequestAsync(It.IsAny<IEnumerable<ChatMessageDTO>>(), It.IsAny<string>(), It.IsAny<string>()))
+        .ReturnsAsync(_mockRequestBuilder.Object);
 
     _ = _mockRequestBuilder.Setup(x => x.ExecuteAsync(It.IsAny<CancellationToken>()))
         .ReturnsAsync(new AIRequestResult { Success = true, Content = /*lang=json,strict*/ "{\"toolCalls\":[]}" });
 
-    _ = _mockAIAgent.Setup(x => x.CreateResponseRequest(It.IsAny<IEnumerable<ChatMessageDTO>>(), It.IsAny<string>(), It.IsAny<string>()))
-        .Returns(_mockRequestBuilder.Object);
+    _ = _mockAIAgent.Setup(x => x.CreateResponseRequestAsync(It.IsAny<IEnumerable<ChatMessageDTO>>(), It.IsAny<string>(), It.IsAny<string>()))
+        .ReturnsAsync(_mockRequestBuilder.Object);
 
     _ = _mockConversationStore.Setup(x => x.AddReplyAsync(conversationId, It.IsAny<Content>(), It.IsAny<CancellationToken>()))
         .ReturnsAsync(Result.Ok(conversation));

@@ -7,16 +7,18 @@ using FluentResults;
 namespace Apollo.Application.ToDos;
 
 /// <summary>
+/// <para>
 /// Orchestrates time expression parsing by delegating to a chain of
 /// <see cref="ITimeExpressionParser"/> implementations that are discovered
 /// automatically at startup via <see cref="TimeExpressionParserAttribute"/>.
-///
+/// </para>
+/// <para>
 /// To add a new time format, create a class that:
 ///   1. Implements <see cref="ITimeExpressionParser"/>
 ///   2. Is decorated with <see cref="TimeExpressionParserAttribute"/>
 ///   3. Has a public parameterless constructor
-///
-/// No changes to this class or any registration code are required.
+/// </para>
+/// <para>No changes to this class or any registration code are required.</para>
 /// </summary>
 public sealed class FuzzyTimeParser : IFuzzyTimeParser
 {
@@ -50,13 +52,12 @@ public sealed class FuzzyTimeParser : IFuzzyTimeParser
     var parserType = typeof(ITimeExpressionParser);
     var attributeType = typeof(TimeExpressionParserAttribute);
 
-    return Assembly.GetExecutingAssembly()
+    return [.. Assembly.GetExecutingAssembly()
       .GetTypes()
       .Where(t => t.IsClass
         && !t.IsAbstract
         && parserType.IsAssignableFrom(t)
         && t.IsDefined(attributeType, inherit: false))
-      .Select(t => (ITimeExpressionParser)Activator.CreateInstance(t)!)
-      .ToList();
+      .Select(t => (ITimeExpressionParser)Activator.CreateInstance(t)!)];
   }
 }

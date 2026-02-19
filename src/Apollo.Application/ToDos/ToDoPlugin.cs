@@ -27,7 +27,6 @@ public sealed class ToDoPlugin(
 
   [KernelFunction("create_todo")]
   [Description("Creates a new todo with an optional reminder. Supports a wide range of time expressions including 'in 10 minutes', 'tomorrow at 3pm', 'tonight', 'next Monday', 'noon', 'end of day', or ISO 8601 format.")]
-  [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0046:Convert to conditional expression", Justification = "Maintains better code readability")]
   public async Task<string> CreateToDoAsync(
     [Description("The todo description")] string description,
     [Description("Optional reminder time. Supports: 'in 10 minutes', 'in 2 hours', 'in half an hour', 'in an hour', 'tomorrow', 'tomorrow at 3pm', 'at 3pm', 'tonight', 'this morning', 'this afternoon', 'this evening', 'noon', 'midnight', 'next Monday', 'on Friday', 'next week', 'end of day', 'eod', 'end of week', or ISO 8601 (e.g., 2025-12-31T10:00:00).")] string? reminderDate = null,
@@ -65,14 +64,12 @@ public sealed class ToDoPlugin(
 
       var result = await mediator.Send(command, cancellationToken);
 
-      if (result.IsFailed)
+      return (result, reminder) switch
       {
-        return $"Failed to create todo: {result.GetErrorMessages()}";
-      }
-
-      return reminder.HasValue
-        ? $"Successfully created todo '{result.Value.Description.Value}' with a reminder set for {reminder.Value:yyyy-MM-dd HH:mm:ss} UTC."
-        : $"Successfully created todo '{result.Value.Description.Value}'.";
+        ({ IsFailed: true }, _) => $"Failed to create todo: {result.GetErrorMessages()}",
+        (_, { } r) => $"Successfully created todo '{result.Value.Description.Value}' with a reminder set for {r:yyyy-MM-dd HH:mm:ss} UTC.",
+        _ => $"Successfully created todo '{result.Value.Description.Value}'."
+      };
     }
     catch (Exception ex)
     {
@@ -282,14 +279,12 @@ public sealed class ToDoPlugin(
 
       var result = await mediator.Send(command, cancellationToken);
 
-      if (result.IsFailed)
+      return (result, ids.Count) switch
       {
-        return $"Failed to set priority: {result.GetErrorMessages()}";
-      }
-
-      return ids.Count == 0
-        ? $"Successfully set priority to {LevelToEmoji(levelResult.Value)} for all {result.Value} active todos."
-        : $"Successfully set priority to {LevelToEmoji(levelResult.Value)} for {result.Value} todos.";
+        ({ IsFailed: true }, _) => $"Failed to set priority: {result.GetErrorMessages()}",
+        (_, 0) => $"Successfully set priority to {LevelToEmoji(levelResult.Value)} for all {result.Value} active todos.",
+        _ => $"Successfully set priority to {LevelToEmoji(levelResult.Value)} for {result.Value} todos."
+      };
     }
     catch (Exception ex)
     {
@@ -323,14 +318,12 @@ public sealed class ToDoPlugin(
 
       var result = await mediator.Send(command, cancellationToken);
 
-      if (result.IsFailed)
+      return (result, ids.Count) switch
       {
-        return $"Failed to set energy: {result.GetErrorMessages()}";
-      }
-
-      return ids.Count == 0
-        ? $"Successfully set energy to {LevelToEmoji(levelResult.Value)} for all {result.Value} active todos."
-        : $"Successfully set energy to {LevelToEmoji(levelResult.Value)} for {result.Value} todos.";
+        ({ IsFailed: true }, _) => $"Failed to set energy: {result.GetErrorMessages()}",
+        (_, 0) => $"Successfully set energy to {LevelToEmoji(levelResult.Value)} for all {result.Value} active todos.",
+        _ => $"Successfully set energy to {LevelToEmoji(levelResult.Value)} for {result.Value} todos."
+      };
     }
     catch (Exception ex)
     {
@@ -364,14 +357,12 @@ public sealed class ToDoPlugin(
 
       var result = await mediator.Send(command, cancellationToken);
 
-      if (result.IsFailed)
+      return (result, ids.Count) switch
       {
-        return $"Failed to set interest: {result.GetErrorMessages()}";
-      }
-
-      return ids.Count == 0
-        ? $"Successfully set interest to {LevelToEmoji(levelResult.Value)} for all {result.Value} active todos."
-        : $"Successfully set interest to {LevelToEmoji(levelResult.Value)} for {result.Value} todos.";
+        ({ IsFailed: true }, _) => $"Failed to set interest: {result.GetErrorMessages()}",
+        (_, 0) => $"Successfully set interest to {LevelToEmoji(levelResult.Value)} for all {result.Value} active todos.",
+        _ => $"Successfully set interest to {LevelToEmoji(levelResult.Value)} for {result.Value} todos."
+      };
     }
     catch (Exception ex)
     {
@@ -388,18 +379,12 @@ public sealed class ToDoPlugin(
       var query = new GetToDosByPersonIdQuery(personId);
       var result = await mediator.Send(query, cancellationToken);
 
-      if (result.IsFailed)
+      return result switch
       {
-        return $"Failed to retrieve todos: {(result.Errors.Count > 0 ? result.Errors[0].Message : "Unknown error")}";
-      }
-      else if (!result.Value.Any())
-      {
-        return "You currently have no active todos.";
-      }
-      else
-      {
-        return FormatToDosAsTable(result.Value);
-      }
+        { IsFailed: true } => $"Failed to retrieve todos: {(result.Errors.Count > 0 ? result.Errors[0].Message : "Unknown error")}",
+        _ when !result.Value.Any() => "You currently have no active todos.",
+        _ => FormatToDosAsTable(result.Value)
+      };
     }
     catch (Exception ex)
     {

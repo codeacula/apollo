@@ -96,8 +96,8 @@ public sealed class ProcessIncomingMessageCommandHandler(
     var toolPlanningMessages = ConversationHistoryBuilder.BuildForToolPlanning(conversation, activeTodosSnapshot.TodoIds);
 
     // Phase 1: Tool Planning (JSON output)
-    var toolPlanResult = await apolloAIAgent
-      .CreateToolPlanningRequest(toolPlanningMessages, userTimezone, activeTodosSnapshot.Summary)
+    var toolPlanResult = await (await apolloAIAgent
+      .CreateToolPlanningRequestAsync(toolPlanningMessages, userTimezone, activeTodosSnapshot.Summary))
       .ExecuteAsync(cancellationToken);
 
     var toolPlan = new ToolPlan();
@@ -148,8 +148,8 @@ public sealed class ProcessIncomingMessageCommandHandler(
 
     ConversationLogs.ActionsTaken(logger, person.Id.Value, [actionsSummary]);
 
-    var responseResult = await apolloAIAgent
-      .CreateResponseRequest(responseMessages, actionsSummary, userTimezone)
+    var responseResult = await (await apolloAIAgent
+      .CreateResponseRequestAsync(responseMessages, actionsSummary, userTimezone))
       .ExecuteAsync(cancellationToken);
 
     return !responseResult.Success
