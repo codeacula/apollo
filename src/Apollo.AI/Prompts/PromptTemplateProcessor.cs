@@ -19,15 +19,9 @@ public interface IPromptTemplateProcessor
 /// </summary>
 public sealed class PromptTemplateProcessor : IPromptTemplateProcessor
 {
-  /// <inheritdoc />
   public string Process(string templateText, IDictionary<string, string> variables)
   {
-    if (string.IsNullOrEmpty(templateText))
-    {
-      return templateText;
-    }
-
-    if (variables == null || variables.Count == 0)
+    if (string.IsNullOrEmpty(templateText) || variables == null || variables.Count == 0)
     {
       return templateText;
     }

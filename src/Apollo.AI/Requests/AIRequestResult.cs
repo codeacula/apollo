@@ -18,11 +18,9 @@ public sealed record AIRequestResult
 
   public bool HasToolCalls => ToolCalls.Count > 0;
 
-  public IEnumerable<ToolCallResult> SuccessfulToolCalls =>
-    ToolCalls.Where(tc => tc.Success);
+  public IEnumerable<ToolCallResult> SuccessfulToolCalls => ToolCalls.Where(tc => tc.Success);
 
-  public IEnumerable<ToolCallResult> FailedToolCalls =>
-    ToolCalls.Where(tc => !tc.Success);
+  public IEnumerable<ToolCallResult> FailedToolCalls => ToolCalls.Where(tc => !tc.Success);
 
   public string FormatActionsSummary()
   {

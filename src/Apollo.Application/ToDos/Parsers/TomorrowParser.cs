@@ -53,11 +53,8 @@ public sealed partial class TomorrowParser : ITimeExpressionParser
       return Result.Ok(TimeParserHelpers.EnsureUtc(dt));
     }
 
-    if (TomorrowPattern().IsMatch(input))
-    {
-      return Result.Ok(TimeParserHelpers.EnsureUtc(referenceTimeUtc.AddDays(1)));
-    }
-
-    return Result.Fail<DateTime>($"'{input}' is not a tomorrow expression");
+    return TomorrowPattern().IsMatch(input)
+      ? Result.Ok(TimeParserHelpers.EnsureUtc(referenceTimeUtc.AddDays(1)))
+      : Result.Fail<DateTime>($"'{input}' is not a tomorrow expression");
   }
 }

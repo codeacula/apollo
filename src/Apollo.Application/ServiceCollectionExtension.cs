@@ -11,13 +11,10 @@ public static class ServiceCollectionExtension
   public static IServiceCollection AddApplicationServices(this IServiceCollection services)
   {
     _ = services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<IApolloApplication>());
-
     services.TryAddScoped<IToDoReminderScheduler, NoOpToDoReminderScheduler>();
 
     _ = services.AddTransient(_ => TimeProvider.System);
-
     _ = services.AddSingleton<IFuzzyTimeParser, FuzzyTimeParser>();
-
     _ = services.AddScoped<ITimeParsingService, TimeParsingService>();
 
     return services;

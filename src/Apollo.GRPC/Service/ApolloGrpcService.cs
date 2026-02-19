@@ -70,7 +70,7 @@ public sealed class ApolloGrpcService(
     var person = userContext.Person!;
 
     // Parse the reminder time using the consolidated time parsing service
-    var userTimeZoneId = person.TimeZoneId.HasValue ? person.TimeZoneId.Value.Value : null;
+    var userTimeZoneId = person.TimeZoneId?.Value;
     var parsedTimeResult = await timeParsingService.ParseTimeAsync(request.ReminderTime, userTimeZoneId);
     if (parsedTimeResult.IsFailed)
     {
