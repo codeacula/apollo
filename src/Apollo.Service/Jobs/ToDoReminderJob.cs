@@ -3,6 +3,7 @@ using Apollo.Core.Logging;
 using Apollo.Core.Notifications;
 using Apollo.Core.People;
 using Apollo.Core.ToDos;
+using Apollo.Domain.ToDos.Models;
 using Apollo.Domain.ToDos.ValueObjects;
 
 using Quartz;
@@ -59,24 +60,23 @@ public class ToDoReminderJob(
 
           var person = personResult.Value;
 
-          var reminderDetails = personReminders.Select(r => r.Details.Value);
+           var reminderDetails = personReminders.Select(r => r.Details.Value);
 
-          var messageResult = await reminderMessageGenerator.GenerateReminderMessageAsync(
-            person,
-            reminderDetails,
-            context.CancellationToken);
+           var messageResult = await reminderMessageGenerator.GenerateReminderMessageAsync(
+             person,
+             reminderDetails,
+             context.CancellationToken);
 
-          string reminderContent;
-          if (messageResult.IsSuccess)
-          {
-            reminderContent = messageResult.Value;
-          }
-          else
-          {
-            ToDoLogs.LogErrorProcessingReminder(logger, new InvalidOperationException($"AI message generation failed: {messageResult.GetErrorMessages()}"), personReminders[0].Id.Value);
-            var reminderMessage = string.Join("\n", reminderDetails.Select(d => $"• {d}"));
-            reminderContent = $"**Reminder: You have {personReminders.Count} reminder(s) due:**\n{reminderMessage}";
-          }
+           var reminderContent = messageResult switch
+           {
+             { IsSuccess: true, Value: var content } => content,
+             _ => GetFallbackReminderMessage(reminderDetails, personReminders)
+           };
+
+           if (messageResult.IsFailed)
+           {
+             ToDoLogs.LogErrorProcessingReminder(logger, new InvalidOperationException($"AI message generation failed: {messageResult.GetErrorMessages()}"), personReminders[0].Id.Value);
+           }
 
           var notification = new Notification
           {
@@ -118,5 +118,11 @@ public class ToDoReminderJob(
     {
       ToDoLogs.LogJobFailed(logger, ex);
     }
+  }
+
+  private static string GetFallbackReminderMessage(IEnumerable<string> reminderDetails, List<Reminder> personReminders)
+  {
+    var reminderMessage = string.Join("\n", reminderDetails.Select(d => $"• {d}"));
+    return $"**Reminder: You have {personReminders.Count} reminder(s) due:**\n{reminderMessage}";
   }
 }

@@ -84,7 +84,11 @@ public sealed class PersonStore(SuperAdminConfig SuperAdminConfig, IDocumentSess
     {
       var dbUser = await session.Query<DbPerson>()
         .FirstOrDefaultAsync(u => u.Id == id.Value, cancellationToken);
-      return dbUser is null ? Result.Fail<Person>($"User with ID {id} not found") : Result.Ok((Person)dbUser);
+      return dbUser switch
+      {
+        null => Result.Fail<Person>($"User with ID {id} not found"),
+        _ => Result.Ok((Person)dbUser)
+      };
     }
     catch (Exception ex)
     {
