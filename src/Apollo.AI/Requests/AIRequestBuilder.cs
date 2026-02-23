@@ -192,6 +192,9 @@ public sealed class AIRequestBuilder(ApolloAIConfig config, IPromptTemplateProce
         case ChatRole.Assistant:
           history.AddAssistantMessage(message.Content);
           break;
+        case ChatRole.System:
+        case ChatRole.Function:
+          break;
       }
     }
 

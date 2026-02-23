@@ -46,13 +46,16 @@ public sealed record GrpcResult<T> where T : class
     };
   }
 
-  public static implicit operator Result<T>(GrpcResult<T> grpcResult) => grpcResult switch
+  public static implicit operator Result<T>(GrpcResult<T> grpcResult)
   {
-    { IsSuccess: true, Data: not null, Data: var data } => Result.Ok(data),
-    { IsSuccess: true, Data: null } => Result.Fail<T>("GrpcResult marked as successful but contains null data"),
-    { IsSuccess: false, Errors: var errors } when errors.Count > 0 => Result.Fail<T>(errors
-      .Select(e => new Error(e.Message).WithMetadata("ErrorCode", e.ErrorCode ?? string.Empty))),
-    { IsSuccess: false } => Result.Fail<T>("GrpcResult marked as failed but contains no error information"),
-    _ => Result.Fail<T>("Unknown GrpcResult state")
-  };
+    return grpcResult switch
+    {
+      { IsSuccess: true, Data: not null, Data: var data } => Result.Ok(data),
+      { IsSuccess: true, Data: null } => Result.Fail<T>("GrpcResult marked as successful but contains null data"),
+      { IsSuccess: false, Errors: var errors } when errors.Count > 0 => Result.Fail<T>(errors
+        .Select(e => new Error(e.Message).WithMetadata("ErrorCode", e.ErrorCode ?? string.Empty))),
+      { IsSuccess: false } => Result.Fail<T>("GrpcResult marked as failed but contains no error information"),
+      _ => Result.Fail<T>("Unknown GrpcResult state")
+    };
+  }
 }

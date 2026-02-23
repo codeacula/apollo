@@ -100,12 +100,12 @@ public sealed class ProcessIncomingMessageCommandHandler(
       .CreateToolPlanningRequestAsync(toolPlanningMessages, userTimezone, activeTodosSnapshot.Summary))
       .ExecuteAsync(cancellationToken);
 
-     var toolPlan = toolPlanResult switch
-     {
-       { Success: true, Content: var content } => ProcessToolPlanParsing(person.Id.Value, content),
-       { Success: false, ErrorMessage: var errorMsg } => LogToolPlanningFailure(person.Id.Value, errorMsg),
-       _ => new ToolPlan()
-     };
+    var toolPlan = toolPlanResult switch
+    {
+      { Success: true, Content: var content } => ProcessToolPlanParsing(person.Id.Value, content),
+      { Success: false, ErrorMessage: var errorMsg } => LogToolPlanningFailure(person.Id.Value, errorMsg),
+      _ => new ToolPlan()
+    };
 
     // Phase 2: Validate + Execute Tool Calls
     var validationContext = new ToolPlanValidationContext(
@@ -209,34 +209,34 @@ public sealed class ProcessIncomingMessageCommandHandler(
     return new ActiveTodosSnapshot(summary, todoIds);
   }
 
-   private sealed record ActiveTodosSnapshot(string Summary, IReadOnlyCollection<string> TodoIds);
+  private sealed record ActiveTodosSnapshot(string Summary, IReadOnlyCollection<string> TodoIds);
 
-   private ToolPlan ProcessToolPlanParsing(Guid personId, string content)
-   {
-     var parseResult = ToolPlanParser.Parse(content);
-     return parseResult switch
-     {
-       { IsSuccess: true, Value: var toolPlan } => LogAndReturnToolPlan(personId, toolPlan),
-       _ => LogParsingFailure(personId, parseResult)
-     };
-   }
+  private ToolPlan ProcessToolPlanParsing(Guid personId, string content)
+  {
+    var parseResult = ToolPlanParser.Parse(content);
+    return parseResult switch
+    {
+      { IsSuccess: true, Value: var toolPlan } => LogAndReturnToolPlan(personId, toolPlan),
+      _ => LogParsingFailure(personId, parseResult)
+    };
+  }
 
-   private ToolPlan LogAndReturnToolPlan(Guid personId, ToolPlan toolPlan)
-   {
-     ConversationLogs.ToolPlanReceived(logger, personId, toolPlan.ToolCalls.Count);
-     return toolPlan;
-   }
+  private ToolPlan LogAndReturnToolPlan(Guid personId, ToolPlan toolPlan)
+  {
+    ConversationLogs.ToolPlanReceived(logger, personId, toolPlan.ToolCalls.Count);
+    return toolPlan;
+  }
 
-   private ToolPlan LogParsingFailure(Guid personId, Result<ToolPlan> parseResult)
-   {
-     var errorMsg = parseResult.Errors.Count > 0 ? parseResult.Errors[0].Message : "Unknown error";
-     ConversationLogs.ToolPlanParsingFailed(logger, personId, errorMsg);
-     return new ToolPlan();
-   }
+  private ToolPlan LogParsingFailure(Guid personId, Result<ToolPlan> parseResult)
+  {
+    var errorMsg = parseResult.Errors.Count > 0 ? parseResult.Errors[0].Message : "Unknown error";
+    ConversationLogs.ToolPlanParsingFailed(logger, personId, errorMsg);
+    return new ToolPlan();
+  }
 
-   private ToolPlan LogToolPlanningFailure(Guid personId, string errorMsg)
-   {
-     ConversationLogs.ToolPlanningRequestFailed(logger, personId, errorMsg);
-     return new ToolPlan();
-   }
+  private ToolPlan LogToolPlanningFailure(Guid personId, string errorMsg)
+  {
+    ConversationLogs.ToolPlanningRequestFailed(logger, personId, errorMsg);
+    return new ToolPlan();
+  }
 }

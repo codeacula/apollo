@@ -60,23 +60,23 @@ public class ToDoReminderJob(
 
           var person = personResult.Value;
 
-           var reminderDetails = personReminders.Select(r => r.Details.Value);
+          var reminderDetails = personReminders.Select(r => r.Details.Value);
 
-           var messageResult = await reminderMessageGenerator.GenerateReminderMessageAsync(
-             person,
-             reminderDetails,
-             context.CancellationToken);
+          var messageResult = await reminderMessageGenerator.GenerateReminderMessageAsync(
+            person,
+            reminderDetails,
+            context.CancellationToken);
 
-           var reminderContent = messageResult switch
-           {
-             { IsSuccess: true, Value: var content } => content,
-             _ => GetFallbackReminderMessage(reminderDetails, personReminders)
-           };
+          var reminderContent = messageResult switch
+          {
+            { IsSuccess: true, Value: var content } => content,
+            _ => GetFallbackReminderMessage(reminderDetails, personReminders)
+          };
 
-           if (messageResult.IsFailed)
-           {
-             ToDoLogs.LogErrorProcessingReminder(logger, new InvalidOperationException($"AI message generation failed: {messageResult.GetErrorMessages()}"), personReminders[0].Id.Value);
-           }
+          if (messageResult.IsFailed)
+          {
+            ToDoLogs.LogErrorProcessingReminder(logger, new InvalidOperationException($"AI message generation failed: {messageResult.GetErrorMessages()}"), personReminders[0].Id.Value);
+          }
 
           var notification = new Notification
           {

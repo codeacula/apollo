@@ -42,7 +42,7 @@ public sealed class PersonNotificationClient(IEnumerable<INotificationChannel> n
     return results;
   }
 
-  private Result EvaluateNotificationResults(List<Result> results)
+  private static Result EvaluateNotificationResults(List<Result> results)
   {
     var successCount = results.Count(r => r.IsSuccess);
 
