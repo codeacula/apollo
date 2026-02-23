@@ -70,6 +70,15 @@ public sealed class TimeParsingService(
     if (DateTime.TryParse(input.Trim(), CultureInfo.InvariantCulture, DateTimeStyles.None,
       out var parsed))
     {
+      // If the input is a time-only string (e.g., "3:00 PM"), DateTime.TryParse uses the
+      // system's current local date as the default, which may not match the user's today.
+      // Anchor such times to today in the user's timezone instead.
+      if (TimeOnly.TryParse(input.Trim(), CultureInfo.InvariantCulture, out _))
+      {
+        var today = GetTodayInUserTimezone(now, userTimeZoneId);
+        parsed = today.Add(parsed.TimeOfDay);
+      }
+
       var utcParsed = ConvertToUtc(parsed, userTimeZoneId);
       return Result.Ok(utcParsed);
     }
@@ -110,6 +119,28 @@ public sealed class TimeParsingService(
 
     var utcResult = ConvertToUtc(llmParsed, userTimeZoneId);
     return Result.Ok(utcResult);
+  }
+
+  private static DateTime GetTodayInUserTimezone(DateTime utcNow, string? userTimeZoneId)
+  {
+    if (string.IsNullOrWhiteSpace(userTimeZoneId))
+    {
+      return utcNow.Date;
+    }
+
+    try
+    {
+      var timeZone = TimeZoneInfo.FindSystemTimeZoneById(userTimeZoneId);
+      return TimeZoneInfo.ConvertTimeFromUtc(utcNow, timeZone).Date;
+    }
+    catch (TimeZoneNotFoundException)
+    {
+      return utcNow.Date;
+    }
+    catch (InvalidTimeZoneException)
+    {
+      return utcNow.Date;
+    }
   }
 
   private static DateTime ConvertToUtc(DateTime parsedDate, string? userTimeZoneId)
