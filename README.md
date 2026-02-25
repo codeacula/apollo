@@ -18,7 +18,7 @@ If you want to help out, we outline how to do so in [CONTRIBUTING](CONTRIBUTING.
 
 Please follow the directions in [SECURITY](SECURITY.md).
 
-## Documentation
+## 📝 Documentation
 
 All project documentation, including architecture, coding practices, and local development setup, lives in [ARCHITECTURE.md](ARCHITECTURE.md).
 

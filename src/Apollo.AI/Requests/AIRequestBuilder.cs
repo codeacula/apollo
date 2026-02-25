@@ -184,13 +184,17 @@ public sealed class AIRequestBuilder(ApolloAIConfig config, IPromptTemplateProce
 
     foreach (var message in _messages.OrderBy(m => m.CreatedOn))
     {
-      if (message.Role == ChatRole.User)
+      switch (message.Role)
       {
-        history.AddUserMessage(message.Content);
-      }
-      else if (message.Role == ChatRole.Assistant)
-      {
-        history.AddAssistantMessage(message.Content);
+        case ChatRole.User:
+          history.AddUserMessage(message.Content);
+          break;
+        case ChatRole.Assistant:
+          history.AddAssistantMessage(message.Content);
+          break;
+        case ChatRole.System:
+        case ChatRole.Function:
+          break;
       }
     }
 

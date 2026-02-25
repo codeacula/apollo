@@ -60,44 +60,53 @@ public sealed class CompleteToDoCommandHandler(
         continue;
       }
 
-      // Unlink the reminder from this ToDo
       var unlinkResult = await reminderStore.UnlinkFromToDoAsync(reminder.Id, toDoId, cancellationToken);
       if (unlinkResult.IsFailed)
       {
         ToDoLogs.LogFailedToUnlinkReminder(logger, reminder.Id.Value, toDoId.Value, string.Join(", ", unlinkResult.GetErrorMessages()));
       }
 
-      // Check if other ToDos are still linked to this reminder
       var remainingLinksResult = await reminderStore.GetLinkedToDoIdsAsync(reminder.Id, cancellationToken);
-      var remainingLinks = remainingLinksResult.IsSuccess ? remainingLinksResult.Value.ToList() : [];
-
-      if (remainingLinks.Count == 0)
+      var remainingLinks = remainingLinksResult switch
       {
-        // No other ToDos linked, delete the reminder and its job
-        var deleteJobResult = await toDoReminderScheduler.DeleteJobAsync(reminder.QuartzJobId.Value, cancellationToken);
-        if (deleteJobResult.IsFailed)
-        {
-          ToDoLogs.LogFailedToDeleteReminderJob(logger, reminder.QuartzJobId.Value.Value, string.Join(", ", deleteJobResult.GetErrorMessages()));
-        }
+        { IsSuccess: true, Value: var links } => links.ToList(),
+        _ => []
+      };
 
-        var deleteReminderResult = await reminderStore.DeleteAsync(reminder.Id, cancellationToken);
-        if (deleteReminderResult.IsFailed)
-        {
-          ToDoLogs.LogFailedToDeleteReminder(logger, reminder.Id.Value, string.Join(", ", deleteReminderResult.GetErrorMessages()));
-        }
-      }
-      else
+      var cleanupResult = remainingLinks.Count == 0
+        ? await DeleteReminderAndItsJobAsync(reminder, cancellationToken)
+        : await RecreateReminderJobIfNeededAsync(reminder, cancellationToken);
+
+      if (cleanupResult.IsFailed)
       {
-        // Other ToDos still linked - check if we need to recreate the job
-        // (in case it was deleted by another concurrent operation)
-        var jobResult = await toDoReminderScheduler.GetOrCreateJobAsync(reminder.ReminderTime.Value, cancellationToken);
-        if (jobResult.IsFailed)
-        {
-          return Result.Fail("Failed to ensure reminder job still exists.");
-        }
+        return cleanupResult;
       }
     }
 
     return Result.Ok();
+  }
+
+  private async Task<Result> DeleteReminderAndItsJobAsync(Reminder reminder, CancellationToken cancellationToken)
+  {
+    var deleteJobResult = await toDoReminderScheduler.DeleteJobAsync(reminder.QuartzJobId!.Value, cancellationToken);
+    if (deleteJobResult.IsFailed)
+    {
+      ToDoLogs.LogFailedToDeleteReminderJob(logger, reminder.QuartzJobId.Value.Value, string.Join(", ", deleteJobResult.GetErrorMessages()));
+    }
+
+    var deleteReminderResult = await reminderStore.DeleteAsync(reminder.Id, cancellationToken);
+    if (deleteReminderResult.IsFailed)
+    {
+      ToDoLogs.LogFailedToDeleteReminder(logger, reminder.Id.Value, string.Join(", ", deleteReminderResult.GetErrorMessages()));
+      return deleteReminderResult;
+    }
+
+    return Result.Ok();
+  }
+
+  private async Task<Result> RecreateReminderJobIfNeededAsync(Reminder reminder, CancellationToken cancellationToken)
+  {
+    var jobResult = await toDoReminderScheduler.GetOrCreateJobAsync(reminder.ReminderTime.Value, cancellationToken);
+    return jobResult.IsFailed ? Result.Fail("Failed to ensure reminder job still exists.") : Result.Ok();
   }
 }

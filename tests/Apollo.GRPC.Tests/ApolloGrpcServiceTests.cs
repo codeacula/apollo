@@ -35,12 +35,12 @@ public sealed class ApolloGrpcServiceTests
     // Provide a dummy Person on the user context so the service doesn't NRE
     var dummyPerson = new Domain.People.Models.Person
     {
-      Id = new Domain.People.ValueObjects.PersonId(Guid.NewGuid()),
-      PlatformId = new Domain.People.ValueObjects.PlatformId("user", "1", Domain.Common.Enums.Platform.Discord),
-      Username = new Domain.People.ValueObjects.Username("user"),
-      HasAccess = new Domain.People.ValueObjects.HasAccess(true),
-      CreatedOn = new Domain.Common.ValueObjects.CreatedOn(DateTime.UtcNow),
-      UpdatedOn = new Domain.Common.ValueObjects.UpdatedOn(DateTime.UtcNow)
+      Id = new PersonId(Guid.NewGuid()),
+      PlatformId = new PlatformId("user", "1", Platform.Discord),
+      Username = new Username("user"),
+      HasAccess = new HasAccess(true),
+      CreatedOn = new CreatedOn(DateTime.UtcNow),
+      UpdatedOn = new UpdatedOn(DateTime.UtcNow)
     };
     _ = userContext.SetupGet(u => u.Person).Returns(dummyPerson);
 
@@ -53,7 +53,7 @@ public sealed class ApolloGrpcServiceTests
       userContext.Object
     );
 
-    var request = new GetDailyPlanRequest { Username = "user", PlatformUserId = "1", Platform = Domain.Common.Enums.Platform.Discord };
+    var request = new GetDailyPlanRequest { Username = "user", PlatformUserId = "1", Platform = Platform.Discord };
 
     // Act
     var result = await service.GetDailyPlanAsync(request);
@@ -76,7 +76,7 @@ public sealed class ApolloGrpcServiceTests
     var timeParsingService = new Mock<ITimeParsingService>();
     var reminderUtc = new DateTime(2026, 3, 1, 21, 0, 0, DateTimeKind.Utc);
 
-    PersonTimeZoneId.TryParse("Europe/London", out var tzId, out _);
+    _ = PersonTimeZoneId.TryParse("Europe/London", out var tzId, out _);
     var person = new Domain.People.Models.Person
     {
       Id = new PersonId(Guid.NewGuid()),
