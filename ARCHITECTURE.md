@@ -24,7 +24,7 @@ graph TD
     subgraph "Apollo System"
         API[Apollo.API<br/>:5144]
         Bot[Apollo.Discord]
-        
+
         subgraph "Core Backend"
             Service[Apollo.Service<br/>:5270]
             DB[(PostgreSQL<br/>Marten)]
@@ -35,10 +35,10 @@ graph TD
 
     User -->|HTTP/REST| API
     DiscordPlatform -->|WebSocket| Bot
-    
+
     API -->|gRPC| Service
     Bot -->|gRPC| Service
-    
+
     Service -->|Read/Write| DB
     Service -->|Cache| Redis
     Service -->|Prompts| AI
@@ -46,13 +46,13 @@ graph TD
 
 ### Service Ports (Development)
 
-| Service | Port | Protocol | Description |
-|---------|------|----------|-------------|
-| Apollo.Service | 5270 | gRPC | Central backend host |
-| Apollo.API | 5144 | HTTP | REST gateway + Swagger UI |
+| Service        | Port | Protocol  | Description                                               |
+| -------------- | ---- | --------- | --------------------------------------------------------- |
+| Apollo.Service | 5270 | gRPC      | Central backend host                                      |
+| Apollo.API     | 5144 | HTTP      | REST gateway + Swagger UI                                 |
 | Apollo.Discord | 5145 | WebSocket | Discord bot (worker service, port exposed in Docker only) |
-| PostgreSQL | 5432 | TCP | Database |
-| Redis | 6379 | TCP | Distributed cache |
+| PostgreSQL     | 5432 | TCP       | Database                                                  |
+| Redis          | 6379 | TCP       | Distributed cache                                         |
 
 ---
 
@@ -95,7 +95,7 @@ graph TD
     Service --> Database
     Service --> GRPC
     Service --> Notifications
-    
+
     API --> GRPC
     Discord --> GRPC
 
@@ -103,7 +103,7 @@ graph TD
     Application --> Domain
     Application --> AI
     Application --> Cache
-    
+
     Database --> Domain
     AI --> Core
     Cache --> Core
@@ -113,14 +113,14 @@ graph TD
 
 ### Layer Organization
 
-| Layer | Projects | Description |
-|-------|----------|-------------|
-| **Presentation** | `Apollo.Service`, `Apollo.API`, `Apollo.Discord` | Entry points and host applications |
-| **Transport** | `Apollo.GRPC` | Shared gRPC contracts, clients, and interceptors |
-| **Application** | `Apollo.Application` | Use cases, MediatR handlers, orchestration |
+| Layer              | Projects                                                               | Description                                                  |
+| ------------------ | ---------------------------------------------------------------------- | ------------------------------------------------------------ |
+| **Presentation**   | `Apollo.Service`, `Apollo.API`, `Apollo.Discord`                       | Entry points and host applications                           |
+| **Transport**      | `Apollo.GRPC`                                                          | Shared gRPC contracts, clients, and interceptors             |
+| **Application**    | `Apollo.Application`                                                   | Use cases, MediatR handlers, orchestration                   |
 | **Infrastructure** | `Apollo.Database`, `Apollo.AI`, `Apollo.Cache`, `Apollo.Notifications` | External concerns: persistence, LLMs, caching, notifications |
-| **Shared** | `Apollo.Core` | Common DTOs, logging utilities, extensions |
-| **Domain** | `Apollo.Domain` | Pure business entities and value objects |
+| **Shared**         | `Apollo.Core`                                                          | Common DTOs, logging utilities, extensions                   |
+| **Domain**         | `Apollo.Domain`                                                        | Pure business entities and value objects                     |
 
 ---
 
@@ -139,10 +139,10 @@ sequenceDiagram
     Note over D: User sends "Remind me to buy milk"
     D->>G: SendApolloMessageAsync(NewMessageRequest)
     G->>M: Send(ProcessIncomingMessageCommand)
-    
+
     M->>DB: GetOrCreatePerson()
     M->>DB: AddMessageAsync(User Content)
-    
+
     rect rgb(240, 248, 255)
         Note right of M: AI Processing Loop
         M->>AI: Plan Tools (History + Active ToDos)
@@ -151,7 +151,7 @@ sequenceDiagram
         M->>AI: Generate Response (with Tool Results)
         AI-->>M: "I've added that to your list."
     end
-    
+
     M->>DB: AddReplyAsync(AI Content)
     M-->>G: Return Reply
     G-->>D: Return GrpcResult
@@ -254,17 +254,17 @@ flowchart TB
 
 ### Workflow Summary
 
-| Phase | Component | Description |
-|-------|-----------|-------------|
-| **Ingress** | `IncomingMessageHandler`, `SlashCommandModule` | Receives Discord events, validates access via cache |
-| **Transport** | `ApolloGrpcService` | Translates gRPC requests to MediatR commands |
-| **Orchestration** | `ProcessIncomingMessageCommandHandler` | Validates, resolves person, manages conversation |
-| **AI Phase 1** | `ToolPlanParser` | LLM generates JSON tool plan |
-| **AI Phase 2** | `ToolPlanValidator` → `ToolExecutionService` | Validates and executes tool calls via reflection |
-| **AI Phase 3** | Response generation | LLM creates natural language response |
-| **Persistence** | Marten stores | Events appended, inline projections updated |
-| **Egress** | gRPC response → Discord | Reply sent back to user |
-| **Background** | Quartz → `ToDoReminderJob` | Scheduled reminders sent via notification channels |
+| Phase             | Component                                      | Description                                         |
+| ----------------- | ---------------------------------------------- | --------------------------------------------------- |
+| **Ingress**       | `IncomingMessageHandler`, `SlashCommandModule` | Receives Discord events, validates access via cache |
+| **Transport**     | `ApolloGrpcService`                            | Translates gRPC requests to MediatR commands        |
+| **Orchestration** | `ProcessIncomingMessageCommandHandler`         | Validates, resolves person, manages conversation    |
+| **AI Phase 1**    | `ToolPlanParser`                               | LLM generates JSON tool plan                        |
+| **AI Phase 2**    | `ToolPlanValidator` → `ToolExecutionService`   | Validates and executes tool calls via reflection    |
+| **AI Phase 3**    | Response generation                            | LLM creates natural language response               |
+| **Persistence**   | Marten stores                                  | Events appended, inline projections updated         |
+| **Egress**        | gRPC response → Discord                        | Reply sent back to user                             |
+| **Background**    | Quartz → `ToDoReminderJob`                     | Scheduled reminders sent via notification channels  |
 
 ---
 
@@ -328,9 +328,9 @@ flowchart LR
 
 - **Events**: Immutable records in `Apollo.Database/*/Events/` (e.g., `ToDoCreatedEvent`, `ReminderCreatedEvent`)
 - **Aggregates**: `Db*` classes with `Apply()` methods:
-  - `DbPerson`, `DbNotificationChannel` - User management
-  - `DbConversation`, `DbMessage` - Chat history
-  - `DbToDo`, `DbReminder`, `DbToDoReminder` - Task and reminder management
+    - `DbPerson`, `DbNotificationChannel` - User management
+    - `DbConversation`, `DbMessage` - Chat history
+    - `DbToDo`, `DbReminder`, `DbToDoReminder` - Task and reminder management
 - **Projections**: `SnapshotLifecycle.Inline` - read models update synchronously
 - **Storage**: Events in `mt_events`, projections in `mt_doc_*` tables
 
@@ -343,12 +343,14 @@ flowchart LR
 Core domain entities, value objects, and domain services. Pure business logic with no external dependencies.
 
 **Aggregates:**
+
 - `Conversations` - Chat history and messages
 - `People` - User profiles and notification preferences
 - `ToDos` - Tasks with priority, energy, and interest levels
 - `Reminders` - Standalone reminders (in `ToDos/Models/Reminder.cs`)
 
 **Common (Shared):**
+
 - `Common/Enums/` - Shared enums like `Level` (Blue/Green/Yellow/Red), `Platform`
 - `Common/ValueObjects/` - Shared value objects: `Content`, `CreatedOn`, `DisplayName`, `UpdatedOn`, `UtcDateTime`
 
@@ -359,6 +361,7 @@ Core domain entities, value objects, and domain services. Pure business logic wi
 Shared utilities, abstractions, and contracts used across all projects.
 
 **Subdirectories:**
+
 - `Conversations/` - `IConversationStore` interface, DTOs
 - `People/` - `IPersonStore` interface, `IPersonCache`, DTOs
 - `ToDos/` - `IToDoStore`, `IReminderStore` interfaces, DTOs
@@ -376,12 +379,14 @@ Shared utilities, abstractions, and contracts used across all projects.
 Application layer with use-cases and business orchestration. Implements CQRS pattern using MediatR.
 
 **Subdirectories:**
+
 - `Conversations/` - Message processing orchestration
 - `People/` - Person management, `PersonPlugin`
 - `ToDos/` - Task management, `ToDoPlugin`
 - `Reminders/` - Reminder management, `RemindersPlugin`
 
 **Plugins:** Domain-specific AI plugins with `[KernelFunction]` decorated methods:
+
 - `ToDoPlugin` - 13+ tool functions for task management
 - `RemindersPlugin` - Reminder creation and management
 - `PersonPlugin` - User preference management
@@ -394,7 +399,8 @@ Application layer with use-cases and business orchestration. Implements CQRS pat
 
 Data persistence using Marten for event sourcing and Entity Framework Core for migrations. Contains stores, events, and aggregate projections.
 
-**Database Aggregates (Db* classes):**
+**Database Aggregates (Db\* classes):**
+
 - `DbPerson` - Person aggregate with notification channels
 - `DbNotificationChannel` - Notification channel settings
 - `DbConversation` - Conversation aggregate
@@ -404,6 +410,7 @@ Data persistence using Marten for event sourcing and Entity Framework Core for m
 - `DbToDoReminder` - Reminders linked to specific ToDos
 
 **Stores:**
+
 - `IPersonStore` / `PersonStore`
 - `IConversationStore` / `ConversationStore`
 - `IToDoStore` / `ToDoStore`
@@ -418,17 +425,18 @@ Data persistence using Marten for event sourcing and Entity Framework Core for m
 AI agent implementations powered by Microsoft Semantic Kernel. Provides `IApolloAIAgent` interface for chat completions, tool planning, and LLM interactions.
 
 **Subdirectories:**
+
 - `Plugins/` - Infrastructure plugins (e.g., `TimePlugin`)
 - `Prompts/` - YAML prompt definitions:
-  - `ApolloToolPlanning.yml` - Tool planning phase prompts
-  - `ApolloToolCalling.yml` - Tool calling configuration
-  - `ApolloResponse.yml` - Response generation prompts
-  - `ApolloReminder.yml` - Reminder-specific prompts
-  - `ApolloDailyPlanning.yml` - Daily task selection prompts
+    - `ApolloToolPlanning.yml` - Tool planning phase prompts
+    - `ApolloToolCalling.yml` - Tool calling configuration
+    - `ApolloResponse.yml` - Response generation prompts
+    - `ApolloReminder.yml` - Reminder-specific prompts
+    - `ApolloDailyPlanning.yml` - Daily task selection prompts
 - `Tooling/` - Tool execution pipeline:
-  - `ToolPlanValidator` - Validates tool calls against available plugins
-  - `ToolCallResolver` - Resolves `[KernelFunction]` methods via reflection
-  - `ToolExecutionService` - Executes validated tool calls
+    - `ToolPlanValidator` - Validates tool calls against available plugins
+    - `ToolCallResolver` - Resolves `[KernelFunction]` methods via reflection
+    - `ToolExecutionService` - Executes validated tool calls
 - `Planning/` - `ToolPlanParser` for JSON tool plan parsing
 - `Requests/` - `AIRequestBuilder` fluent builder for AI requests
 
@@ -503,16 +511,16 @@ Vue 3 single-page application built with Vite and TypeScript.
 
 ### Naming Conventions
 
-| Type | Convention | Example |
-|------|------------|---------|
-| Classes/Records | PascalCase | `ToDoStore`, `PersonNotificationClient` |
-| Interfaces | `I` prefix | `IToDoStore`, `IApolloAIAgent` |
-| Value Objects | Concept name | `ToDoId`, `Description`, `Priority` |
-| DTOs | `DTO` suffix | `ToDoDTO`, `ChatCompletionRequestDTO` |
-| Commands | `Command` suffix | `CreateToDoCommand` |
-| Queries | `Query` suffix | `GetToDoByIdQuery` |
-| Handlers | `Handler` suffix | `CreateToDoCommandHandler` |
-| Events | `Event` suffix | `ToDoCreatedEvent` |
+| Type            | Convention       | Example                                 |
+| --------------- | ---------------- | --------------------------------------- |
+| Classes/Records | PascalCase       | `ToDoStore`, `PersonNotificationClient` |
+| Interfaces      | `I` prefix       | `IToDoStore`, `IApolloAIAgent`          |
+| Value Objects   | Concept name     | `ToDoId`, `Description`, `Priority`     |
+| DTOs            | `DTO` suffix     | `ToDoDTO`, `ChatCompletionRequestDTO`   |
+| Commands        | `Command` suffix | `CreateToDoCommand`                     |
+| Queries         | `Query` suffix   | `GetToDoByIdQuery`                      |
+| Handlers        | `Handler` suffix | `CreateToDoCommandHandler`              |
+| Events          | `Event` suffix   | `ToDoCreatedEvent`                      |
 
 ### Type Design
 
@@ -666,6 +674,7 @@ Host Machine                          Container (apollo-dev)
 ```
 
 The script will:
+
 1. Auto-detect Docker or Podman
 2. Build the dev container image (tooling layers are cached; only the file copy layer rebuilds)
 3. Start Postgres and Redis via `compose.dev.yaml`
@@ -674,27 +683,28 @@ The script will:
 
 ### What's Inside the Container
 
-| Tool | Version | Purpose |
-|------|---------|---------|
-| .NET SDK | 10.0 | Build and test the solution |
-| Node.js | 22 LTS | Frontend build and tooling |
-| OpenCode | latest | AI coding assistant |
-| GitHub CLI | latest | PR creation and repo operations |
-| csharp-ls | latest | C# language server for LSP |
+| Tool       | Version | Purpose                         |
+| ---------- | ------- | ------------------------------- |
+| .NET SDK   | 10.0    | Build and test the solution     |
+| Node.js    | 22 LTS  | Frontend build and tooling      |
+| OpenCode   | latest  | AI coding assistant             |
+| GitHub CLI | latest  | PR creation and repo operations |
+| csharp-ls  | latest  | C# language server for LSP      |
 
 **MCP Servers** (available to AI agents):
+
 - `memory` - Knowledge graph persistence across sessions
 - `sequential-thinking` - Step-by-step reasoning for complex tasks
 
 ### File Layout
 
-| Path | Purpose |
-|------|---------|
-| `start-dev.sh` | Launcher script (run from repo root) |
-| `compose.dev.yaml` | Dev compose file (dev container + Postgres 16 + Redis 7) |
-| `docker/Dockerfile.dev` | Dev container image definition |
-| `docker/entrypoint.sh` | Container startup (branch checkout, dependency restore, OpenCode launch) |
-| `docker/opencode.json` | OpenCode MCP server configuration |
+| Path                    | Purpose                                                                  |
+| ----------------------- | ------------------------------------------------------------------------ |
+| `start-dev.sh`          | Launcher script (run from repo root)                                     |
+| `compose.dev.yaml`      | Dev compose file (dev container + Postgres 16 + Redis 7)                 |
+| `docker/Dockerfile.dev` | Dev container image definition                                           |
+| `docker/entrypoint.sh`  | Container startup (branch checkout, dependency restore, OpenCode launch) |
+| `docker/opencode.json`  | OpenCode MCP server configuration                                        |
 
 ### Stopping the Environment
 
@@ -710,13 +720,13 @@ docker compose -f compose.dev.yaml down    # or: podman compose -f compose.dev.y
 
 Pull requests to `main` trigger the **Build and Test** GitHub Actions workflow (`.github/workflows/pr-build-test.yml`):
 
-| Step | Command |
-|------|---------|
-| .NET restore | `dotnet restore` |
-| .NET build | `dotnet build --no-restore` |
-| .NET tests | `dotnet test --no-build --no-restore` |
-| Frontend install | `npm ci` (in `src/Client`) |
-| Frontend build | `npm run build` (in `src/Client`) |
+| Step             | Command                               |
+| ---------------- | ------------------------------------- |
+| .NET restore     | `dotnet restore`                      |
+| .NET build       | `dotnet build --no-restore`           |
+| .NET tests       | `dotnet test --no-build --no-restore` |
+| Frontend install | `npm ci` (in `src/Client`)            |
+| Frontend build   | `npm run build` (in `src/Client`)     |
 
 **Runtime versions:** .NET 10.x, Node.js 20.x
 

@@ -152,8 +152,8 @@ public sealed record DbPerson
   {
     var channels = person.NotificationChannels.Select(c =>
     {
-      return c.Type == ev.Data.ChannelType && c.Identifier == ev.Data.Identifier
-        ? (c with { IsEnabled = ev.Data.IsEnabled, UpdatedOn = ev.Data.ToggledOn })
+      return (c.Type, c.Identifier) == (ev.Data.ChannelType, ev.Data.Identifier)
+        ? c with { IsEnabled = ev.Data.IsEnabled, UpdatedOn = ev.Data.ToggledOn }
         : c;
     }).ToList();
 

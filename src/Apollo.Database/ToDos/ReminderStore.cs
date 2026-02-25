@@ -68,7 +68,7 @@ public sealed class ReminderStore(IDocumentSession session, TimeProvider timePro
 
       var reminderIds = links.Select(l => l.ReminderId).ToList();
 
-      if (reminderIds.Count == 0)
+      if (reminderIds is [])
       {
         return Result.Ok(Enumerable.Empty<Reminder>());
       }

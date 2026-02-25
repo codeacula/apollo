@@ -13,6 +13,8 @@ using Grpc.Net.Client;
 
 using ProtoBuf.Grpc.Client;
 
+using GrpcDeleteToDoRequest = Apollo.GRPC.Contracts.DeleteToDoRequest;
+
 using CoreCreateReminderRequest = Apollo.Core.Reminders.Requests.CreateReminderRequest;
 using CoreCreateToDoRequest = Apollo.Core.ToDos.Requests.CreateToDoRequest;
 using GrpcCreateReminderRequest = Apollo.GRPC.Contracts.CreateReminderRequest;
@@ -81,6 +83,23 @@ public class ApolloGrpcClient : IApolloGrpcClient, IApolloServiceClient, IDispos
     return grpcResponse.IsFailed
       ? Result.Fail<Reminder>(grpcResponse.Errors)
       : Result.Ok(MapReminderToDomain(grpcResponse.Value));
+  }
+
+  public async Task<Result<string>> DeleteToDoAsync(PlatformId platformId, Guid toDoId, CancellationToken cancellationToken = default)
+  {
+    var grpcRequest = new GrpcDeleteToDoRequest
+    {
+      Platform = platformId.Platform,
+      PlatformUserId = platformId.PlatformUserId,
+      Username = platformId.Username,
+      ToDoId = toDoId,
+    };
+
+    var grpcResult = await ApolloGrpcService.DeleteToDoAsync(grpcRequest);
+
+    return grpcResult.IsSuccess
+      ? Result.Ok(grpcResult.Data ?? string.Empty)
+      : Result.Fail(string.Join("; ", grpcResult.Errors.Select(e => e.Message)));
   }
 
   public async Task<Result<string>> SendMessageAsync(ProcessMessageRequest request, CancellationToken cancellationToken = default)

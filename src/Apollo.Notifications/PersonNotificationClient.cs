@@ -1,5 +1,6 @@
 using Apollo.Core.Notifications;
 using Apollo.Domain.People.Models;
+using Apollo.Domain.People.ValueObjects;
 
 using FluentResults;
 
@@ -11,11 +12,18 @@ public sealed class PersonNotificationClient(IEnumerable<INotificationChannel> n
   {
     var enabledChannels = person.NotificationChannels.Where(c => c.IsEnabled).ToList();
 
-    if (enabledChannels.Count == 0)
+    if (enabledChannels is [])
     {
       return Result.Fail("Person has no enabled notification channels");
     }
 
+    var results = await SendToEnabledChannelsAsync(enabledChannels, notification, cancellationToken);
+
+    return EvaluateNotificationResults(results);
+  }
+
+  private async Task<List<Result>> SendToEnabledChannelsAsync(List<NotificationChannel> enabledChannels, Notification notification, CancellationToken cancellationToken)
+  {
     var results = new List<Result>();
 
     foreach (var channel in enabledChannels)
@@ -31,19 +39,18 @@ public sealed class PersonNotificationClient(IEnumerable<INotificationChannel> n
       results.Add(result);
     }
 
+    return results;
+  }
+
+  private static Result EvaluateNotificationResults(List<Result> results)
+  {
     var successCount = results.Count(r => r.IsSuccess);
 
-    if (successCount == 0)
+    return (successCount, results.Count) switch
     {
-      return Result.Fail($"Failed to send notification to any channel. Errors: {string.Join("; ", results.SelectMany(r => r.Errors).Select(e => e.Message))}");
-    }
-
-    if (successCount < results.Count)
-    {
-      var errors = string.Join("; ", results.Where(r => r.IsFailed).SelectMany(r => r.Errors).Select(e => e.Message));
-      return Result.Ok().WithSuccess($"Sent to {successCount}/{results.Count} channels. Partial failures: {errors}");
-    }
-
-    return Result.Ok();
+      (0, _) => Result.Fail($"Failed to send notification to any channel. Errors: {string.Join("; ", results.SelectMany(r => r.Errors).Select(e => e.Message))}"),
+      (var s, var t) when s < t => Result.Ok().WithSuccess($"Sent to {s}/{t} channels. Partial failures: {string.Join("; ", results.Where(r => r.IsFailed).SelectMany(r => r.Errors).Select(e => e.Message))}"),
+      _ => Result.Ok()
+    };
   }
 }

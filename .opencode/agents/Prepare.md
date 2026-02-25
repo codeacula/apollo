@@ -41,29 +41,32 @@ Your job is to act as a Lead Architect, creating tasks for lighter agents to coo
     The following is an example of a plan. Anything surrounded with {{...}} can be assumed to be text-replacement variables whose content is based on the name. It assumes a GitHub issue ID of #110. `plan` contains the data of the expected plan: `filename` is the name the plan should be saved as, and `template` contains the plan's text. `template-variables` contains a list of the variables used in the template and their descriptions.
     </summary>
     <plan>
-        <filename>{{issue-id}}-{{task-title}}.md</filename
+        <filename>{{issue-id}}-{{task-title}}.md</filename>
         <template-variables>
-        - **issue-id**: The ID of the issue from GitHub that the plan is being created for.
-        - **task-title**: The title of the task.
-        - **task-description**: A detailed description of the task, including any relevant information from the GitHub issue.
-        - **step-number**: The number of the step in the plan.
-        - **step-description**: A brief description of what the step entails.
-        - **file-name**: The name of the file that needs to be changed or created for this step.
-        - **recommend-change**: A recommendation for what change should be made to the file.
-        - **reason-for-change**: An explanation of why this change is necessary for the task
-        - **test-file-name**: The name of the test file that should be created or edited for this step.
-        - **test-name**: The name of the specific test that should be created or edited.
-        - **reason-for-test**: An explanation of why this test is necessary for the task
+            - **issue-id**: The ID of the issue from GitHub that the plan is being created for.
+            - **task-title**: The title of the task.
+            - **task-description**: A detailed description of the task, including any relevant information from the GitHub issue.
+            - **step-number**: The number of the step in the plan.
+            - **step-description**: A brief description of what the step entails.
+            - **file-name**: The name of the file that needs to be changed or created for this step.
+            - **recommend-change**: A recommendation for what change should be made to the file.
+            - **reason-for-change**: An explanation of why this change is necessary for the task
+            - **test-file-name**: The name of the test file that should be created or edited for this step.
+            - **test-name**: The name of the specific test that should be created or edited.
+            - **reason-for-test**: An explanation of why this test is necessary for the task
         </template-variables>
         <template>
-            # {{task-title}}
+            <template-header>
+                # {{task-title}}
 
-            ## Description
+                ## Description
 
-            {{task-description}}
+                {{task-description}}
+            </template-header>
 
-            ## Steps
             <steps>
+                ## Steps
+
                 <step>
                     <step-info>### {{step-number}} - {{step-description}}</step-info>
                     <files>
@@ -74,8 +77,8 @@ Your job is to act as a Lead Architect, creating tasks for lighter agents to coo
                     </files>
                     <tests>
                         ### Tests
-                        <test>#### {{test-file-name}}:{{test-name}}
-                        <reason>{{reason-for-test}}
+                        <test>#### {{test-file-name}}:{{test-name}}</test>
+                        <reason>{{reason-for-test}}</reason>
                     </tests>
                 </step>
             </steps>

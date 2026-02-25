@@ -27,12 +27,4 @@
       "preferred_line_length": 120,
     },
   },
-  "auto_install_extensions": {
-    "csharp": true,
-    "html": true,
-    "dockerfile": true,
-    "docker-compose": true,
-    "toml": true,
-    "vue": true,
-  },
 }

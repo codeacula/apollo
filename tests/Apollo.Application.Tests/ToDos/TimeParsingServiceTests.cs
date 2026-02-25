@@ -323,12 +323,12 @@ public sealed class TimeParsingServiceTests
   }
 
   [Fact]
-  public async Task ParseTimeAsyncWithFuzzyTimeAndUserTimezoneConvertsToUtc()
+  public async Task ParseTimeAsyncWithFuzzyTimeAndUserTimezoneConvertsToUtcAsync()
   {
     // Arrange — fuzzy parser returns a time that should be treated as user-local
     // "tomorrow at 3pm" → fuzzy returns 2025-12-31T15:00:00 with Unspecified kind
     var fuzzyParsed = new DateTime(2025, 12, 31, 15, 0, 0, DateTimeKind.Unspecified);
-    _fuzzyTimeParser
+    _ = _fuzzyTimeParser
       .Setup(p => p.TryParseFuzzyTime("tomorrow at 3pm", ReferenceTime))
       .Returns(Result.Ok(fuzzyParsed));
 
@@ -341,11 +341,11 @@ public sealed class TimeParsingServiceTests
   }
 
   [Fact]
-  public async Task ParseTimeAsyncWithFuzzyTimeAndNoTimezoneReturnsUtcDirectly()
+  public async Task ParseTimeAsyncWithFuzzyTimeAndNoTimezoneReturnsUtcDirectlyAsync()
   {
     // Arrange — fuzzy parser returns UTC time (relative durations)
     var expected = new DateTime(2025, 12, 30, 14, 40, 0, DateTimeKind.Utc);
-    _fuzzyTimeParser
+    _ = _fuzzyTimeParser
       .Setup(p => p.TryParseFuzzyTime("in 10 minutes", ReferenceTime))
       .Returns(Result.Ok(expected));
 
@@ -358,11 +358,11 @@ public sealed class TimeParsingServiceTests
   }
 
   [Fact]
-  public async Task ParseTimeAsyncWithIso8601ZSuffixReturnsUtcKind()
+  public async Task ParseTimeAsyncWithIso8601ZSuffixReturnsUtcKindAsync()
   {
     // Arrange — fuzzy parser fails
     const string input = "2025-12-31T10:00:00Z";
-    _fuzzyTimeParser
+    _ = _fuzzyTimeParser
       .Setup(p => p.TryParseFuzzyTime(input, ReferenceTime))
       .Returns(Result.Fail<DateTime>("Not fuzzy"));
 
@@ -375,11 +375,11 @@ public sealed class TimeParsingServiceTests
   }
 
   [Fact]
-  public async Task ParseTimeAsyncWithIso8601OffsetConvertsToUtc()
+  public async Task ParseTimeAsyncWithIso8601OffsetConvertsToUtcAsync()
   {
     // Arrange — fuzzy parser fails
     const string input = "2025-12-31T10:00:00-05:00";
-    _fuzzyTimeParser
+    _ = _fuzzyTimeParser
       .Setup(p => p.TryParseFuzzyTime(input, ReferenceTime))
       .Returns(Result.Fail<DateTime>("Not fuzzy"));
 
@@ -392,11 +392,11 @@ public sealed class TimeParsingServiceTests
   }
 
   [Fact]
-  public async Task ParseTimeAsyncWithInvalidTimezoneIdFallsBackToUtc()
+  public async Task ParseTimeAsyncWithInvalidTimezoneIdFallsBackToUtcAsync()
   {
     // Arrange — fuzzy parser fails, C# parsing succeeds with Unspecified kind
     const string input = "2025-12-31T10:00:00";
-    _fuzzyTimeParser
+    _ = _fuzzyTimeParser
       .Setup(p => p.TryParseFuzzyTime(input, ReferenceTime))
       .Returns(Result.Fail<DateTime>("Not fuzzy"));
 
@@ -409,11 +409,11 @@ public sealed class TimeParsingServiceTests
   }
 
   [Fact]
-  public async Task ParseTimeAsyncWithEmptyTimezoneIdTreatsAsUtc()
+  public async Task ParseTimeAsyncWithEmptyTimezoneIdTreatsAsUtcAsync()
   {
     // Arrange — fuzzy parser fails, C# parsing succeeds
     const string input = "2025-12-31T10:00:00";
-    _fuzzyTimeParser
+    _ = _fuzzyTimeParser
       .Setup(p => p.TryParseFuzzyTime(input, ReferenceTime))
       .Returns(Result.Fail<DateTime>("Not fuzzy"));
 
