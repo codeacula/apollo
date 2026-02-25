@@ -1,6 +1,5 @@
 using Apollo.Core.ToDos.Responses;
 
-using NetCord;
 using NetCord.Rest;
 
 namespace Apollo.Discord.Components;
