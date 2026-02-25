@@ -50,7 +50,7 @@ public sealed record GrpcResult<T> where T : class
   {
     return grpcResult switch
     {
-      { IsSuccess: true, Data: not null, Data: var data } => Result.Ok(data),
+      { IsSuccess: true, Data: var data and not null } => Result.Ok(data),
       { IsSuccess: true, Data: null } => Result.Fail<T>("GrpcResult marked as successful but contains null data"),
       { IsSuccess: false, Errors: var errors } when errors.Count > 0 => Result.Fail<T>(errors
         .Select(e => new Error(e.Message).WithMetadata("ErrorCode", e.ErrorCode ?? string.Empty))),
