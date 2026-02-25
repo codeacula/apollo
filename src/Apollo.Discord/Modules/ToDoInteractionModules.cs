@@ -86,7 +86,7 @@ public class ToDoDeleteSelectInteractionModule(IApolloServiceClient apolloServic
   {
     _ = await RespondAsync(InteractionCallback.DeferredModifyMessage);
 
-    var selectedValue = Context.SelectedValues.Count > 0 ? Context.SelectedValues[0] : null;
+    var selectedValue = Context.SelectedValues is [var first, ..] ? first : null;
     if (selectedValue is null || !Guid.TryParse(selectedValue, out var toDoId))
     {
       _ = await ModifyResponseAsync(message =>
