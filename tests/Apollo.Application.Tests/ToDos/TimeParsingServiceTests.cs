@@ -75,10 +75,38 @@ public sealed class TimeParsingServiceTests
     // Act
     var result = await _service.ParseTimeAsync(input);
 
-    // Assert
+    // Assert - time-only input should be anchored to today's date (not 0001-01-01)
     Assert.True(result.IsSuccess);
+    Assert.Equal(ReferenceTime.Year, result.Value.Year);
+    Assert.Equal(ReferenceTime.Month, result.Value.Month);
+    Assert.Equal(ReferenceTime.Day, result.Value.Day);
     Assert.Equal(expectedHour, result.Value.Hour);
     Assert.Equal(expectedMinute, result.Value.Minute);
+  }
+
+  [Theory]
+  [InlineData("3:00 PM", "America/Chicago", 2025, 12, 30, 21, 0)]
+  [InlineData("9:30 AM", "America/New_York", 2025, 12, 30, 14, 30)]
+  public async Task ParseTimeAsyncWithTimeOnlyInputAndTimezoneAnchorsToTodayInUserTimezoneAsync(
+    string input, string timezone, int expectedYear, int expectedMonth, int expectedDay,
+    int expectedHour, int expectedMinute)
+  {
+    // Arrange - fuzzy parser fails
+    _ = _fuzzyTimeParser
+      .Setup(p => p.TryParseFuzzyTime(input, ReferenceTime))
+      .Returns(Result.Fail<DateTime>("Not fuzzy"));
+
+    // Act
+    var result = await _service.ParseTimeAsync(input, timezone);
+
+    // Assert - time should be anchored to today (2025-12-30) and converted to UTC
+    Assert.True(result.IsSuccess);
+    Assert.Equal(expectedYear, result.Value.Year);
+    Assert.Equal(expectedMonth, result.Value.Month);
+    Assert.Equal(expectedDay, result.Value.Day);
+    Assert.Equal(expectedHour, result.Value.Hour);
+    Assert.Equal(expectedMinute, result.Value.Minute);
+    Assert.Equal(DateTimeKind.Utc, result.Value.Kind);
   }
 
   [Theory]
