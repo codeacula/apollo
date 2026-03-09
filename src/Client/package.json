@@ -4,9 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vue-tsc -b && vite build",
-    "preview": "vite preview"
+    "dev": "bun x vite",
+    "build": "bun x vue-tsc -b && bun x vite build",
+    "preview": "bun x vite preview"
   },
   "dependencies": {
     "axios": "^1.13.6",

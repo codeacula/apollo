@@ -44,13 +44,12 @@ RUN wget https://dot.net/v1/dotnet-install.sh -O /tmp/dotnet-install.sh \
 ENV DOTNET_ROOT=/usr/share/dotnet
 ENV PATH="$PATH:/usr/share/dotnet"
 
-# Install Node.js LTS
-RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - \
-    && apt-get install -y nodejs \
-    && rm -rf /var/lib/apt/lists/*
+# Install Bun
+RUN curl -fsSL https://bun.sh/install | bash
+ENV PATH="/root/.bun/bin:$PATH"
 
-# Install OpenCode and MCP servers globally
-RUN npm install -g \
+# Install OpenCode and MCP servers globally using Bun
+RUN bun install -g \
     opencode-ai \
     @modelcontextprotocol/server-memory \
     @modelcontextprotocol/server-sequential-thinking

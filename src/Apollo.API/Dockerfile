@@ -8,14 +8,14 @@ ENV ConnectionStrings__Redis=redis:6379,password=apollo_redis
 USER app
 
 # Build the client
-FROM node:alpine AS client-build
+FROM oven/bun:alpine AS client-build
 WORKDIR /src
-COPY ./src/Client/package*.json ./src/Client/
-RUN cd ./src/Client && npm ci
+COPY ./src/Client/package*.json ./src/Client/bun.lock ./src/Client/
+RUN cd ./src/Client && bun install
 COPY ./src/Client ./src/Client
 
 # Build to ../Apollo.API/wwwroot as configured in vite.config.ts
-RUN cd ./src/Client && npm run build
+RUN cd ./src/Client && bun run build
 FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG configuration=Release
 WORKDIR /src
