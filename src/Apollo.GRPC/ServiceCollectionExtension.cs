@@ -48,7 +48,9 @@ public static class ServiceCollectionExtension
           return GrpcChannel.ForAddress(address, channelOptions);
         });
 
-    _ = services.AddSingleton<IApolloServiceClient, ApolloGrpcClient>();
+    _ = services.AddSingleton<ApolloGrpcClient>();
+    _ = services.AddSingleton<IApolloServiceClient>(sp => sp.GetRequiredService<ApolloGrpcClient>());
+    _ = services.AddSingleton<IApolloGrpcClient>(sp => sp.GetRequiredService<ApolloGrpcClient>());
 
     return services;
   }

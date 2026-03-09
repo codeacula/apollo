@@ -51,4 +51,20 @@ public interface IApolloGrpcService
   [OperationContract]
   [RequireSuperAdmin]
   Task<GrpcResult<string>> RevokeAccessAsync(ManageAccessRequest request);
+
+  [OperationContract]
+  [RequireSuperAdmin]
+  Task<GrpcResult<ConfigurationDTO[]>> GetAllConfigurationsAsync(GetAllConfigurationsRequest request);
+
+  [OperationContract]
+  [RequireSuperAdmin]
+  Task<GrpcResult<ConfigurationDTO>> GetConfigurationAsync(GetConfigurationRequest request);
+
+  [OperationContract]
+  [RequireSuperAdmin]
+  Task<GrpcResult> SetConfigurationAsync(SetConfigurationRequest request);
+
+  [OperationContract]
+  [RequireSuperAdmin]
+  Task<GrpcResult> DeleteConfigurationAsync(DeleteConfigurationRequest request);
 }

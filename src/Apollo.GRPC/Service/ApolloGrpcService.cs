@@ -1,3 +1,4 @@
+using Apollo.Application.Configuration;
 using Apollo.Application.Conversations;
 using Apollo.Application.People;
 using Apollo.Application.ToDos;
@@ -281,6 +282,46 @@ public sealed class ApolloGrpcService(
     return revokeResult.IsFailed
       ? (GrpcResult<string>)revokeResult.Errors.Select(e => new GrpcError(e.Message)).ToArray()
       : (GrpcResult<string>)$"Access revoked from {request.TargetUsername}";
+  }
+
+  public async Task<GrpcResult<ConfigurationDTO[]>> GetAllConfigurationsAsync(GetAllConfigurationsRequest request)
+  {
+    var query = new GetAllConfigurationsQuery();
+    var result = await mediator.Send(query);
+
+    return result.IsFailed
+      ? result.Errors.Select(e => new GrpcError(e.Message)).ToArray()
+      : result.Value.Select(c => new ConfigurationDTO { Key = c.Key, Value = c.Value }).ToArray();
+  }
+
+  public async Task<GrpcResult<ConfigurationDTO>> GetConfigurationAsync(GetConfigurationRequest request)
+  {
+    var query = new GetConfigurationQuery(request.Key);
+    var result = await mediator.Send(query);
+
+    return result.IsFailed
+      ? (GrpcResult<ConfigurationDTO>)result.Errors.Select(e => new GrpcError(e.Message)).ToArray()
+      : (GrpcResult<ConfigurationDTO>)new ConfigurationDTO { Key = result.Value.Key, Value = result.Value.Value };
+  }
+
+  public async Task<GrpcResult> SetConfigurationAsync(SetConfigurationRequest request)
+  {
+    var command = new SetConfigurationCommand(request.Key, request.Value);
+    var result = await mediator.Send(command);
+
+    return result.IsFailed
+      ? (GrpcResult)result.Errors.Select(e => new GrpcError(e.Message)).ToArray()
+      : (GrpcResult)"Configuration saved successfully";
+  }
+
+  public async Task<GrpcResult> DeleteConfigurationAsync(DeleteConfigurationRequest request)
+  {
+    var command = new DeleteConfigurationCommand(request.Key);
+    var result = await mediator.Send(command);
+
+    return result.IsFailed
+      ? (GrpcResult)result.Errors.Select(e => new GrpcError(e.Message)).ToArray()
+      : (GrpcResult)"Configuration deleted successfully";
   }
 
   private bool IsSuperAdmin(Platform platform, string platformUserId)

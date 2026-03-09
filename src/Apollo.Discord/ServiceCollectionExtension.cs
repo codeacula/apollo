@@ -13,17 +13,19 @@ public static class ServiceCollectionExtensions
   public static IServiceCollection AddDiscordServices(this IServiceCollection services)
   {
     _ = services
-    .AddDiscordGateway(options => options.Intents = GatewayIntents.All)
-        .AddApplicationCommands()
-        .AddDiscordRest()
-        .AddComponentInteractions<ButtonInteraction, ButtonInteractionContext>()
-        .AddComponentInteractions<StringMenuInteraction, StringMenuInteractionContext>()
-        .AddComponentInteractions<UserMenuInteraction, UserMenuInteractionContext>()
-        .AddComponentInteractions<RoleMenuInteraction, RoleMenuInteractionContext>()
-        .AddComponentInteractions<MentionableMenuInteraction, MentionableMenuInteractionContext>()
-        .AddComponentInteractions<ChannelMenuInteraction, ChannelMenuInteractionContext>()
-        .AddComponentInteractions<ModalInteraction, ModalInteractionContext>()
-         .AddGatewayHandlers(typeof(IApolloDiscord).Assembly);
+      .AddDiscordGateway(options => options.Intents = GatewayIntents.All)
+      .AddApplicationCommands()
+      .AddDiscordRest()
+      .AddComponentInteractions<ButtonInteraction, ButtonInteractionContext>()
+      .AddComponentInteractions<StringMenuInteraction, StringMenuInteractionContext>()
+      .AddComponentInteractions<UserMenuInteraction, UserMenuInteractionContext>()
+      .AddComponentInteractions<RoleMenuInteraction, RoleMenuInteractionContext>()
+      .AddComponentInteractions<MentionableMenuInteraction, MentionableMenuInteractionContext>()
+      .AddComponentInteractions<ChannelMenuInteraction, ChannelMenuInteractionContext>()
+      .AddComponentInteractions<ModalInteraction, ModalInteractionContext>()
+      .AddGatewayHandlers(typeof(IApolloDiscord).Assembly);
+
+    _ = services.AddHostedService<ConfigurationSubscriber>();
 
     return services;
   }

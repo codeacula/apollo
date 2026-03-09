@@ -5,6 +5,47 @@ using FluentResults;
 namespace Apollo.GRPC.Contracts;
 
 [DataContract]
+public sealed record GrpcResult
+{
+  [DataMember(Order = 1)]
+  public bool IsSuccess { get; init; }
+
+  [DataMember(Order = 2)]
+  public string? Message { get; init; }
+
+  [DataMember(Order = 3)]
+  public List<GrpcError> Errors { get; init; } = [];
+
+  public static implicit operator GrpcResult(string message)
+  {
+    return new()
+    {
+      IsSuccess = true,
+      Message = message,
+      Errors = []
+    };
+  }
+
+  public static implicit operator GrpcResult(GrpcError error)
+  {
+    return new()
+    {
+      IsSuccess = false,
+      Errors = [error]
+    };
+  }
+
+  public static implicit operator GrpcResult(GrpcError[] errors)
+  {
+    return new()
+    {
+      IsSuccess = false,
+      Errors = [.. errors]
+    };
+  }
+}
+
+[DataContract]
 public sealed record GrpcResult<T> where T : class
 {
   [DataMember(Order = 1)]

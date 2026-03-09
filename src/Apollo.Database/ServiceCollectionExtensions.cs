@@ -1,7 +1,10 @@
+using Apollo.Core.Configuration;
 using Apollo.Core.Conversations;
 using Apollo.Core.Data;
 using Apollo.Core.People;
 using Apollo.Core.ToDos;
+using Apollo.Database.Configuration;
+using Apollo.Database.Configuration.Events;
 using Apollo.Database.Conversations;
 using Apollo.Database.Conversations.Events;
 using Apollo.Database.People;
@@ -85,11 +88,18 @@ public static class ServiceCollectionExtensions
         _ = options.Events.AddEventType<ToDoReminderLinkedEvent>();
         _ = options.Events.AddEventType<ToDoReminderUnlinkedEvent>();
 
+        _ = options.Schema.For<DbConfigurationEntry>()
+          .Identity(x => x.Id);
+
+        _ = options.Events.AddEventType<ConfigurationEntrySetEvent>();
+        _ = options.Events.AddEventType<ConfigurationEntryDeletedEvent>();
+
         _ = options.Projections.Snapshot<DbPerson>(Marten.Events.Projections.SnapshotLifecycle.Inline);
         _ = options.Projections.Snapshot<DbConversation>(Marten.Events.Projections.SnapshotLifecycle.Inline);
         _ = options.Projections.Snapshot<DbToDo>(Marten.Events.Projections.SnapshotLifecycle.Inline);
         _ = options.Projections.Snapshot<DbReminder>(Marten.Events.Projections.SnapshotLifecycle.Inline);
         _ = options.Projections.Snapshot<DbToDoReminder>(Marten.Events.Projections.SnapshotLifecycle.Inline);
+        _ = options.Projections.Snapshot<DbConfigurationEntry>(Marten.Events.Projections.SnapshotLifecycle.Inline);
       })
       .UseLightweightSessions();
 
@@ -97,7 +107,8 @@ public static class ServiceCollectionExtensions
       .AddScoped<IConversationStore, ConversationStore>()
       .AddScoped<IPersonStore, PersonStore>()
       .AddScoped<IToDoStore, ToDoStore>()
-      .AddScoped<IReminderStore, ReminderStore>();
+      .AddScoped<IReminderStore, ReminderStore>()
+      .AddScoped<IConfigurationStore, ConfigurationStore>();
 
     return services;
   }
