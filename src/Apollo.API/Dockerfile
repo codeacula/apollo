@@ -3,6 +3,7 @@ WORKDIR /app
 EXPOSE 5144
 
 ENV ASPNETCORE_URLS=http://+:5144
+ENV ConnectionStrings__Redis=redis:6379,password=apollo_redis
 
 USER app
 

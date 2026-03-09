@@ -3,6 +3,8 @@ WORKDIR /app
 EXPOSE 5270
 
 ENV ASPNETCORE_URLS=http://+:5270
+ENV ConnectionStrings__Redis=redis:6379,password=apollo_redis
+ENV ConnectionStrings__PostgreSQL="Host=pgsql;Database=apollo_db;Username=apollo;Password=apollo"
 
 USER app
 
