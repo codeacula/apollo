@@ -1,4 +1,3 @@
-using Apollo.AI.Config;
 using Apollo.AI.DTOs;
 using Apollo.AI.Enums;
 using Apollo.AI.Plugins;

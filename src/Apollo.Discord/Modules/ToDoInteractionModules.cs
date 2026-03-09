@@ -143,9 +143,20 @@ public class ToDoDeleteSelectInteractionModule(IApolloServiceClient apolloServic
 public class ToDoDeleteConfirmInteractionModule(IApolloServiceClient apolloServiceClient) : ComponentInteractionModule<ButtonInteractionContext>
 {
   [ComponentInteraction(ToDoDeleteConfirmComponent.ConfirmButtonCustomId)]
-  public async Task HandleDeleteConfirmAsync(Guid toDoId)
+  public async Task HandleDeleteConfirmAsync(string toDoIdRaw)
   {
     _ = await RespondAsync(InteractionCallback.DeferredModifyMessage);
+
+    if (!Guid.TryParse(toDoIdRaw, out var toDoId))
+    {
+      _ = await ModifyResponseAsync(message =>
+      {
+        message.Content = "⚠️ Invalid to-do ID.";
+        message.Components = [];
+        message.Flags = MessageFlags.IsComponentsV2;
+      });
+      return;
+    }
 
     var platformId = new PlatformId(
       Context.User.Username,

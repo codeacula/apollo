@@ -1,4 +1,8 @@
+using Apollo.AI.DTOs;
+using Apollo.AI.Prompts;
+using Apollo.AI.Requests;
 using Apollo.Core.Configuration;
+
 using Microsoft.Extensions.Logging;
 
 namespace Apollo.AI;

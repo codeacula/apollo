@@ -45,6 +45,9 @@ services:
     depends_on:
       - pgsql
       - redis
+    environment:
+      - ConnectionStrings__Apollo=Host=pgsql;Database=${POSTGRES_DB:-apollo_db};Username=${POSTGRES_USER:-apollo};Password=${POSTGRES_PASSWORD:-apollo}
+      - ConnectionStrings__Quartz=Host=pgsql;Database=${POSTGRES_DB:-apollo_db};Username=${POSTGRES_USER:-apollo};Password=${POSTGRES_PASSWORD:-apollo}
     networks:
       - apollo
 

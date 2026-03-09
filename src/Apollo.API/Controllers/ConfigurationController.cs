@@ -12,14 +12,14 @@ public sealed class ConfigurationController(IApolloGrpcService grpcService) : Co
   public async Task<IActionResult> GetAll()
   {
     var result = await grpcService.GetAllConfigurationsAsync(new GetAllConfigurationsRequest());
-    return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Errors);
+    return result.IsSuccess ? Ok(result.Data) : BadRequest(result.Errors);
   }
 
   [HttpGet("{key}")]
   public async Task<IActionResult> Get(string key)
   {
     var result = await grpcService.GetConfigurationAsync(new GetConfigurationRequest { Key = key });
-    return result.IsSuccess ? Ok(result.Value) : NotFound(result.Errors);
+    return result.IsSuccess ? Ok(result.Data) : NotFound(result.Errors);
   }
 
   [HttpPost]
