@@ -1,14 +1,10 @@
-using Apollo.AI.Config;
-using Apollo.AI.DTOs;
-using Apollo.AI.Prompts;
-using Apollo.AI.Requests;
-
+using Apollo.Core.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace Apollo.AI;
 
 public sealed class ApolloAIAgent(
-  ApolloAIConfig config,
+  IConfigurationStore configurationStore,
   IPromptLoader promptLoader,
   IPromptTemplateProcessor templateProcessor,
   ILogger<AIRequestBuilder> logger) : IApolloAIAgent
@@ -21,7 +17,20 @@ public sealed class ApolloAIAgent(
 
   public IAIRequestBuilder CreateRequest()
   {
-    return new AIRequestBuilder(config, templateProcessor, logger);
+    return new AIRequestBuilder(templateProcessor, logger);
+  }
+
+  private async Task<IAIRequestBuilder> CreateConfiguredRequestAsync()
+  {
+    var modelIdResult = await configurationStore.GetConfigurationAsync(ConfigurationKeys.AiModelId);
+    var endpointResult = await configurationStore.GetConfigurationAsync(ConfigurationKeys.AiEndpoint);
+    var apiKeyResult = await configurationStore.GetConfigurationAsync(ConfigurationKeys.AiApiKey);
+
+    var modelId = modelIdResult.IsSuccess ? modelIdResult.Value.Value : "";
+    var endpoint = endpointResult.IsSuccess ? endpointResult.Value.Value : "";
+    var apiKey = apiKeyResult.IsSuccess ? apiKeyResult.Value.Value : "";
+
+    return CreateRequest().WithConfig(modelId, endpoint, apiKey);
   }
 
   public async Task<IAIRequestBuilder> CreateToolPlanningRequestAsync(
@@ -39,7 +48,8 @@ public sealed class ApolloAIAgent(
       ["active_todos"] = activeTodos
     };
 
-    return CreateRequest()
+    var request = await CreateConfiguredRequestAsync();
+    return request
       .FromPromptDefinition(prompt)
       .WithMessages(messages)
       .WithToolCalling(enabled: false)
@@ -60,7 +70,8 @@ public sealed class ApolloAIAgent(
       ["user_timezone"] = userTimezone
     };
 
-    return CreateRequest()
+    var request = await CreateConfiguredRequestAsync();
+    return request
       .FromPromptDefinition(prompt)
       .WithMessages(messages)
       .WithToolCalling(enabled: false)
@@ -81,7 +92,8 @@ public sealed class ApolloAIAgent(
       ["reminder_items"] = reminderItems
     };
 
-    return CreateRequest()
+    var request = await CreateConfiguredRequestAsync();
+    return request
       .FromPromptDefinition(prompt)
       .WithTemplateVariables(variables);
   }
@@ -102,7 +114,8 @@ public sealed class ApolloAIAgent(
       ["task_count"] = taskCount.ToString(System.Globalization.CultureInfo.InvariantCulture)
     };
 
-    return CreateRequest()
+    var request = await CreateConfiguredRequestAsync();
+    return request
       .FromPromptDefinition(prompt)
       .WithToolCalling(enabled: false)
       .WithJsonMode(enabled: true)
@@ -122,7 +135,8 @@ public sealed class ApolloAIAgent(
       ["user_timezone"] = userTimezone
     };
 
-    return CreateRequest()
+    var request = await CreateConfiguredRequestAsync();
+    return request
       .FromPromptDefinition(prompt)
       .WithMessage(new ChatMessageDTO(Enums.ChatRole.User, timeExpression, DateTime.UtcNow))
       .WithToolCalling(enabled: false)

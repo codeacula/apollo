@@ -4,13 +4,23 @@ services:
     build:
       context: .
       dockerfile: src/Apollo.API/Dockerfile
-    ports:
-      - 5144:5144
     env_file:
       - .env
     depends_on:
       - apollo-service
       - redis
+    networks:
+      - apollo
+
+  caddy:
+    image: caddy:latest
+    restart: always
+    ports:
+      - "8087:8087"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+    depends_on:
+      - apollo-api
     networks:
       - apollo
 

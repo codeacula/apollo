@@ -8,4 +8,6 @@ public static class ConfigurationKeys
   public const string DiscordToken = "Discord:Token";
   public const string DiscordPublicKey = "Discord:PublicKey";
   public const string AiApiKey = "AI:ApiKey";
+  public const string AiModelId = "AI:ModelId";
+  public const string AiEndpoint = "AI:Endpoint";
 }

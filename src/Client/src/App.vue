@@ -1,30 +1,57 @@
-<script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue'
-</script>
-
 <template>
-  <div>
-    <a href="https://vite.dev" target="_blank">
-      <img src="/vite.svg" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://vuejs.org/" target="_blank">
-      <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-    </a>
+  <div id="app">
+    <nav class="navbar">
+      <div class="navbar-brand">
+        <strong>Apollo</strong>
+      </div>
+      <div class="navbar-menu">
+        <router-link to="/settings" class="nav-link">Settings</router-link>
+      </div>
+    </nav>
+    <main class="content">
+      <router-view />
+    </main>
   </div>
-  <HelloWorld msg="Vite + Vue" />
 </template>
 
-<style scoped>
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
+<style>
+#app {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: #2c3e50;
+  min-height: 100vh;
+  background-color: #f9f9f9;
 }
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background-color: #2c3e50;
+  color: white;
 }
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
+
+.navbar-brand {
+  font-size: 1.5rem;
+}
+
+.nav-link {
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.nav-link:hover, .router-link-active {
+  color: white;
+}
+
+.content {
+  padding: 1rem;
+}
+
+body {
+  margin: 0;
+  padding: 0;
 }
 </style>

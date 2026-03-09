@@ -17,4 +17,5 @@ public interface IAIRequestBuilder
   IAIRequestBuilder WithTemplateVariables(IDictionary<string, string> variables);
 
   Task<AIRequestResult> ExecuteAsync(CancellationToken cancellationToken = default);
+  IAIRequestBuilder WithConfig(string modelId, string endpoint, string apiKey);
 }

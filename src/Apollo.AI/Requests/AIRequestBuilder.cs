@@ -13,9 +13,8 @@ using Microsoft.SemanticKernel.Connectors.OpenAI;
 
 namespace Apollo.AI.Requests;
 
-public sealed class AIRequestBuilder(ApolloAIConfig config, IPromptTemplateProcessor templateProcessor, ILogger<AIRequestBuilder> logger) : IAIRequestBuilder
+public sealed class AIRequestBuilder(IPromptTemplateProcessor templateProcessor, ILogger<AIRequestBuilder> logger) : IAIRequestBuilder
 {
-  private readonly ApolloAIConfig _config = config;
   private readonly IPromptTemplateProcessor _templateProcessor = templateProcessor;
   private readonly ILogger<AIRequestBuilder> _logger = logger;
   private readonly List<ChatMessageDTO> _messages = [];
@@ -26,6 +25,18 @@ public sealed class AIRequestBuilder(ApolloAIConfig config, IPromptTemplateProce
   private double _temperature = 0.7;
   private bool _toolCallingEnabled = true;
   private bool _jsonModeEnabled;
+
+  private string _modelId = "";
+  private string _endpoint = "";
+  private string _apiKey = "";
+
+  public IAIRequestBuilder WithConfig(string modelId, string endpoint, string apiKey)
+  {
+    _modelId = modelId;
+    _endpoint = endpoint;
+    _apiKey = apiKey;
+    return this;
+  }
 
   public IAIRequestBuilder WithSystemPrompt(string systemPrompt)
   {
@@ -156,8 +167,13 @@ public sealed class AIRequestBuilder(ApolloAIConfig config, IPromptTemplateProce
 
   private Kernel BuildKernel(List<ToolCallResult> toolCalls)
   {
+    if (string.IsNullOrWhiteSpace(_modelId) || string.IsNullOrWhiteSpace(_endpoint))
+    {
+      throw new InvalidOperationException("AI configuration is missing. Please set AI:ModelId and AI:Endpoint in the configuration.");
+    }
+
     var builder = Kernel.CreateBuilder();
-    _ = builder.Services.AddOpenAIChatCompletion(_config.ModelId, new Uri(_config.Endpoint));
+    _ = builder.Services.AddOpenAIChatCompletion(_modelId, new Uri(_endpoint), _apiKey);
     _ = builder.Services.AddSingleton<IFunctionInvocationFilter>(new FunctionInvocationFilter(toolCalls, maxToolCalls: 5, _logger));
 
     var kernel = builder.Build();

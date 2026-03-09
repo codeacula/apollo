@@ -11,12 +11,16 @@ public static class ServiceCollectionExtensions
 {
   public static IServiceCollection AddAiServices(this IServiceCollection services, IConfiguration configuration)
   {
-    var apolloAiConfig = configuration.GetSection(nameof(ApolloAIConfig)).Get<ApolloAIConfig>();
+    _ = services
+      .AddSingleton<IPromptLoader, PromptLoader>()
+      .AddSingleton<IPromptTemplateProcessor, PromptTemplateProcessor>()
+      .AddTransient<IApolloAIAgent, ApolloAIAgent>()
+      .AddTransient<IReminderMessageGenerator, ApolloReminderMessageGenerator>();
 
-    if (apolloAiConfig == null)
-    {
-      Console.WriteLine("No AI configuration set; using default settings.");
-    }
+    return services;
+  }
+}
+
 
     var config = apolloAiConfig ?? new ApolloAIConfig();
 

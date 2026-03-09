@@ -1,0 +1,7 @@
+{
+	admin off
+}
+
+:8087 {
+	reverse_proxy apollo-api:5144
+}
