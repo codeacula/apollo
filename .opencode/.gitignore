@@ -1,5 +1,0 @@
-# OpenCode runtime files (handled by root .gitignore, kept here as backup)
-node_modules/
-package.json
-bun.lock
-memory/
