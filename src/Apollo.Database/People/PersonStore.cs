@@ -1,4 +1,5 @@
 using Apollo.Core;
+using Apollo.Core.Configuration;
 using Apollo.Core.People;
 using Apollo.Database.People.Events;
 using Apollo.Domain.Common.Enums;
@@ -11,7 +12,7 @@ using Marten;
 
 namespace Apollo.Database.People;
 
-public sealed class PersonStore(SuperAdminConfig SuperAdminConfig, IDocumentSession session, TimeProvider timeProvider, IPersonCache personCache) : IPersonStore
+public sealed class PersonStore(IConfigurationStore configurationStore, IDocumentSession session, TimeProvider timeProvider, IPersonCache personCache) : IPersonStore
 {
   public async Task<Result<Person>> CreateByPlatformIdAsync(PlatformId platformId, CancellationToken cancellationToken = default)
   {
@@ -27,7 +28,8 @@ public sealed class PersonStore(SuperAdminConfig SuperAdminConfig, IDocumentSess
 
       var events = new List<object> { pce };
 
-      if (IsSuperAdmin(platformId))
+      var isSuperAdminResult = await IsSuperAdminAsync(platformId, cancellationToken);
+      if (isSuperAdminResult.IsSuccess && isSuperAdminResult.Value)
       {
         events.Add(new AccessGrantedEvent(time)
         {
@@ -57,11 +59,24 @@ public sealed class PersonStore(SuperAdminConfig SuperAdminConfig, IDocumentSess
     }
   }
 
-  private bool IsSuperAdmin(PlatformId platformId)
+  private async Task<Result<bool>> IsSuperAdminAsync(PlatformId platformId, CancellationToken cancellationToken = default)
   {
-    return !string.IsNullOrWhiteSpace(SuperAdminConfig.DiscordUserId)
-      && platformId.Platform == Platform.Discord
-      && string.Equals(platformId.PlatformUserId, SuperAdminConfig.DiscordUserId, StringComparison.OrdinalIgnoreCase);
+    if (platformId.Platform != Platform.Discord)
+    {
+      return Result.Ok(false);
+    }
+
+    var configResult = await configurationStore.GetAsync(cancellationToken);
+    if (configResult.IsFailed)
+    {
+      return Result.Ok(false);
+    }
+
+    var superAdminDiscordUserId = configResult.Value.SuperAdminDiscordUserId;
+    var isSuperAdmin = !string.IsNullOrWhiteSpace(superAdminDiscordUserId)
+      && string.Equals(platformId.PlatformUserId, superAdminDiscordUserId, StringComparison.OrdinalIgnoreCase);
+
+    return Result.Ok(isSuperAdmin);
   }
 
   public async Task<Result<HasAccess>> GetAccessAsync(PersonId id, CancellationToken cancellationToken = default)

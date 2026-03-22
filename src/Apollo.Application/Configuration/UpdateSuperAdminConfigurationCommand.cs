@@ -1,0 +1,34 @@
+using Apollo.Core.Configuration;
+
+using FluentResults;
+
+namespace Apollo.Application.Configuration;
+
+/// <summary>
+/// Designates the super admin by Discord user ID.
+/// Persists via event-based store (immutable event appended to configuration stream).
+/// </summary>
+public sealed record UpdateSuperAdminConfigurationCommand(
+  string? DiscordUserId
+) : IRequest<Result<ConfigurationData>>;
+
+public sealed class UpdateSuperAdminConfigurationCommandHandler(IConfigurationStore configurationStore)
+  : IRequestHandler<UpdateSuperAdminConfigurationCommand, Result<ConfigurationData>>
+{
+  public async Task<Result<ConfigurationData>> Handle(UpdateSuperAdminConfigurationCommand request, CancellationToken cancellationToken = default)
+  {
+    try
+    {
+      if (string.IsNullOrWhiteSpace(request.DiscordUserId))
+      {
+        return Result.Fail<ConfigurationData>("DiscordUserId must be provided.");
+      }
+
+      return await configurationStore.UpdateSuperAdminAsync(request.DiscordUserId, cancellationToken);
+    }
+    catch (Exception ex)
+    {
+      return Result.Fail<ConfigurationData>(ex.Message);
+    }
+  }
+}

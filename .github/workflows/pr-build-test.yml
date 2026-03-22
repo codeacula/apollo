@@ -20,10 +20,8 @@ jobs:
       with:
         dotnet-version: '10.0.x'
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20.x'
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v2
 
     - name: Restore .NET dependencies
       run: dotnet restore
@@ -36,8 +34,8 @@ jobs:
 
     - name: Install frontend dependencies
       working-directory: src/Client
-      run: npm ci
+      run: bun install
 
     - name: Build frontend
       working-directory: src/Client
-      run: npm run build
+      run: bun run build

@@ -6,16 +6,23 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
-    "vue": "^3.5.18"
+    "pinia": "^2.1.7",
+    "vue": "^3.5.18",
+    "vue-router": "^4.5.0"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^6.0.1",
+    "@vue/test-utils": "^2.4.6",
     "@vue/tsconfig": "^0.7.0",
+    "happy-dom": "^20.8.4",
     "typescript": "~5.8.3",
     "vite": "^7.1.11",
+    "vitest": "^4.1.0",
     "vue-tsc": "^3.0.5"
   }
 }

@@ -593,18 +593,17 @@ Verify: PostgreSQL on `localhost:5432`, Redis on `localhost:6379`
 
 ### Configuration
 
-Copy `.env.example` to `.env` for Docker, or use User Secrets for local development:
+Application configuration (AI provider settings, Discord bot credentials, super-admin designation) is now stored in the database via event sourcing and must be set through the system initialization wizard at first startup.
 
-```bash
-# Apollo.Service
-cd src/Apollo.Service
-dotnet user-secrets set "ApolloAIConfig:ApiKey" "YOUR_API_KEY"
+For infrastructure configuration, copy `.env.example` to `.env` for Docker deployment. See `docs/INITIALIZATION.md` for detailed setup instructions.
 
-# Apollo.Discord
-cd src/Apollo.Discord
-dotnet user-secrets set "Discord:Token" "YOUR_DISCORD_BOT_TOKEN"
-dotnet user-secrets set "Discord:PublicKey" "YOUR_DISCORD_PUBLIC_KEY"
-```
+Infrastructure secrets that must be configured:
+
+- Database connection string: `ConnectionStrings__Apollo`
+- Redis connection string: `ConnectionStrings__Redis`
+- gRPC service configuration: `GrpcHostConfig__*` variables
+
+Application configuration is set via the `/api/setup` endpoint during first-time initialization.
 
 ### Running Services
 
@@ -725,8 +724,8 @@ Pull requests to `main` trigger the **Build and Test** GitHub Actions workflow (
 | .NET restore     | `dotnet restore`                      |
 | .NET build       | `dotnet build --no-restore`           |
 | .NET tests       | `dotnet test --no-build --no-restore` |
-| Frontend install | `npm ci` (in `src/Client`)            |
-| Frontend build   | `npm run build` (in `src/Client`)     |
+| Frontend install | `bun install` (in `src/Client`)       |
+| Frontend build   | `bun run build` (in `src/Client`)     |
 
 **Runtime versions:** .NET 10.x, Node.js 20.x
 

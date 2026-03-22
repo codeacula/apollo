@@ -1,7 +1,10 @@
+using Apollo.Core.Configuration;
 using Apollo.Core.Conversations;
 using Apollo.Core.Data;
 using Apollo.Core.People;
 using Apollo.Core.ToDos;
+using Apollo.Database.Configuration;
+using Apollo.Database.Configuration.Events;
 using Apollo.Database.Conversations;
 using Apollo.Database.Conversations.Events;
 using Apollo.Database.People;
@@ -24,12 +27,10 @@ public static class ServiceCollectionExtensions
   public static IServiceCollection AddDatabaseServices(this IServiceCollection services, IConfiguration configuration)
   {
     var connectionString = configuration.GetConnectionString("Apollo") ?? throw new MissingDatabaseStringException("Apollo");
-    var superAdminConfig = configuration.GetSection(nameof(SuperAdminConfig)).Get<SuperAdminConfig>() ?? new SuperAdminConfig();
     var personConfig = configuration.GetSection(nameof(PersonConfig)).Get<PersonConfig>() ?? new PersonConfig();
 
     _ = services.AddDbContextPool<ApolloDbContext>(options => options.UseNpgsql(connectionString));
     _ = services.AddSingleton(new ApolloConnectionString(connectionString))
-      .AddSingleton(superAdminConfig)
       .AddSingleton(personConfig)
       .AddScoped<IApolloDbContext, ApolloDbContext>();
 
@@ -85,11 +86,19 @@ public static class ServiceCollectionExtensions
         _ = options.Events.AddEventType<ToDoReminderLinkedEvent>();
         _ = options.Events.AddEventType<ToDoReminderUnlinkedEvent>();
 
+        _ = options.Schema.For<DbConfiguration>()
+          .Identity(x => x.Id);
+
+        _ = options.Events.AddEventType<AiConfigurationUpdatedEvent>();
+        _ = options.Events.AddEventType<DiscordConfigurationUpdatedEvent>();
+        _ = options.Events.AddEventType<SuperAdminConfigurationUpdatedEvent>();
+
         _ = options.Projections.Snapshot<DbPerson>(Marten.Events.Projections.SnapshotLifecycle.Inline);
         _ = options.Projections.Snapshot<DbConversation>(Marten.Events.Projections.SnapshotLifecycle.Inline);
         _ = options.Projections.Snapshot<DbToDo>(Marten.Events.Projections.SnapshotLifecycle.Inline);
         _ = options.Projections.Snapshot<DbReminder>(Marten.Events.Projections.SnapshotLifecycle.Inline);
         _ = options.Projections.Snapshot<DbToDoReminder>(Marten.Events.Projections.SnapshotLifecycle.Inline);
+        _ = options.Projections.Snapshot<DbConfiguration>(Marten.Events.Projections.SnapshotLifecycle.Inline);
       })
       .UseLightweightSessions();
 
@@ -97,7 +106,8 @@ public static class ServiceCollectionExtensions
       .AddScoped<IConversationStore, ConversationStore>()
       .AddScoped<IPersonStore, PersonStore>()
       .AddScoped<IToDoStore, ToDoStore>()
-      .AddScoped<IReminderStore, ReminderStore>();
+      .AddScoped<IReminderStore, ReminderStore>()
+      .AddScoped<Apollo.Core.Configuration.IConfigurationStore, ConfigurationStore>();
 
     return services;
   }

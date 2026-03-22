@@ -1,4 +1,4 @@
-using Apollo.Core.People;
+using Apollo.Core.Configuration;
 using Apollo.Domain.Common.Enums;
 using Apollo.Domain.Common.ValueObjects;
 using Apollo.Domain.People.Models;
@@ -7,9 +7,12 @@ using Apollo.GRPC.Attributes;
 using Apollo.GRPC.Context;
 using Apollo.GRPC.Interceptors;
 
+using FluentResults;
+
 using Grpc.Core;
 
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
 
 using Moq;
 
@@ -19,7 +22,8 @@ public class AuthorizationInterceptorTests
 {
   private readonly Mock<IUserContext> _userContextMock;
   private readonly Mock<IServiceProvider> _serviceProviderMock;
-  private readonly SuperAdminConfig _superAdminConfig;
+  private readonly Mock<IServiceScopeFactory> _serviceScopeFactoryMock;
+  private readonly Mock<IConfigurationStore> _configurationStoreMock;
   private readonly AuthorizationInterceptor _interceptor;
   private readonly DefaultHttpContext _httpContext;
 
@@ -27,13 +31,23 @@ public class AuthorizationInterceptorTests
   {
     _userContextMock = new Mock<IUserContext>();
     _serviceProviderMock = new Mock<IServiceProvider>();
-    _superAdminConfig = new SuperAdminConfig { DiscordUserId = "999" }; // Admin ID
+    _serviceScopeFactoryMock = new Mock<IServiceScopeFactory>();
+    _configurationStoreMock = new Mock<IConfigurationStore>();
+
+    var configData = new ConfigurationData { SuperAdminDiscordUserId = "999" }; // Admin ID
+    _configurationStoreMock.Setup(c => c.GetAsync(It.IsAny<CancellationToken>()))
+      .ReturnsAsync(Result.Ok(configData));
+
+    var scopeMock = new Mock<IServiceScope>();
+    scopeMock.Setup(s => s.ServiceProvider).Returns(_serviceProviderMock.Object);
+    _serviceScopeFactoryMock.Setup(f => f.CreateScope()).Returns(scopeMock.Object);
 
     _httpContext = new DefaultHttpContext { RequestServices = _serviceProviderMock.Object };
 
-    _interceptor = new AuthorizationInterceptor(_superAdminConfig);
+    _interceptor = new AuthorizationInterceptor(_serviceScopeFactoryMock.Object);
 
     _ = _serviceProviderMock.Setup(x => x.GetService(typeof(IUserContext))).Returns(_userContextMock.Object);
+    _ = _serviceProviderMock.Setup(x => x.GetService(typeof(IConfigurationStore))).Returns(_configurationStoreMock.Object);
   }
 
   [Fact]
@@ -68,7 +82,7 @@ public class AuthorizationInterceptorTests
     var endpoint = new Endpoint(null, metadata, "TestEndpoint");
     _httpContext.SetEndpoint(endpoint);
 
-    // Person matches SuperAdminConfig
+    // Person matches DB config SuperAdminDiscordUserId
     var person = CreatePerson(hasAccess: true, platformUserId: "999", platform: Platform.Discord);
     _ = _userContextMock.Setup(x => x.Person).Returns(person);
 
@@ -93,7 +107,7 @@ public class AuthorizationInterceptorTests
     var endpoint = new Endpoint(null, metadata, "TestEndpoint");
     _httpContext.SetEndpoint(endpoint);
 
-    // Person does NOT match SuperAdminConfig
+    // Person does NOT match DB config SuperAdminDiscordUserId
     var person = CreatePerson(hasAccess: true, platformUserId: "123", platform: Platform.Discord);
     _ = _userContextMock.Setup(x => x.Person).Returns(person);
 
