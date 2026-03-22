@@ -1,5 +1,9 @@
 using Apollo.Application.Configuration;
+
+using FluentResults;
+
 using MediatR;
+
 using Microsoft.AspNetCore.Mvc;
 
 namespace Apollo.API.Controllers;
@@ -9,6 +13,7 @@ namespace Apollo.API.Controllers;
 /// GET /api/setup/status - Check initialization status.
 /// POST /api/setup - Initial system setup (one-time only).
 /// </summary>
+/// <param name="mediator"></param>
 [ApiController]
 [Route("api/setup")]
 public sealed class SetupController(IMediator mediator) : ControllerBase
@@ -17,6 +22,7 @@ public sealed class SetupController(IMediator mediator) : ControllerBase
   /// GET /api/setup/status - Returns the system initialization status.
   /// Indicates which subsystems (AI, Discord, SuperAdmin) are configured.
   /// </summary>
+  /// <param name="cancellationToken"></param>
   [HttpGet("status")]
   public async Task<IActionResult> GetStatusAsync(CancellationToken cancellationToken = default)
   {
@@ -25,7 +31,7 @@ public sealed class SetupController(IMediator mediator) : ControllerBase
 
     if (result.IsFailed)
     {
-      return BadRequest(new { error = result.Errors.FirstOrDefault()?.Message });
+      return BadRequest(new { error = GetErrorMessage(result) });
     }
 
     var status = result.Value;
@@ -43,6 +49,8 @@ public sealed class SetupController(IMediator mediator) : ControllerBase
   /// Accepts AI config, Discord config, and SuperAdmin Discord user ID.
   /// Only allowed on first-time setup (system must not be initialized).
   /// </summary>
+  /// <param name="request"></param>
+  /// <param name="cancellationToken"></param>
   [HttpPost]
   public async Task<IActionResult> PostSetupAsync(
     [FromBody] SetupRequest request,
@@ -72,7 +80,7 @@ public sealed class SetupController(IMediator mediator) : ControllerBase
 
         if (aiResult.IsFailed)
         {
-          return BadRequest(new { error = $"AI configuration failed: {aiResult.Errors.FirstOrDefault()?.Message}" });
+          return BadRequest(new { error = $"AI configuration failed: {GetErrorMessage(aiResult)}" });
         }
       }
 
@@ -84,7 +92,7 @@ public sealed class SetupController(IMediator mediator) : ControllerBase
 
         if (discordResult.IsFailed)
         {
-          return BadRequest(new { error = $"Discord configuration failed: {discordResult.Errors.FirstOrDefault()?.Message}" });
+          return BadRequest(new { error = $"Discord configuration failed: {GetErrorMessage(discordResult)}" });
         }
       }
 
@@ -96,7 +104,7 @@ public sealed class SetupController(IMediator mediator) : ControllerBase
 
         if (adminResult.IsFailed)
         {
-          return BadRequest(new { error = $"SuperAdmin configuration failed: {adminResult.Errors.FirstOrDefault()?.Message}" });
+          return BadRequest(new { error = $"SuperAdmin configuration failed: {GetErrorMessage(adminResult)}" });
         }
       }
 
@@ -117,6 +125,11 @@ public sealed class SetupController(IMediator mediator) : ControllerBase
     {
       return BadRequest(new { error = $"Setup failed: {ex.Message}" });
     }
+  }
+
+  private static string GetErrorMessage(ResultBase result)
+  {
+    return result.Errors.Count > 0 ? result.Errors[0].Message : "Unknown error";
   }
 }
 

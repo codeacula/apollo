@@ -11,6 +11,18 @@ namespace Apollo.GRPC.Tests;
 
 public sealed class ApolloGrpcClientTests
 {
+  private static ApolloGrpcClient CreateClient(IApolloGrpcService service)
+  {
+    var channel = GrpcChannel.ForAddress("http://localhost:5000");
+    var hostConfig = new GrpcHostConfig { ApiToken = string.Empty, Host = "localhost", Port = 5000, UseHttps = false, ValidateSslCertificate = false };
+    var interceptor = new GrpcClientLoggingInterceptor(Mock.Of<Microsoft.Extensions.Logging.ILogger<GrpcClientLoggingInterceptor>>());
+    var client = new ApolloGrpcClient(channel, interceptor, hostConfig);
+
+    var backing = typeof(ApolloGrpcClient).GetField("<ApolloGrpcService>k__BackingField", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+    backing!.SetValue(client, service);
+    return client;
+  }
+
   [Fact]
   public async Task GetDailyPlanAsyncGrpcReturnsNullSuggestedTasksReturnsOkWithEmptyListAsync()
   {
@@ -30,16 +42,7 @@ public sealed class ApolloGrpcClientTests
     _ = mockService.Setup(s => s.GetDailyPlanAsync(It.IsAny<GetDailyPlanRequest>()))
       .ReturnsAsync(grpcResult);
 
-    // Use a real channel object as it's required by the client constructor but won't be used in this test
-    using var channel = GrpcChannel.ForAddress("http://localhost:5000");
-    var hostConfig = new GrpcHostConfig { ApiToken = string.Empty, Host = "localhost", Port = 5000, UseHttps = false, ValidateSslCertificate = false };
-    // Create a real interceptor instance (it's a sealed class but cheap to construct)
-    var interceptor = new GrpcClientLoggingInterceptor(Mock.Of<Microsoft.Extensions.Logging.ILogger<GrpcClientLoggingInterceptor>>());
-    var client = new ApolloGrpcClient(channel, interceptor, hostConfig);
-
-    // Replace internal service via reflection (test seam) - set the private backing field
-    var backing = typeof(ApolloGrpcClient).GetField("<ApolloGrpcService>k__BackingField", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
-    backing!.SetValue(client, mockService.Object);
+    using var client = CreateClient(mockService.Object);
 
     // Act
     var result = await client.GetDailyPlanAsync(new Domain.People.ValueObjects.PlatformId("u", "1", Domain.Common.Enums.Platform.Discord));

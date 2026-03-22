@@ -24,7 +24,7 @@ public sealed class SaveConfigurationCommandTests
       AiEndpoint = "https://api.openai.com",
       AiApiKey = "secret",
     };
-    store.Setup(x => x.UpdateAiAsync("gpt-4", "https://api.openai.com", "secret", It.IsAny<CancellationToken>()))
+    _ = store.Setup(x => x.UpdateAiAsync("gpt-4", "https://api.openai.com", "secret", It.IsAny<CancellationToken>()))
       .ReturnsAsync(Result.Ok(expectedConfig));
 
     var handler = new UpdateAiConfigurationCommandHandler(store.Object);
@@ -49,7 +49,7 @@ public sealed class SaveConfigurationCommandTests
       Id = Guid.NewGuid(),
       SuperAdminDiscordUserId = "discord-user-123",
     };
-    store.Setup(x => x.UpdateSuperAdminAsync("discord-user-123", It.IsAny<CancellationToken>()))
+    _ = store.Setup(x => x.UpdateSuperAdminAsync("discord-user-123", It.IsAny<CancellationToken>()))
       .ReturnsAsync(Result.Ok(expectedConfig));
 
     var handler = new UpdateSuperAdminConfigurationCommandHandler(store.Object);
@@ -69,7 +69,7 @@ public sealed class SaveConfigurationCommandTests
   public async Task HandleReturnsFailureWhenStoreFailsAsync()
   {
     var store = new Mock<IConfigurationStore>();
-    store.Setup(x => x.UpdateAiAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+    _ = store.Setup(x => x.UpdateAiAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
       .ReturnsAsync(Result.Fail<ConfigurationData>("Database connection failed"));
 
     var handler = new UpdateAiConfigurationCommandHandler(store.Object);

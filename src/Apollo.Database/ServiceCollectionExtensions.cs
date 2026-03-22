@@ -1,4 +1,3 @@
-using Apollo.Core.Configuration;
 using Apollo.Core.Conversations;
 using Apollo.Core.Data;
 using Apollo.Core.People;
@@ -107,7 +106,7 @@ public static class ServiceCollectionExtensions
       .AddScoped<IPersonStore, PersonStore>()
       .AddScoped<IToDoStore, ToDoStore>()
       .AddScoped<IReminderStore, ReminderStore>()
-      .AddScoped<Apollo.Core.Configuration.IConfigurationStore, ConfigurationStore>();
+      .AddScoped<Core.Configuration.IConfigurationStore, ConfigurationStore>();
 
     return services;
   }

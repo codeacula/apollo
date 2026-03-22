@@ -17,7 +17,7 @@ public sealed class GetInitializationStatusQueryTests
   public async Task HandleReturnsNotInitializedWhenNoConfigExistsAsync()
   {
     var store = new Mock<IConfigurationStore>();
-    store.Setup(x => x.GetAsync(It.IsAny<CancellationToken>()))
+    _ = store.Setup(x => x.GetAsync(It.IsAny<CancellationToken>()))
       .ReturnsAsync(Result.Ok(ConfigurationData.Empty()));
 
     var handler = new GetInitializationStatusQueryHandler(store.Object);
@@ -38,7 +38,7 @@ public sealed class GetInitializationStatusQueryTests
   public async Task HandleReturnsInitializedWithDetailsWhenConfigExistsAsync()
   {
     var store = new Mock<IConfigurationStore>();
-    store.Setup(x => x.GetAsync(It.IsAny<CancellationToken>()))
+    _ = store.Setup(x => x.GetAsync(It.IsAny<CancellationToken>()))
       .ReturnsAsync(Result.Ok(new ConfigurationData
       {
         Id = Guid.NewGuid(),
@@ -69,7 +69,7 @@ public sealed class GetInitializationStatusQueryTests
   public async Task HandleReportsAiNotConfiguredWhenAiConfigEmptyAsync()
   {
     var store = new Mock<IConfigurationStore>();
-    store.Setup(x => x.GetAsync(It.IsAny<CancellationToken>()))
+    _ = store.Setup(x => x.GetAsync(It.IsAny<CancellationToken>()))
       .ReturnsAsync(Result.Ok(new ConfigurationData
       {
         Id = Guid.NewGuid(),

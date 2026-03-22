@@ -134,7 +134,7 @@ public sealed class ProcessIncomingMessageCommandHandler(
       ? "None"
       : string.Join("\n", toolResults.Select(tc => $"- {tc.ToSummary()}"));
 
-    ConversationLogs.ActionsTaken(logger, person.Id.Value, [actionsSummary]);
+    ConversationLogs.ActionsTaken(logger, person.Id.Value, actionsSummary);
 
     var responseResult = await (await apolloAIAgent
       .CreateResponseRequestAsync(responseMessages, actionsSummary, userTimezone))
@@ -234,7 +234,7 @@ public sealed class ProcessIncomingMessageCommandHandler(
     return new ToolPlan();
   }
 
-  private ToolPlan LogToolPlanningFailure(Guid personId, string errorMsg)
+  private ToolPlan LogToolPlanningFailure(Guid personId, string? errorMsg)
   {
     ConversationLogs.ToolPlanningRequestFailed(logger, personId, errorMsg);
     return new ToolPlan();

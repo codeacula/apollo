@@ -1,6 +1,6 @@
+using Apollo.Application.Tests.TestSupport;
 using Apollo.Application.ToDos;
 using Apollo.Core.ToDos;
-using Apollo.Domain.Common.ValueObjects;
 using Apollo.Domain.People.ValueObjects;
 using Apollo.Domain.ToDos.Models;
 using Apollo.Domain.ToDos.ValueObjects;
@@ -24,7 +24,7 @@ public class AddReminderCommandHandlerTests
     var toDoId = new ToDoId(Guid.NewGuid());
     var reminderDate = DateTime.UtcNow.AddMinutes(30);
     var quartzJobId = new QuartzJobId(Guid.NewGuid());
-    var toDo = CreateToDo(toDoId);
+    var toDo = ApplicationTestData.CreateToDo(new PersonId(Guid.NewGuid()), toDoId: toDoId);
 
     _ = toDoStore
       .Setup(x => x.GetAsync(toDoId, It.IsAny<CancellationToken>()))
@@ -36,16 +36,8 @@ public class AddReminderCommandHandlerTests
 
     _ = reminderStore
       .Setup(x => x.CreateAsync(It.IsAny<ReminderId>(), It.IsAny<PersonId>(), It.IsAny<Details>(), It.IsAny<ReminderTime>(), quartzJobId, It.IsAny<CancellationToken>()))
-      .ReturnsAsync((ReminderId id, PersonId personId, Details details, ReminderTime time, QuartzJobId jobId, CancellationToken _) => Result.Ok(new Reminder
-      {
-        Id = id,
-        PersonId = personId,
-        Details = details,
-        ReminderTime = time,
-        QuartzJobId = jobId,
-        CreatedOn = new CreatedOn(DateTime.UtcNow),
-        UpdatedOn = new UpdatedOn(DateTime.UtcNow)
-      }));
+      .ReturnsAsync((ReminderId id, PersonId personId, Details details, ReminderTime time, QuartzJobId jobId, CancellationToken _) =>
+        Result.Ok(ApplicationTestData.CreateReminder(personId, details.Value, id, jobId, time.Value)));
 
     _ = reminderStore
       .Setup(x => x.LinkToToDoAsync(It.IsAny<ReminderId>(), toDoId, It.IsAny<CancellationToken>()))
@@ -91,7 +83,7 @@ public class AddReminderCommandHandlerTests
 
     var toDoId = new ToDoId(Guid.NewGuid());
     var reminderDate = DateTime.UtcNow.AddMinutes(30);
-    var toDo = CreateToDo(toDoId);
+    var toDo = ApplicationTestData.CreateToDo(new PersonId(Guid.NewGuid()), toDoId: toDoId);
 
     _ = toDoStore
       .Setup(x => x.GetAsync(toDoId, It.IsAny<CancellationToken>()))
@@ -105,20 +97,5 @@ public class AddReminderCommandHandlerTests
 
     Assert.True(result.IsFailed);
     reminderStore.Verify(x => x.CreateAsync(It.IsAny<ReminderId>(), It.IsAny<PersonId>(), It.IsAny<Details>(), It.IsAny<ReminderTime>(), It.IsAny<QuartzJobId>(), It.IsAny<CancellationToken>()), Times.Never);
-  }
-
-  private static ToDo CreateToDo(ToDoId toDoId)
-  {
-    return new ToDo
-    {
-      CreatedOn = new CreatedOn(DateTime.UtcNow),
-      Description = new Description("test"),
-      Energy = new Energy(0),
-      Id = toDoId,
-      Interest = new Interest(0),
-      PersonId = new PersonId(Guid.NewGuid()),
-      Priority = new Priority(0),
-      UpdatedOn = new UpdatedOn(DateTime.UtcNow)
-    };
   }
 }

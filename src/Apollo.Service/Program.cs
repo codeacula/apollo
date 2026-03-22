@@ -7,8 +7,6 @@ using Apollo.Database;
 using Apollo.GRPC;
 using Apollo.Service;
 
-using Microsoft.Extensions.Logging;
-
 WebApplicationBuilder webAppBuilder = WebApplication.CreateBuilder(args);
 var configuration = webAppBuilder.Configuration;
 

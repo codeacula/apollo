@@ -8,6 +8,9 @@ namespace Apollo.Application.Configuration;
 /// Updates the Discord subsystem configuration (Token, PublicKey, BotName).
 /// Persists via event-based store (immutable event appended to configuration stream).
 /// </summary>
+/// <param name="Token"></param>
+/// <param name="PublicKey"></param>
+/// <param name="BotName"></param>
 public sealed record UpdateDiscordConfigurationCommand(
   string? Token,
   string? PublicKey,
@@ -21,12 +24,9 @@ public sealed class UpdateDiscordConfigurationCommandHandler(IConfigurationStore
   {
     try
     {
-      if (string.IsNullOrWhiteSpace(request.Token) && string.IsNullOrWhiteSpace(request.PublicKey))
-      {
-        return Result.Fail<ConfigurationData>("At least one of Token or PublicKey must be provided.");
-      }
-
-      return await configurationStore.UpdateDiscordAsync(request.Token, request.PublicKey, request.BotName, cancellationToken);
+      return string.IsNullOrWhiteSpace(request.Token) && string.IsNullOrWhiteSpace(request.PublicKey)
+        ? Result.Fail<ConfigurationData>("At least one of Token or PublicKey must be provided.")
+        : await configurationStore.UpdateDiscordAsync(request.Token, request.PublicKey, request.BotName, cancellationToken);
     }
     catch (Exception ex)
     {

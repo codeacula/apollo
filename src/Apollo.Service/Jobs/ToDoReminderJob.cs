@@ -16,14 +16,16 @@ public class ToDoReminderJob(
   IPersonStore personStore,
   IPersonNotificationClient notificationClient,
   IReminderMessageGenerator reminderMessageGenerator,
-  ILogger<ToDoReminderJob> logger,
-  TimeProvider timeProvider) : IJob
+  ILogger<ToDoReminderJob> logger) : IJob
 {
   public async Task Execute(IJobExecutionContext context)
   {
     try
     {
-      ToDoLogs.LogJobStarted(logger, timeProvider.GetUtcNow());
+      if (logger.IsEnabled(LogLevel.Information))
+      {
+        ToDoLogs.LogJobStarted(logger);
+      }
 
       if (!Guid.TryParse(context.JobDetail.Key.Name, out var jobGuid))
       {
@@ -112,7 +114,10 @@ public class ToDoReminderJob(
 
       _ = await context.Scheduler.DeleteJob(context.JobDetail.Key, context.CancellationToken);
 
-      ToDoLogs.LogJobCompleted(logger, timeProvider.GetUtcNow());
+      if (logger.IsEnabled(LogLevel.Information))
+      {
+        ToDoLogs.LogJobCompleted(logger);
+      }
     }
     catch (Exception ex)
     {

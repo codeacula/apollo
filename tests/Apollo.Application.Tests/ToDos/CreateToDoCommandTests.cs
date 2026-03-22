@@ -1,8 +1,7 @@
+using Apollo.Application.Tests.TestSupport;
 using Apollo.Application.ToDos;
 using Apollo.Core.ToDos;
-using Apollo.Domain.Common.ValueObjects;
 using Apollo.Domain.People.ValueObjects;
-using Apollo.Domain.ToDos.Models;
 using Apollo.Domain.ToDos.ValueObjects;
 
 using FluentResults;
@@ -38,17 +37,8 @@ public class CreateToDoCommandTests
         It.IsAny<Energy>(),
         It.IsAny<Interest>(),
         It.IsAny<CancellationToken>()))
-      .ReturnsAsync((ToDoId id, PersonId pId, Description desc, Priority priority, Energy energy, Interest interest, CancellationToken _) => Result.Ok(new ToDo
-      {
-        CreatedOn = new CreatedOn(DateTime.UtcNow),
-        Description = desc,
-        Energy = energy,
-        Id = id,
-        Interest = interest,
-        PersonId = pId,
-        Priority = priority,
-        UpdatedOn = new UpdatedOn(DateTime.UtcNow)
-      }));
+      .ReturnsAsync((ToDoId id, PersonId pId, Description desc, Priority _, Energy _, Interest _, CancellationToken _) =>
+        Result.Ok(ApplicationTestData.CreateToDo(pId, desc.Value, id)));
 
     _ = scheduler
       .InSequence(sequence)
@@ -58,16 +48,8 @@ public class CreateToDoCommandTests
     _ = reminderStore
       .InSequence(sequence)
       .Setup(x => x.CreateAsync(It.IsAny<ReminderId>(), personId, It.IsAny<Details>(), It.IsAny<ReminderTime>(), quartzJobId, It.IsAny<CancellationToken>()))
-      .ReturnsAsync((ReminderId id, PersonId pid, Details details, ReminderTime time, QuartzJobId jobId, CancellationToken _) => Result.Ok(new Reminder
-      {
-        Id = id,
-        PersonId = pid,
-        Details = details,
-        ReminderTime = time,
-        QuartzJobId = jobId,
-        CreatedOn = new CreatedOn(DateTime.UtcNow),
-        UpdatedOn = new UpdatedOn(DateTime.UtcNow)
-      }));
+      .ReturnsAsync((ReminderId id, PersonId pid, Details details, ReminderTime time, QuartzJobId jobId, CancellationToken _) =>
+        Result.Ok(ApplicationTestData.CreateReminder(pid, details.Value, id, jobId, time.Value)));
 
     _ = reminderStore
       .InSequence(sequence)
@@ -107,17 +89,8 @@ public class CreateToDoCommandTests
         It.IsAny<Energy>(),
         It.IsAny<Interest>(),
         It.IsAny<CancellationToken>()))
-      .ReturnsAsync((ToDoId id, PersonId pId, Description desc, Priority priority, Energy energy, Interest interest, CancellationToken _) => Result.Ok(new ToDo
-      {
-        CreatedOn = new CreatedOn(DateTime.UtcNow),
-        Description = desc,
-        Energy = energy,
-        Id = id,
-        Interest = interest,
-        PersonId = pId,
-        Priority = priority,
-        UpdatedOn = new UpdatedOn(DateTime.UtcNow)
-      }));
+      .ReturnsAsync((ToDoId id, PersonId pId, Description desc, Priority _, Energy _, Interest _, CancellationToken _) =>
+        Result.Ok(ApplicationTestData.CreateToDo(pId, desc.Value, id)));
 
     var result = await handler.Handle(new CreateToDoCommand(personId, description), CancellationToken.None);
 

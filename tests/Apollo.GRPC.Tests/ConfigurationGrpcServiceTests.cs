@@ -13,6 +13,16 @@ namespace Apollo.GRPC.Tests;
 
 public sealed class ConfigurationGrpcServiceTests
 {
+  private static ConfigurationGrpcService CreateService(Mock<IMediator> mediator) => new(mediator.Object);
+
+  private static void AssertGrpcFailure<T>(GrpcResult<T> result, string expectedMessage) where T : class
+  {
+    Assert.False(result.IsSuccess);
+    Assert.Null(result.Data);
+    Assert.NotEmpty(result.Errors);
+    Assert.Equal(expectedMessage, result.Errors[0].Message);
+  }
+
   /// <summary>
   /// AT1: GetConfiguration() returns current config when store has data
   /// </summary>
@@ -38,7 +48,7 @@ public sealed class ConfigurationGrpcServiceTests
       .Setup(m => m.Send(It.IsAny<GetConfigurationQuery>(), It.IsAny<CancellationToken>()))
       .ReturnsAsync(Result.Ok(configData));
 
-    var service = new ConfigurationGrpcService(mediator.Object);
+    var service = CreateService(mediator);
 
     // Act
     var result = await service.GetConfigurationAsync();
@@ -69,7 +79,7 @@ public sealed class ConfigurationGrpcServiceTests
       .Setup(m => m.Send(It.IsAny<GetConfigurationQuery>(), It.IsAny<CancellationToken>()))
       .ReturnsAsync(Result.Ok(emptyConfigData));
 
-    var service = new ConfigurationGrpcService(mediator.Object);
+    var service = CreateService(mediator);
 
     // Act
     var result = await service.GetConfigurationAsync();
@@ -115,7 +125,7 @@ public sealed class ConfigurationGrpcServiceTests
       .Setup(m => m.Send(It.IsAny<UpdateAiConfigurationCommand>(), It.IsAny<CancellationToken>()))
       .ReturnsAsync(Result.Ok(updatedConfig));
 
-    var service = new ConfigurationGrpcService(mediator.Object);
+    var service = CreateService(mediator);
 
     // Act
     var result = await service.UpdateAiConfigurationAsync(request);
@@ -165,7 +175,7 @@ public sealed class ConfigurationGrpcServiceTests
       .Setup(m => m.Send(It.IsAny<UpdateDiscordConfigurationCommand>(), It.IsAny<CancellationToken>()))
       .ReturnsAsync(Result.Ok(updatedConfig));
 
-    var service = new ConfigurationGrpcService(mediator.Object);
+    var service = CreateService(mediator);
 
     // Act
     var result = await service.UpdateDiscordConfigurationAsync(request);
@@ -210,7 +220,7 @@ public sealed class ConfigurationGrpcServiceTests
       .Setup(m => m.Send(It.IsAny<UpdateSuperAdminConfigurationCommand>(), It.IsAny<CancellationToken>()))
       .ReturnsAsync(Result.Ok(updatedConfig));
 
-    var service = new ConfigurationGrpcService(mediator.Object);
+    var service = CreateService(mediator);
 
     // Act
     var result = await service.UpdateSuperAdminConfigurationAsync(request);
@@ -230,23 +240,27 @@ public sealed class ConfigurationGrpcServiceTests
   /// <summary>
   /// AT5: GetConfigurationStatus() returns subsystem readiness flags
   /// </summary>
-  [Fact]
-  public async Task GetConfigurationStatusAsyncReturnsSubsystemReadinessFlagsAsync()
+  /// <param name="isInitialized"></param>
+  /// <param name="isAiConfigured"></param>
+  /// <param name="isDiscordConfigured"></param>
+  /// <param name="isSuperAdminConfigured"></param>
+  [Theory]
+  [InlineData(true, true, true, true)]
+  [InlineData(true, true, false, false)]
+  public async Task GetConfigurationStatusAsyncReturnsExpectedReadinessAsync(
+    bool isInitialized,
+    bool isAiConfigured,
+    bool isDiscordConfigured,
+    bool isSuperAdminConfigured)
   {
-    // Arrange
-    var status = new InitializationStatus(
-      IsInitialized: true,
-      IsAiConfigured: true,
-      IsDiscordConfigured: true,
-      IsSuperAdminConfigured: true
-    );
+    var status = new InitializationStatus(isInitialized, isAiConfigured, isDiscordConfigured, isSuperAdminConfigured);
 
     var mediator = new Mock<IMediator>();
     _ = mediator
       .Setup(m => m.Send(It.IsAny<GetInitializationStatusQuery>(), It.IsAny<CancellationToken>()))
       .ReturnsAsync(Result.Ok(status));
 
-    var service = new ConfigurationGrpcService(mediator.Object);
+    var service = CreateService(mediator);
 
     // Act
     var result = await service.GetConfigurationStatusAsync();
@@ -254,43 +268,10 @@ public sealed class ConfigurationGrpcServiceTests
     // Assert
     Assert.True(result.IsSuccess);
     Assert.NotNull(result.Data);
-    Assert.True(result.Data.IsInitialized);
-    Assert.True(result.Data.IsAiConfigured);
-    Assert.True(result.Data.IsDiscordConfigured);
-    Assert.True(result.Data.IsSuperAdminConfigured);
-  }
-
-  /// <summary>
-  /// AT5: GetConfigurationStatus() returns partial readiness when only some subsystems configured
-  /// </summary>
-  [Fact]
-  public async Task GetConfigurationStatusAsyncReturnsPartialReadinessAsync()
-  {
-    // Arrange
-    var status = new InitializationStatus(
-      IsInitialized: true,
-      IsAiConfigured: true,
-      IsDiscordConfigured: false,
-      IsSuperAdminConfigured: false
-    );
-
-    var mediator = new Mock<IMediator>();
-    _ = mediator
-      .Setup(m => m.Send(It.IsAny<GetInitializationStatusQuery>(), It.IsAny<CancellationToken>()))
-      .ReturnsAsync(Result.Ok(status));
-
-    var service = new ConfigurationGrpcService(mediator.Object);
-
-    // Act
-    var result = await service.GetConfigurationStatusAsync();
-
-    // Assert
-    Assert.True(result.IsSuccess);
-    Assert.NotNull(result.Data);
-    Assert.True(result.Data.IsInitialized);
-    Assert.True(result.Data.IsAiConfigured);
-    Assert.False(result.Data.IsDiscordConfigured);
-    Assert.False(result.Data.IsSuperAdminConfigured);
+    Assert.Equal(isInitialized, result.Data.IsInitialized);
+    Assert.Equal(isAiConfigured, result.Data.IsAiConfigured);
+    Assert.Equal(isDiscordConfigured, result.Data.IsDiscordConfigured);
+    Assert.Equal(isSuperAdminConfigured, result.Data.IsSuperAdminConfigured);
   }
 
   /// <summary>
@@ -307,8 +288,7 @@ public sealed class ConfigurationGrpcServiceTests
     Assert.NotEmpty(serviceContractAttr);
 
     // Verify that all methods have OperationContract attribute
-    var methods = interfaceType.GetMethods();
-    foreach (var method in methods)
+    foreach (var method in interfaceType.GetMethods())
     {
       var operationContractAttr = method.GetCustomAttributes(
         typeof(System.ServiceModel.OperationContractAttribute), false);
@@ -368,9 +348,7 @@ public sealed class ConfigurationGrpcServiceTests
   public void MethodReturnTypesAreGrpcResult()
   {
     var interfaceType = typeof(IConfigurationGrpcService);
-    var methods = interfaceType.GetMethods();
-
-    foreach (var method in methods)
+    foreach (var method in interfaceType.GetMethods())
     {
       var returnType = method.ReturnType;
       // Check if return type is Task<GrpcResult<...>>
@@ -403,16 +381,13 @@ public sealed class ConfigurationGrpcServiceTests
       .Setup(m => m.Send(It.IsAny<UpdateAiConfigurationCommand>(), It.IsAny<CancellationToken>()))
       .ReturnsAsync(Result.Fail<ConfigurationData>("Configuration update failed"));
 
-    var service = new ConfigurationGrpcService(mediator.Object);
+    var service = CreateService(mediator);
 
     // Act
     var result = await service.UpdateAiConfigurationAsync(request);
 
     // Assert
-    Assert.False(result.IsSuccess);
-    Assert.Null(result.Data);
-    Assert.NotEmpty(result.Errors);
-    Assert.Equal("Configuration update failed", result.Errors[0].Message);
+    AssertGrpcFailure(result, "Configuration update failed");
   }
 
   /// <summary>
@@ -427,16 +402,13 @@ public sealed class ConfigurationGrpcServiceTests
       .Setup(m => m.Send(It.IsAny<GetConfigurationQuery>(), It.IsAny<CancellationToken>()))
       .ReturnsAsync(Result.Fail<ConfigurationData>("Database error"));
 
-    var service = new ConfigurationGrpcService(mediator.Object);
+    var service = CreateService(mediator);
 
     // Act
     var result = await service.GetConfigurationAsync();
 
     // Assert
-    Assert.False(result.IsSuccess);
-    Assert.Null(result.Data);
-    Assert.NotEmpty(result.Errors);
-    Assert.Equal("Database error", result.Errors[0].Message);
+    AssertGrpcFailure(result, "Database error");
   }
 
   /// <summary>
@@ -451,16 +423,13 @@ public sealed class ConfigurationGrpcServiceTests
       .Setup(m => m.Send(It.IsAny<GetInitializationStatusQuery>(), It.IsAny<CancellationToken>()))
       .ReturnsAsync(Result.Fail<InitializationStatus>("Status query failed"));
 
-    var service = new ConfigurationGrpcService(mediator.Object);
+    var service = CreateService(mediator);
 
     // Act
     var result = await service.GetConfigurationStatusAsync();
 
     // Assert
-    Assert.False(result.IsSuccess);
-    Assert.Null(result.Data);
-    Assert.NotEmpty(result.Errors);
-    Assert.Equal("Status query failed", result.Errors[0].Message);
+    AssertGrpcFailure(result, "Status query failed");
   }
 
   /// <summary>
@@ -496,7 +465,7 @@ public sealed class ConfigurationGrpcServiceTests
       .Setup(m => m.Send(It.IsAny<UpdateAiConfigurationCommand>(), It.IsAny<CancellationToken>()))
       .ReturnsAsync(Result.Ok(updatedConfig));
 
-    var service = new ConfigurationGrpcService(mediator.Object);
+    var service = CreateService(mediator);
 
     // Act
     var result = await service.UpdateAiConfigurationAsync(request);

@@ -1,17 +1,16 @@
-namespace Apollo.Service.Tests;
 
 using Apollo.AI;
 using Apollo.AI.Config;
-using Apollo.Application;
 using Apollo.Cache;
 using Apollo.Core.Logging;
-using Apollo.Database;
-using Apollo.GRPC;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+
 using Moq;
+
+namespace Apollo.Service.Tests;
 
 public sealed class StartupBehaviorTests
 {
@@ -35,12 +34,12 @@ public sealed class StartupBehaviorTests
       .Build();
 
     var services = new ServiceCollection();
-    services.AddLogging();
+    _ = services.AddLogging();
 
     // Act & Assert - Should not throw when infrastructure config is present but app config is absent
     var exception = Record.Exception(() =>
     {
-      services
+      _ = services
         .AddCacheServices(configuration.GetConnectionString("Redis")!)
         .AddAiServices(configuration);  // No AI config provided - should use defaults
     });
@@ -65,14 +64,14 @@ public sealed class StartupBehaviorTests
   {
     // Arrange: Configuration with no AI section
     var configBuilder = new ConfigurationBuilder();
-    configBuilder.AddInMemoryCollection(new Dictionary<string, string?>());
+    _ = configBuilder.AddInMemoryCollection([]);
     var configuration = configBuilder.Build();
 
     var services = new ServiceCollection();
-    services.AddLogging();
+    _ = services.AddLogging();
 
     // Act
-    services.AddAiServices(configuration);
+    _ = services.AddAiServices(configuration);
 
     // Assert: Service provider builds successfully
     var provider = services.BuildServiceProvider();
@@ -93,7 +92,7 @@ public sealed class StartupBehaviorTests
   {
     // Arrange: Configuration without Redis connection string
     var configBuilder = new ConfigurationBuilder();
-    configBuilder.AddInMemoryCollection(new Dictionary<string, string?>());
+    _ = configBuilder.AddInMemoryCollection([]);
     var configuration = configBuilder.Build();
 
     var services = new ServiceCollection();
@@ -102,11 +101,11 @@ public sealed class StartupBehaviorTests
     var exception = Record.Exception(() =>
     {
       var redisConnectionString = configuration.GetConnectionString("Redis") ?? throw new InvalidOperationException("Redis connection string not found");
-      services.AddCacheServices(redisConnectionString);
+      _ = services.AddCacheServices(redisConnectionString);
     });
 
     Assert.NotNull(exception);
-    Assert.IsType<InvalidOperationException>(exception);
+    _ = Assert.IsType<InvalidOperationException>(exception);
   }
 
   /// <summary>
@@ -122,16 +121,13 @@ public sealed class StartupBehaviorTests
     {
       { "ConnectionStrings:Redis", "localhost:6379" }
     };
-    configBuilder.AddInMemoryCollection(inMemorySettings);
+    _ = configBuilder.AddInMemoryCollection(inMemorySettings);
     var configuration = configBuilder.Build();
 
     var services = new ServiceCollection();
 
     // Act & Assert: Should throw because Quartz is infrastructure
-    var exception = Record.Exception(() =>
-    {
-      services.AddRequiredServices(configuration);
-    });
+    var exception = Record.Exception(() => _ = services.AddRequiredServices(configuration));
 
     Assert.NotNull(exception);
   }
@@ -156,12 +152,12 @@ public sealed class StartupBehaviorTests
       .Build();
 
     var services = new ServiceCollection();
-    services.AddLogging();
+    _ = services.AddLogging();
 
     // Act: Register services without application config
     var exception = Record.Exception(() =>
     {
-      services
+      _ = services
         .AddCacheServices(configuration.GetConnectionString("Redis")!)
         .AddAiServices(configuration);
     });
@@ -187,24 +183,10 @@ public sealed class StartupBehaviorTests
   {
     // Arrange
     var mockLogger = new Mock<ILogger>();
-    var capturedLogLevel = LogLevel.Information;
-    var capturedMessage = string.Empty;
 
-    mockLogger
+    _ = mockLogger
       .Setup(x => x.IsEnabled(It.IsAny<LogLevel>()))
       .Returns(true);
-
-    mockLogger
-      .Setup(x => x.Log(
-        It.IsAny<LogLevel>(),
-        It.IsAny<EventId>(),
-        It.IsAny<It.IsAnyType>(),
-        It.IsAny<Exception>(),
-        It.IsAny<Func<It.IsAnyType, Exception?, string>>()))
-      .Callback((LogLevel level, EventId eventId, object state, Exception ex, Delegate func) =>
-      {
-        capturedLogLevel = level;
-      });
 
     // Act: Call the AILogs method (which uses source-generated logging)
     AILogs.AINotConfigured(mockLogger.Object);

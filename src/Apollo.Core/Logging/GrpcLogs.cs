@@ -12,19 +12,19 @@ public static partial class GrpcLogs
       EventId = 1000,
       Level = LogLevel.Information,
       Message = "Starting call. Host: {Host} Type/Method: {Type} / {Method}")]
-  public static partial void LogStartingCall(ILogger logger, string host, string type, string method);
+  public static partial void LogStartingCall(ILogger logger, string host, int type, string method);
 
   [LoggerMessage(
       EventId = 1001,
       Level = LogLevel.Information,
-      Message = "Call succeeded. Host: {Host} Type/Method: {Type} / {Method}. {@Response}")]
-  public static partial void LogCallSucceeded(ILogger logger, string host, string type, string method, object response);
+      Message = "Call succeeded. Host: {Host} Type/Method: {Type} / {Method}.")]
+  public static partial void LogCallSucceeded(ILogger logger, string host, int type, string method);
 
   [LoggerMessage(
       EventId = 1002,
       Level = LogLevel.Error,
       Message = "Call failed. Host: {Host} Type/Method: {Type} / {Method}")]
-  public static partial void LogCallFailed(ILogger logger, string host, string type, string method, Exception incException);
+  public static partial void LogCallFailed(ILogger logger, string host, int type, string method, Exception incException);
 
   [LoggerMessage(
       EventId = 1003,

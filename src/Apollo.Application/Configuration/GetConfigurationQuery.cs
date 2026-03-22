@@ -18,11 +18,7 @@ public sealed class GetConfigurationQueryHandler(IConfigurationStore configurati
     {
       var result = await configurationStore.GetAsync(cancellationToken);
       // If not found (not yet initialized), return an empty default instead of failing
-      if (result.IsFailed)
-      {
-        return Result.Ok(ConfigurationData.Empty());
-      }
-      return result;
+      return result.IsFailed ? Result.Ok(ConfigurationData.Empty()) : result;
     }
     catch (Exception ex)
     {

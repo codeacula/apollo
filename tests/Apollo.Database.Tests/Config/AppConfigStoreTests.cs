@@ -1,5 +1,4 @@
 using Apollo.Database.Configuration;
-using Apollo.Database.Configuration.Events;
 
 using Marten;
 using Marten.Events;
@@ -25,7 +24,7 @@ public sealed class AppConfigStoreTests
   public async Task GetAsyncReturnsFailWhenNoConfigExistsAsync()
   {
     // Arrange
-    _sessionMock
+    _ = _sessionMock
       .Setup(s => s.LoadAsync<DbConfiguration>(ConfigurationId.Root, It.IsAny<CancellationToken>()))
       .ReturnsAsync((DbConfiguration?)null);
 
@@ -47,9 +46,9 @@ public sealed class AppConfigStoreTests
   public async Task SaveAsyncCreatesNewConfigStreamAsync()
   {
     // Arrange
-    var modelId = "test-model";
-    var endpoint = "https://test.example.com";
-    var apiKey = "test-api-key";
+    const string modelId = "test-model";
+    const string endpoint = "https://test.example.com";
+    const string apiKey = "test-api-key";
 
     var updatedConfig = new DbConfiguration
     {
@@ -60,24 +59,24 @@ public sealed class AppConfigStoreTests
     };
 
     // No existing config
-    _sessionMock
+    _ = _sessionMock
       .Setup(s => s.LoadAsync<DbConfiguration>(ConfigurationId.Root, It.IsAny<CancellationToken>()))
       .ReturnsAsync((DbConfiguration?)null);
 
-    _sessionMock
+    _ = _sessionMock
       .Setup(s => s.SaveChangesAsync(It.IsAny<CancellationToken>()))
       .Returns(Task.CompletedTask);
 
     // Create a proper Mock<IEventStoreOperations>
     var eventStoreMock = new Mock<IEventStoreOperations>(MockBehavior.Loose);
-    _sessionMock.SetupGet(s => s.Events).Returns(eventStoreMock.Object);
+    _ = _sessionMock.SetupGet(s => s.Events).Returns(eventStoreMock.Object);
 
     // Setup the mock to return updatedConfig for AggregateStreamAsync
-    eventStoreMock
-      .Setup(e => e.AggregateStreamAsync<DbConfiguration>(
-        ConfigurationId.Root, 
-        It.IsAny<long>(), 
-        It.IsAny<DateTimeOffset?>(), 
+    _ = eventStoreMock
+      .Setup(e => e.AggregateStreamAsync(
+        ConfigurationId.Root,
+        It.IsAny<long>(),
+        It.IsAny<DateTimeOffset?>(),
         It.IsAny<DbConfiguration?>()))
       .ReturnsAsync(updatedConfig);
 
@@ -100,9 +99,9 @@ public sealed class AppConfigStoreTests
   public async Task SaveAsyncAppendsUpdateEventToExistingStreamAsync()
   {
     // Arrange
-    var modelId = "new-model";
-    var endpoint = "https://new.example.com";
-    var apiKey = "new-api-key";
+    const string modelId = "new-model";
+    const string endpoint = "https://new.example.com";
+    const string apiKey = "new-api-key";
 
     var existingConfig = new DbConfiguration
     {
@@ -119,24 +118,24 @@ public sealed class AppConfigStoreTests
     };
 
     // Existing config found
-    _sessionMock
+    _ = _sessionMock
       .Setup(s => s.LoadAsync<DbConfiguration>(ConfigurationId.Root, It.IsAny<CancellationToken>()))
       .ReturnsAsync(existingConfig);
 
-    _sessionMock
+    _ = _sessionMock
       .Setup(s => s.SaveChangesAsync(It.IsAny<CancellationToken>()))
       .Returns(Task.CompletedTask);
 
     // Create a proper Mock<IEventStoreOperations>
     var eventStoreMock = new Mock<IEventStoreOperations>(MockBehavior.Loose);
-    _sessionMock.SetupGet(s => s.Events).Returns(eventStoreMock.Object);
+    _ = _sessionMock.SetupGet(s => s.Events).Returns(eventStoreMock.Object);
 
     // Setup the mock to return updatedConfig for AggregateStreamAsync
-    eventStoreMock
-      .Setup(e => e.AggregateStreamAsync<DbConfiguration>(
-        ConfigurationId.Root, 
-        It.IsAny<long>(), 
-        It.IsAny<DateTimeOffset?>(), 
+    _ = eventStoreMock
+      .Setup(e => e.AggregateStreamAsync(
+        ConfigurationId.Root,
+        It.IsAny<long>(),
+        It.IsAny<DateTimeOffset?>(),
         It.IsAny<DbConfiguration?>()))
       .ReturnsAsync(updatedConfig);
 
@@ -158,7 +157,7 @@ public sealed class AppConfigStoreTests
   public async Task IsInitializedAsyncReturnsFalseWhenNoConfigAsync()
   {
     // Arrange
-    _sessionMock
+    _ = _sessionMock
       .Setup(s => s.LoadAsync<DbConfiguration>(ConfigurationId.Root, It.IsAny<CancellationToken>()))
       .ReturnsAsync((DbConfiguration?)null);
 
@@ -182,7 +181,7 @@ public sealed class AppConfigStoreTests
     // Arrange
     var existingConfig = new DbConfiguration { Id = ConfigurationId.Root };
 
-    _sessionMock
+    _ = _sessionMock
       .Setup(s => s.LoadAsync<DbConfiguration>(ConfigurationId.Root, It.IsAny<CancellationToken>()))
       .ReturnsAsync(existingConfig);
 

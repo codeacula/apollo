@@ -1,6 +1,6 @@
+using Apollo.Application.Tests.TestSupport;
 using Apollo.Application.ToDos;
 using Apollo.Core.ToDos;
-using Apollo.Domain.Common.ValueObjects;
 using Apollo.Domain.People.ValueObjects;
 using Apollo.Domain.ToDos.Models;
 using Apollo.Domain.ToDos.ValueObjects;
@@ -31,16 +31,8 @@ public class CreateReminderCommandHandlerTests
 
     _ = reminderStore
       .Setup(x => x.CreateAsync(It.IsAny<ReminderId>(), personId, It.IsAny<Details>(), It.IsAny<ReminderTime>(), quartzJobId, It.IsAny<CancellationToken>()))
-      .ReturnsAsync((ReminderId id, PersonId pid, Details det, ReminderTime time, QuartzJobId jobId, CancellationToken _) => Result.Ok(new Reminder
-      {
-        Id = id,
-        PersonId = pid,
-        Details = det,
-        ReminderTime = time,
-        QuartzJobId = jobId,
-        CreatedOn = new CreatedOn(DateTime.UtcNow),
-        UpdatedOn = new UpdatedOn(DateTime.UtcNow)
-      }));
+      .ReturnsAsync((ReminderId id, PersonId pid, Details det, ReminderTime time, QuartzJobId jobId, CancellationToken _) =>
+        Result.Ok(ApplicationTestData.CreateReminder(pid, det.Value, id, jobId, time.Value)));
 
     var result = await handler.Handle(new CreateReminderCommand(personId, details, reminderDate), CancellationToken.None);
 

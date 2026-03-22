@@ -32,14 +32,9 @@ public sealed class ConfigurationStore(IDocumentSession session) : IConfiguratio
 
       var existing = await session.LoadAsync<DbConfiguration>(ConfigurationId.Root, cancellationToken);
 
-      if (existing is null)
-      {
-        session.Events.StartStream<DbConfiguration>(ConfigurationId.Root, ev);
-      }
-      else
-      {
-        session.Events.Append(ConfigurationId.Root, ev);
-      }
+      _ = existing is null
+        ? session.Events.StartStream<DbConfiguration>(ConfigurationId.Root, ev)
+        : session.Events.Append(ConfigurationId.Root, ev);
 
       await session.SaveChangesAsync(cancellationToken);
 
@@ -63,14 +58,9 @@ public sealed class ConfigurationStore(IDocumentSession session) : IConfiguratio
 
       var existing = await session.LoadAsync<DbConfiguration>(ConfigurationId.Root, cancellationToken);
 
-      if (existing is null)
-      {
-        session.Events.StartStream<DbConfiguration>(ConfigurationId.Root, ev);
-      }
-      else
-      {
-        session.Events.Append(ConfigurationId.Root, ev);
-      }
+      _ = existing is null
+        ? session.Events.StartStream<DbConfiguration>(ConfigurationId.Root, ev)
+        : session.Events.Append(ConfigurationId.Root, ev);
 
       await session.SaveChangesAsync(cancellationToken);
 
@@ -94,14 +84,9 @@ public sealed class ConfigurationStore(IDocumentSession session) : IConfiguratio
 
       var existing = await session.LoadAsync<DbConfiguration>(ConfigurationId.Root, cancellationToken);
 
-      if (existing is null)
-      {
-        session.Events.StartStream<DbConfiguration>(ConfigurationId.Root, ev);
-      }
-      else
-      {
-        session.Events.Append(ConfigurationId.Root, ev);
-      }
+      _ = existing is null
+        ? session.Events.StartStream<DbConfiguration>(ConfigurationId.Root, ev)
+        : session.Events.Append(ConfigurationId.Root, ev);
 
       await session.SaveChangesAsync(cancellationToken);
 

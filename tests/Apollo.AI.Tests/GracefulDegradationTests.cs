@@ -1,12 +1,15 @@
-namespace Apollo.AI.Tests;
 
 using Apollo.AI.Config;
 using Apollo.AI.Prompts;
 using Apollo.AI.Requests;
+
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+
 using Moq;
+
+namespace Apollo.AI.Tests;
 
 public sealed class GracefulDegradationTests
 {
@@ -26,8 +29,7 @@ public sealed class GracefulDegradationTests
       Endpoint = "",
       ApiKey = ""
     };
-
-    var mockPromptLoader = new Mock<IPromptLoader>();
+    _ = new Mock<IPromptLoader>();
     var mockTemplateProcessor = new Mock<IPromptTemplateProcessor>();
     var mockLogger = new Mock<ILogger<AIRequestBuilder>>();
 
@@ -55,10 +57,7 @@ public sealed class GracefulDegradationTests
     var configuration = new ConfigurationBuilder().Build(); // Empty configuration, no ApolloAIConfig section
 
     // Act & Assert
-    var exception = Record.Exception(() =>
-    {
-      services.AddAiServices(configuration);
-    });
+    var exception = Record.Exception(() => _ = services.AddAiServices(configuration));
 
     Assert.Null(exception);
 

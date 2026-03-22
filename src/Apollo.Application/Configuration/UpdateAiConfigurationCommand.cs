@@ -8,6 +8,9 @@ namespace Apollo.Application.Configuration;
 /// Updates the AI subsystem configuration (ModelId, Endpoint, ApiKey).
 /// Persists via event-based store (immutable event appended to configuration stream).
 /// </summary>
+/// <param name="ModelId"></param>
+/// <param name="Endpoint"></param>
+/// <param name="ApiKey"></param>
 public sealed record UpdateAiConfigurationCommand(
   string? ModelId,
   string? Endpoint,
@@ -21,12 +24,9 @@ public sealed class UpdateAiConfigurationCommandHandler(IConfigurationStore conf
   {
     try
     {
-      if (string.IsNullOrWhiteSpace(request.ModelId) && string.IsNullOrWhiteSpace(request.Endpoint))
-      {
-        return Result.Fail<ConfigurationData>("At least one of ModelId or Endpoint must be provided.");
-      }
-
-      return await configurationStore.UpdateAiAsync(request.ModelId, request.Endpoint, request.ApiKey, cancellationToken);
+      return string.IsNullOrWhiteSpace(request.ModelId) && string.IsNullOrWhiteSpace(request.Endpoint)
+        ? Result.Fail<ConfigurationData>("At least one of ModelId or Endpoint must be provided.")
+        : await configurationStore.UpdateAiAsync(request.ModelId, request.Endpoint, request.ApiKey, cancellationToken);
     }
     catch (Exception ex)
     {
