@@ -59,8 +59,8 @@ public sealed class ConfigurationGrpcServiceTests
     Assert.Equal(configId, result.Data.Id);
     Assert.Equal("gpt-4", result.Data.AiModelId);
     Assert.Equal("https://api.openai.com", result.Data.AiEndpoint);
-    Assert.Equal("test-key", result.Data.AiApiKey);
-    Assert.Equal("test-token", result.Data.DiscordToken);
+    Assert.True(result.Data.HasAiApiKey);
+    Assert.True(result.Data.HasDiscordToken);
     Assert.Equal("test-public-key", result.Data.DiscordPublicKey);
     Assert.Equal("TestBot", result.Data.DiscordBotName);
     Assert.Equal("123456789", result.Data.SuperAdminDiscordUserId);
@@ -90,8 +90,8 @@ public sealed class ConfigurationGrpcServiceTests
     Assert.Equal(Guid.Empty, result.Data.Id);
     Assert.Null(result.Data.AiModelId);
     Assert.Null(result.Data.AiEndpoint);
-    Assert.Null(result.Data.AiApiKey);
-    Assert.Null(result.Data.DiscordToken);
+    Assert.False(result.Data.HasAiApiKey);
+    Assert.False(result.Data.HasDiscordToken);
     Assert.Null(result.Data.DiscordPublicKey);
     Assert.Null(result.Data.DiscordBotName);
     Assert.Null(result.Data.SuperAdminDiscordUserId);
@@ -136,7 +136,7 @@ public sealed class ConfigurationGrpcServiceTests
     Assert.Equal(configId, result.Data.Id);
     Assert.Equal("gpt-4-turbo", result.Data.AiModelId);
     Assert.Equal("https://api.openai.com/v1", result.Data.AiEndpoint);
-    Assert.Equal("sk-test-key", result.Data.AiApiKey);
+    Assert.True(result.Data.HasAiApiKey);
 
     // Verify the correct command was sent
     mediator.Verify(m => m.Send(
@@ -183,7 +183,7 @@ public sealed class ConfigurationGrpcServiceTests
     // Assert
     Assert.True(result.IsSuccess);
     Assert.NotNull(result.Data);
-    Assert.Equal("discord-token-xyz", result.Data.DiscordToken);
+    Assert.True(result.Data.HasDiscordToken);
     Assert.Equal("discord-public-key-xyz", result.Data.DiscordPublicKey);
     Assert.Equal("ApolloBot", result.Data.DiscordBotName);
 
@@ -294,6 +294,15 @@ public sealed class ConfigurationGrpcServiceTests
         typeof(System.ServiceModel.OperationContractAttribute), false);
 
       Assert.NotEmpty(operationContractAttr);
+
+      if (method.Name == nameof(IConfigurationGrpcService.GetConfigurationStatusAsync))
+      {
+        Assert.NotEmpty(method.GetCustomAttributes(typeof(Apollo.GRPC.Attributes.RequireAccessAttribute), false));
+      }
+      else
+      {
+        Assert.NotEmpty(method.GetCustomAttributes(typeof(Apollo.GRPC.Attributes.RequireSuperAdminAttribute), false));
+      }
     }
   }
 
@@ -476,9 +485,9 @@ public sealed class ConfigurationGrpcServiceTests
     // Verify AI fields updated
     Assert.Equal("gpt-4-new", result.Data.AiModelId);
     Assert.Equal("https://api.openai.com", result.Data.AiEndpoint);
-    Assert.Equal("new-key", result.Data.AiApiKey);
+    Assert.True(result.Data.HasAiApiKey);
     // Verify other fields preserved
-    Assert.Equal("discord-token", result.Data.DiscordToken);
+    Assert.True(result.Data.HasDiscordToken);
     Assert.Equal("discord-public-key", result.Data.DiscordPublicKey);
     Assert.Equal("ExistingBot", result.Data.DiscordBotName);
     Assert.Equal("123456789", result.Data.SuperAdminDiscordUserId);

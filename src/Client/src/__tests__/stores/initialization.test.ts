@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
+
 import { useInitializationStore } from '../../stores/initializationStore'
 
 describe('Initialization Store', () => {
@@ -11,31 +12,34 @@ describe('Initialization Store', () => {
     vi.unstubAllGlobals()
   })
 
-  /**
-   * The initialization store should call GET /api/setup/status and reflect
-   * that the system is NOT initialized when the API reports no configuration exists.
-   */
   it('returns not initialized when API reports no config', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+    const mockFetch = vi.fn().mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve({ isConfigured: false }),
-    }))
+      json: () => Promise.resolve({
+        isInitialized: false,
+        isAiConfigured: false,
+        isDiscordConfigured: false,
+        isSuperAdminConfigured: false,
+      }),
+    })
+    vi.stubGlobal('fetch', mockFetch)
 
     const store = useInitializationStore()
     await store.checkInitializationStatus()
 
     expect(store.isInitialized).toBe(false)
+    expect(mockFetch).toHaveBeenCalledWith('/api/setup/status')
   })
 
-  /**
-   * The initialization store should call GET /api/setup/status and reflect
-   * that the system IS initialized when the API reports configuration exists,
-   * including subsystem details (AI configured, Discord configured, etc.).
-   */
   it('returns initialized when API reports config exists', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve({ isConfigured: true }),
+      json: () => Promise.resolve({
+        isInitialized: true,
+        isAiConfigured: true,
+        isDiscordConfigured: true,
+        isSuperAdminConfigured: true,
+      }),
     }))
 
     const store = useInitializationStore()

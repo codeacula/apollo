@@ -1,73 +1,36 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { useInitializationStore } from '../../stores/initializationStore'
-import type { RouteLocationNormalized } from 'vue-router'
+
+import { resolveInitializationNavigation } from '../../router'
 
 describe('Router Guards', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
   })
 
-  /**
-   * When the system is not initialized (initialization store reports false),
-   * the router guard should redirect any navigation to the /setup route.
-   */
-   it('redirects to setup when not initialized', () => {
-    const initStore = useInitializationStore()
-    initStore.setInitialized(false)
-
-    const mockNext = vi.fn()
-    const toRoute: RouteLocationNormalized = {
-      path: '/dashboard',
-      name: 'Dashboard',
-      params: {},
-      query: {},
-      hash: '',
-      fullPath: '/dashboard',
-      matched: [],
-      meta: {},
-      redirectedFrom: undefined,
+  it('redirects to setup when not initialized', async () => {
+    const initStore = {
+      isInitialized: null,
+      checkInitializationStatus: vi.fn().mockImplementation(async function (this: { isInitialized: boolean | null }) {
+        this.isInitialized = false
+      }),
     }
 
-    // Simulate the guard logic
-    if (toRoute.path !== '/setup' && initStore.isInitialized === false) {
-      mockNext('/setup')
-    } else {
-      mockNext()
-    }
+    const result = await resolveInitializationNavigation('/dashboard', initStore)
 
-    expect(mockNext).toHaveBeenCalledWith('/setup')
+    expect(result).toBe('/setup')
+    expect(initStore.checkInitializationStatus).toHaveBeenCalledOnce()
   })
 
-  /**
-   * When the system is initialized (initialization store reports true),
-   * the router guard should allow navigation to proceed normally to the
-   * requested route.
-   */
-   it('allows navigation when initialized', () => {
-    const initStore = useInitializationStore()
-    initStore.setInitialized(true)
-
-    const mockNext = vi.fn()
-    const toRoute: RouteLocationNormalized = {
-      path: '/dashboard',
-      name: 'Dashboard',
-      params: {},
-      query: {},
-      hash: '',
-      fullPath: '/dashboard',
-      matched: [],
-      meta: {},
-      redirectedFrom: undefined,
+  it('allows navigation when initialized', async () => {
+    const initStore = {
+      isInitialized: true,
+      checkInitializationStatus: vi.fn(),
     }
 
-    // Simulate the guard logic
-    if (toRoute.path !== '/setup' && initStore.isInitialized === false) {
-      mockNext('/setup')
-    } else {
-      mockNext()
-    }
+    const result = await resolveInitializationNavigation('/dashboard', initStore)
 
-    expect(mockNext).toHaveBeenCalledWith()
+    expect(result).toBe(true)
+    expect(initStore.checkInitializationStatus).not.toHaveBeenCalled()
   })
 })

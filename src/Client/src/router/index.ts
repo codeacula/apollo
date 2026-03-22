@@ -4,6 +4,8 @@ import SetupView from '../views/SetupView.vue';
 import DashboardView from '../views/DashboardView.vue';
 import { useInitializationStore } from '../stores/initializationStore';
 
+type InitializationGuardStore = Pick<ReturnType<typeof useInitializationStore>, 'isInitialized' | 'checkInitializationStatus'>
+
 const routes: RouteRecordRaw[] = [
   {
     path: '/setup',
@@ -26,24 +28,28 @@ const router = createRouter({
   routes,
 });
 
-// Navigation guard to redirect to setup if not initialized
-router.beforeEach((to, _from, next) => {
-  // Skip guard for setup route
-  if (to.path === '/setup') {
-    next();
-    return;
+export async function resolveInitializationNavigation(
+  toPath: string,
+  initStore: InitializationGuardStore,
+): Promise<true | string> {
+  if (initStore.isInitialized === null) {
+    await initStore.checkInitializationStatus();
   }
 
-  const initStore = useInitializationStore();
+  if (toPath === '/setup') {
+    return initStore.isInitialized === true ? '/dashboard' : true;
+  }
 
-  // If not initialized, redirect to setup
   if (initStore.isInitialized === false) {
-    next('/setup');
-    return;
+    return '/setup';
   }
 
-  // Allow navigation
-  next();
+  return true;
+}
+
+// Navigation guard to redirect to setup if not initialized
+router.beforeEach(async (to) => {
+  return await resolveInitializationNavigation(to.path, useInitializationStore());
 });
 
 export default router;

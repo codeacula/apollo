@@ -13,14 +13,6 @@ public sealed class SetupControllerTests(WebApplicationFactory<IApolloAPI> facto
 {
   private readonly WebApplicationFactory<IApolloAPI> _factory = factory;
 
-  /// <summary>
-  /// GET /api/setup/status should return a JSON response indicating the system is
-  /// not initialized when no configuration exists in the database.
-  /// </summary>
-  /// <param name="isInitialized"></param>
-  /// <param name="isAiConfigured"></param>
-  /// <param name="isDiscordConfigured"></param>
-  /// <param name="isSuperAdminConfigured"></param>
   [Theory]
   [InlineData(false, false, false, false)]
   [InlineData(true, true, false, true)]
@@ -30,7 +22,6 @@ public sealed class SetupControllerTests(WebApplicationFactory<IApolloAPI> facto
     bool isDiscordConfigured,
     bool isSuperAdminConfigured)
   {
-    // Arrange
     var mockMediator = new Mock<IMediator>();
     var status = new InitializationStatus(isInitialized, isAiConfigured, isDiscordConfigured, isSuperAdminConfigured);
 
@@ -39,11 +30,8 @@ public sealed class SetupControllerTests(WebApplicationFactory<IApolloAPI> facto
       .ReturnsAsync(FluentResults.Result.Ok(status));
 
     var client = CreateClient(mockMediator);
-
-    // Act
     var response = await client.GetAsync("/api/setup/status");
 
-    // Assert
     Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
     var content = await response.Content.ReadAsStringAsync();
     Assert.Contains($"\"isInitialized\":{isInitialized.ToString().ToLowerInvariant()}", content);
@@ -52,18 +40,10 @@ public sealed class SetupControllerTests(WebApplicationFactory<IApolloAPI> facto
     Assert.Contains($"\"isSuperAdminConfigured\":{isSuperAdminConfigured.ToString().ToLowerInvariant()}", content);
   }
 
-  /// <summary>
-  /// POST /api/setup should accept a configuration payload (AI settings, Discord
-  /// settings, super admin Discord user ID) and persist it via MediatR, returning
-  /// success on first-time setup.
-  /// </summary>
   [Fact]
-  public async Task PostSetupSavesConfigurationAsync()
+  public async Task PostSetupAcceptsNestedConfigurationPayloadAsync()
   {
-    // Arrange
     var mockMediator = new Mock<IMediator>();
-
-    // Initial status query returns not initialized
     var notInitializedStatus = new InitializationStatus(false, false, false, false);
 
     var configData = new Core.Configuration.ConfigurationData
@@ -76,9 +56,6 @@ public sealed class SetupControllerTests(WebApplicationFactory<IApolloAPI> facto
       SuperAdminDiscordUserId = "123456789",
     };
 
-    // Use a sequential pattern: first call is status check (returns not init),
-    // then three config update commands (all return success),
-    // then final status check (returns initialized)
     var sequence = new MockSequence();
 
     _ = mockMediator
@@ -111,57 +88,66 @@ public sealed class SetupControllerTests(WebApplicationFactory<IApolloAPI> facto
 
     var setupRequest = new
     {
-      aiModelId = "gpt-4",
-      aiEndpoint = "https://api.openai.com",
-      aiApiKey = "key123",
-      discordToken = "token123",
-      discordPublicKey = "pubkey123",
-      superAdminDiscordUserId = "123456789",
+      ai = new
+      {
+        modelId = "gpt-4",
+        endpoint = "https://api.openai.com",
+        apiKey = "key123",
+      },
+      discord = new
+      {
+        token = "token123",
+        publicKey = "pubkey123",
+      },
+      superAdmin = new
+      {
+        discordUserId = "123456789",
+      },
     };
 
-    var content = CreateJsonContent(setupRequest);
+    var response = await client.PostAsync("/api/setup", CreateJsonContent(setupRequest));
 
-    // Act
-    var response = await client.PostAsync("/api/setup", content);
-
-    // Assert
     Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
     var responseContent = await response.Content.ReadAsStringAsync();
     Assert.Contains("\"message\":\"Setup completed successfully.\"", responseContent);
     Assert.Contains("\"isInitialized\":true", responseContent);
   }
 
-  /// <summary>
-  /// POST /api/setup should reject the request with an appropriate error when the
-  /// system is already initialized. Configuration updates after initial setup must
-  /// go through a separate update endpoint.
-  /// </summary>
+  [Fact]
+  public async Task PostSetupRejectsEmptyPayloadAsync()
+  {
+    var mockMediator = new Mock<IMediator>();
+    var notInitializedStatus = new InitializationStatus(false, false, false, false);
+
+    _ = mockMediator
+      .Setup(m => m.Send(It.IsAny<GetInitializationStatusQuery>(), It.IsAny<CancellationToken>()))
+      .ReturnsAsync(FluentResults.Result.Ok(notInitializedStatus));
+
+    var client = CreateClient(mockMediator);
+    var response = await client.PostAsync("/api/setup", CreateJsonContent(new { }));
+
+    Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
+    var responseContent = await response.Content.ReadAsStringAsync();
+    Assert.Contains("At least one setup configuration section is required", responseContent);
+  }
+
   [Fact]
   public async Task PostSetupRejectsWhenAlreadyInitializedAsync()
   {
-    // Arrange
     var mockMediator = new Mock<IMediator>();
-
-    // Status query returns already initialized
     var initializedStatus = new InitializationStatus(true, true, true, true);
+
     _ = mockMediator
       .Setup(m => m.Send(It.IsAny<GetInitializationStatusQuery>(), It.IsAny<CancellationToken>()))
       .ReturnsAsync(FluentResults.Result.Ok(initializedStatus));
 
     var client = CreateClient(mockMediator);
-
-    var setupRequest = new
+    var response = await client.PostAsync("/api/setup", CreateJsonContent(new
     {
       aiModelId = "gpt-4",
       aiEndpoint = "https://api.openai.com",
-    };
+    }));
 
-    var content = CreateJsonContent(setupRequest);
-
-    // Act
-    var response = await client.PostAsync("/api/setup", content);
-
-    // Assert
     Assert.Equal(System.Net.HttpStatusCode.Conflict, response.StatusCode);
     var responseContent = await response.Content.ReadAsStringAsync();
     Assert.Contains("already initialized", responseContent);

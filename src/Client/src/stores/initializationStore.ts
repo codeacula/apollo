@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 
+import { getSetupStatus } from '../services/healthApi';
+
 export interface InitializationState {
   isInitialized: boolean | null;
   isLoading: boolean;
@@ -17,14 +19,8 @@ export const useInitializationStore = defineStore('initialization', () => {
     error.value = null;
 
     try {
-      const response = await fetch('/api/configuration/status');
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch status: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      isInitialized.value = data.isConfigured === true;
+      const data = await getSetupStatus();
+      isInitialized.value = data.isInitialized;
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Unknown error';
       isInitialized.value = false;

@@ -15,10 +15,10 @@ public sealed record ConfigurationDTO
   public string? AiEndpoint { get; init; }
 
   [DataMember(Order = 4)]
-  public string? AiApiKey { get; init; }
+  public required bool HasAiApiKey { get; init; }
 
   [DataMember(Order = 5)]
-  public string? DiscordToken { get; init; }
+  public required bool HasDiscordToken { get; init; }
 
   [DataMember(Order = 6)]
   public string? DiscordPublicKey { get; init; }

@@ -70,12 +70,33 @@ public sealed class SetupController(IMediator mediator) : ControllerBase
       return Conflict(new { error = "System is already initialized. Use dedicated update endpoints to modify configuration." });
     }
 
+    var aiModelId = request.Ai?.ModelId ?? request.AiModelId;
+    var aiEndpoint = request.Ai?.Endpoint ?? request.AiEndpoint;
+    var aiApiKey = request.Ai?.ApiKey ?? request.AiApiKey;
+    var discordToken = request.Discord?.Token ?? request.DiscordToken;
+    var discordPublicKey = request.Discord?.PublicKey ?? request.DiscordPublicKey;
+    var discordBotName = request.Discord?.BotName ?? request.DiscordBotName;
+    var superAdminDiscordUserId = request.SuperAdmin?.DiscordUserId ?? request.SuperAdminDiscordUserId;
+
+    var hasAiInput = !string.IsNullOrWhiteSpace(aiModelId)
+      || !string.IsNullOrWhiteSpace(aiEndpoint)
+      || !string.IsNullOrWhiteSpace(aiApiKey);
+    var hasDiscordInput = !string.IsNullOrWhiteSpace(discordToken)
+      || !string.IsNullOrWhiteSpace(discordPublicKey)
+      || !string.IsNullOrWhiteSpace(discordBotName);
+    var hasSuperAdminInput = !string.IsNullOrWhiteSpace(superAdminDiscordUserId);
+
+    if (!hasAiInput && !hasDiscordInput && !hasSuperAdminInput)
+    {
+      return BadRequest(new { error = "At least one setup configuration section is required." });
+    }
+
     try
     {
       // Execute AI configuration update if provided
-      if (!string.IsNullOrWhiteSpace(request.AiModelId) || !string.IsNullOrWhiteSpace(request.AiEndpoint))
+      if (hasAiInput)
       {
-        var aiCmd = new UpdateAiConfigurationCommand(request.AiModelId, request.AiEndpoint, request.AiApiKey);
+        var aiCmd = new UpdateAiConfigurationCommand(aiModelId, aiEndpoint, aiApiKey);
         var aiResult = await mediator.Send(aiCmd, cancellationToken);
 
         if (aiResult.IsFailed)
@@ -85,9 +106,9 @@ public sealed class SetupController(IMediator mediator) : ControllerBase
       }
 
       // Execute Discord configuration update if provided
-      if (!string.IsNullOrWhiteSpace(request.DiscordToken) || !string.IsNullOrWhiteSpace(request.DiscordPublicKey))
+      if (hasDiscordInput)
       {
-        var discordCmd = new UpdateDiscordConfigurationCommand(request.DiscordToken, request.DiscordPublicKey, request.DiscordBotName);
+        var discordCmd = new UpdateDiscordConfigurationCommand(discordToken, discordPublicKey, discordBotName);
         var discordResult = await mediator.Send(discordCmd, cancellationToken);
 
         if (discordResult.IsFailed)
@@ -97,9 +118,9 @@ public sealed class SetupController(IMediator mediator) : ControllerBase
       }
 
       // Execute SuperAdmin configuration update if provided
-      if (!string.IsNullOrWhiteSpace(request.SuperAdminDiscordUserId))
+      if (hasSuperAdminInput)
       {
-        var adminCmd = new UpdateSuperAdminConfigurationCommand(request.SuperAdminDiscordUserId);
+        var adminCmd = new UpdateSuperAdminConfigurationCommand(superAdminDiscordUserId);
         var adminResult = await mediator.Send(adminCmd, cancellationToken);
 
         if (adminResult.IsFailed)
@@ -141,8 +162,30 @@ public sealed record SetupRequest
   public string? AiModelId { get; init; }
   public string? AiEndpoint { get; init; }
   public string? AiApiKey { get; init; }
+  public SetupAiRequest? Ai { get; init; }
   public string? DiscordToken { get; init; }
   public string? DiscordPublicKey { get; init; }
   public string? DiscordBotName { get; init; }
+  public SetupDiscordRequest? Discord { get; init; }
   public string? SuperAdminDiscordUserId { get; init; }
+  public SetupSuperAdminRequest? SuperAdmin { get; init; }
+}
+
+public sealed record SetupAiRequest
+{
+  public string? ModelId { get; init; }
+  public string? Endpoint { get; init; }
+  public string? ApiKey { get; init; }
+}
+
+public sealed record SetupDiscordRequest
+{
+  public string? Token { get; init; }
+  public string? PublicKey { get; init; }
+  public string? BotName { get; init; }
+}
+
+public sealed record SetupSuperAdminRequest
+{
+  public string? DiscordUserId { get; init; }
 }

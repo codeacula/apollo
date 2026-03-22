@@ -23,8 +23,8 @@ public sealed class ConfigurationGrpcService(IMediator mediator) : IConfiguratio
       Id = config.Id,
       AiModelId = config.AiModelId,
       AiEndpoint = config.AiEndpoint,
-      AiApiKey = config.AiApiKey,
-      DiscordToken = config.DiscordToken,
+      HasAiApiKey = !string.IsNullOrWhiteSpace(config.AiApiKey),
+      HasDiscordToken = !string.IsNullOrWhiteSpace(config.DiscordToken),
       DiscordPublicKey = config.DiscordPublicKey,
       DiscordBotName = config.DiscordBotName,
       SuperAdminDiscordUserId = config.SuperAdminDiscordUserId
@@ -47,8 +47,8 @@ public sealed class ConfigurationGrpcService(IMediator mediator) : IConfiguratio
       Id = config.Id,
       AiModelId = config.AiModelId,
       AiEndpoint = config.AiEndpoint,
-      AiApiKey = config.AiApiKey,
-      DiscordToken = config.DiscordToken,
+      HasAiApiKey = !string.IsNullOrWhiteSpace(config.AiApiKey),
+      HasDiscordToken = !string.IsNullOrWhiteSpace(config.DiscordToken),
       DiscordPublicKey = config.DiscordPublicKey,
       DiscordBotName = config.DiscordBotName,
       SuperAdminDiscordUserId = config.SuperAdminDiscordUserId
@@ -71,8 +71,8 @@ public sealed class ConfigurationGrpcService(IMediator mediator) : IConfiguratio
       Id = config.Id,
       AiModelId = config.AiModelId,
       AiEndpoint = config.AiEndpoint,
-      AiApiKey = config.AiApiKey,
-      DiscordToken = config.DiscordToken,
+      HasAiApiKey = !string.IsNullOrWhiteSpace(config.AiApiKey),
+      HasDiscordToken = !string.IsNullOrWhiteSpace(config.DiscordToken),
       DiscordPublicKey = config.DiscordPublicKey,
       DiscordBotName = config.DiscordBotName,
       SuperAdminDiscordUserId = config.SuperAdminDiscordUserId
@@ -95,8 +95,8 @@ public sealed class ConfigurationGrpcService(IMediator mediator) : IConfiguratio
       Id = config.Id,
       AiModelId = config.AiModelId,
       AiEndpoint = config.AiEndpoint,
-      AiApiKey = config.AiApiKey,
-      DiscordToken = config.DiscordToken,
+      HasAiApiKey = !string.IsNullOrWhiteSpace(config.AiApiKey),
+      HasDiscordToken = !string.IsNullOrWhiteSpace(config.DiscordToken),
       DiscordPublicKey = config.DiscordPublicKey,
       DiscordBotName = config.DiscordBotName,
       SuperAdminDiscordUserId = config.SuperAdminDiscordUserId
