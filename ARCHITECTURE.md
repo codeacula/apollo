@@ -429,7 +429,6 @@ AI agent implementations powered by Microsoft Semantic Kernel. Provides `IApollo
 - `Plugins/` - Infrastructure plugins (e.g., `TimePlugin`)
 - `Prompts/` - YAML prompt definitions:
     - `ApolloToolPlanning.yml` - Tool planning phase prompts
-    - `ApolloToolCalling.yml` - Tool calling configuration
     - `ApolloResponse.yml` - Response generation prompts
     - `ApolloReminder.yml` - Reminder-specific prompts
     - `ApolloDailyPlanning.yml` - Daily task selection prompts
@@ -593,18 +592,17 @@ Verify: PostgreSQL on `localhost:5432`, Redis on `localhost:6379`
 
 ### Configuration
 
-Copy `.env.example` to `.env` for Docker, or use User Secrets for local development:
+Application configuration (AI provider settings, Discord bot credentials, super-admin designation) is now stored in the database via event sourcing and must be set through the system initialization wizard at first startup.
 
-```bash
-# Apollo.Service
-cd src/Apollo.Service
-dotnet user-secrets set "ApolloAIConfig:ApiKey" "YOUR_API_KEY"
+For infrastructure configuration, copy `.env.example` to `.env` for Docker deployment. See `docs/INITIALIZATION.md` for detailed setup instructions.
 
-# Apollo.Discord
-cd src/Apollo.Discord
-dotnet user-secrets set "Discord:Token" "YOUR_DISCORD_BOT_TOKEN"
-dotnet user-secrets set "Discord:PublicKey" "YOUR_DISCORD_PUBLIC_KEY"
-```
+Infrastructure secrets that must be configured:
+
+- Database connection string: `ConnectionStrings__Apollo`
+- Redis connection string: `ConnectionStrings__Redis`
+- gRPC service configuration: `GrpcHostConfig__*` variables
+
+Application configuration is set via the `/api/setup` endpoint during first-time initialization.
 
 ### Running Services
 
@@ -630,92 +628,6 @@ dotnet watch --project src/Apollo.Discord/Apollo.Discord.csproj
 - **gRPC errors:** Verify Apollo.Service is running on port 5270
 - **Redis errors:** Check Redis connection string in appsettings
 
----
-
-## AI-Assisted Development Container
-
-Apollo includes an isolated, containerized development environment designed for AI-assisted coding. The `start-dev.sh` script launches an [OpenCode](https://opencode.ai) session inside a Docker/Podman container with all dependencies pre-installed, so you can let AI agents build, test, and modify code freely without affecting your host machine.
-
-### How It Works
-
-Project files are **copied into the container** at build time. The container owns all files, so AI agents can read, write, build, and test without permission issues or risk to your local environment. Changes flow back to the host exclusively via `git push` from inside the container.
-
-```
-Host Machine                          Container (apollo-dev)
-┌─────────────────┐                  ┌──────────────────────────┐
-│ ~/Projects/apollo│── COPY ──────>  │ /workspace               │
-│ (your files)    │                  │   .NET 10 SDK            │
-│                 │                  │   Node.js 22             │
-│                 │<── git push ──  │   OpenCode + MCP servers  │
-│                 │                  │   GitHub CLI              │
-└─────────────────┘                  └──────┬───────────────────┘
-                                            │ network
-                                   ┌────────┴────────┐
-                                   │  Postgres + Redis │
-                                   │  (separate containers)│
-                                   └─────────────────────┘
-```
-
-### Prerequisites
-
-- Linux or WSL2
-- Docker or Podman installed
-- `~/.gitconfig` configured with your name and email
-- `~/.ssh/` with SSH keys for git operations
-
-### Quick Start
-
-```bash
-# Start on current branch
-./start-dev.sh
-
-# Start on a specific branch
-./start-dev.sh feature/my-branch
-```
-
-The script will:
-
-1. Auto-detect Docker or Podman
-2. Build the dev container image (tooling layers are cached; only the file copy layer rebuilds)
-3. Start Postgres and Redis via `compose.dev.yaml`
-4. Wait for Postgres to be healthy
-5. Launch OpenCode in an interactive container session
-
-### What's Inside the Container
-
-| Tool       | Version | Purpose                         |
-| ---------- | ------- | ------------------------------- |
-| .NET SDK   | 10.0    | Build and test the solution     |
-| Node.js    | 22 LTS  | Frontend build and tooling      |
-| OpenCode   | latest  | AI coding assistant             |
-| GitHub CLI | latest  | PR creation and repo operations |
-| csharp-ls  | latest  | C# language server for LSP      |
-
-**MCP Servers** (available to AI agents):
-
-- `memory` - Knowledge graph persistence across sessions
-- `sequential-thinking` - Step-by-step reasoning for complex tasks
-
-### File Layout
-
-| Path                    | Purpose                                                                  |
-| ----------------------- | ------------------------------------------------------------------------ |
-| `start-dev.sh`          | Launcher script (run from repo root)                                     |
-| `compose.dev.yaml`      | Dev compose file (dev container + Postgres 16 + Redis 7)                 |
-| `docker/Dockerfile.dev` | Dev container image definition                                           |
-| `docker/entrypoint.sh`  | Container startup (branch checkout, dependency restore, OpenCode launch) |
-| `docker/opencode.json`  | OpenCode MCP server configuration                                        |
-
-### Stopping the Environment
-
-When you exit OpenCode, the container is removed but **Postgres and Redis keep running** so you can restart quickly. To stop everything:
-
-```bash
-docker compose -f compose.dev.yaml down    # or: podman compose -f compose.dev.yaml down
-```
-
----
-
 ## CI/CD
 
 Pull requests to `main` trigger the **Build and Test** GitHub Actions workflow (`.github/workflows/pr-build-test.yml`):
@@ -725,8 +637,8 @@ Pull requests to `main` trigger the **Build and Test** GitHub Actions workflow (
 | .NET restore     | `dotnet restore`                      |
 | .NET build       | `dotnet build --no-restore`           |
 | .NET tests       | `dotnet test --no-build --no-restore` |
-| Frontend install | `npm ci` (in `src/Client`)            |
-| Frontend build   | `npm run build` (in `src/Client`)     |
+| Frontend install | `bun install` (in `src/Client`)       |
+| Frontend build   | `bun run build` (in `src/Client`)     |
 
 **Runtime versions:** .NET 10.x, Node.js 20.x
 

@@ -1,6 +1,6 @@
+using Apollo.Application.Tests.TestSupport;
 using Apollo.Application.ToDos;
 using Apollo.Core.ToDos;
-using Apollo.Domain.Common.ValueObjects;
 using Apollo.Domain.ToDos.Models;
 using Apollo.Domain.ToDos.ValueObjects;
 
@@ -22,7 +22,7 @@ public class RemoveReminderCommandHandlerTests
     var toDoId = new ToDoId(Guid.NewGuid());
     var reminderId = new ReminderId(Guid.NewGuid());
     var quartzJobId = new QuartzJobId(Guid.NewGuid());
-    var reminder = CreateReminder(reminderId, quartzJobId);
+    var reminder = ApplicationTestData.CreateReminder(reminderId: reminderId, quartzJobId: quartzJobId);
 
     _ = reminderStore
       .Setup(x => x.GetAsync(reminderId, It.IsAny<CancellationToken>()))
@@ -63,7 +63,7 @@ public class RemoveReminderCommandHandlerTests
     var otherToDoId = new ToDoId(Guid.NewGuid());
     var reminderId = new ReminderId(Guid.NewGuid());
     var quartzJobId = new QuartzJobId(Guid.NewGuid());
-    var reminder = CreateReminder(reminderId, quartzJobId);
+    var reminder = ApplicationTestData.CreateReminder(reminderId: reminderId, quartzJobId: quartzJobId);
 
     _ = reminderStore
       .Setup(x => x.GetAsync(reminderId, It.IsAny<CancellationToken>()))
@@ -103,18 +103,5 @@ public class RemoveReminderCommandHandlerTests
 
     Assert.True(result.IsFailed);
     reminderStore.Verify(x => x.UnlinkFromToDoAsync(It.IsAny<ReminderId>(), It.IsAny<ToDoId>(), It.IsAny<CancellationToken>()), Times.Never);
-  }
-
-  private static Reminder CreateReminder(ReminderId reminderId, QuartzJobId quartzJobId)
-  {
-    return new Reminder
-    {
-      Id = reminderId,
-      Details = new Details("test"),
-      ReminderTime = new ReminderTime(DateTime.UtcNow.AddMinutes(30)),
-      QuartzJobId = quartzJobId,
-      CreatedOn = new CreatedOn(DateTime.UtcNow),
-      UpdatedOn = new UpdatedOn(DateTime.UtcNow)
-    };
   }
 }

@@ -1,4 +1,4 @@
-using Apollo.Core.People;
+using Apollo.Core.Configuration;
 using Apollo.Domain.Common.Enums;
 using Apollo.Domain.People.Models;
 using Apollo.GRPC.Attributes;
@@ -12,7 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Apollo.GRPC.Interceptors;
 
-public class AuthorizationInterceptor(SuperAdminConfig superAdminConfig) : Interceptor
+public sealed class AuthorizationInterceptor(IServiceScopeFactory serviceScopeFactory) : Interceptor
 {
 
   public override async Task<TResponse> UnaryServerHandler<TRequest, TResponse>(
@@ -43,20 +43,31 @@ public class AuthorizationInterceptor(SuperAdminConfig superAdminConfig) : Inter
     _ = (requireAccess, requireSuperAdmin) switch
     {
       (true, _) when person?.HasAccess.Value != true => throw new RpcException(new Status(StatusCode.PermissionDenied, "Access denied.")),
-      (_, true) when person == null || !IsSuperAdmin(person) => throw new RpcException(new Status(StatusCode.PermissionDenied, "Super Admin access required.")),
+      (_, true) when person == null || !await IsSuperAdminAsync(person) => throw new RpcException(new Status(StatusCode.PermissionDenied, "Super Admin access required.")),
       _ => 0
     };
 
     return await continuation(request, context);
   }
 
-  private bool IsSuperAdmin(Person person)
+  private async Task<bool> IsSuperAdminAsync(Person person)
   {
-    return person.PlatformId.Platform switch
+    if (person.PlatformId.Platform != Platform.Discord)
     {
-      Platform.Discord when !string.IsNullOrWhiteSpace(superAdminConfig.DiscordUserId)
-        => string.Equals(person.PlatformId.PlatformUserId, superAdminConfig.DiscordUserId, StringComparison.OrdinalIgnoreCase),
-      _ => false
-    };
+      return false;
+    }
+
+    using var scope = serviceScopeFactory.CreateScope();
+    var configStore = scope.ServiceProvider.GetRequiredService<IConfigurationStore>();
+    var configResult = await configStore.GetAsync();
+
+    if (configResult.IsFailed)
+    {
+      return false;
+    }
+
+    var superAdminDiscordUserId = configResult.Value.SuperAdminDiscordUserId;
+    return !string.IsNullOrWhiteSpace(superAdminDiscordUserId)
+      && string.Equals(person.PlatformId.PlatformUserId, superAdminDiscordUserId, StringComparison.OrdinalIgnoreCase);
   }
 }

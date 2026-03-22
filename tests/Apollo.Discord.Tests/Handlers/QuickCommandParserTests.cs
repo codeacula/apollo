@@ -4,50 +4,43 @@ namespace Apollo.Discord.Tests.Handlers;
 
 public class QuickCommandParserTests
 {
+  public static TheoryData<string, bool> ToDoCommandCases => new()
+  {
+    { "todo Buy groceries", true },
+    { "Todo Buy groceries", true },
+    { "TODO Buy groceries", true },
+    { "task Buy groceries", true },
+    { "Task Buy groceries", true },
+    { "TASK Buy groceries", true },
+    { "  todo spaced", true },
+    { "\ttask tabbed", true },
+    { "todolist", false },
+    { "tasklist", false },
+    { "my todo", false },
+    { "task", false },
+    { "hello world", false },
+    { "", false }
+  };
+
+  public static TheoryData<string, bool> ReminderCommandCases => new()
+  {
+    { "remind me to take a break in 10 minutes", true },
+    { "Remind take a break in 10 minutes", true },
+    { "REMIND me to call mom in 1 hour", true },
+    { "reminder take a break in 30 minutes", true },
+    { "REMINDER take a break in 30 minutes", true },
+    { "remember something", false },
+    { "hello world", false },
+    { "", false }
+  };
+
   [Theory]
-  [InlineData("todo Buy groceries")]
-  [InlineData("Todo Buy groceries")]
-  [InlineData("TODO Buy groceries")]
-  public void IsToDoCommandWithTodoPrefixReturnsTrue(string content)
+  [MemberData(nameof(ToDoCommandCases))]
+  public void IsToDoCommandReturnsExpectedResult(string content, bool expected)
   {
     var result = QuickCommandParser.IsToDoCommand(content);
 
-    Assert.True(result);
-  }
-
-  [Theory]
-  [InlineData("task Buy groceries")]
-  [InlineData("Task Buy groceries")]
-  [InlineData("TASK Buy groceries")]
-  public void IsToDoCommandWithTaskPrefixReturnsTrue(string content)
-  {
-    var result = QuickCommandParser.IsToDoCommand(content);
-
-    Assert.True(result);
-  }
-
-  [Theory]
-  [InlineData("todolist")]
-  [InlineData("tasklist")]
-  [InlineData("my todo")]
-  [InlineData("task")]
-  [InlineData("hello world")]
-  [InlineData("")]
-  public void IsToDoCommandWithNonCommandReturnsFalse(string content)
-  {
-    var result = QuickCommandParser.IsToDoCommand(content);
-
-    Assert.False(result);
-  }
-
-  [Theory]
-  [InlineData("  todo spaced")]
-  [InlineData("\ttask tabbed")]
-  public void IsToDoCommandWithLeadingWhitespaceReturnsTrue(string content)
-  {
-    var result = QuickCommandParser.IsToDoCommand(content);
-
-    Assert.True(result);
+    Assert.Equal(expected, result);
   }
 
   [Theory]
@@ -77,35 +70,12 @@ public class QuickCommandParserTests
   }
 
   [Theory]
-  [InlineData("remind me to take a break in 10 minutes")]
-  [InlineData("Remind take a break in 10 minutes")]
-  [InlineData("REMIND me to call mom in 1 hour")]
-  public void IsReminderCommandWithRemindPrefixReturnsTrue(string content)
+  [MemberData(nameof(ReminderCommandCases))]
+  public void IsReminderCommandReturnsExpectedResult(string content, bool expected)
   {
     var result = QuickCommandParser.IsReminderCommand(content);
 
-    Assert.True(result);
-  }
-
-  [Theory]
-  [InlineData("reminder take a break in 30 minutes")]
-  [InlineData("REMINDER take a break in 30 minutes")]
-  public void IsReminderCommandWithReminderPrefixReturnsTrue(string content)
-  {
-    var result = QuickCommandParser.IsReminderCommand(content);
-
-    Assert.True(result);
-  }
-
-  [Theory]
-  [InlineData("remember something")]
-  [InlineData("hello world")]
-  [InlineData("")]
-  public void IsReminderCommandWithNonCommandReturnsFalse(string content)
-  {
-    var result = QuickCommandParser.IsReminderCommand(content);
-
-    Assert.False(result);
+    Assert.Equal(expected, result);
   }
 
   [Theory]

@@ -68,19 +68,19 @@ public static partial class CacheLogs
     EventId = 3011,
     Level = LogLevel.Debug,
     Message = "Cache hit for person id: {PersonId}, access: {HasAccess}")]
-  public static partial void PersonCacheHit(ILogger logger, string personId, bool hasAccess);
+  public static partial void PersonCacheHit(ILogger logger, Guid personId, bool hasAccess);
 
   [LoggerMessage(
     EventId = 3012,
     Level = LogLevel.Debug,
     Message = "Cache set for person id: {PersonId}, access: {HasAccess}")]
-  public static partial void PersonCacheSet(ILogger logger, string personId, bool hasAccess);
+  public static partial void PersonCacheSet(ILogger logger, Guid personId, bool hasAccess);
 
   [LoggerMessage(
     EventId = 3013,
     Level = LogLevel.Information,
     Message = "Cache invalidated for person id: {PersonId}")]
-  public static partial void PersonCacheInvalidated(ILogger logger, string personId);
+  public static partial void PersonCacheInvalidated(ILogger logger, Guid personId);
 
   [LoggerMessage(
     EventId = 3014,
@@ -92,13 +92,13 @@ public static partial class CacheLogs
     EventId = 3015,
     Level = LogLevel.Error,
     Message = "Error writing to cache for person id: {PersonId}")]
-  public static partial void PersonCacheWriteError(ILogger logger, Exception exception, string personId);
+  public static partial void PersonCacheWriteError(ILogger logger, Exception exception, Guid personId);
 
   [LoggerMessage(
     EventId = 3016,
     Level = LogLevel.Error,
     Message = "Error deleting from cache for person id: {PersonId}")]
-  public static partial void PersonCacheDeleteError(ILogger logger, Exception exception, string personId);
+  public static partial void PersonCacheDeleteError(ILogger logger, Exception exception, Guid personId);
 
   [LoggerMessage(
     EventId = 3017,
@@ -110,7 +110,7 @@ public static partial class CacheLogs
     EventId = 3018,
     Level = LogLevel.Debug,
     Message = "Platform mapping cache hit for: {PlatformUserId}, platform: {Platform}, person id: {PersonId}")]
-  public static partial void PlatformMappingCacheHit(ILogger logger, string platformUserId, Platform platform, string personId);
+  public static partial void PlatformMappingCacheHit(ILogger logger, string platformUserId, Platform platform, Guid personId);
 
   [LoggerMessage(
     EventId = 3019,

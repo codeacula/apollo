@@ -15,6 +15,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Apollo.Application\Apollo.Application.csproj" />
     <ProjectReference Include="..\Apollo.Core\Apollo.Core.csproj" />
+    <ProjectReference Include="..\Apollo.Database\Apollo.Database.csproj" />
     <ProjectReference Include="..\Apollo.GRPC\Apollo.GRPC.csproj" />
   </ItemGroup>
 

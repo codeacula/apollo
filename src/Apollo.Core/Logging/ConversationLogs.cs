@@ -18,7 +18,7 @@ public static partial class ConversationLogs
     EventId = 3301,
     Level = LogLevel.Information,
     Message = "Actions taken for person {PersonId}: {Actions}")]
-  public static partial void ActionsTaken(ILogger logger, Guid personId, List<string> actions);
+  public static partial void ActionsTaken(ILogger logger, Guid personId, string actions);
 
   [LoggerMessage(
     EventId = 3302,

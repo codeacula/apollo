@@ -9,7 +9,6 @@ This library contains all Discord/NetCord-specific functionality for the Apollo 
     - `SuccessNotificationComponent.cs`: Success notification component
     - `ToDoChannelSelectComponent.cs`: Channel selection component
     - `ToDoRoleSelectComponent.cs`: Role selection component
-    - `DailyAlertTimeConfigComponent.cs`: Button component to trigger time/message configuration
 
 - **Modules/**: Discord command and interaction handlers
     - `ApolloApplicationCommands.cs`: Slash command handlers

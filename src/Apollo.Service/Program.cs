@@ -1,6 +1,8 @@
 using Apollo.AI;
+using Apollo.AI.Config;
 using Apollo.Application;
 using Apollo.Cache;
+using Apollo.Core.Logging;
 using Apollo.Database;
 using Apollo.GRPC;
 using Apollo.Service;
@@ -19,6 +21,14 @@ _ = webAppBuilder.Services
 
 WebApplication app = webAppBuilder.Build();
 
+// Check if AI is configured and log warning if not
+var aiConfig = app.Services.GetRequiredService<ApolloAIConfig>();
+var logger = app.Services.GetRequiredService<ILogger<Program>>();
+if (string.IsNullOrWhiteSpace(aiConfig.ModelId) || string.IsNullOrWhiteSpace(aiConfig.Endpoint))
+{
+  AILogs.AINotConfigured(logger);
+}
+
 // Apply database migrations
 await app.Services.MigrateDatabaseAsync();
 
@@ -28,3 +38,4 @@ _ = app.MapControllers();
 _ = app.AddGrpcServerServices();
 
 await app.RunAsync();
+

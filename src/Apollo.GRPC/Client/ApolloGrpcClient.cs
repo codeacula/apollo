@@ -13,12 +13,11 @@ using Grpc.Net.Client;
 
 using ProtoBuf.Grpc.Client;
 
-using GrpcDeleteToDoRequest = Apollo.GRPC.Contracts.DeleteToDoRequest;
-
 using CoreCreateReminderRequest = Apollo.Core.Reminders.Requests.CreateReminderRequest;
 using CoreCreateToDoRequest = Apollo.Core.ToDos.Requests.CreateToDoRequest;
 using GrpcCreateReminderRequest = Apollo.GRPC.Contracts.CreateReminderRequest;
 using GrpcCreateToDoRequest = Apollo.GRPC.Contracts.CreateToDoRequest;
+using GrpcDeleteToDoRequest = Apollo.GRPC.Contracts.DeleteToDoRequest;
 using GrpcGetDailyPlanRequest = Apollo.GRPC.Contracts.GetDailyPlanRequest;
 using GrpcGetPersonToDosRequest = Apollo.GRPC.Contracts.GetPersonToDosRequest;
 using GrpcManageAccessRequest = Apollo.GRPC.Contracts.ManageAccessRequest;

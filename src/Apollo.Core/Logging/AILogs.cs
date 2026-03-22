@@ -61,4 +61,16 @@ public static partial class AILogs
     Level = LogLevel.Error,
     Message = "Infinite Loop Detected - {ToolCallKey} called {RepeatCount} times consecutively")]
   public static partial void InfiniteLoopDetected(ILogger logger, string toolCallKey, int repeatCount);
+
+  [LoggerMessage(
+    EventId = 3409,
+    Level = LogLevel.Warning,
+    Message = "AI subsystem is not configured (missing ModelId or Endpoint). Operations will be unavailable.")]
+  public static partial void AINotConfigured(ILogger logger);
+
+  [LoggerMessage(
+    EventId = 3410,
+    Level = LogLevel.Error,
+    Message = "AI connection failed (transient error): {ErrorMessage}")]
+  public static partial void AIConnectionFailed(ILogger logger, string errorMessage);
 }

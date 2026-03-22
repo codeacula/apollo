@@ -98,6 +98,13 @@ public sealed class AIRequestBuilder(ApolloAIConfig config, IPromptTemplateProce
   {
     var toolCalls = new List<ToolCallResult>();
 
+    // Check if AI is configured before attempting to build kernel
+    if (string.IsNullOrWhiteSpace(_config.ModelId) || string.IsNullOrWhiteSpace(_config.Endpoint))
+    {
+      AILogs.AINotConfigured(_logger);
+      return AIRequestResult.Failure("AI not configured. Please provide ModelId and Endpoint in configuration.");
+    }
+
     try
     {
       var startTime = DateTimeOffset.UtcNow;
@@ -191,9 +198,6 @@ public sealed class AIRequestBuilder(ApolloAIConfig config, IPromptTemplateProce
           break;
         case ChatRole.Assistant:
           history.AddAssistantMessage(message.Content);
-          break;
-        case ChatRole.System:
-        case ChatRole.Function:
           break;
       }
     }

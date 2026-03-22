@@ -19,6 +19,8 @@ using Microsoft.Extensions.Logging;
 
 using Moq;
 
+using Apollo.Application.Tests.TestSupport;
+
 namespace Apollo.Application.Tests.Conversations;
 
 public class ProcessIncomingMessageCommandHandlerTests
@@ -66,40 +68,18 @@ public class ProcessIncomingMessageCommandHandlerTests
   {
     // Arrange
     var personId = new PersonId(Guid.NewGuid());
-    var person = CreatePerson(personId);
     var conversationId = new ConversationId(Guid.NewGuid());
     var conversation = CreateConversation(conversationId, personId);
     var command = new ProcessIncomingMessageCommand(personId, new Content("Hello"));
 
-    _ = _mockPersonStore.Setup(x => x.GetAsync(personId, It.IsAny<CancellationToken>()))
-        .ReturnsAsync(Result.Ok(person));
-
-    _ = _mockConversationStore.Setup(x => x.GetOrCreateConversationByPersonIdAsync(personId, It.IsAny<CancellationToken>()))
-        .ReturnsAsync(Result.Ok(conversation));
-
-    _ = _mockConversationStore.Setup(x => x.AddMessageAsync(conversationId, It.IsAny<Content>(), It.IsAny<CancellationToken>()))
-        .ReturnsAsync(Result.Ok(conversation));
-
-    _ = _mockToDoStore.Setup(x => x.GetByPersonIdAsync(personId, false, It.IsAny<CancellationToken>()))
-        .ReturnsAsync(Result.Ok<IEnumerable<Domain.ToDos.Models.ToDo>>([]));
-
-    _ = _mockAIAgent.Setup(x => x.CreateToolPlanningRequestAsync(It.IsAny<IEnumerable<ChatMessageDTO>>(), It.IsAny<string>(), It.IsAny<string>()))
-        .ReturnsAsync(_mockRequestBuilder.Object);
-
-    _ = _mockRequestBuilder.Setup(x => x.ExecuteAsync(It.IsAny<CancellationToken>()))
-        .ReturnsAsync(new AIRequestResult { Success = true, Content = /*lang=json,strict*/ "{\"toolCalls\":[]}" });
-
-    _ = _mockAIAgent.Setup(x => x.CreateResponseRequestAsync(It.IsAny<IEnumerable<ChatMessageDTO>>(), It.IsAny<string>(), It.IsAny<string>()))
-        .ReturnsAsync(_mockRequestBuilder.Object);
-
-    _ = _mockConversationStore.Setup(x => x.AddReplyAsync(conversationId, It.IsAny<Content>(), It.IsAny<CancellationToken>()))
-        .ReturnsAsync(Result.Ok(conversation));
+    SetupSuccessfulProcessing(personId, conversation, "Hello back");
 
     // Act
     var result = await _handler.Handle(command, CancellationToken.None);
 
     // Assert
     Assert.True(result.IsSuccess);
+    Assert.Equal("Hello back", result.Value.Content.Value);
     _mockConversationStore.Verify(x => x.GetOrCreateConversationByPersonIdAsync(personId, It.IsAny<CancellationToken>()), Times.Once);
   }
 
@@ -127,11 +107,10 @@ public class ProcessIncomingMessageCommandHandlerTests
   {
     // Arrange
     var personId = new PersonId(Guid.NewGuid());
-    var person = CreatePerson(personId);
     var command = new ProcessIncomingMessageCommand(personId, new Content("Hello"));
 
     _ = _mockPersonStore.Setup(x => x.GetAsync(personId, It.IsAny<CancellationToken>()))
-        .ReturnsAsync(Result.Ok(person));
+        .ReturnsAsync(Result.Ok(CreatePerson(personId)));
 
     _ = _mockConversationStore.Setup(x => x.GetOrCreateConversationByPersonIdAsync(personId, It.IsAny<CancellationToken>()))
         .ReturnsAsync(Result.Fail<Conversation>("Database error"));
@@ -149,13 +128,12 @@ public class ProcessIncomingMessageCommandHandlerTests
   {
     // Arrange
     var personId = new PersonId(Guid.NewGuid());
-    var person = CreatePerson(personId);
     var conversationId = new ConversationId(Guid.NewGuid());
     var conversation = CreateConversation(conversationId, personId);
     var command = new ProcessIncomingMessageCommand(personId, new Content("Hello"));
 
     _ = _mockPersonStore.Setup(x => x.GetAsync(personId, It.IsAny<CancellationToken>()))
-        .ReturnsAsync(Result.Ok(person));
+        .ReturnsAsync(Result.Ok(CreatePerson(personId)));
 
     _ = _mockConversationStore.Setup(x => x.GetOrCreateConversationByPersonIdAsync(personId, It.IsAny<CancellationToken>()))
         .ReturnsAsync(Result.Ok(conversation));
@@ -189,18 +167,35 @@ public class ProcessIncomingMessageCommandHandlerTests
     Assert.Contains("Unexpected error", result.Errors.Select(e => e.Message));
   }
 
-  private static Person CreatePerson(PersonId personId)
+  private void SetupSuccessfulProcessing(PersonId personId, Conversation conversation, string aiReply)
   {
-    return new Person
-    {
-      Id = personId,
-      PlatformId = new PlatformId("testuser", "123", Domain.Common.Enums.Platform.Discord),
-      Username = new Username("testuser"),
-      HasAccess = new HasAccess(true),
-      CreatedOn = new CreatedOn(DateTime.UtcNow),
-      UpdatedOn = new UpdatedOn(DateTime.UtcNow)
-    };
+    _ = _mockPersonStore.Setup(x => x.GetAsync(personId, It.IsAny<CancellationToken>()))
+      .ReturnsAsync(Result.Ok(CreatePerson(personId)));
+
+    _ = _mockConversationStore.Setup(x => x.GetOrCreateConversationByPersonIdAsync(personId, It.IsAny<CancellationToken>()))
+      .ReturnsAsync(Result.Ok(conversation));
+
+    _ = _mockConversationStore.Setup(x => x.AddMessageAsync(conversation.Id, It.IsAny<Content>(), It.IsAny<CancellationToken>()))
+      .ReturnsAsync(Result.Ok(conversation));
+
+    _ = _mockToDoStore.Setup(x => x.GetByPersonIdAsync(personId, false, It.IsAny<CancellationToken>()))
+      .ReturnsAsync(Result.Ok<IEnumerable<Domain.ToDos.Models.ToDo>>([]));
+
+    _ = _mockAIAgent.Setup(x => x.CreateToolPlanningRequestAsync(It.IsAny<IEnumerable<ChatMessageDTO>>(), It.IsAny<string>(), It.IsAny<string>()))
+      .ReturnsAsync(_mockRequestBuilder.Object);
+
+    _ = _mockAIAgent.Setup(x => x.CreateResponseRequestAsync(It.IsAny<IEnumerable<ChatMessageDTO>>(), It.IsAny<string>(), It.IsAny<string>()))
+      .ReturnsAsync(_mockRequestBuilder.Object);
+
+    _ = _mockRequestBuilder.SetupSequence(x => x.ExecuteAsync(It.IsAny<CancellationToken>()))
+      .ReturnsAsync(new AIRequestResult { Success = true, Content = /*lang=json,strict*/ "{\"toolCalls\":[]}" })
+      .ReturnsAsync(new AIRequestResult { Success = true, Content = aiReply });
+
+    _ = _mockConversationStore.Setup(x => x.AddReplyAsync(conversation.Id, It.IsAny<Content>(), It.IsAny<CancellationToken>()))
+      .ReturnsAsync(Result.Ok(conversation));
   }
+
+  private static Person CreatePerson(PersonId personId) => ApplicationTestData.CreatePerson(personId);
 
   private static Conversation CreateConversation(ConversationId conversationId, PersonId personId)
   {

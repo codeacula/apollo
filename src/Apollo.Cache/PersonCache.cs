@@ -34,7 +34,7 @@ public sealed class PersonCache(IConnectionMultiplexer redis, ILogger<PersonCach
       if (Guid.TryParse(value.ToString(), out var guid))
       {
         var personId = new PersonId(guid);
-        CacheLogs.PlatformMappingCacheHit(_logger, platformId.PlatformUserId, platformId.Platform, personId.Value.ToString());
+        CacheLogs.PlatformMappingCacheHit(_logger, platformId.PlatformUserId, platformId.Platform, personId.Value);
         return Result.Ok<PersonId?>(personId);
       }
 
@@ -87,7 +87,7 @@ public sealed class PersonCache(IConnectionMultiplexer redis, ILogger<PersonCach
         return Result.Ok<bool?>(null);
       }
       var hasAccess = (bool)value;
-      CacheLogs.PersonCacheHit(_logger, personId.Value.ToString(), hasAccess);
+      CacheLogs.PersonCacheHit(_logger, personId.Value, hasAccess);
       return Result.Ok<bool?>(hasAccess);
     }
     catch (Exception ex)
@@ -104,12 +104,12 @@ public sealed class PersonCache(IConnectionMultiplexer redis, ILogger<PersonCach
       var key = GetAccessCacheKey(personId);
       _ = await _db.StringSetAsync(key, hasAccess, CacheTtl);
 
-      CacheLogs.PersonCacheSet(_logger, personId.Value.ToString(), hasAccess);
+      CacheLogs.PersonCacheSet(_logger, personId.Value, hasAccess);
       return Result.Ok();
     }
     catch (Exception ex)
     {
-      CacheLogs.PersonCacheWriteError(_logger, ex, personId.Value.ToString());
+      CacheLogs.PersonCacheWriteError(_logger, ex, personId.Value);
       return Result.Fail($"Failed to write to cache for person {personId.Value}: {ex.Message}");
     }
   }
@@ -121,12 +121,12 @@ public sealed class PersonCache(IConnectionMultiplexer redis, ILogger<PersonCach
       var key = GetAccessCacheKey(personId);
       _ = await _db.KeyDeleteAsync(key);
 
-      CacheLogs.PersonCacheInvalidated(_logger, personId.Value.ToString());
+      CacheLogs.PersonCacheInvalidated(_logger, personId.Value);
       return Result.Ok();
     }
     catch (Exception ex)
     {
-      CacheLogs.PersonCacheDeleteError(_logger, ex, personId.Value.ToString());
+      CacheLogs.PersonCacheDeleteError(_logger, ex, personId.Value);
       return Result.Fail($"Failed to invalidate cache for person {personId.Value}: {ex.Message}");
     }
   }

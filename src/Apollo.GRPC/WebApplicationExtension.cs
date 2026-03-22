@@ -9,6 +9,7 @@ public static class WebApplicationExtension
   public static WebApplication AddGrpcServerServices(this WebApplication app)
   {
     _ = app.MapGrpcService<ApolloGrpcService>();
+    _ = app.MapGrpcService<ConfigurationGrpcService>();
 
     return app;
   }

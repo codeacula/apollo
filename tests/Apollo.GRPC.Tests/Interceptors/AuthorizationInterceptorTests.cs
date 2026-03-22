@@ -1,15 +1,18 @@
-using Apollo.Core.People;
+using Apollo.Core.Configuration;
 using Apollo.Domain.Common.Enums;
-using Apollo.Domain.Common.ValueObjects;
 using Apollo.Domain.People.Models;
 using Apollo.Domain.People.ValueObjects;
 using Apollo.GRPC.Attributes;
 using Apollo.GRPC.Context;
 using Apollo.GRPC.Interceptors;
+using Apollo.GRPC.Tests.TestSupport;
+
+using FluentResults;
 
 using Grpc.Core;
 
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
 
 using Moq;
 
@@ -19,7 +22,8 @@ public class AuthorizationInterceptorTests
 {
   private readonly Mock<IUserContext> _userContextMock;
   private readonly Mock<IServiceProvider> _serviceProviderMock;
-  private readonly SuperAdminConfig _superAdminConfig;
+  private readonly Mock<IServiceScopeFactory> _serviceScopeFactoryMock;
+  private readonly Mock<IConfigurationStore> _configurationStoreMock;
   private readonly AuthorizationInterceptor _interceptor;
   private readonly DefaultHttpContext _httpContext;
 
@@ -27,13 +31,23 @@ public class AuthorizationInterceptorTests
   {
     _userContextMock = new Mock<IUserContext>();
     _serviceProviderMock = new Mock<IServiceProvider>();
-    _superAdminConfig = new SuperAdminConfig { DiscordUserId = "999" }; // Admin ID
+    _serviceScopeFactoryMock = new Mock<IServiceScopeFactory>();
+    _configurationStoreMock = new Mock<IConfigurationStore>();
+
+    var configData = new ConfigurationData { SuperAdminDiscordUserId = "999" }; // Admin ID
+    _ = _configurationStoreMock.Setup(c => c.GetAsync(It.IsAny<CancellationToken>()))
+      .ReturnsAsync(Result.Ok(configData));
+
+    var scopeMock = new Mock<IServiceScope>();
+    _ = scopeMock.Setup(s => s.ServiceProvider).Returns(_serviceProviderMock.Object);
+    _ = _serviceScopeFactoryMock.Setup(f => f.CreateScope()).Returns(scopeMock.Object);
 
     _httpContext = new DefaultHttpContext { RequestServices = _serviceProviderMock.Object };
 
-    _interceptor = new AuthorizationInterceptor(_superAdminConfig);
+    _interceptor = new AuthorizationInterceptor(_serviceScopeFactoryMock.Object);
 
     _ = _serviceProviderMock.Setup(x => x.GetService(typeof(IUserContext))).Returns(_userContextMock.Object);
+    _ = _serviceProviderMock.Setup(x => x.GetService(typeof(IConfigurationStore))).Returns(_configurationStoreMock.Object);
   }
 
   [Fact]
@@ -47,15 +61,11 @@ public class AuthorizationInterceptorTests
     var person = CreatePerson(hasAccess: false);
     _ = _userContextMock.Setup(x => x.Person).Returns(person);
 
-    var context = new TestServerCallContext(_httpContext);
-    static Task<string> continuationAsync(string req, ServerCallContext ctx)
-    {
-      return Task.FromResult("Response");
-    }
+    var context = CreateContext(new RequireAccessAttribute());
 
     // Act & Assert
     var ex = await Assert.ThrowsAsync<RpcException>(() =>
-        _interceptor.UnaryServerHandler("Request", context, continuationAsync));
+        _interceptor.UnaryServerHandler("Request", context, ContinuationAsync));
 
     Assert.Equal(StatusCode.PermissionDenied, ex.Status.StatusCode);
   }
@@ -64,22 +74,13 @@ public class AuthorizationInterceptorTests
   public async Task InterceptRequireSuperAdminIsSuperAdminProceedsAsync()
   {
     // Arrange
-    var metadata = new EndpointMetadataCollection(new RequireSuperAdminAttribute());
-    var endpoint = new Endpoint(null, metadata, "TestEndpoint");
-    _httpContext.SetEndpoint(endpoint);
-
-    // Person matches SuperAdminConfig
     var person = CreatePerson(hasAccess: true, platformUserId: "999", platform: Platform.Discord);
     _ = _userContextMock.Setup(x => x.Person).Returns(person);
 
-    var context = new TestServerCallContext(_httpContext);
-    static Task<string> continuationAsync(string req, ServerCallContext ctx)
-    {
-      return Task.FromResult("Response");
-    }
+    var context = CreateContext(new RequireSuperAdminAttribute());
 
     // Act
-    var result = await _interceptor.UnaryServerHandler("Request", context, continuationAsync);
+    var result = await _interceptor.UnaryServerHandler("Request", context, ContinuationAsync);
 
     // Assert
     Assert.Equal("Response", result);
@@ -89,23 +90,14 @@ public class AuthorizationInterceptorTests
   public async Task InterceptRequireSuperAdminNotSuperAdminThrowsRpcExceptionAsync()
   {
     // Arrange
-    var metadata = new EndpointMetadataCollection(new RequireSuperAdminAttribute());
-    var endpoint = new Endpoint(null, metadata, "TestEndpoint");
-    _httpContext.SetEndpoint(endpoint);
-
-    // Person does NOT match SuperAdminConfig
     var person = CreatePerson(hasAccess: true, platformUserId: "123", platform: Platform.Discord);
     _ = _userContextMock.Setup(x => x.Person).Returns(person);
 
-    var context = new TestServerCallContext(_httpContext);
-    static Task<string> continuationAsync(string req, ServerCallContext ctx)
-    {
-      return Task.FromResult("Response");
-    }
+    var context = CreateContext(new RequireSuperAdminAttribute());
 
     // Act & Assert
     var ex = await Assert.ThrowsAsync<RpcException>(() =>
-        _interceptor.UnaryServerHandler("Request", context, continuationAsync));
+        _interceptor.UnaryServerHandler("Request", context, ContinuationAsync));
 
     Assert.Equal(StatusCode.PermissionDenied, ex.Status.StatusCode);
   }
@@ -114,18 +106,10 @@ public class AuthorizationInterceptorTests
   public async Task InterceptNoAttributeProceedsAsync()
   {
     // Arrange
-    var metadata = new EndpointMetadataCollection(); // Empty
-    var endpoint = new Endpoint(null, metadata, "TestEndpoint");
-    _httpContext.SetEndpoint(endpoint);
-
-    var context = new TestServerCallContext(_httpContext);
-    static Task<string> continuationAsync(string req, ServerCallContext ctx)
-    {
-      return Task.FromResult("Response");
-    }
+    var context = CreateContext();
 
     // Act
-    var result = await _interceptor.UnaryServerHandler("Request", context, continuationAsync);
+    var result = await _interceptor.UnaryServerHandler("Request", context, ContinuationAsync);
 
     // Assert
     Assert.Equal("Response", result);
@@ -133,14 +117,19 @@ public class AuthorizationInterceptorTests
 
   private static Person CreatePerson(bool hasAccess, string platformUserId = "123", Platform platform = Platform.Discord)
   {
-    return new Person
+    return GrpcTestData.CreatePerson(platformUserId: platformUserId, platform: platform) with
     {
-      Id = new PersonId(Guid.NewGuid()),
-      PlatformId = new PlatformId("testuser", platformUserId, platform),
-      Username = new Username("testuser"),
-      HasAccess = new HasAccess(hasAccess),
-      CreatedOn = new CreatedOn(DateTime.UtcNow),
-      UpdatedOn = new UpdatedOn(DateTime.UtcNow)
+      HasAccess = new HasAccess(hasAccess)
     };
+  }
+
+  private static Task<string> ContinuationAsync(string _, ServerCallContext __) => Task.FromResult("Response");
+
+  private TestServerCallContext CreateContext(params object[] metadataItems)
+  {
+    var metadata = new EndpointMetadataCollection(metadataItems);
+    var endpoint = new Endpoint(null, metadata, "TestEndpoint");
+    _httpContext.SetEndpoint(endpoint);
+    return new TestServerCallContext(_httpContext);
   }
 }

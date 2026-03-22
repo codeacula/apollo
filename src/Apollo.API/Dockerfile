@@ -7,14 +7,14 @@ ENV ASPNETCORE_URLS=http://+:5144
 USER app
 
 # Build the client
-FROM node:alpine AS client-build
+FROM oven/bun:1.3.8-alpine AS client-build
 WORKDIR /src
-COPY ./src/Client/package*.json ./src/Client/
-RUN cd ./src/Client && npm ci
+COPY ./src/Client/package.json ./src/Client/bun.lock ./src/Client/
+RUN cd ./src/Client && bun install --frozen-lockfile
 COPY ./src/Client ./src/Client
 
 # Build to ../Apollo.API/wwwroot as configured in vite.config.ts
-RUN cd ./src/Client && npm run build
+RUN cd ./src/Client && bun run build
 FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG configuration=Release
 WORKDIR /src
