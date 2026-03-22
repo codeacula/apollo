@@ -11,7 +11,6 @@ namespace Apollo.Database.Tests.Config;
 public sealed class AppConfigStoreTests
 {
   private readonly Mock<IDocumentSession> _sessionMock;
-  private readonly TimeProvider _timeProvider = TimeProvider.System;
 
   public AppConfigStoreTests()
   {
@@ -30,7 +29,7 @@ public sealed class AppConfigStoreTests
       .Setup(s => s.LoadAsync<DbConfiguration>(ConfigurationId.Root, It.IsAny<CancellationToken>()))
       .ReturnsAsync((DbConfiguration?)null);
 
-    var store = new ConfigurationStore(_sessionMock.Object, _timeProvider);
+    var store = new ConfigurationStore(_sessionMock.Object);
 
     // Act
     var result = await store.GetAsync();
@@ -82,7 +81,7 @@ public sealed class AppConfigStoreTests
         It.IsAny<DbConfiguration?>()))
       .ReturnsAsync(updatedConfig);
 
-    var store = new ConfigurationStore(_sessionMock.Object, _timeProvider);
+    var store = new ConfigurationStore(_sessionMock.Object);
 
     // Act
     var result = await store.UpdateAiAsync(modelId, endpoint, apiKey);
@@ -141,7 +140,7 @@ public sealed class AppConfigStoreTests
         It.IsAny<DbConfiguration?>()))
       .ReturnsAsync(updatedConfig);
 
-    var store = new ConfigurationStore(_sessionMock.Object, _timeProvider);
+    var store = new ConfigurationStore(_sessionMock.Object);
 
     // Act
     var result = await store.UpdateAiAsync(modelId, endpoint, apiKey);
@@ -163,7 +162,7 @@ public sealed class AppConfigStoreTests
       .Setup(s => s.LoadAsync<DbConfiguration>(ConfigurationId.Root, It.IsAny<CancellationToken>()))
       .ReturnsAsync((DbConfiguration?)null);
 
-    var store = new ConfigurationStore(_sessionMock.Object, _timeProvider);
+    var store = new ConfigurationStore(_sessionMock.Object);
 
     // Act
     var result = await store.IsInitializedAsync();
@@ -187,7 +186,7 @@ public sealed class AppConfigStoreTests
       .Setup(s => s.LoadAsync<DbConfiguration>(ConfigurationId.Root, It.IsAny<CancellationToken>()))
       .ReturnsAsync(existingConfig);
 
-    var store = new ConfigurationStore(_sessionMock.Object, _timeProvider);
+    var store = new ConfigurationStore(_sessionMock.Object);
 
     // Act
     var result = await store.IsInitializedAsync();

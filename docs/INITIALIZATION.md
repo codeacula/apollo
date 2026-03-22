@@ -28,13 +28,13 @@ This section is for deployment operators who need to set up the backing services
 
 ### 1. Start Backing Services
 
-For Docker deployments, use the provided `compose.dev.yaml` or `docker-compose.yaml`:
+For Docker deployments, use the provided `docker-compose.yaml`:
 
 ```bash
-# Development environment
+# Start the full stack
 docker compose up -d
 
-# Or explicitly start infrastructure
+# Or explicitly start infrastructure only
 docker compose up -d pgsql redis
 ```
 

@@ -7,7 +7,7 @@ using Marten;
 
 namespace Apollo.Database.Configuration;
 
-public sealed class ConfigurationStore(IDocumentSession session, TimeProvider timeProvider) : IConfigurationStore
+public sealed class ConfigurationStore(IDocumentSession session) : IConfigurationStore
 {
   public async Task<Result<ConfigurationData>> GetAsync(CancellationToken cancellationToken = default)
   {

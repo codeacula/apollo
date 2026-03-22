@@ -2,18 +2,18 @@ using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace Apollo.API.Tests.Controllers;
 
-public class AiControllerTests(WebApplicationFactory<IApolloAPI> factory) : IClassFixture<WebApplicationFactory<IApolloAPI>>
+public class ApiRoutingTests(WebApplicationFactory<IApolloAPI> factory) : IClassFixture<WebApplicationFactory<IApolloAPI>>
 {
   private readonly WebApplicationFactory<IApolloAPI> _factory = factory;
 
   [Fact]
-  public async Task GetRootReturnsNotFoundAsync()
+  public async Task GetRootReturnsSuccessAsync()
   {
     var client = _factory.CreateClient();
 
     var response = await client.GetAsync("/");
 
-    Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
+    Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
   }
 
   [Fact]

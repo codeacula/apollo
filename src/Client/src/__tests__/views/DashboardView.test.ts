@@ -4,7 +4,7 @@ import { createRouter, createMemoryHistory } from 'vue-router'
 import { setActivePinia, createPinia } from 'pinia'
 import DashboardView from '../../views/DashboardView.vue'
 import ConfigurationStatus from '../../components/ConfigurationStatus.vue'
-import type { ConfigurationStatus as ConfigurationStatusType, SubsystemStatus } from '../../services/healthApi'
+import type { ConfigurationStatus as ConfigurationStatusType } from '../../services/healthApi'
 
 describe('DashboardView', () => {
   beforeEach(() => {
