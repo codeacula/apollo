@@ -61,7 +61,14 @@ _ = app.MapFallback(async context =>
     return;
   }
 
-  var indexPath = Path.Combine(app.Environment.WebRootPath!, "index.html");
+  var webRootPath = app.Environment.WebRootPath;
+  if (string.IsNullOrWhiteSpace(webRootPath))
+  {
+    context.Response.StatusCode = StatusCodes.Status404NotFound;
+    return;
+  }
+
+  var indexPath = Path.Combine(webRootPath, "index.html");
   if (!File.Exists(indexPath))
   {
     context.Response.StatusCode = StatusCodes.Status404NotFound;
