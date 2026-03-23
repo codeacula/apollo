@@ -14,11 +14,6 @@ public sealed class DashboardUpdatePublisher(
   {
     try
     {
-      if (cancellationToken.IsCancellationRequested)
-      {
-        return;
-      }
-
       ISubscriber subscriber = redis.GetSubscriber();
       _ = await subscriber.PublishAsync(RedisChannel.Literal(DashboardChannels.OverviewUpdated), "updated");
     }

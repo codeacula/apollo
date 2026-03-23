@@ -48,11 +48,6 @@ public sealed class DashboardOverviewStore(IQuerySession querySession) : IDashbo
       .ToListAsync(cancellationToken);
     var messagesLast24Hours = recentConversationMessages.Sum(x => x.Messages.Count(m => m.CreatedOn >= messagesWindowStart));
 
-    var peopleById = (await querySession.Query<DbPerson>()
-      .Select(x => new PersonLookupProjection(x.Id, x.Username))
-      .ToListAsync(cancellationToken))
-      .ToDictionary(x => x.Id, x => x.Username);
-
     var recentToDos = await querySession.Query<DbToDo>()
       .Where(x => !x.IsDeleted)
       .OrderByDescending(x => x.CreatedOn)
@@ -72,6 +67,20 @@ public sealed class DashboardOverviewStore(IQuerySession querySession) : IDashbo
       .Take(6)
       .Select(x => new ConversationActivityProjection(x.PersonId, x.UpdatedOn, x.Messages))
       .ToListAsync(cancellationToken);
+
+    var activityPersonIds = recentToDos.Select(x => x.PersonId)
+      .Concat(recentReminders.Select(x => x.PersonId))
+      .Concat(recentConversations.Select(x => x.PersonId))
+      .Distinct()
+      .ToArray();
+
+    var peopleById = activityPersonIds.Length == 0
+      ? new Dictionary<Guid, string>()
+      : (await querySession.Query<DbPerson>()
+          .Where(x => activityPersonIds.Contains(x.Id))
+          .Select(x => new PersonLookupProjection(x.Id, x.Username))
+          .ToListAsync(cancellationToken))
+          .ToDictionary(x => x.Id, x => x.Username);
 
     var activity = BuildRecentActivity(recentToDos, recentReminders, recentConversations, peopleById)
       .OrderByDescending(x => x.OccurredOnUtc)

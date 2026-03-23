@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
 import { createMemoryHistory, createRouter } from 'vue-router'
 import { createPinia, setActivePinia } from 'pinia'
 
@@ -109,10 +109,10 @@ describe('DashboardView', () => {
     vi.stubGlobal('fetch', mockFetch)
 
     const wrapper = mountDashboard()
-    await wrapper.vm.$nextTick()
-    await new Promise(resolve => setTimeout(resolve, 100))
+    await flushPromises()
 
     expect(mockFetch).toHaveBeenCalledWith('/api/dashboard/overview')
+    wrapper.unmount()
   })
 
   it('renders summary cards from the overview payload', async () => {
@@ -122,8 +122,7 @@ describe('DashboardView', () => {
     }))
 
     const wrapper = mountDashboard()
-    await wrapper.vm.$nextTick()
-    await new Promise(resolve => setTimeout(resolve, 100))
+    await flushPromises()
 
     expect(wrapper.text()).toContain('People with Access')
     expect(wrapper.text()).toContain('2/3')
@@ -131,6 +130,7 @@ describe('DashboardView', () => {
     expect(wrapper.text()).toContain('7')
     expect(wrapper.text()).toContain('Messages in 24h')
     expect(wrapper.text()).toContain('11')
+    wrapper.unmount()
   })
 
   it('renders recent activity items', async () => {
@@ -140,12 +140,12 @@ describe('DashboardView', () => {
     }))
 
     const wrapper = mountDashboard()
-    await wrapper.vm.$nextTick()
-    await new Promise(resolve => setTimeout(resolve, 100))
+    await flushPromises()
 
     expect(wrapper.text()).toContain('Recent activity')
     expect(wrapper.text()).toContain('codeacula added Clean the cauldron')
     expect(wrapper.text()).toContain('Stretch and drink water')
+    wrapper.unmount()
   })
 
   it('shows empty activity copy when nothing has happened yet', async () => {
@@ -155,10 +155,10 @@ describe('DashboardView', () => {
     }))
 
     const wrapper = mountDashboard()
-    await wrapper.vm.$nextTick()
-    await new Promise(resolve => setTimeout(resolve, 100))
+    await flushPromises()
 
     expect(wrapper.text()).toContain('Apollo is either napping or freshly initialized')
+    wrapper.unmount()
   })
 
   it('passes configuration status into the status component', async () => {
@@ -168,8 +168,7 @@ describe('DashboardView', () => {
     }))
 
     const wrapper = mountDashboard()
-    await wrapper.vm.$nextTick()
-    await new Promise(resolve => setTimeout(resolve, 100))
+    await flushPromises()
 
     const configStatusComponent = wrapper.findComponent(ConfigurationStatus)
     expect(configStatusComponent.exists()).toBe(true)
@@ -179,6 +178,7 @@ describe('DashboardView', () => {
       discord: true,
       superAdmin: true,
     })
+    wrapper.unmount()
   })
 
   it('shows realtime status when SignalR is available', async () => {
@@ -188,10 +188,10 @@ describe('DashboardView', () => {
     }))
 
     const wrapper = mountDashboard()
-    await wrapper.vm.$nextTick()
-    await new Promise(resolve => setTimeout(resolve, 100))
+    await flushPromises()
 
     expect(wrapper.text()).toContain('Live via SignalR')
+    wrapper.unmount()
   })
 
   it('falls back to polling when realtime connection is unavailable', async () => {
@@ -202,9 +202,9 @@ describe('DashboardView', () => {
     }))
 
     const wrapper = mountDashboard()
-    await wrapper.vm.$nextTick()
-    await new Promise(resolve => setTimeout(resolve, 100))
+    await flushPromises()
 
     expect(wrapper.text()).toContain('Polling every 15s')
+    wrapper.unmount()
   })
 })

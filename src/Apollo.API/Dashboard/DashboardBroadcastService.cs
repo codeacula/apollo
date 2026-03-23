@@ -32,7 +32,12 @@ public sealed class DashboardBroadcastService(
       return;
     }
 
-    var updates = Channel.CreateUnbounded<bool>();
+    var updates = Channel.CreateBounded<bool>(new BoundedChannelOptions(1)
+    {
+      SingleReader = true,
+      SingleWriter = false,
+      FullMode = BoundedChannelFullMode.DropNewest,
+    });
 
     queue.OnMessage(_ => updates.Writer.TryWrite(true));
 
@@ -40,10 +45,6 @@ public sealed class DashboardBroadcastService(
     {
       await foreach (var _ in updates.Reader.ReadAllAsync(stoppingToken))
       {
-        while (updates.Reader.TryRead(out var _))
-        {
-          // Coalesce bursts of pub/sub notifications into a single refresh.
-        }
 
         try
         {
