@@ -1,4 +1,5 @@
 using Apollo.Core;
+using Apollo.Core.Dashboard;
 using Apollo.Core.ToDos;
 using Apollo.Database.ToDos.Events;
 using Apollo.Domain.People.ValueObjects;
@@ -11,7 +12,7 @@ using Marten;
 
 namespace Apollo.Database.ToDos;
 
-public sealed class ToDoStore(IDocumentSession session, TimeProvider timeProvider) : IToDoStore
+public sealed class ToDoStore(IDocumentSession session, TimeProvider timeProvider, IDashboardUpdatePublisher dashboardUpdatePublisher) : IToDoStore
 {
   public async Task<Result> CompleteAsync(ToDoId id, CancellationToken cancellationToken = default)
   {
@@ -21,6 +22,7 @@ public sealed class ToDoStore(IDocumentSession session, TimeProvider timeProvide
       _ = session.Events.Append(id.Value, new ToDoCompletedEvent(id.Value, time));
 
       await session.SaveChangesAsync(cancellationToken);
+      await dashboardUpdatePublisher.PublishOverviewUpdatedAsync(cancellationToken);
 
       return Result.Ok();
     }
@@ -39,6 +41,7 @@ public sealed class ToDoStore(IDocumentSession session, TimeProvider timeProvide
 
       _ = session.Events.StartStream<DbToDo>(id.Value, [ev]);
       await session.SaveChangesAsync(cancellationToken);
+      await dashboardUpdatePublisher.PublishOverviewUpdatedAsync(cancellationToken);
 
       var newToDo = await session.Events.AggregateStreamAsync<DbToDo>(id.Value, token: cancellationToken);
 
@@ -58,6 +61,7 @@ public sealed class ToDoStore(IDocumentSession session, TimeProvider timeProvide
       _ = session.Events.Append(id.Value, new ToDoDeletedEvent(id.Value, time));
 
       await session.SaveChangesAsync(cancellationToken);
+      await dashboardUpdatePublisher.PublishOverviewUpdatedAsync(cancellationToken);
 
       return Result.Ok();
     }
@@ -111,6 +115,7 @@ public sealed class ToDoStore(IDocumentSession session, TimeProvider timeProvide
       _ = session.Events.Append(id.Value, new ToDoUpdatedEvent(id.Value, description.Value, time));
 
       await session.SaveChangesAsync(cancellationToken);
+      await dashboardUpdatePublisher.PublishOverviewUpdatedAsync(cancellationToken);
 
       return Result.Ok();
     }
@@ -128,6 +133,7 @@ public sealed class ToDoStore(IDocumentSession session, TimeProvider timeProvide
       _ = session.Events.Append(toDoId.Value, new ToDoPriorityUpdatedEvent(toDoId.Value, (int)priority.Value, time));
 
       await session.SaveChangesAsync(cancellationToken);
+      await dashboardUpdatePublisher.PublishOverviewUpdatedAsync(cancellationToken);
 
       return Result.Ok();
     }
@@ -145,6 +151,7 @@ public sealed class ToDoStore(IDocumentSession session, TimeProvider timeProvide
       _ = session.Events.Append(toDoId.Value, new ToDoEnergyUpdatedEvent(toDoId.Value, (int)energy.Value, time));
 
       await session.SaveChangesAsync(cancellationToken);
+      await dashboardUpdatePublisher.PublishOverviewUpdatedAsync(cancellationToken);
 
       return Result.Ok();
     }
@@ -162,6 +169,7 @@ public sealed class ToDoStore(IDocumentSession session, TimeProvider timeProvide
       _ = session.Events.Append(toDoId.Value, new ToDoInterestUpdatedEvent(toDoId.Value, (int)interest.Value, time));
 
       await session.SaveChangesAsync(cancellationToken);
+      await dashboardUpdatePublisher.PublishOverviewUpdatedAsync(cancellationToken);
 
       return Result.Ok();
     }

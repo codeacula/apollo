@@ -1,5 +1,6 @@
 using Apollo.Core;
 using Apollo.Core.Conversations;
+using Apollo.Core.Dashboard;
 using Apollo.Database.Conversations.Events;
 using Apollo.Domain.Common.ValueObjects;
 using Apollo.Domain.Conversations.Models;
@@ -12,7 +13,7 @@ using Marten;
 
 namespace Apollo.Database.Conversations;
 
-public sealed class ConversationStore(IDocumentSession session, TimeProvider timeProvider) : IConversationStore
+public sealed class ConversationStore(IDocumentSession session, TimeProvider timeProvider, IDashboardUpdatePublisher dashboardUpdatePublisher) : IConversationStore
 {
   public async Task<Result<Conversation>> AddMessageAsync(ConversationId conversationId, Content message, CancellationToken cancellationToken = default)
   {
@@ -26,6 +27,7 @@ public sealed class ConversationStore(IDocumentSession session, TimeProvider tim
       });
 
       await session.SaveChangesAsync(cancellationToken);
+      await dashboardUpdatePublisher.PublishOverviewUpdatedAsync(cancellationToken);
 
       var conversation = await GetAsync(conversationId, cancellationToken);
 
@@ -49,6 +51,7 @@ public sealed class ConversationStore(IDocumentSession session, TimeProvider tim
       });
 
       await session.SaveChangesAsync(cancellationToken);
+      await dashboardUpdatePublisher.PublishOverviewUpdatedAsync(cancellationToken);
 
       var conversation = await GetAsync(conversationId, cancellationToken);
 
@@ -74,6 +77,7 @@ public sealed class ConversationStore(IDocumentSession session, TimeProvider tim
 
       _ = session.Events.StartStream<DbConversation>(conversationId, [ev]);
       await session.SaveChangesAsync(cancellationToken);
+      await dashboardUpdatePublisher.PublishOverviewUpdatedAsync(cancellationToken);
 
       var newConversation = await session.Events.AggregateStreamAsync<DbConversation>(conversationId, token: cancellationToken);
 
