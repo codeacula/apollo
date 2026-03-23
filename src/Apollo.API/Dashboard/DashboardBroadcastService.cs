@@ -15,21 +15,48 @@ public sealed class DashboardBroadcastService(
   IHubContext<DashboardHub> hubContext,
   ILogger<DashboardBroadcastService> logger) : BackgroundService
 {
+  private static readonly TimeSpan[] RetryDelays =
+  [
+    TimeSpan.FromSeconds(5),
+    TimeSpan.FromSeconds(15),
+    TimeSpan.FromSeconds(30),
+    TimeSpan.FromSeconds(60),
+  ];
+
   protected override async Task ExecuteAsync(CancellationToken stoppingToken)
   {
     string? lastSignature = null;
     ChannelMessageQueue queue;
 
-    try
+    int attempt = 0;
+    while (true)
     {
-      var redis = serviceProvider.GetRequiredService<IConnectionMultiplexer>();
-      ISubscriber subscriber = redis.GetSubscriber();
-      queue = await subscriber.SubscribeAsync(RedisChannel.Literal(DashboardChannels.OverviewUpdated));
-    }
-    catch (Exception ex)
-    {
-      DashboardLogs.DashboardBroadcastDisabled(logger, ex);
-      return;
+      try
+      {
+        var redis = serviceProvider.GetRequiredService<IConnectionMultiplexer>();
+        ISubscriber subscriber = redis.GetSubscriber();
+        queue = await subscriber.SubscribeAsync(RedisChannel.Literal(DashboardChannels.OverviewUpdated));
+        break;
+      }
+      catch (Exception ex) when (!stoppingToken.IsCancellationRequested)
+      {
+        DashboardLogs.DashboardBroadcastDisabled(logger, ex);
+        var delay = RetryDelays[Math.Min(attempt, RetryDelays.Length - 1)];
+        attempt++;
+        try
+        {
+          await Task.Delay(delay, stoppingToken);
+        }
+        catch (OperationCanceledException)
+        {
+          return;
+        }
+      }
+      catch (Exception ex)
+      {
+        DashboardLogs.DashboardBroadcastDisabled(logger, ex);
+        return;
+      }
     }
 
     var updates = Channel.CreateBounded<bool>(new BoundedChannelOptions(1)

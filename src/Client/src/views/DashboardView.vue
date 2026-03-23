@@ -22,6 +22,7 @@ let pollingHandle: ReturnType<typeof setInterval> | null = null
 let pollingRefreshInFlight = false
 let pollingFailureCount = 0
 let isUnmounting = false
+let isMounted = false
 
 const POLLING_MAX_FAILURES = 3
 
@@ -113,12 +114,13 @@ function stopPolling(): void {
 }
 
 onMounted(async () => {
+  isMounted = true
   isLoading.value = true
   error.value = null
 
   try {
     await loadOverview()
-    realtimeSubscription = await subscribeToDashboardUpdates({
+    const subscription = await subscribeToDashboardUpdates({
       onOverviewUpdated: updatedOverview => {
         overview.value = updatedOverview
       },
@@ -141,22 +143,36 @@ onMounted(async () => {
         console.warn('Dashboard realtime connection unavailable, switching to polling.', err)
         startPolling()
       },
+      onReconnectError: err => {
+        console.warn('Dashboard realtime data refresh failed after reconnect.', err)
+        // The SignalR connection is still healthy — just reload data, don't downgrade to polling.
+        loadOverview().catch(loadErr => console.warn('Dashboard reload after reconnect error failed.', loadErr))
+      },
     })
+
+    if (!isMounted) {
+      // Component was unmounted while subscribing — tear down immediately.
+      subscription?.stop().catch(err => console.warn('Dashboard realtime stop (late unmount) failed.', err))
+      return
+    }
+
+    realtimeSubscription = subscription
 
     if (!realtimeSubscription) {
       startPolling()
     }
   } catch (err) {
-    error.value = err instanceof Error ? err.message : 'An error occurred while fetching status'
+    error.value = err instanceof Error ? err.message : 'An error occurred while loading the dashboard'
   } finally {
     isLoading.value = false
   }
 })
 
-onUnmounted(async () => {
+onUnmounted(() => {
+  isMounted = false
   isUnmounting = true
   stopPolling()
-  await realtimeSubscription?.stop()
+  realtimeSubscription?.stop().catch(err => console.warn('Dashboard realtime stop failed.', err))
 })
 </script>
 
@@ -305,15 +321,6 @@ h1 {
   gap: 1rem;
 }
 
-.panel {
-  border-radius: 1.5rem;
-  overflow: hidden;
-  border: 1px solid var(--line);
-  background: rgba(255, 253, 249, 0.88);
-  box-shadow: 0 22px 55px rgba(82, 56, 39, 0.12);
-  backdrop-filter: blur(8px);
-}
-
 .panel-status {
   grid-column: 1;
 }
@@ -357,4 +364,8 @@ h1 {
     white-space: normal;
   }
 }
+</style>
+
+<style>
+@import '../assets/panel.css';
 </style>

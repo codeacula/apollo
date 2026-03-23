@@ -15,33 +15,57 @@ public sealed class DashboardOverviewStore(IQuerySession querySession) : IDashbo
     var messagesWindowStart = nowUtc.AddHours(-24);
     var remindersWindowEnd = nowUtc.AddHours(24);
 
-    var totalPeople = await querySession.Query<DbPerson>().CountAsync(cancellationToken);
-    var peopleWithAccess = await querySession.Query<DbPerson>().CountAsync(x => x.HasAccess, token: cancellationToken);
+    var totalPeopleTask = querySession.Query<DbPerson>().CountAsync(cancellationToken);
+    var peopleWithAccessTask = querySession.Query<DbPerson>().CountAsync(x => x.HasAccess, token: cancellationToken);
 
-    var activeToDos = await querySession.Query<DbToDo>()
+    var activeToDosTask = querySession.Query<DbToDo>()
       .Where(x => !x.IsDeleted && !x.IsCompleted)
       .CountAsync(cancellationToken);
-    var completedToDos = await querySession.Query<DbToDo>()
+    var completedToDosTask = querySession.Query<DbToDo>()
       .Where(x => !x.IsDeleted && x.IsCompleted)
       .CountAsync(cancellationToken);
-    var createdTodayToDos = await querySession.Query<DbToDo>()
+    var createdTodayToDosTask = querySession.Query<DbToDo>()
       .Where(x => !x.IsDeleted && x.CreatedOn >= dayStart)
       .CountAsync(cancellationToken);
 
-    var scheduledReminders = await querySession.Query<DbReminder>()
+    var scheduledRemindersTask = querySession.Query<DbReminder>()
       .Where(x => !x.IsDeleted)
       .CountAsync(cancellationToken);
-    var dueSoonReminders = await querySession.Query<DbReminder>()
-      .Where(x => !x.IsDeleted && x.ReminderTime >= nowUtc && x.ReminderTime <= remindersWindowEnd)
+    var dueSoonRemindersTask = querySession.Query<DbReminder>()
+      .Where(x => !x.IsDeleted && x.ReminderTime >= nowUtc && x.ReminderTime <= remindersWindowEnd
+                  && !x.SentOn.HasValue && !x.AcknowledgedOn.HasValue)
       .CountAsync(cancellationToken);
-    var sentTodayReminders = await querySession.Query<DbReminder>()
+    var sentTodayRemindersTask = querySession.Query<DbReminder>()
       .Where(x => !x.IsDeleted && x.SentOn >= dayStart)
       .CountAsync(cancellationToken);
-    var acknowledgedReminders = await querySession.Query<DbReminder>()
+    var acknowledgedRemindersTask = querySession.Query<DbReminder>()
       .Where(x => !x.IsDeleted && x.AcknowledgedOn.HasValue)
       .CountAsync(cancellationToken);
 
-    var totalConversations = await querySession.Query<DbConversation>().CountAsync(cancellationToken);
+    var totalConversationsTask = querySession.Query<DbConversation>().CountAsync(cancellationToken);
+
+    await Task.WhenAll(
+      totalPeopleTask,
+      peopleWithAccessTask,
+      activeToDosTask,
+      completedToDosTask,
+      createdTodayToDosTask,
+      scheduledRemindersTask,
+      dueSoonRemindersTask,
+      sentTodayRemindersTask,
+      acknowledgedRemindersTask,
+      totalConversationsTask);
+
+    var totalPeople = await totalPeopleTask;
+    var peopleWithAccess = await peopleWithAccessTask;
+    var activeToDos = await activeToDosTask;
+    var completedToDos = await completedToDosTask;
+    var createdTodayToDos = await createdTodayToDosTask;
+    var scheduledReminders = await scheduledRemindersTask;
+    var dueSoonReminders = await dueSoonRemindersTask;
+    var sentTodayReminders = await sentTodayRemindersTask;
+    var acknowledgedReminders = await acknowledgedRemindersTask;
+    var totalConversations = await totalConversationsTask;
     var messagesLast24Hours = (await querySession.Query<DbConversation>()
       .Where(x => x.UpdatedOn >= messagesWindowStart)
       .Select(x => x.Messages.Count(m => m.CreatedOn >= messagesWindowStart))
@@ -65,7 +89,13 @@ public sealed class DashboardOverviewStore(IQuerySession querySession) : IDashbo
     var recentConversations = await querySession.Query<DbConversation>()
       .OrderByDescending(x => x.UpdatedOn)
       .Take(6)
-      .Select(x => new ConversationActivityProjection(x.PersonId, x.UpdatedOn, x.Messages))
+      .Select(x => new ConversationActivityProjection(
+        x.PersonId,
+        x.UpdatedOn,
+        x.Messages.Count > 0 ? x.Messages[x.Messages.Count - 1].Content : string.Empty,
+        x.Messages.Count > 0 && x.Messages[x.Messages.Count - 1].FromUser,
+        x.Messages.Count > 0 ? x.Messages[x.Messages.Count - 1].CreatedOn : x.UpdatedOn,
+        x.Messages.Count))
       .ToListAsync(cancellationToken);
 
     var activityPersonIds = recentToDos.Select(x => x.PersonId)
@@ -151,20 +181,18 @@ public sealed class DashboardOverviewStore(IQuerySession querySession) : IDashbo
 
     foreach (var conversation in conversations)
     {
-      if (conversation.Messages.Count == 0)
+      if (conversation.MessageCount == 0)
       {
         continue;
       }
 
-      var latestMessage = conversation.Messages[^1];
-
       yield return new DashboardActivityData
       {
         Id = 0,
-        Kind = latestMessage.FromUser ? "user_message" : "apollo_message",
-        Title = latestMessage.FromUser ? "User message" : "Apollo reply",
-        Description = $"{ResolveUsername(peopleById, conversation.PersonId)}: {Truncate(latestMessage.Content, 80)}",
-        OccurredOnUtc = latestMessage.CreatedOn,
+        Kind = conversation.LastMessageFromUser ? "user_message" : "apollo_message",
+        Title = conversation.LastMessageFromUser ? "User message" : "Apollo reply",
+        Description = $"{ResolveUsername(peopleById, conversation.PersonId)}: {Truncate(conversation.LastMessageContent, 80)}",
+        OccurredOnUtc = conversation.LastMessageCreatedOn,
       };
     }
   }
@@ -195,5 +223,11 @@ public sealed class DashboardOverviewStore(IQuerySession querySession) : IDashbo
 
   private sealed record ReminderActivityProjection(Guid PersonId, string Details, DateTime CreatedOn, DateTime? SentOn);
 
-  private sealed record ConversationActivityProjection(Guid PersonId, DateTime UpdatedOn, IReadOnlyList<DbMessage> Messages);
+  private sealed record ConversationActivityProjection(
+    Guid PersonId,
+    DateTime UpdatedOn,
+    string LastMessageContent,
+    bool LastMessageFromUser,
+    DateTime LastMessageCreatedOn,
+    int MessageCount);
 }

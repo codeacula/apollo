@@ -13,6 +13,8 @@ export interface DashboardRealtimeOptions {
   onReconnecting?: () => void
   onDisconnected?: (error?: unknown) => void
   onError?: (error: unknown) => void
+  /** Called when onReconnect throws after a successful SignalR reconnect. */
+  onReconnectError?: (error: unknown) => void
 }
 
 export async function subscribeToDashboardUpdates(
@@ -54,7 +56,7 @@ function wireDashboardEvents(connection: HubConnection, options: DashboardRealti
     try {
       await options.onReconnect?.()
     } catch (error) {
-      options.onError?.(error)
+      options.onReconnectError?.(error) ?? options.onError?.(error)
     }
   })
 
