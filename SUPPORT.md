@@ -23,6 +23,6 @@ Please do the following first:
 - [Report A Bug](https://github.com/codeacula/apollo/issues/new?template=bug_report.yml)
 - [Request A Feature](https://github.com/codeacula/apollo/issues/new?template=feature_request.yml)
 - [Browse Current Issues](https://github.com/codeacula/apollo/issues)
-- Join my Discord: [Codeacula's Workshop](https://discord.gg/sTgnMduGCF)
+- Join my Discord: [Codeacula's Workshop](https://discord.gg/Q4SfDUfUED)
 
 > This project is early-stage and evolving — thanks for being patient and curious!
