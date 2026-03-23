@@ -25,13 +25,10 @@ export async function subscribeToDashboardUpdates(
 
   wireDashboardEvents(connection, options)
 
-  try
-  {
+  try {
     await connection.start()
     options.onConnected?.()
-  }
-  catch (error)
-  {
+  } catch (error) {
     options.onError?.(error)
     return null
   }

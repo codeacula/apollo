@@ -12,12 +12,19 @@ public sealed class DashboardUpdatePublisher(
 {
   public async Task PublishOverviewUpdatedAsync(CancellationToken cancellationToken = default)
   {
-    cancellationToken.ThrowIfCancellationRequested();
-
     try
     {
+      if (cancellationToken.IsCancellationRequested)
+      {
+        return;
+      }
+
       ISubscriber subscriber = redis.GetSubscriber();
       _ = await subscriber.PublishAsync(RedisChannel.Literal(DashboardChannels.OverviewUpdated), "updated");
+    }
+    catch (OperationCanceledException)
+    {
+      // Ignore cancellations after successful writes; dashboard updates are best-effort.
     }
     catch (Exception ex)
     {
