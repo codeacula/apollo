@@ -1,8 +1,10 @@
 using Apollo.Core.Conversations;
 using Apollo.Core.Data;
+using Apollo.Core.Dashboard;
 using Apollo.Core.People;
 using Apollo.Core.ToDos;
 using Apollo.Database.Configuration;
+using Apollo.Database.Dashboard;
 using Apollo.Database.Configuration.Events;
 using Apollo.Database.Conversations;
 using Apollo.Database.Conversations.Events;
@@ -103,6 +105,7 @@ public static class ServiceCollectionExtensions
 
     _ = services
       .AddScoped<IConversationStore, ConversationStore>()
+      .AddScoped<IDashboardOverviewStore, DashboardOverviewStore>()
       .AddScoped<IPersonStore, PersonStore>()
       .AddScoped<IToDoStore, ToDoStore>()
       .AddScoped<IReminderStore, ReminderStore>()

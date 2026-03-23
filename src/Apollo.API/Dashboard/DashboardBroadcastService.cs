@@ -17,8 +17,6 @@ public sealed class DashboardBroadcastService(
 {
   protected override async Task ExecuteAsync(CancellationToken stoppingToken)
   {
-    await Task.Yield();
-
     string? lastSignature = null;
     ChannelMessageQueue queue;
 
