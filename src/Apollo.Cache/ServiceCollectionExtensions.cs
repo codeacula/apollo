@@ -1,3 +1,4 @@
+using Apollo.Core.Dashboard;
 using Apollo.Core.People;
 
 using Microsoft.Extensions.DependencyInjection;
@@ -12,6 +13,7 @@ public static class ServiceCollectionExtensions
   {
     _ = services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(redisConnectionString));
     _ = services.AddSingleton<IPersonCache, PersonCache>();
+    _ = services.AddSingleton<IDashboardUpdatePublisher, DashboardUpdatePublisher>();
 
     return services;
   }

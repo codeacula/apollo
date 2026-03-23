@@ -8,10 +8,16 @@ WebApplicationBuilder webAppBuilder = WebApplication.CreateBuilder(args);
 var configuration = webAppBuilder.Configuration;
 
 _ = webAppBuilder.Services.AddControllers();
+_ = webAppBuilder.Services.AddSignalR();
+_ = webAppBuilder.Services.AddSingleton<Apollo.API.Dashboard.DashboardConnectionTracker>();
 _ = webAppBuilder.Services
   .AddCacheServices(configuration.GetConnectionString("Redis")!)
   .AddGrpcClientServices()
   .AddDatabaseServices(configuration);
+
+_ = webAppBuilder.Services
+  .AddScoped<Apollo.API.Dashboard.IDashboardOverviewService, Apollo.API.Dashboard.DashboardOverviewService>()
+  .AddHostedService<Apollo.API.Dashboard.DashboardBroadcastService>();
 
 // Register MediatR scoped to only the configuration handlers.
 // Apollo.API is a pure REST gateway and only needs configuration CQRS handlers.
@@ -38,9 +44,24 @@ if (app.Environment.IsDevelopment())
   _ = app.MapOpenApi();
 }
 
-_ = app.MapControllers();
-_ = app.UseHttpsRedirection();
+var appUrls = configuration["ASPNETCORE_URLS"];
+if (!string.IsNullOrWhiteSpace(appUrls) && appUrls.Contains("https://", StringComparison.OrdinalIgnoreCase))
+{
+  _ = app.UseHttpsRedirection();
+}
 _ = app.UseDefaultFiles();
 _ = app.UseStaticFiles();
+_ = app.MapControllers();
+_ = app.MapHub<Apollo.API.Dashboard.DashboardHub>("/hubs/dashboard");
+_ = app.MapFallback(async context =>
+{
+  if (context.Request.Path.StartsWithSegments("/api") || context.Request.Path.StartsWithSegments("/hubs"))
+  {
+    context.Response.StatusCode = StatusCodes.Status404NotFound;
+    return;
+  }
+
+  await context.Response.SendFileAsync(Path.Combine(app.Environment.WebRootPath!, "index.html"));
+});
 
 await app.RunAsync();

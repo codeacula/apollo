@@ -1,4 +1,5 @@
 using Apollo.Database.Configuration;
+using Apollo.Core.Dashboard;
 
 using Marten;
 using Marten.Events;
@@ -10,10 +11,12 @@ namespace Apollo.Database.Tests.Config;
 public sealed class AppConfigStoreTests
 {
   private readonly Mock<IDocumentSession> _sessionMock;
+  private readonly Mock<IDashboardUpdatePublisher> _dashboardUpdatePublisherMock;
 
   public AppConfigStoreTests()
   {
     _sessionMock = new Mock<IDocumentSession>(MockBehavior.Loose);
+    _dashboardUpdatePublisherMock = new Mock<IDashboardUpdatePublisher>(MockBehavior.Loose);
   }
 
   /// <summary>
@@ -28,7 +31,7 @@ public sealed class AppConfigStoreTests
       .Setup(s => s.LoadAsync<DbConfiguration>(ConfigurationId.Root, It.IsAny<CancellationToken>()))
       .ReturnsAsync((DbConfiguration?)null);
 
-    var store = new ConfigurationStore(_sessionMock.Object);
+    var store = new ConfigurationStore(_sessionMock.Object, _dashboardUpdatePublisherMock.Object);
 
     // Act
     var result = await store.GetAsync();
@@ -80,7 +83,7 @@ public sealed class AppConfigStoreTests
         It.IsAny<DbConfiguration?>()))
       .ReturnsAsync(updatedConfig);
 
-    var store = new ConfigurationStore(_sessionMock.Object);
+    var store = new ConfigurationStore(_sessionMock.Object, _dashboardUpdatePublisherMock.Object);
 
     // Act
     var result = await store.UpdateAiAsync(modelId, endpoint, apiKey);
@@ -139,7 +142,7 @@ public sealed class AppConfigStoreTests
         It.IsAny<DbConfiguration?>()))
       .ReturnsAsync(updatedConfig);
 
-    var store = new ConfigurationStore(_sessionMock.Object);
+    var store = new ConfigurationStore(_sessionMock.Object, _dashboardUpdatePublisherMock.Object);
 
     // Act
     var result = await store.UpdateAiAsync(modelId, endpoint, apiKey);
@@ -161,7 +164,7 @@ public sealed class AppConfigStoreTests
       .Setup(s => s.LoadAsync<DbConfiguration>(ConfigurationId.Root, It.IsAny<CancellationToken>()))
       .ReturnsAsync((DbConfiguration?)null);
 
-    var store = new ConfigurationStore(_sessionMock.Object);
+    var store = new ConfigurationStore(_sessionMock.Object, _dashboardUpdatePublisherMock.Object);
 
     // Act
     var result = await store.IsInitializedAsync();
@@ -185,7 +188,7 @@ public sealed class AppConfigStoreTests
       .Setup(s => s.LoadAsync<DbConfiguration>(ConfigurationId.Root, It.IsAny<CancellationToken>()))
       .ReturnsAsync(existingConfig);
 
-    var store = new ConfigurationStore(_sessionMock.Object);
+    var store = new ConfigurationStore(_sessionMock.Object, _dashboardUpdatePublisherMock.Object);
 
     // Act
     var result = await store.IsInitializedAsync();

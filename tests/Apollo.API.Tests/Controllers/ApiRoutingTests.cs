@@ -19,6 +19,18 @@ public class ApiRoutingTests(WebApplicationFactory<IApolloAPI> factory) : IClass
   }
 
   [Fact]
+  public async Task GetDashboardRouteReturnsValidSpaResponseBasedOnAssetAvailabilityAsync()
+  {
+    var client = _factory.CreateClient();
+
+    var response = await client.GetAsync("/dashboard");
+
+    Assert.True(
+      response.StatusCode is System.Net.HttpStatusCode.OK or System.Net.HttpStatusCode.NotFound,
+      $"Unexpected status code: {response.StatusCode}");
+  }
+
+  [Fact]
   public async Task GetNonExistentEndpointReturnsNotFoundAsync()
   {
     var client = _factory.CreateClient();
