@@ -17,8 +17,13 @@ _ = webAppBuilder.Services
 
 _ = webAppBuilder.Services
   .AddScoped<Apollo.API.Dashboard.IDashboardOverviewService, Apollo.API.Dashboard.DashboardOverviewService>()
-  .AddSingleton(TimeProvider.System)
-  .AddHostedService<Apollo.API.Dashboard.DashboardBroadcastService>();
+  .AddSingleton(TimeProvider.System);
+
+var redisConnectionString = configuration.GetConnectionString("Redis");
+if (!string.IsNullOrWhiteSpace(redisConnectionString))
+{
+  _ = webAppBuilder.Services.AddHostedService<Apollo.API.Dashboard.DashboardBroadcastService>();
+}
 
 // Register MediatR scoped to only the configuration handlers.
 // Apollo.API is a pure REST gateway and only needs configuration CQRS handlers.

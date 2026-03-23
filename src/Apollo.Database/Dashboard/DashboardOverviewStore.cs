@@ -42,11 +42,11 @@ public sealed class DashboardOverviewStore(IQuerySession querySession) : IDashbo
       .CountAsync(cancellationToken);
 
     var totalConversations = await querySession.Query<DbConversation>().CountAsync(cancellationToken);
-    var recentConversationMessages = await querySession.Query<DbConversation>()
+    var messagesLast24Hours = (await querySession.Query<DbConversation>()
       .Where(x => x.UpdatedOn >= messagesWindowStart)
-      .Select(x => new ConversationMessagesProjection(x.Messages))
-      .ToListAsync(cancellationToken);
-    var messagesLast24Hours = recentConversationMessages.Sum(x => x.Messages.Count(m => m.CreatedOn >= messagesWindowStart));
+      .Select(x => x.Messages.Count(m => m.CreatedOn >= messagesWindowStart))
+      .ToListAsync(cancellationToken))
+      .Sum();
 
     var recentToDos = await querySession.Query<DbToDo>()
       .Where(x => !x.IsDeleted)
@@ -196,6 +196,4 @@ public sealed class DashboardOverviewStore(IQuerySession querySession) : IDashbo
   private sealed record ReminderActivityProjection(Guid PersonId, string Details, DateTime CreatedOn, DateTime? SentOn);
 
   private sealed record ConversationActivityProjection(Guid PersonId, DateTime UpdatedOn, IReadOnlyList<DbMessage> Messages);
-
-  private sealed record ConversationMessagesProjection(IReadOnlyList<DbMessage> Messages);
 }

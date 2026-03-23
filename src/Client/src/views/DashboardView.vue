@@ -21,13 +21,14 @@ let realtimeSubscription: Awaited<ReturnType<typeof subscribeToDashboardUpdates>
 let pollingHandle: ReturnType<typeof setInterval> | null = null
 let pollingRefreshInFlight = false
 let pollingFailureCount = 0
+let isUnmounting = false
 
 const POLLING_MAX_FAILURES = 3
 
 const liveModeLabel = computed(() => {
   switch (liveMode.value) {
     case 'polling':
-      return 'Polling every 15s'
+      return `Polling every ${POLLING_INTERVAL_MS / 1000}s`
     case 'reconnecting':
       return 'Reconnecting...'
     default:
@@ -132,7 +133,9 @@ onMounted(async () => {
         liveMode.value = 'reconnecting'
       },
       onDisconnected: () => {
-        startPolling()
+        if (!isUnmounting) {
+          startPolling()
+        }
       },
       onError: err => {
         console.warn('Dashboard realtime connection unavailable, switching to polling.', err)
@@ -151,6 +154,7 @@ onMounted(async () => {
 })
 
 onUnmounted(async () => {
+  isUnmounting = true
   stopPolling()
   await realtimeSubscription?.stop()
 })

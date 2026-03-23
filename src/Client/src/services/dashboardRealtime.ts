@@ -51,7 +51,11 @@ function wireDashboardEvents(connection: HubConnection, options: DashboardRealti
 
   connection.onreconnected(async () => {
     options.onConnected?.()
-    await options.onReconnect?.()
+    try {
+      await options.onReconnect?.()
+    } catch (error) {
+      options.onError?.(error)
+    }
   })
 
   connection.onclose(error => {
