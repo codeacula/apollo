@@ -321,6 +321,32 @@ public sealed class AppConfigStoreTests
   }
 
   /// <summary>
+  /// When SaveChangesAsync throws, the store should return a failure result and must NOT
+  /// call PublishOverviewUpdatedAsync (the DB write did not succeed).
+  /// </summary>
+  [Fact]
+  public async Task UpdateAiAsyncDoesNotPublishWhenSaveChangesFailsAsync()
+  {
+    _ = _sessionMock
+      .Setup(s => s.LoadAsync<DbConfiguration>(ConfigurationId.Root, It.IsAny<CancellationToken>()))
+      .ReturnsAsync(new DbConfiguration { Id = ConfigurationId.Root });
+    _ = _sessionMock
+      .Setup(s => s.SaveChangesAsync(It.IsAny<CancellationToken>()))
+      .ThrowsAsync(new InvalidOperationException("DB write failed"));
+
+    var eventStoreMock = new Mock<IEventStoreOperations>(MockBehavior.Loose);
+    _ = _sessionMock.SetupGet(s => s.Events).Returns(eventStoreMock.Object);
+
+    var store = new ConfigurationStore(_sessionMock.Object, _dashboardUpdatePublisherMock.Object);
+    var result = await store.UpdateAiAsync("model", "https://endpoint", "key");
+
+    Assert.True(result.IsFailed);
+    _dashboardUpdatePublisherMock.Verify(
+      p => p.PublishOverviewUpdatedAsync(It.IsAny<CancellationToken>()),
+      Times.Never);
+  }
+
+  /// <summary>
   /// The initialization check should return false when no configuration aggregate exists
   /// in the database, indicating the system needs first-time setup.
   /// </summary>
