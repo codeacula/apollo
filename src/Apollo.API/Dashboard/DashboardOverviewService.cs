@@ -24,20 +24,71 @@ public sealed class DashboardOverviewService(
       throw new InvalidOperationException(statusResult.Errors.Count > 0 ? statusResult.Errors[0].Message : "Unknown error");
     }
 
-    var people = await querySession.Query<DbPerson>().ToListAsync(cancellationToken);
-    var toDos = await querySession.Query<DbToDo>()
-      .Where(x => !x.IsDeleted)
-      .ToListAsync(cancellationToken);
-    var reminders = await querySession.Query<DbReminder>()
-      .Where(x => !x.IsDeleted)
-      .ToListAsync(cancellationToken);
-    var conversations = await querySession.Query<DbConversation>().ToListAsync(cancellationToken);
-
     var now = TimeProvider.System.GetUtcNow().UtcDateTime;
     var status = statusResult.Value;
-    var peopleById = people.ToDictionary(x => x.Id, x => x.Username);
+    var dayStart = now.Date;
+    var messagesWindowStart = now.AddHours(-24);
+    var remindersWindowEnd = now.AddHours(24);
 
-    var activity = BuildRecentActivity(toDos, reminders, conversations, peopleById)
+    var totalPeople = await querySession.Query<DbPerson>().CountAsync(cancellationToken);
+    var peopleWithAccess = await querySession.Query<DbPerson>().CountAsync(x => x.HasAccess, token: cancellationToken);
+
+    var activeToDos = await querySession.Query<DbToDo>()
+      .Where(x => !x.IsDeleted && !x.IsCompleted)
+      .CountAsync(cancellationToken);
+    var completedToDos = await querySession.Query<DbToDo>()
+      .Where(x => !x.IsDeleted && x.IsCompleted)
+      .CountAsync(cancellationToken);
+    var createdTodayToDos = await querySession.Query<DbToDo>()
+      .Where(x => !x.IsDeleted && x.CreatedOn >= dayStart)
+      .CountAsync(cancellationToken);
+
+    var scheduledReminders = await querySession.Query<DbReminder>()
+      .Where(x => !x.IsDeleted)
+      .CountAsync(cancellationToken);
+    var dueSoonReminders = await querySession.Query<DbReminder>()
+      .Where(x => !x.IsDeleted && x.ReminderTime >= now && x.ReminderTime <= remindersWindowEnd)
+      .CountAsync(cancellationToken);
+    var sentTodayReminders = await querySession.Query<DbReminder>()
+      .Where(x => !x.IsDeleted && x.SentOn >= dayStart)
+      .CountAsync(cancellationToken);
+    var acknowledgedReminders = await querySession.Query<DbReminder>()
+      .Where(x => !x.IsDeleted && x.AcknowledgedOn.HasValue)
+      .CountAsync(cancellationToken);
+
+    var totalConversations = await querySession.Query<DbConversation>().CountAsync(cancellationToken);
+    var recentConversationMessages = await querySession.Query<DbConversation>()
+      .Where(x => x.UpdatedOn >= messagesWindowStart)
+      .Select(x => new ConversationMessagesProjection(x.Messages))
+      .ToListAsync(cancellationToken);
+    var messagesLast24Hours = recentConversationMessages.Sum(x => x.Messages.Count(m => m.CreatedOn >= messagesWindowStart));
+
+    var peopleById = (await querySession.Query<DbPerson>()
+      .Select(x => new PersonLookupProjection(x.Id, x.Username))
+      .ToListAsync(cancellationToken))
+      .ToDictionary(x => x.Id, x => x.Username);
+
+    var recentToDos = await querySession.Query<DbToDo>()
+      .Where(x => !x.IsDeleted)
+      .OrderByDescending(x => x.CreatedOn)
+      .Take(6)
+      .Select(x => new ToDoActivityProjection(x.PersonId, x.Description, x.CreatedOn))
+      .ToListAsync(cancellationToken);
+
+    var recentReminders = await querySession.Query<DbReminder>()
+      .Where(x => !x.IsDeleted)
+      .OrderByDescending(x => x.SentOn ?? x.CreatedOn)
+      .Take(6)
+      .Select(x => new ReminderActivityProjection(x.PersonId, x.Details, x.CreatedOn, x.SentOn))
+      .ToListAsync(cancellationToken);
+
+    var recentConversations = await querySession.Query<DbConversation>()
+      .OrderByDescending(x => x.UpdatedOn)
+      .Take(6)
+      .Select(x => new ConversationActivityProjection(x.PersonId, x.UpdatedOn, x.Messages))
+      .ToListAsync(cancellationToken);
+
+    var activity = BuildRecentActivity(recentToDos, recentReminders, recentConversations, peopleById)
       .OrderByDescending(x => x.OccurredOnUtc)
       .Take(8)
       .ToArray();
@@ -58,26 +109,26 @@ public sealed class DashboardOverviewService(
       },
       People = new DashboardPeopleSummaryResponse
       {
-        Total = people.Count,
-        WithAccess = people.Count(x => x.HasAccess),
+        Total = totalPeople,
+        WithAccess = peopleWithAccess,
       },
       ToDos = new DashboardToDoSummaryResponse
       {
-        Active = toDos.Count(x => !x.IsCompleted),
-        Completed = toDos.Count(x => x.IsCompleted),
-        CreatedToday = toDos.Count(x => x.CreatedOn >= now.Date),
+        Active = activeToDos,
+        Completed = completedToDos,
+        CreatedToday = createdTodayToDos,
       },
       Reminders = new DashboardReminderSummaryResponse
       {
-        Scheduled = reminders.Count,
-        DueWithin24Hours = reminders.Count(x => x.ReminderTime >= now && x.ReminderTime <= now.AddHours(24)),
-        SentToday = reminders.Count(x => x.SentOn >= now.Date),
-        Acknowledged = reminders.Count(x => x.AcknowledgedOn.HasValue),
+        Scheduled = scheduledReminders,
+        DueWithin24Hours = dueSoonReminders,
+        SentToday = sentTodayReminders,
+        Acknowledged = acknowledgedReminders,
       },
       Conversations = new DashboardConversationSummaryResponse
       {
-        Total = conversations.Count,
-        MessagesLast24Hours = conversations.Sum(x => x.Messages.Count(m => m.CreatedOn >= now.AddHours(-24))),
+        Total = totalConversations,
+        MessagesLast24Hours = messagesLast24Hours,
       },
       Activity = activity,
     };
@@ -97,9 +148,9 @@ public sealed class DashboardOverviewService(
   }
 
   private static IEnumerable<DashboardActivityItemResponse> BuildRecentActivity(
-    IEnumerable<DbToDo> toDos,
-    IEnumerable<DbReminder> reminders,
-    IEnumerable<DbConversation> conversations,
+    IEnumerable<ToDoActivityProjection> toDos,
+    IEnumerable<ReminderActivityProjection> reminders,
+    IEnumerable<ConversationActivityProjection> conversations,
     IReadOnlyDictionary<Guid, string> peopleById)
   {
     foreach (var toDo in toDos.OrderByDescending(x => x.CreatedOn).Take(6))
@@ -128,12 +179,12 @@ public sealed class DashboardOverviewService(
 
     foreach (var conversation in conversations.OrderByDescending(x => x.UpdatedOn).Take(6))
     {
-      var latestMessage = conversation.Messages.LastOrDefault();
-
-      if (latestMessage is null)
+      if (conversation.Messages.Count == 0)
       {
         continue;
       }
+
+      var latestMessage = conversation.Messages[^1];
 
       yield return new DashboardActivityItemResponse
       {
@@ -149,6 +200,16 @@ public sealed class DashboardOverviewService(
   {
     return peopleById.TryGetValue(personId, out var username) ? username : "Unknown user";
   }
+
+  private sealed record PersonLookupProjection(Guid Id, string Username);
+
+  private sealed record ToDoActivityProjection(Guid PersonId, string Description, DateTime CreatedOn);
+
+  private sealed record ReminderActivityProjection(Guid PersonId, string Details, DateTime CreatedOn, DateTime? SentOn);
+
+  private sealed record ConversationActivityProjection(Guid PersonId, DateTime UpdatedOn, IReadOnlyList<DbMessage> Messages);
+
+  private sealed record ConversationMessagesProjection(IReadOnlyList<DbMessage> Messages);
 
   private static string Truncate(string value, int maxLength)
   {
