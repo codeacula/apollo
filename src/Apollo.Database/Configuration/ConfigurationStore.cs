@@ -1,5 +1,4 @@
 using Apollo.Core.Configuration;
-using Apollo.Core.Dashboard;
 using Apollo.Database.Configuration.Events;
 
 using FluentResults;
@@ -8,7 +7,7 @@ using Marten;
 
 namespace Apollo.Database.Configuration;
 
-public sealed class ConfigurationStore(IDocumentSession session, IDashboardUpdatePublisher dashboardUpdatePublisher) : IConfigurationStore
+public sealed class ConfigurationStore(IDocumentSession session) : IConfigurationStore
 {
   public async Task<Result<ConfigurationData>> GetAsync(CancellationToken cancellationToken = default)
   {
@@ -38,7 +37,6 @@ public sealed class ConfigurationStore(IDocumentSession session, IDashboardUpdat
         : session.Events.Append(ConfigurationId.Root, ev);
 
       await session.SaveChangesAsync(cancellationToken);
-      await dashboardUpdatePublisher.PublishOverviewUpdatedAsync(cancellationToken);
 
       var updated = await session.Events.AggregateStreamAsync<DbConfiguration>(ConfigurationId.Root, token: cancellationToken);
 
@@ -65,7 +63,6 @@ public sealed class ConfigurationStore(IDocumentSession session, IDashboardUpdat
         : session.Events.Append(ConfigurationId.Root, ev);
 
       await session.SaveChangesAsync(cancellationToken);
-      await dashboardUpdatePublisher.PublishOverviewUpdatedAsync(cancellationToken);
 
       var updated = await session.Events.AggregateStreamAsync<DbConfiguration>(ConfigurationId.Root, token: cancellationToken);
 
@@ -92,7 +89,6 @@ public sealed class ConfigurationStore(IDocumentSession session, IDashboardUpdat
         : session.Events.Append(ConfigurationId.Root, ev);
 
       await session.SaveChangesAsync(cancellationToken);
-      await dashboardUpdatePublisher.PublishOverviewUpdatedAsync(cancellationToken);
 
       var updated = await session.Events.AggregateStreamAsync<DbConfiguration>(ConfigurationId.Root, token: cancellationToken);
 

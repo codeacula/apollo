@@ -80,7 +80,7 @@ public class ProcessIncomingMessageCommandHandlerTests
     // Assert
     Assert.True(result.IsSuccess);
     Assert.Equal("Hello back", result.Value.Content.Value);
-    _mockConversationStore.Verify(x => x.GetOrCreateConversationByPersonIdAsync(personId, It.IsAny<CancellationToken>()), Times.Once);
+    _mockConversationStore.Verify(x => x.GetConversationByPersonIdAsync(personId, It.IsAny<CancellationToken>()), Times.Once);
   }
 
   [Fact]
@@ -112,7 +112,10 @@ public class ProcessIncomingMessageCommandHandlerTests
     _ = _mockPersonStore.Setup(x => x.GetAsync(personId, It.IsAny<CancellationToken>()))
         .ReturnsAsync(Result.Ok(CreatePerson(personId)));
 
-    _ = _mockConversationStore.Setup(x => x.GetOrCreateConversationByPersonIdAsync(personId, It.IsAny<CancellationToken>()))
+    _ = _mockConversationStore.Setup(x => x.GetConversationByPersonIdAsync(personId, It.IsAny<CancellationToken>()))
+        .ReturnsAsync(Result.Fail<Conversation>("Not found"));
+
+    _ = _mockConversationStore.Setup(x => x.CreateAsync(personId, It.IsAny<CancellationToken>()))
         .ReturnsAsync(Result.Fail<Conversation>("Database error"));
 
     // Act
@@ -135,7 +138,7 @@ public class ProcessIncomingMessageCommandHandlerTests
     _ = _mockPersonStore.Setup(x => x.GetAsync(personId, It.IsAny<CancellationToken>()))
         .ReturnsAsync(Result.Ok(CreatePerson(personId)));
 
-    _ = _mockConversationStore.Setup(x => x.GetOrCreateConversationByPersonIdAsync(personId, It.IsAny<CancellationToken>()))
+    _ = _mockConversationStore.Setup(x => x.GetConversationByPersonIdAsync(personId, It.IsAny<CancellationToken>()))
         .ReturnsAsync(Result.Ok(conversation));
 
     _ = _mockConversationStore.Setup(x => x.AddMessageAsync(conversationId, It.IsAny<Content>(), It.IsAny<CancellationToken>()))
@@ -172,7 +175,7 @@ public class ProcessIncomingMessageCommandHandlerTests
     _ = _mockPersonStore.Setup(x => x.GetAsync(personId, It.IsAny<CancellationToken>()))
       .ReturnsAsync(Result.Ok(CreatePerson(personId)));
 
-    _ = _mockConversationStore.Setup(x => x.GetOrCreateConversationByPersonIdAsync(personId, It.IsAny<CancellationToken>()))
+    _ = _mockConversationStore.Setup(x => x.GetConversationByPersonIdAsync(personId, It.IsAny<CancellationToken>()))
       .ReturnsAsync(Result.Ok(conversation));
 
     _ = _mockConversationStore.Setup(x => x.AddMessageAsync(conversation.Id, It.IsAny<Content>(), It.IsAny<CancellationToken>()))

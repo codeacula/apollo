@@ -6,6 +6,8 @@ using Apollo.Domain.ToDos.ValueObjects;
 
 using FluentResults;
 
+using MediatR;
+
 using Microsoft.Extensions.Logging;
 
 using Moq;
@@ -20,8 +22,9 @@ public class CompleteToDoCommandTests
     var toDoStore = new Mock<IToDoStore>();
     var reminderStore = new Mock<IReminderStore>();
     var toDoReminderScheduler = new Mock<IToDoReminderScheduler>();
+    var mediator = new Mock<IMediator>();
     var logger = new Mock<ILogger<CompleteToDoCommandHandler>>();
-    var handler = new CompleteToDoCommandHandler(toDoStore.Object, reminderStore.Object, toDoReminderScheduler.Object, logger.Object);
+    var handler = new CompleteToDoCommandHandler(toDoStore.Object, reminderStore.Object, toDoReminderScheduler.Object, mediator.Object, logger.Object);
 
     var toDoId = new ToDoId(Guid.NewGuid());
 
@@ -41,8 +44,9 @@ public class CompleteToDoCommandTests
     var toDoStore = new Mock<IToDoStore>();
     var reminderStore = new Mock<IReminderStore>();
     var toDoReminderScheduler = new Mock<IToDoReminderScheduler>();
+    var mediator = new Mock<IMediator>();
     var logger = new Mock<ILogger<CompleteToDoCommandHandler>>();
-    var handler = new CompleteToDoCommandHandler(toDoStore.Object, reminderStore.Object, toDoReminderScheduler.Object, logger.Object);
+    var handler = new CompleteToDoCommandHandler(toDoStore.Object, reminderStore.Object, toDoReminderScheduler.Object, mediator.Object, logger.Object);
 
     var toDoId = new ToDoId(Guid.NewGuid());
     var quartzJobId = new QuartzJobId(Guid.NewGuid());
@@ -84,8 +88,9 @@ public class CompleteToDoCommandTests
     var toDoStore = new Mock<IToDoStore>();
     var reminderStore = new Mock<IReminderStore>();
     var toDoReminderScheduler = new Mock<IToDoReminderScheduler>();
+    var mediator = new Mock<IMediator>();
     var logger = new Mock<ILogger<CompleteToDoCommandHandler>>();
-    var handler = new CompleteToDoCommandHandler(toDoStore.Object, reminderStore.Object, toDoReminderScheduler.Object, logger.Object);
+    var handler = new CompleteToDoCommandHandler(toDoStore.Object, reminderStore.Object, toDoReminderScheduler.Object, mediator.Object, logger.Object);
 
     var toDoId = new ToDoId(Guid.NewGuid());
     var otherToDoId = new ToDoId(Guid.NewGuid());

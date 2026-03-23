@@ -1,6 +1,5 @@
 using Apollo.Core;
 using Apollo.Core.Configuration;
-using Apollo.Core.Dashboard;
 using Apollo.Core.People;
 using Apollo.Database.People.Events;
 using Apollo.Domain.Common.Enums;
@@ -13,7 +12,7 @@ using Marten;
 
 namespace Apollo.Database.People;
 
-public sealed class PersonStore(IConfigurationStore configurationStore, IDocumentSession session, TimeProvider timeProvider, IPersonCache personCache, IDashboardUpdatePublisher dashboardUpdatePublisher) : IPersonStore
+public sealed class PersonStore(IConfigurationStore configurationStore, IDocumentSession session, TimeProvider timeProvider, IPersonCache personCache) : IPersonStore
 {
   public async Task<Result<Person>> CreateByPlatformIdAsync(PlatformId platformId, CancellationToken cancellationToken = default)
   {
@@ -41,7 +40,6 @@ public sealed class PersonStore(IConfigurationStore configurationStore, IDocumen
 
       _ = session.Events.StartStream<DbPerson>(id, events);
       await session.SaveChangesAsync(cancellationToken);
-      await dashboardUpdatePublisher.PublishOverviewUpdatedAsync(cancellationToken);
 
       var newPerson = await session.Events.AggregateStreamAsync<DbPerson>(id, token: cancellationToken);
 
@@ -140,7 +138,6 @@ public sealed class PersonStore(IConfigurationStore configurationStore, IDocumen
 
 
       await session.SaveChangesAsync(cancellationToken);
-      await dashboardUpdatePublisher.PublishOverviewUpdatedAsync(cancellationToken);
 
       // Invalidate access cache after granting access
       _ = await personCache.InvalidateAccessAsync(id);
@@ -165,7 +162,6 @@ public sealed class PersonStore(IConfigurationStore configurationStore, IDocumen
       });
 
       await session.SaveChangesAsync(cancellationToken);
-      await dashboardUpdatePublisher.PublishOverviewUpdatedAsync(cancellationToken);
 
       // Invalidate access cache after revoking access
       _ = await personCache.InvalidateAccessAsync(id);

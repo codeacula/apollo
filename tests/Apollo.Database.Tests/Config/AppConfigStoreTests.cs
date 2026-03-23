@@ -1,5 +1,4 @@
 using Apollo.Database.Configuration;
-using Apollo.Core.Dashboard;
 
 using Marten;
 using Marten.Events;
@@ -11,12 +10,10 @@ namespace Apollo.Database.Tests.Config;
 public sealed class AppConfigStoreTests
 {
   private readonly Mock<IDocumentSession> _sessionMock;
-  private readonly Mock<IDashboardUpdatePublisher> _dashboardUpdatePublisherMock;
 
   public AppConfigStoreTests()
   {
     _sessionMock = new Mock<IDocumentSession>(MockBehavior.Loose);
-    _dashboardUpdatePublisherMock = new Mock<IDashboardUpdatePublisher>(MockBehavior.Loose);
   }
 
   /// <summary>
@@ -31,7 +28,7 @@ public sealed class AppConfigStoreTests
       .Setup(s => s.LoadAsync<DbConfiguration>(ConfigurationId.Root, It.IsAny<CancellationToken>()))
       .ReturnsAsync((DbConfiguration?)null);
 
-    var store = new ConfigurationStore(_sessionMock.Object, _dashboardUpdatePublisherMock.Object);
+    var store = new ConfigurationStore(_sessionMock.Object);
 
     // Act
     var result = await store.GetAsync();
@@ -61,7 +58,7 @@ public sealed class AppConfigStoreTests
       .Setup(e => e.AggregateStreamAsync(ConfigurationId.Root, It.IsAny<long>(), It.IsAny<DateTimeOffset?>(), It.IsAny<DbConfiguration?>()))
       .ReturnsAsync(new DbConfiguration { Id = ConfigurationId.Root });
 
-    var store = new ConfigurationStore(_sessionMock.Object, _dashboardUpdatePublisherMock.Object);
+    var store = new ConfigurationStore(_sessionMock.Object);
     _ = await store.UpdateAiAsync("model", "https://endpoint", "key");
 
     eventStoreMock.As<IEventOperations>().Verify(
@@ -92,7 +89,7 @@ public sealed class AppConfigStoreTests
       .Setup(e => e.AggregateStreamAsync(ConfigurationId.Root, It.IsAny<long>(), It.IsAny<DateTimeOffset?>(), It.IsAny<DbConfiguration?>()))
       .ReturnsAsync(new DbConfiguration { Id = ConfigurationId.Root, AiModelId = "new-model" });
 
-    var store = new ConfigurationStore(_sessionMock.Object, _dashboardUpdatePublisherMock.Object);
+    var store = new ConfigurationStore(_sessionMock.Object);
     _ = await store.UpdateAiAsync("new-model", "https://endpoint", "key");
 
     eventStoreMock.As<IEventOperations>().Verify(
@@ -101,33 +98,6 @@ public sealed class AppConfigStoreTests
     eventStoreMock.As<IEventOperations>().Verify(
       e => e.StartStream<DbConfiguration>(ConfigurationId.Root, It.IsAny<object[]>()),
       Times.Never);
-  }
-
-  /// <summary>
-  /// Mutating configuration operations should notify the dashboard publisher.
-  /// </summary>
-  [Fact]
-  public async Task UpdateAiAsyncPublishesDashboardUpdateAsync()
-  {
-    _ = _sessionMock
-      .Setup(s => s.LoadAsync<DbConfiguration>(ConfigurationId.Root, It.IsAny<CancellationToken>()))
-      .ReturnsAsync(new DbConfiguration { Id = ConfigurationId.Root });
-    _ = _sessionMock
-      .Setup(s => s.SaveChangesAsync(It.IsAny<CancellationToken>()))
-      .Returns(Task.CompletedTask);
-
-    var eventStoreMock = new Mock<IEventStoreOperations>(MockBehavior.Loose);
-    _ = _sessionMock.SetupGet(s => s.Events).Returns(eventStoreMock.Object);
-    _ = eventStoreMock
-      .Setup(e => e.AggregateStreamAsync(ConfigurationId.Root, It.IsAny<long>(), It.IsAny<DateTimeOffset?>(), It.IsAny<DbConfiguration?>()))
-      .ReturnsAsync(new DbConfiguration { Id = ConfigurationId.Root });
-
-    var store = new ConfigurationStore(_sessionMock.Object, _dashboardUpdatePublisherMock.Object);
-    _ = await store.UpdateAiAsync("model", "https://endpoint", "key");
-
-    _dashboardUpdatePublisherMock.Verify(
-      p => p.PublishOverviewUpdatedAsync(It.IsAny<CancellationToken>()),
-      Times.Once);
   }
 
   /// <summary>
@@ -161,15 +131,12 @@ public sealed class AppConfigStoreTests
       .Setup(e => e.AggregateStreamAsync(ConfigurationId.Root, It.IsAny<long>(), It.IsAny<DateTimeOffset?>(), It.IsAny<DbConfiguration?>()))
       .ReturnsAsync(updatedConfig);
 
-    var store = new ConfigurationStore(_sessionMock.Object, _dashboardUpdatePublisherMock.Object);
+    var store = new ConfigurationStore(_sessionMock.Object);
     var result = await store.UpdateDiscordAsync(token, publicKey, botName);
 
     Assert.True(result.IsSuccess);
     Assert.Equal(token, result.Value.DiscordToken);
     Assert.Equal(botName, result.Value.DiscordBotName);
-    _dashboardUpdatePublisherMock.Verify(
-      p => p.PublishOverviewUpdatedAsync(It.IsAny<CancellationToken>()),
-      Times.Once);
   }
 
   /// <summary>
@@ -199,14 +166,11 @@ public sealed class AppConfigStoreTests
       .Setup(e => e.AggregateStreamAsync(ConfigurationId.Root, It.IsAny<long>(), It.IsAny<DateTimeOffset?>(), It.IsAny<DbConfiguration?>()))
       .ReturnsAsync(updatedConfig);
 
-    var store = new ConfigurationStore(_sessionMock.Object, _dashboardUpdatePublisherMock.Object);
+    var store = new ConfigurationStore(_sessionMock.Object);
     var result = await store.UpdateSuperAdminAsync(discordUserId);
 
     Assert.True(result.IsSuccess);
     Assert.Equal(discordUserId, result.Value.SuperAdminDiscordUserId);
-    _dashboardUpdatePublisherMock.Verify(
-      p => p.PublishOverviewUpdatedAsync(It.IsAny<CancellationToken>()),
-      Times.Once);
   }
 
   /// <summary>
@@ -251,7 +215,7 @@ public sealed class AppConfigStoreTests
         It.IsAny<DbConfiguration?>()))
       .ReturnsAsync(updatedConfig);
 
-    var store = new ConfigurationStore(_sessionMock.Object, _dashboardUpdatePublisherMock.Object);
+    var store = new ConfigurationStore(_sessionMock.Object);
 
     // Act
     var result = await store.UpdateAiAsync(modelId, endpoint, apiKey);
@@ -310,7 +274,7 @@ public sealed class AppConfigStoreTests
         It.IsAny<DbConfiguration?>()))
       .ReturnsAsync(updatedConfig);
 
-    var store = new ConfigurationStore(_sessionMock.Object, _dashboardUpdatePublisherMock.Object);
+    var store = new ConfigurationStore(_sessionMock.Object);
 
     // Act
     var result = await store.UpdateAiAsync(modelId, endpoint, apiKey);
@@ -321,11 +285,10 @@ public sealed class AppConfigStoreTests
   }
 
   /// <summary>
-  /// When SaveChangesAsync throws, the store should return a failure result and must NOT
-  /// call PublishOverviewUpdatedAsync (the DB write did not succeed).
+  /// When SaveChangesAsync throws, the store should return a failure result.
   /// </summary>
   [Fact]
-  public async Task UpdateAiAsyncDoesNotPublishWhenSaveChangesFailsAsync()
+  public async Task UpdateAiAsyncReturnsFailWhenSaveChangesThrowsAsync()
   {
     _ = _sessionMock
       .Setup(s => s.LoadAsync<DbConfiguration>(ConfigurationId.Root, It.IsAny<CancellationToken>()))
@@ -337,13 +300,10 @@ public sealed class AppConfigStoreTests
     var eventStoreMock = new Mock<IEventStoreOperations>(MockBehavior.Loose);
     _ = _sessionMock.SetupGet(s => s.Events).Returns(eventStoreMock.Object);
 
-    var store = new ConfigurationStore(_sessionMock.Object, _dashboardUpdatePublisherMock.Object);
+    var store = new ConfigurationStore(_sessionMock.Object);
     var result = await store.UpdateAiAsync("model", "https://endpoint", "key");
 
     Assert.True(result.IsFailed);
-    _dashboardUpdatePublisherMock.Verify(
-      p => p.PublishOverviewUpdatedAsync(It.IsAny<CancellationToken>()),
-      Times.Never);
   }
 
   /// <summary>
@@ -358,7 +318,7 @@ public sealed class AppConfigStoreTests
       .Setup(s => s.LoadAsync<DbConfiguration>(ConfigurationId.Root, It.IsAny<CancellationToken>()))
       .ReturnsAsync((DbConfiguration?)null);
 
-    var store = new ConfigurationStore(_sessionMock.Object, _dashboardUpdatePublisherMock.Object);
+    var store = new ConfigurationStore(_sessionMock.Object);
 
     // Act
     var result = await store.IsInitializedAsync();
@@ -382,7 +342,7 @@ public sealed class AppConfigStoreTests
       .Setup(s => s.LoadAsync<DbConfiguration>(ConfigurationId.Root, It.IsAny<CancellationToken>()))
       .ReturnsAsync(existingConfig);
 
-    var store = new ConfigurationStore(_sessionMock.Object, _dashboardUpdatePublisherMock.Object);
+    var store = new ConfigurationStore(_sessionMock.Object);
 
     // Act
     var result = await store.IsInitializedAsync();

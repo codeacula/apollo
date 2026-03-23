@@ -1,3 +1,4 @@
+using Apollo.Application.ToDos.Notifications;
 using Apollo.Core;
 using Apollo.Core.Logging;
 using Apollo.Core.ToDos;
@@ -18,6 +19,7 @@ public sealed record SetAllToDosAttributeCommand(
 
 public sealed class SetAllToDosAttributeCommandHandler(
   IToDoStore toDoStore,
+  IMediator mediator,
   ILogger<SetAllToDosAttributeCommandHandler> logger) : IRequestHandler<SetAllToDosAttributeCommand, Result<int>>
 {
   public async Task<Result<int>> Handle(SetAllToDosAttributeCommand request, CancellationToken cancellationToken)
@@ -43,6 +45,7 @@ public sealed class SetAllToDosAttributeCommandHandler(
         }
 
         var (updated, errors) = await UpdateAttributesAsync(todoId, request, cancellationToken);
+
         if (updated)
         {
           updatedCount++;
@@ -109,6 +112,7 @@ public sealed class SetAllToDosAttributeCommandHandler(
       else
       {
         updated = true;
+        await mediator.Publish(new ToDoPriorityUpdatedNotification(), cancellationToken);
       }
     }
 
@@ -122,6 +126,7 @@ public sealed class SetAllToDosAttributeCommandHandler(
       else
       {
         updated = true;
+        await mediator.Publish(new ToDoEnergyUpdatedNotification(), cancellationToken);
       }
     }
 
@@ -135,6 +140,7 @@ public sealed class SetAllToDosAttributeCommandHandler(
       else
       {
         updated = true;
+        await mediator.Publish(new ToDoInterestUpdatedNotification(), cancellationToken);
       }
     }
 

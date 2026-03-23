@@ -6,6 +6,8 @@ using Apollo.Domain.ToDos.ValueObjects;
 
 using FluentResults;
 
+using MediatR;
+
 using Microsoft.Extensions.Logging;
 
 using Moq;
@@ -164,10 +166,11 @@ public sealed class ReminderCleanupCommandBehaviorTests
     public Mock<IToDoStore> ToDoStore { get; } = new();
     public Mock<IReminderStore> ReminderStore { get; } = new();
     public Mock<IToDoReminderScheduler> Scheduler { get; } = new();
+    public Mock<IMediator> Mediator { get; } = new();
     public Mock<ILogger<DeleteToDoCommandHandler>> DeleteLogger { get; } = new();
     public Mock<ILogger<CompleteToDoCommandHandler>> CompleteLogger { get; } = new();
 
-    public DeleteToDoCommandHandler DeleteHandler => new(ToDoStore.Object, ReminderStore.Object, Scheduler.Object, DeleteLogger.Object);
-    public CompleteToDoCommandHandler CompleteHandler => new(ToDoStore.Object, ReminderStore.Object, Scheduler.Object, CompleteLogger.Object);
+    public DeleteToDoCommandHandler DeleteHandler => new(ToDoStore.Object, ReminderStore.Object, Scheduler.Object, Mediator.Object, DeleteLogger.Object);
+    public CompleteToDoCommandHandler CompleteHandler => new(ToDoStore.Object, ReminderStore.Object, Scheduler.Object, Mediator.Object, CompleteLogger.Object);
   }
 }

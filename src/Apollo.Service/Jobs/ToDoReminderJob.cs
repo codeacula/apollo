@@ -1,3 +1,4 @@
+using Apollo.Application.Reminders;
 using Apollo.Core;
 using Apollo.Core.Logging;
 using Apollo.Core.Notifications;
@@ -5,6 +6,8 @@ using Apollo.Core.People;
 using Apollo.Core.ToDos;
 using Apollo.Domain.ToDos.Models;
 using Apollo.Domain.ToDos.ValueObjects;
+
+using MediatR;
 
 using Quartz;
 
@@ -16,6 +19,7 @@ public class ToDoReminderJob(
   IPersonStore personStore,
   IPersonNotificationClient notificationClient,
   IReminderMessageGenerator reminderMessageGenerator,
+  IMediator mediator,
   ILogger<ToDoReminderJob> logger) : IJob
 {
   public async Task Execute(IJobExecutionContext context)
@@ -99,7 +103,7 @@ public class ToDoReminderJob(
 
           foreach (var reminder in personReminders)
           {
-            var markAsSentResult = await reminderStore.MarkAsSentAsync(reminder.Id, context.CancellationToken);
+            var markAsSentResult = await mediator.Send(new MarkReminderSentCommand(reminder.Id), context.CancellationToken);
             if (markAsSentResult.IsFailed)
             {
               ToDoLogs.LogFailedToMarkReminderAsSent(logger, reminder.Id.Value, markAsSentResult.GetErrorMessages());

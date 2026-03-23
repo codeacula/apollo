@@ -6,6 +6,8 @@ using Apollo.Domain.ToDos.ValueObjects;
 
 using FluentResults;
 
+using MediatR;
+
 using Moq;
 
 namespace Apollo.Application.Tests.ToDos;
@@ -18,7 +20,8 @@ public class CreateToDoCommandTests
     var store = new Mock<IToDoStore>();
     var reminderStore = new Mock<IReminderStore>();
     var scheduler = new Mock<IToDoReminderScheduler>();
-    var handler = new CreateToDoCommandHandler(store.Object, reminderStore.Object, scheduler.Object);
+    var mediator = new Mock<IMediator>();
+    var handler = new CreateToDoCommandHandler(store.Object, reminderStore.Object, scheduler.Object, mediator.Object);
 
     var personId = new PersonId(Guid.NewGuid());
     var description = new Description("test");
@@ -75,7 +78,8 @@ public class CreateToDoCommandTests
     var store = new Mock<IToDoStore>();
     var reminderStore = new Mock<IReminderStore>();
     var scheduler = new Mock<IToDoReminderScheduler>();
-    var handler = new CreateToDoCommandHandler(store.Object, reminderStore.Object, scheduler.Object);
+    var mediator = new Mock<IMediator>();
+    var handler = new CreateToDoCommandHandler(store.Object, reminderStore.Object, scheduler.Object, mediator.Object);
 
     var personId = new PersonId(Guid.NewGuid());
     var description = new Description("test");

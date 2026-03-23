@@ -1,3 +1,4 @@
+using Apollo.Application.ToDos.Notifications;
 using Apollo.Core;
 using Apollo.Core.ToDos;
 using Apollo.Domain.ToDos.Models;
@@ -15,7 +16,8 @@ public sealed record AddReminderCommand(
 public sealed class AddReminderCommandHandler(
   IToDoStore toDoStore,
   IReminderStore reminderStore,
-  IToDoReminderScheduler toDoReminderScheduler) : IRequestHandler<AddReminderCommand, Result<Reminder>>
+  IToDoReminderScheduler toDoReminderScheduler,
+  IMediator mediator) : IRequestHandler<AddReminderCommand, Result<Reminder>>
 {
   public async Task<Result<Reminder>> Handle(AddReminderCommand request, CancellationToken cancellationToken)
   {
@@ -34,6 +36,14 @@ public sealed class AddReminderCommandHandler(
       }
 
       var createResult = await CreateAndLinkReminderAsync(toDoResult.Value, request.ReminderDate, jobResult.Value, cancellationToken);
+      if (createResult.IsFailed)
+      {
+        return createResult;
+      }
+
+      await mediator.Publish(new ReminderCreatedNotification(), cancellationToken);
+      await mediator.Publish(new ReminderLinkedToToDoNotification(), cancellationToken);
+
       return (await EnsureJobExistsAsync(request.ReminderDate, cancellationToken), createResult) switch
       {
         (_, { IsFailed: true } createFailed) => createFailed,

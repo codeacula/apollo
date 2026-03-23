@@ -1,3 +1,4 @@
+using Apollo.Application.ToDos.Notifications;
 using Apollo.Core;
 using Apollo.Core.ToDos;
 using Apollo.Domain.People.ValueObjects;
@@ -15,7 +16,8 @@ public sealed record CancelReminderCommand(
 
 public sealed class CancelReminderCommandHandler(
   IReminderStore reminderStore,
-  IToDoReminderScheduler toDoReminderScheduler) : IRequestHandler<CancelReminderCommand, Result>
+  IToDoReminderScheduler toDoReminderScheduler,
+  IMediator mediator) : IRequestHandler<CancelReminderCommand, Result>
 {
   public async Task<Result> Handle(CancelReminderCommand request, CancellationToken cancellationToken)
   {
@@ -34,7 +36,18 @@ public sealed class CancelReminderCommandHandler(
       }
 
       var linkedResult = await EnsureNotLinkedToToDosAsync(request.ReminderId, cancellationToken);
-      return linkedResult.IsFailed ? linkedResult : await DeleteReminderAndCleanupJobAsync(reminderResult.Value, cancellationToken);
+      if (linkedResult.IsFailed)
+      {
+        return linkedResult;
+      }
+
+      var deleteResult = await DeleteReminderAndCleanupJobAsync(reminderResult.Value, cancellationToken);
+      if (deleteResult.IsSuccess)
+      {
+        await mediator.Publish(new ReminderDeletedNotification(), cancellationToken);
+      }
+
+      return deleteResult;
     }
     catch (Exception ex)
     {

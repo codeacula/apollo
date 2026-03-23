@@ -3,6 +3,7 @@ using Apollo.AI.Models;
 using Apollo.AI.Planning;
 using Apollo.AI.Requests;
 using Apollo.AI.Tooling;
+using Apollo.Application.Conversations.Notifications;
 using Apollo.Application.People;
 using Apollo.Application.Reminders;
 using Apollo.Application.ToDos;
@@ -73,16 +74,30 @@ public sealed class ProcessIncomingMessageCommandHandler(
 
   private async Task<Result<Conversation>> GetOrCreateConversationWithMessageAsync(Person person, string messageContent, CancellationToken cancellationToken)
   {
-    var convoResult = await conversationStore.GetOrCreateConversationByPersonIdAsync(person.Id, cancellationToken);
+    var existingConvoResult = await conversationStore.GetConversationByPersonIdAsync(person.Id, cancellationToken);
+    var convoResult = existingConvoResult.IsSuccess
+      ? existingConvoResult
+      : await conversationStore.CreateAsync(person.Id, cancellationToken);
 
     if (convoResult.IsFailed)
     {
       return Result.Fail<Conversation>("Unable to fetch conversation.");
     }
 
+    if (existingConvoResult.IsFailed)
+    {
+      await mediator.Publish(new ConversationCreatedNotification(), cancellationToken);
+    }
+
     convoResult = await conversationStore.AddMessageAsync(convoResult.Value.Id, new Content(messageContent), cancellationToken);
 
-    return convoResult.IsFailed ? Result.Fail<Conversation>("Unable to add message to conversation.") : convoResult;
+    if (convoResult.IsFailed)
+    {
+      return Result.Fail<Conversation>("Unable to add message to conversation.");
+    }
+
+    await mediator.Publish(new MessageAddedNotification(), cancellationToken);
+    return convoResult;
   }
 
   private async Task<string> ProcessWithAIAsync(Conversation conversation, Person person, CancellationToken cancellationToken)
@@ -166,7 +181,10 @@ public sealed class ProcessIncomingMessageCommandHandler(
     if (addReplyResult.IsFailed)
     {
       DataAccessLogs.UnableToSaveMessageToConversation(logger, conversation.Id.Value, response);
+      return;
     }
+
+    await mediator.Publish(new ReplyAddedNotification(), cancellationToken);
   }
 
   private Result<Reply> CreateReplyToUser(string response)
