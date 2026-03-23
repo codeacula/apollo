@@ -11,7 +11,12 @@ public static class ServiceCollectionExtensions
 {
   public static IServiceCollection AddCacheServices(this IServiceCollection services, string redisConnectionString)
   {
-    _ = services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(redisConnectionString));
+    _ = services.AddSingleton<IConnectionMultiplexer>(_ =>
+    {
+      var options = ConfigurationOptions.Parse(redisConnectionString);
+      options.AbortOnConnectFail = false;
+      return ConnectionMultiplexer.Connect(options);
+    });
     _ = services.AddSingleton<IPersonCache, PersonCache>();
     _ = services.AddSingleton<IDashboardUpdatePublisher, DashboardUpdatePublisher>();
 
