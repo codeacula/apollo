@@ -1,5 +1,6 @@
 using Apollo.Application.Configuration;
 using Apollo.Cache;
+using Apollo.API.Dashboard;
 using Apollo.Database;
 using Apollo.GRPC;
 
@@ -9,7 +10,7 @@ var configuration = webAppBuilder.Configuration;
 
 _ = webAppBuilder.Services.AddControllers();
 _ = webAppBuilder.Services.AddSignalR();
-_ = webAppBuilder.Services.AddSingleton<Apollo.API.Dashboard.DashboardConnectionTracker>();
+_ = webAppBuilder.Services.AddSingleton<DashboardConnectionTracker>();
 
 var redisConnectionString = configuration.GetConnectionString("Redis");
 _ = webAppBuilder.Services
@@ -20,11 +21,11 @@ if (!string.IsNullOrWhiteSpace(redisConnectionString))
 {
   _ = webAppBuilder.Services
     .AddCacheServices(redisConnectionString)
-    .AddHostedService<Apollo.API.Dashboard.DashboardBroadcastService>();
+    .AddHostedService<DashboardBroadcastService>();
 }
 
 _ = webAppBuilder.Services
-  .AddScoped<Apollo.API.Dashboard.IDashboardOverviewService, Apollo.API.Dashboard.DashboardOverviewService>()
+  .AddScoped<IDashboardOverviewService, DashboardOverviewService>()
   .AddSingleton(TimeProvider.System);
 
 // Register MediatR scoped to only the configuration handlers.
@@ -58,7 +59,7 @@ if (!string.IsNullOrWhiteSpace(appUrls) && appUrls.Contains("https://", StringCo
 _ = app.UseDefaultFiles();
 _ = app.UseStaticFiles();
 _ = app.MapControllers();
-_ = app.MapHub<Apollo.API.Dashboard.DashboardHub>("/hubs/dashboard");
+_ = app.MapHub<DashboardHub>("/hubs/dashboard");
 #pragma warning disable ASP0018 // route parameter 'path' is intentionally unused — catch-all for SPA routing
 _ = app.MapMethods("{**path}", [HttpMethods.Get, HttpMethods.Head], async context =>
 #pragma warning restore ASP0018
