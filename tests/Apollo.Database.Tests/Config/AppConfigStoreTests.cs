@@ -64,10 +64,10 @@ public sealed class AppConfigStoreTests
     var store = new ConfigurationStore(_sessionMock.Object, _dashboardUpdatePublisherMock.Object);
     _ = await store.UpdateAiAsync("model", "https://endpoint", "key");
 
-    eventStoreMock.Verify(
+    eventStoreMock.As<IEventOperations>().Verify(
       e => e.StartStream<DbConfiguration>(ConfigurationId.Root, It.IsAny<object[]>()),
       Times.Once);
-    eventStoreMock.Verify(
+    eventStoreMock.As<IEventOperations>().Verify(
       e => e.Append(ConfigurationId.Root, It.IsAny<object[]>()),
       Times.Never);
   }
@@ -95,10 +95,10 @@ public sealed class AppConfigStoreTests
     var store = new ConfigurationStore(_sessionMock.Object, _dashboardUpdatePublisherMock.Object);
     _ = await store.UpdateAiAsync("new-model", "https://endpoint", "key");
 
-    eventStoreMock.Verify(
+    eventStoreMock.As<IEventOperations>().Verify(
       e => e.Append(ConfigurationId.Root, It.IsAny<object[]>()),
       Times.Once);
-    eventStoreMock.Verify(
+    eventStoreMock.As<IEventOperations>().Verify(
       e => e.StartStream<DbConfiguration>(ConfigurationId.Root, It.IsAny<object[]>()),
       Times.Never);
   }
