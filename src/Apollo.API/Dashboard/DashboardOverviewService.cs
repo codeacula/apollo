@@ -152,6 +152,16 @@ public sealed class DashboardOverviewService(
 
   private static string Truncate(string value, int maxLength)
   {
-    return value.Length <= maxLength ? value : $"{value[..(maxLength - 1)]}...";
+    if (value.Length <= maxLength)
+    {
+      return value;
+    }
+
+    if (maxLength <= 3)
+    {
+      return value[..maxLength];
+    }
+
+    return $"{value[..(maxLength - 3)]}...";
   }
 }

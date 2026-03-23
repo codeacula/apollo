@@ -54,7 +54,34 @@ export async function getDashboardOverview(): Promise<DashboardOverview> {
   const response = await fetch('/api/dashboard/overview')
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch dashboard overview: ${response.statusText}`)
+    let errorMessage = `Failed to fetch dashboard overview: ${response.status} ${response.statusText}`
+
+    try {
+      const contentType = response.headers.get('content-type') ?? ''
+
+      if (contentType.includes('application/json')) {
+        const body = await response.json()
+        if (body && typeof body === 'object' && 'error' in body) {
+          const errorDetail = (body as { error?: unknown }).error
+          if (typeof errorDetail === 'string') {
+            errorMessage += ` - ${errorDetail}`
+          } else if (errorDetail !== undefined) {
+            errorMessage += ` - ${JSON.stringify(errorDetail)}`
+          }
+        } else if (body !== undefined) {
+          errorMessage += ` - ${JSON.stringify(body)}`
+        }
+      } else {
+        const text = await response.text()
+        if (text) {
+          errorMessage += ` - ${text}`
+        }
+      }
+    } catch {
+      // Ignore parsing problems and preserve the original HTTP error.
+    }
+
+    throw new Error(errorMessage)
   }
 
   return await response.json() as DashboardOverview

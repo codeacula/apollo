@@ -19,6 +19,7 @@ const POLLING_INTERVAL_MS = 15000
 
 let realtimeSubscription: Awaited<ReturnType<typeof subscribeToDashboardUpdates>> = null
 let pollingHandle: ReturnType<typeof setInterval> | null = null
+let pollingRefreshInFlight = false
 
 const liveModeLabel = computed(() => {
   switch (liveMode.value) {
@@ -74,10 +75,18 @@ function startPolling(): void {
 
   liveMode.value = 'polling'
   pollingHandle = setInterval(async () => {
+    if (pollingRefreshInFlight) {
+      return
+    }
+
+    pollingRefreshInFlight = true
+
     try {
       await loadOverview()
     } catch (err) {
       console.warn('Dashboard polling refresh failed.', err)
+    } finally {
+      pollingRefreshInFlight = false
     }
   }, POLLING_INTERVAL_MS)
 }
@@ -89,6 +98,7 @@ function stopPolling(): void {
 
   clearInterval(pollingHandle)
   pollingHandle = null
+  pollingRefreshInFlight = false
 }
 
 onMounted(async () => {

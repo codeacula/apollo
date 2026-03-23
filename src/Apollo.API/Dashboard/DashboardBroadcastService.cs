@@ -4,74 +4,79 @@ using Microsoft.AspNetCore.SignalR;
 
 using StackExchange.Redis;
 
+using System.Threading.Channels;
+
 namespace Apollo.API.Dashboard;
 
 public sealed class DashboardBroadcastService(
+  IServiceProvider serviceProvider,
   IServiceScopeFactory serviceScopeFactory,
   DashboardConnectionTracker connectionTracker,
-  IConnectionMultiplexer redis,
   IHubContext<DashboardHub> hubContext,
   ILogger<DashboardBroadcastService> logger) : BackgroundService
 {
   protected override async Task ExecuteAsync(CancellationToken stoppingToken)
   {
+    await Task.Yield();
+
     string? lastSignature = null;
-    var gate = new SemaphoreSlim(1, 1);
-    ISubscriber subscriber = redis.GetSubscriber();
-    ChannelMessageQueue queue = await subscriber.SubscribeAsync(RedisChannel.Literal(DashboardChannels.OverviewUpdated));
-
-    queue.OnMessage(async _ =>
-    {
-      try
-      {
-        await gate.WaitAsync(stoppingToken);
-
-        if (!connectionTracker.HasConnections)
-        {
-          lastSignature = null;
-          return;
-        }
-
-        using var scope = serviceScopeFactory.CreateScope();
-        var overviewService = scope.ServiceProvider.GetRequiredService<IDashboardOverviewService>();
-        var overview = await overviewService.GetOverviewAsync(stoppingToken);
-        var signature = overviewService.CreateSignature(overview);
-
-        if (lastSignature is null)
-        {
-          lastSignature = signature;
-          await hubContext.Clients.All.SendAsync("DashboardOverviewUpdated", overview, stoppingToken);
-          return;
-        }
-
-        if (signature == lastSignature)
-        {
-          return;
-        }
-
-        lastSignature = signature;
-        await hubContext.Clients.All.SendAsync("DashboardOverviewUpdated", overview, stoppingToken);
-      }
-      catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
-      {
-        // ignored
-      }
-      catch (Exception ex)
-      {
-        DashboardLogs.DashboardBroadcastFailed(logger, ex);
-      }
-      finally
-      {
-        if (gate.CurrentCount == 0)
-        {
-          gate.Release();
-        }
-      }
-    });
+    ChannelMessageQueue queue;
 
     try
     {
-      await Task.Delay(Timeout.Infinite, stoppingToken);
+      var redis = serviceProvider.GetRequiredService<IConnectionMultiplexer>();
+      ISubscriber subscriber = redis.GetSubscriber();
+      queue = await subscriber.SubscribeAsync(RedisChannel.Literal(DashboardChannels.OverviewUpdated));
+    }
+    catch (Exception ex)
+    {
+      DashboardLogs.DashboardBroadcastDisabled(logger, ex);
+      return;
+    }
+
+    var updates = Channel.CreateUnbounded<bool>();
+
+    queue.OnMessage(_ => updates.Writer.TryWrite(true));
+
+    try
+    {
+      await foreach (var _ in updates.Reader.ReadAllAsync(stoppingToken))
+      {
+        while (updates.Reader.TryRead(out var _))
+        {
+          // Coalesce bursts of pub/sub notifications into a single refresh.
+        }
+
+        try
+        {
+          if (!connectionTracker.HasConnections)
+          {
+            lastSignature = null;
+            continue;
+          }
+
+          using var scope = serviceScopeFactory.CreateScope();
+          var overviewService = scope.ServiceProvider.GetRequiredService<IDashboardOverviewService>();
+          var overview = await overviewService.GetOverviewAsync(stoppingToken);
+          var signature = overviewService.CreateSignature(overview);
+
+          if (signature == lastSignature)
+          {
+            continue;
+          }
+
+          lastSignature = signature;
+          await hubContext.Clients.All.SendAsync("DashboardOverviewUpdated", overview, stoppingToken);
+        }
+        catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+        {
+          break;
+        }
+        catch (Exception ex)
+        {
+          DashboardLogs.DashboardBroadcastFailed(logger, ex);
+        }
+      }
     }
     catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
     {
@@ -79,8 +84,8 @@ public sealed class DashboardBroadcastService(
     }
     finally
     {
+      _ = updates.Writer.TryComplete();
       await queue.UnsubscribeAsync();
-      gate.Dispose();
     }
   }
 }
