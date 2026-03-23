@@ -17,6 +17,7 @@ _ = webAppBuilder.Services
 
 _ = webAppBuilder.Services
   .AddScoped<Apollo.API.Dashboard.IDashboardOverviewService, Apollo.API.Dashboard.DashboardOverviewService>()
+  .AddSingleton(TimeProvider.System)
   .AddHostedService<Apollo.API.Dashboard.DashboardBroadcastService>();
 
 // Register MediatR scoped to only the configuration handlers.
@@ -36,8 +37,6 @@ webAppBuilder.Host.UseDefaultServiceProvider(options =>
 });
 
 WebApplication app = webAppBuilder.Build();
-
-_ = app.UseRequestLocalization();
 
 if (app.Environment.IsDevelopment())
 {

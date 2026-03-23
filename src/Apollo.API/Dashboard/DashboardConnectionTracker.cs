@@ -14,11 +14,11 @@ public sealed class DashboardConnectionTracker
 
   public void Disconnected()
   {
-    _ = Interlocked.Decrement(ref _connectionCount);
+    var result = Interlocked.Decrement(ref _connectionCount);
 
-    if (_connectionCount < 0)
+    if (result < 0)
     {
-      _connectionCount = 0;
+      Interlocked.CompareExchange(ref _connectionCount, 0, result);
     }
   }
 }

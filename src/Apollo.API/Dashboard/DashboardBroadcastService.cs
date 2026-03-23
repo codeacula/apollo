@@ -84,7 +84,15 @@ public sealed class DashboardBroadcastService(
     finally
     {
       _ = updates.Writer.TryComplete();
-      await queue.UnsubscribeAsync();
+
+      try
+      {
+        await queue.UnsubscribeAsync();
+      }
+      catch
+      {
+        // Best-effort cleanup; the host is shutting down.
+      }
     }
   }
 }

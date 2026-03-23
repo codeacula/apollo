@@ -9,7 +9,8 @@ namespace Apollo.API.Dashboard;
 
 public sealed class DashboardOverviewService(
   IMediator mediator,
-  IDashboardOverviewStore dashboardOverviewStore) : IDashboardOverviewService
+  IDashboardOverviewStore dashboardOverviewStore,
+  TimeProvider timeProvider) : IDashboardOverviewService
 {
   public async Task<DashboardOverviewResponse> GetOverviewAsync(CancellationToken cancellationToken = default)
   {
@@ -20,7 +21,7 @@ public sealed class DashboardOverviewService(
       throw new InvalidOperationException(statusResult.Errors.Count > 0 ? statusResult.Errors[0].Message : "Unknown error");
     }
 
-    var now = TimeProvider.System.GetUtcNow().UtcDateTime;
+    var now = timeProvider.GetUtcNow().UtcDateTime;
     var status = statusResult.Value;
     var overviewData = await dashboardOverviewStore.GetOverviewDataAsync(now, cancellationToken);
 
@@ -63,6 +64,7 @@ public sealed class DashboardOverviewService(
       },
       Activity = overviewData.Activity.Select(x => new DashboardActivityItemResponse
       {
+        Id = x.Id,
         Kind = x.Kind,
         Title = x.Title,
         Description = x.Description,

@@ -49,12 +49,14 @@ const createOverview = (overrides: Record<string, unknown> = {}) => ({
   },
   activity: [
     {
+      id: 0,
       kind: 'todo_created',
       title: 'To-do created',
       description: 'codeacula added Clean the cauldron',
       occurredOnUtc: '2026-03-22T19:45:00Z',
     },
     {
+      id: 1,
       kind: 'reminder_sent',
       title: 'Reminder sent',
       description: 'codeacula: Stretch and drink water',
@@ -111,7 +113,10 @@ describe('DashboardView', () => {
     const wrapper = mountDashboard()
     await flushPromises()
 
-    expect(mockFetch).toHaveBeenCalledWith('/api/dashboard/overview')
+    expect(mockFetch).toHaveBeenCalledWith(
+      '/api/dashboard/overview',
+      expect.objectContaining({ signal: expect.any(AbortSignal) }),
+    )
     wrapper.unmount()
   })
 
@@ -182,6 +187,11 @@ describe('DashboardView', () => {
   })
 
   it('shows realtime status when SignalR is available', async () => {
+    vi.mocked(subscribeToDashboardUpdates).mockImplementation(async ({ onConnected }) => {
+      onConnected?.()
+      return { stop: stopMock }
+    })
+
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
       ok: true,
       json: () => Promise.resolve(createOverview()),
@@ -192,6 +202,31 @@ describe('DashboardView', () => {
 
     expect(wrapper.text()).toContain('Live via SignalR')
     wrapper.unmount()
+  })
+
+  it('shows an error state when the overview fetch fails', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Network error')))
+
+    const wrapper = mountDashboard()
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('Network error')
+    wrapper.unmount()
+  })
+
+  it('calls stop on the realtime subscription when the component is unmounted', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(createOverview()),
+    }))
+
+    const wrapper = mountDashboard()
+    await flushPromises()
+
+    wrapper.unmount()
+    await flushPromises()
+
+    expect(stopMock).toHaveBeenCalledOnce()
   })
 
   it('falls back to polling when realtime connection is unavailable', async () => {

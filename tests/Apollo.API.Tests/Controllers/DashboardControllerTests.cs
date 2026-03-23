@@ -58,6 +58,7 @@ public sealed class DashboardControllerTests(WebApplicationFactory<IApolloAPI> f
         [
           new DashboardActivityItemResponse
           {
+            Id = 0,
             Kind = "todo_created",
             Title = "To-do created",
             Description = "codeacula added Stretch",
@@ -90,6 +91,20 @@ public sealed class DashboardControllerTests(WebApplicationFactory<IApolloAPI> f
     Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
     var content = await response.Content.ReadAsStringAsync();
     Assert.Contains("dashboard unavailable", content);
+  }
+
+  [Fact]
+  public async Task GetOverviewReturnsInternalServerErrorOnUnexpectedExceptionAsync()
+  {
+    var mockService = new Mock<IDashboardOverviewService>();
+    mockService
+      .Setup(x => x.GetOverviewAsync(It.IsAny<CancellationToken>()))
+      .ThrowsAsync(new InvalidDataException("unexpected failure"));
+
+    var client = CreateClient(mockService);
+    var response = await client.GetAsync("/api/dashboard/overview");
+
+    Assert.Equal(System.Net.HttpStatusCode.InternalServerError, response.StatusCode);
   }
 
   private HttpClient CreateClient(Mock<IDashboardOverviewService> dashboardOverviewService)

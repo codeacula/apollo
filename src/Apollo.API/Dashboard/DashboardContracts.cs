@@ -54,6 +54,7 @@ public sealed record DashboardConversationSummaryResponse
 
 public sealed record DashboardActivityItemResponse
 {
+  public required int Id { get; init; }
   public required string Kind { get; init; }
   public required string Title { get; init; }
   public required string Description { get; init; }

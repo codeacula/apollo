@@ -51,27 +51,10 @@ defineProps<Props>()
 </template>
 
 <style scoped>
-.panel {
-  border-radius: 1.5rem;
-  overflow: hidden;
-  border: 1px solid rgba(111, 79, 59, 0.18);
-  background: rgba(255, 253, 249, 0.88);
-  box-shadow: 0 22px 55px rgba(82, 56, 39, 0.12);
-  backdrop-filter: blur(8px);
-}
+@import '../../assets/panel.css';
 
 .panel-workload {
   padding: 1.4rem;
-}
-
-.panel-head h2 {
-  margin: 0;
-  font-size: 1.15rem;
-}
-
-.panel-head p {
-  margin: 0.35rem 0 1rem;
-  color: #75665d;
 }
 
 .workload-list {

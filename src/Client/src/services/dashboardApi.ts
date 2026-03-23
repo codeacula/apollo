@@ -34,6 +34,7 @@ export interface DashboardConversationSummary {
 }
 
 export interface DashboardActivityItem {
+  id: number
   kind: string
   title: string
   description: string
@@ -50,8 +51,24 @@ export interface DashboardOverview {
   activity: DashboardActivityItem[]
 }
 
+const FETCH_TIMEOUT_MS = 10_000
+
 export async function getDashboardOverview(): Promise<DashboardOverview> {
-  const response = await fetch('/api/dashboard/overview')
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
+
+  let response: Response
+
+  try {
+    response = await fetch('/api/dashboard/overview', { signal: controller.signal })
+  } catch (err) {
+    if (err instanceof DOMException && err.name === 'AbortError') {
+      throw new Error('Dashboard overview request timed out')
+    }
+    throw err
+  } finally {
+    clearTimeout(timeoutId)
+  }
 
   if (!response.ok) {
     let errorMessage = `Failed to fetch dashboard overview: ${response.status} ${response.statusText}`

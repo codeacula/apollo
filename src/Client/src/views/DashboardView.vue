@@ -13,13 +13,16 @@ import { subscribeToDashboardUpdates } from '../services/dashboardRealtime'
 const isLoading = ref(true)
 const error = ref<string | null>(null)
 const overview = ref<DashboardOverview | null>(null)
-const liveMode = ref<'signalr' | 'polling' | 'reconnecting'>('signalr')
+const liveMode = ref<'signalr' | 'polling' | 'reconnecting'>('reconnecting')
 
 const POLLING_INTERVAL_MS = 15000
 
 let realtimeSubscription: Awaited<ReturnType<typeof subscribeToDashboardUpdates>> = null
 let pollingHandle: ReturnType<typeof setInterval> | null = null
 let pollingRefreshInFlight = false
+let pollingFailureCount = 0
+
+const POLLING_MAX_FAILURES = 3
 
 const liveModeLabel = computed(() => {
   switch (liveMode.value) {
@@ -83,8 +86,14 @@ function startPolling(): void {
 
     try {
       await loadOverview()
+      pollingFailureCount = 0
     } catch (err) {
+      pollingFailureCount++
       console.warn('Dashboard polling refresh failed.', err)
+
+      if (pollingFailureCount >= POLLING_MAX_FAILURES) {
+        error.value = 'Dashboard data could not be refreshed. Check your connection.'
+      }
     } finally {
       pollingRefreshInFlight = false
     }
@@ -99,6 +108,7 @@ function stopPolling(): void {
   clearInterval(pollingHandle)
   pollingHandle = null
   pollingRefreshInFlight = false
+  pollingFailureCount = 0
 }
 
 onMounted(async () => {

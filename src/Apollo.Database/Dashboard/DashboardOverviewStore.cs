@@ -85,6 +85,7 @@ public sealed class DashboardOverviewStore(IQuerySession querySession) : IDashbo
     var activity = BuildRecentActivity(recentToDos, recentReminders, recentConversations, peopleById)
       .OrderByDescending(x => x.OccurredOnUtc)
       .Take(8)
+      .Select((item, index) => item with { Id = index })
       .ToArray();
 
     return new DashboardOverviewData
@@ -122,10 +123,11 @@ public sealed class DashboardOverviewStore(IQuerySession querySession) : IDashbo
     IEnumerable<ConversationActivityProjection> conversations,
     IReadOnlyDictionary<Guid, string> peopleById)
   {
-    foreach (var toDo in toDos.OrderByDescending(x => x.CreatedOn).Take(6))
+    foreach (var toDo in toDos)
     {
       yield return new DashboardActivityData
       {
+        Id = 0,
         Kind = "todo_created",
         Title = "To-do created",
         Description = $"{ResolveUsername(peopleById, toDo.PersonId)} added {Truncate(toDo.Description, 80)}",
@@ -133,12 +135,13 @@ public sealed class DashboardOverviewStore(IQuerySession querySession) : IDashbo
       };
     }
 
-    foreach (var reminder in reminders.OrderByDescending(x => x.SentOn ?? x.CreatedOn).Take(6))
+    foreach (var reminder in reminders)
     {
       var wasSent = reminder.SentOn.HasValue;
 
       yield return new DashboardActivityData
       {
+        Id = 0,
         Kind = wasSent ? "reminder_sent" : "reminder_scheduled",
         Title = wasSent ? "Reminder sent" : "Reminder scheduled",
         Description = $"{ResolveUsername(peopleById, reminder.PersonId)}: {Truncate(reminder.Details, 80)}",
@@ -146,7 +149,7 @@ public sealed class DashboardOverviewStore(IQuerySession querySession) : IDashbo
       };
     }
 
-    foreach (var conversation in conversations.OrderByDescending(x => x.UpdatedOn).Take(6))
+    foreach (var conversation in conversations)
     {
       if (conversation.Messages.Count == 0)
       {
@@ -157,6 +160,7 @@ public sealed class DashboardOverviewStore(IQuerySession querySession) : IDashbo
 
       yield return new DashboardActivityData
       {
+        Id = 0,
         Kind = latestMessage.FromUser ? "user_message" : "apollo_message",
         Title = latestMessage.FromUser ? "User message" : "Apollo reply",
         Description = $"{ResolveUsername(peopleById, conversation.PersonId)}: {Truncate(latestMessage.Content, 80)}",

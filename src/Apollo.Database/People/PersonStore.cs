@@ -190,7 +190,6 @@ public sealed class PersonStore(IConfigurationStore configurationStore, IDocumen
       });
 
       await session.SaveChangesAsync(cancellationToken);
-      await dashboardUpdatePublisher.PublishOverviewUpdatedAsync(cancellationToken);
 
       return Result.Ok();
     }
@@ -212,7 +211,6 @@ public sealed class PersonStore(IConfigurationStore configurationStore, IDocumen
       });
 
       await session.SaveChangesAsync(cancellationToken);
-      await dashboardUpdatePublisher.PublishOverviewUpdatedAsync(cancellationToken);
 
       return Result.Ok();
     }
@@ -236,7 +234,6 @@ public sealed class PersonStore(IConfigurationStore configurationStore, IDocumen
         });
 
       await session.SaveChangesAsync(cancellationToken);
-      await dashboardUpdatePublisher.PublishOverviewUpdatedAsync(cancellationToken);
 
       return Result.Ok();
     }
@@ -260,7 +257,6 @@ public sealed class PersonStore(IConfigurationStore configurationStore, IDocumen
         });
 
       await session.SaveChangesAsync(cancellationToken);
-      await dashboardUpdatePublisher.PublishOverviewUpdatedAsync(cancellationToken);
 
       return Result.Ok();
     }
@@ -290,7 +286,6 @@ public sealed class PersonStore(IConfigurationStore configurationStore, IDocumen
         });
 
       await session.SaveChangesAsync(cancellationToken);
-      await dashboardUpdatePublisher.PublishOverviewUpdatedAsync(cancellationToken);
 
       return Result.Ok();
     }
