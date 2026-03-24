@@ -10,7 +10,7 @@
   https_port {$CADDY_HTTPS_PORT:-8443}
 }
 
-{$CADDY_HOST:-localhost:8083} {
+{$CADDY_HOST:-localhost} {
   # Main API + SPA
   reverse_proxy apollo-api:5144
 

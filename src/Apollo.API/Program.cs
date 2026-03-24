@@ -85,6 +85,7 @@ _ = app.MapMethods("{**path}", [HttpMethods.Get, HttpMethods.Head], async contex
     return;
   }
 
+  context.Response.ContentType = "text/html; charset=utf-8";
   await context.Response.SendFileAsync(indexPath);
 });
 

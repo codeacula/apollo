@@ -74,19 +74,11 @@ public sealed class ProcessIncomingMessageCommandHandler(
 
   private async Task<Result<Conversation>> GetOrCreateConversationWithMessageAsync(Person person, string messageContent, CancellationToken cancellationToken)
   {
-    var existingConvoResult = await conversationStore.GetConversationByPersonIdAsync(person.Id, cancellationToken);
-    var convoResult = existingConvoResult.IsSuccess
-      ? existingConvoResult
-      : await conversationStore.CreateAsync(person.Id, cancellationToken);
+    var convoResult = await conversationStore.GetOrCreateConversationByPersonIdAsync(person.Id, cancellationToken);
 
     if (convoResult.IsFailed)
     {
       return Result.Fail<Conversation>("Unable to fetch conversation.");
-    }
-
-    if (existingConvoResult.IsFailed)
-    {
-      await mediator.Publish(new ConversationCreatedNotification(), cancellationToken);
     }
 
     convoResult = await conversationStore.AddMessageAsync(convoResult.Value.Id, new Content(messageContent), cancellationToken);
