@@ -53,6 +53,25 @@ export interface DashboardOverview {
 
 const FETCH_TIMEOUT_MS = 10_000
 
+async function extractErrorDetail(response: Response): Promise<string> {
+  try {
+    const contentType = response.headers.get('content-type') ?? ''
+
+    if (contentType.includes('application/json')) {
+      const body = await response.json() as unknown
+      if (body && typeof body === 'object' && 'error' in body) {
+        const detail = (body as { error?: unknown }).error
+        return typeof detail === 'string' ? detail : JSON.stringify(detail)
+      }
+      return JSON.stringify(body)
+    }
+
+    return await response.text()
+  } catch {
+    return ''
+  }
+}
+
 export async function getDashboardOverview(): Promise<DashboardOverview> {
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
@@ -71,34 +90,9 @@ export async function getDashboardOverview(): Promise<DashboardOverview> {
   }
 
   if (!response.ok) {
-    let errorMessage = `Failed to fetch dashboard overview: ${response.status} ${response.statusText}`
-
-    try {
-      const contentType = response.headers.get('content-type') ?? ''
-
-      if (contentType.includes('application/json')) {
-        const body = await response.json()
-        if (body && typeof body === 'object' && 'error' in body) {
-          const errorDetail = (body as { error?: unknown }).error
-          if (typeof errorDetail === 'string') {
-            errorMessage += ` - ${errorDetail}`
-          } else if (errorDetail !== undefined) {
-            errorMessage += ` - ${JSON.stringify(errorDetail)}`
-          }
-        } else if (body !== undefined) {
-          errorMessage += ` - ${JSON.stringify(body)}`
-        }
-      } else {
-        const text = await response.text()
-        if (text) {
-          errorMessage += ` - ${text}`
-        }
-      }
-    } catch {
-      // Ignore parsing problems and preserve the original HTTP error.
-    }
-
-    throw new Error(errorMessage)
+    const detail = await extractErrorDetail(response)
+    const suffix = detail ? ` - ${detail}` : ''
+    throw new Error(`Failed to fetch dashboard overview: ${response.status} ${response.statusText}${suffix}`)
   }
 
   return await response.json() as DashboardOverview
