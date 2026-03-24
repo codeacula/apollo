@@ -1,5 +1,7 @@
 using Apollo.Application.Configuration;
 
+using Apollo.Core;
+
 using FluentResults;
 
 using MediatR;
@@ -150,7 +152,7 @@ public sealed class SetupController(IMediator mediator) : ControllerBase
 
   private static string GetErrorMessage(ResultBase result)
   {
-    return result.Errors.Count > 0 ? result.Errors[0].Message : "Unknown error";
+    return result.GetErrorMessages();
   }
 }
 

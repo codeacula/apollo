@@ -247,7 +247,7 @@ public sealed class ProcessIncomingMessageCommandHandler(
 
   private ToolPlan LogParsingFailure(Guid personId, Result<ToolPlan> parseResult)
   {
-    var errorMsg = parseResult.Errors.Count > 0 ? parseResult.Errors[0].Message : "Unknown error";
+    var errorMsg = parseResult.GetErrorMessages();
     ConversationLogs.ToolPlanParsingFailed(logger, personId, errorMsg);
     return new ToolPlan();
   }
