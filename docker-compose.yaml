@@ -1,11 +1,27 @@
 services:
+  caddy:
+    image: caddy:alpine
+    restart: unless-stopped
+    ports:
+      - "${CADDY_HTTP_PORT:-8083}:8083"
+      - "${CADDY_HTTPS_PORT:-8443}:8443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - apollo-api
+      - apollo-discord
+    networks:
+      - apollo
+
   apollo-api:
     image: apollo-api
     build:
       context: .
       dockerfile: src/Apollo.API/Dockerfile
-    ports:
-      - 5144:5144
+    expose:
+      - "5144"
     env_file:
       - .env
     depends_on:
@@ -19,8 +35,8 @@ services:
     build:
       context: .
       dockerfile: src/Apollo.Discord/Dockerfile
-    ports:
-      - 5145:5145
+    expose:
+      - "5145"
     env_file:
       - .env
     depends_on:
@@ -34,8 +50,8 @@ services:
     build:
       context: .
       dockerfile: src/Apollo.Service/Dockerfile
-    ports:
-      - 5270:5270
+    expose:
+      - "5270"
     env_file:
       - .env
     depends_on:
@@ -77,6 +93,8 @@ services:
 volumes:
   pgsql_data:
   redis_data:
+  caddy_data:
+  caddy_config:
 
 networks:
   apollo:

@@ -1,0 +1,22 @@
+# Apollo reverse proxy
+#
+# Dev default: http://localhost:8083
+# Production: set CADDY_HOST=apollothecat.app and CADDY_HTTP_PORT/CADDY_HTTPS_PORT
+# to 80/443 in docker-compose (or via .env). Caddy handles ACME/Let's Encrypt
+# automatically when a real domain is used.
+
+{
+  http_port  {$CADDY_HTTP_PORT:-8083}
+  https_port {$CADDY_HTTPS_PORT:-8443}
+}
+
+{$CADDY_HOST:-localhost:8083} {
+  # Main API + SPA
+  reverse_proxy apollo-api:5144
+
+  # Discord service endpoints (exposed under /discord/)
+  handle /discord/* {
+    uri strip_prefix /discord
+    reverse_proxy apollo-discord:5145
+  }
+}

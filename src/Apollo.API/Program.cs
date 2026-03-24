@@ -64,7 +64,9 @@ _ = app.MapHub<DashboardHub>("/hubs/dashboard");
 _ = app.MapMethods("{**path}", [HttpMethods.Get, HttpMethods.Head], async context =>
 #pragma warning restore ASP0018
 {
-  if (context.Request.Path.StartsWithSegments("/api") || context.Request.Path.StartsWithSegments("/hubs"))
+  if (context.Request.Path.StartsWithSegments("/api")
+    || context.Request.Path.StartsWithSegments("/hubs")
+    || context.Request.Path.StartsWithSegments("/assets"))
   {
     context.Response.StatusCode = StatusCodes.Status404NotFound;
     return;
@@ -84,7 +86,6 @@ _ = app.MapMethods("{**path}", [HttpMethods.Get, HttpMethods.Head], async contex
     return;
   }
 
-  context.Response.ContentType = "text/html; charset=utf-8";
   await context.Response.SendFileAsync(indexPath);
 });
 
