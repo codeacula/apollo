@@ -36,14 +36,6 @@ _ = webAppBuilder.Services.AddMediatR(cfg =>
   cfg.RegisterServicesFromAssemblyContaining<GetInitializationStatusQueryHandler>()
 );
 
-// Disable DI validate-on-build: Apollo.API is a gateway — not all registered handlers
-// (from transitive assembly scans) need resolvable dependencies in this host.
-webAppBuilder.Host.UseDefaultServiceProvider(options =>
-{
-  options.ValidateOnBuild = false;
-  options.ValidateScopes = webAppBuilder.Environment.IsDevelopment();
-});
-
 WebApplication app = webAppBuilder.Build();
 
 if (app.Environment.IsDevelopment())
