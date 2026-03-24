@@ -1,3 +1,4 @@
+using Apollo.Application.ToDos.Notifications;
 using Apollo.Core.ToDos;
 using Apollo.Domain.ToDos.ValueObjects;
 
@@ -10,13 +11,19 @@ public sealed record UpdateToDoCommand(
   Description Description
 ) : IRequest<Result>;
 
-public sealed class UpdateToDoCommandHandler(IToDoStore toDoStore) : IRequestHandler<UpdateToDoCommand, Result>
+public sealed class UpdateToDoCommandHandler(IToDoStore toDoStore, IMediator mediator) : IRequestHandler<UpdateToDoCommand, Result>
 {
   public async Task<Result> Handle(UpdateToDoCommand request, CancellationToken cancellationToken)
   {
     try
     {
-      return await toDoStore.UpdateAsync(request.ToDoId, request.Description, cancellationToken);
+      var result = await toDoStore.UpdateAsync(request.ToDoId, request.Description, cancellationToken);
+      if (result.IsSuccess)
+      {
+        await mediator.Publish(new ToDoUpdatedNotification(), cancellationToken);
+      }
+
+      return result;
     }
     catch (Exception ex)
     {

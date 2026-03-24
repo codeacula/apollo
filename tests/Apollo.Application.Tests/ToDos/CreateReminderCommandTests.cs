@@ -7,6 +7,8 @@ using Apollo.Domain.ToDos.ValueObjects;
 
 using FluentResults;
 
+using MediatR;
+
 using Moq;
 
 namespace Apollo.Application.Tests.ToDos;
@@ -18,7 +20,8 @@ public class CreateReminderCommandHandlerTests
   {
     var reminderStore = new Mock<IReminderStore>();
     var scheduler = new Mock<IToDoReminderScheduler>();
-    var handler = new CreateReminderCommandHandler(reminderStore.Object, scheduler.Object);
+    var mediator = new Mock<IMediator>();
+    var handler = new CreateReminderCommandHandler(reminderStore.Object, scheduler.Object, mediator.Object);
 
     var personId = new PersonId(Guid.NewGuid());
     const string details = "Get coffee";
@@ -48,7 +51,8 @@ public class CreateReminderCommandHandlerTests
   {
     var reminderStore = new Mock<IReminderStore>();
     var scheduler = new Mock<IToDoReminderScheduler>();
-    var handler = new CreateReminderCommandHandler(reminderStore.Object, scheduler.Object);
+    var mediator = new Mock<IMediator>();
+    var handler = new CreateReminderCommandHandler(reminderStore.Object, scheduler.Object, mediator.Object);
 
     var personId = new PersonId(Guid.NewGuid());
     const string details = "Get coffee";
@@ -69,7 +73,8 @@ public class CreateReminderCommandHandlerTests
   {
     var reminderStore = new Mock<IReminderStore>();
     var scheduler = new Mock<IToDoReminderScheduler>();
-    var handler = new CreateReminderCommandHandler(reminderStore.Object, scheduler.Object);
+    var mediator = new Mock<IMediator>();
+    var handler = new CreateReminderCommandHandler(reminderStore.Object, scheduler.Object, mediator.Object);
 
     var personId = new PersonId(Guid.NewGuid());
     const string details = "Get coffee";

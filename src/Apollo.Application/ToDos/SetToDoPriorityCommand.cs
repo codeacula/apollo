@@ -1,3 +1,4 @@
+using Apollo.Application.ToDos.Notifications;
 using Apollo.Core.ToDos;
 using Apollo.Domain.People.ValueObjects;
 using Apollo.Domain.ToDos.ValueObjects;
@@ -12,16 +13,25 @@ public sealed record SetToDoPriorityCommand(
   Priority Priority
 ) : IRequest<Result>;
 
-public sealed class SetToDoPriorityCommandHandler(IToDoStore toDoStore) : IRequestHandler<SetToDoPriorityCommand, Result>
+public sealed class SetToDoPriorityCommandHandler(IToDoStore toDoStore, IMediator mediator) : IRequestHandler<SetToDoPriorityCommand, Result>
 {
   public async Task<Result> Handle(SetToDoPriorityCommand request, CancellationToken cancellationToken)
   {
     try
     {
       var ownershipResult = await VerifyOwnershipAsync(request.ToDoId, request.PersonId, cancellationToken);
-      return ownershipResult.IsFailed
-        ? ownershipResult
-        : await toDoStore.UpdatePriorityAsync(request.ToDoId, request.Priority, cancellationToken);
+      if (ownershipResult.IsFailed)
+      {
+        return ownershipResult;
+      }
+
+      var result = await toDoStore.UpdatePriorityAsync(request.ToDoId, request.Priority, cancellationToken);
+      if (result.IsSuccess)
+      {
+        await mediator.Publish(new ToDoPriorityUpdatedNotification(), cancellationToken);
+      }
+
+      return result;
     }
     catch (Exception ex)
     {

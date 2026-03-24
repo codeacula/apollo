@@ -6,6 +6,8 @@ using Apollo.Domain.ToDos.ValueObjects;
 
 using FluentResults;
 
+using MediatR;
+
 using Microsoft.Extensions.Logging;
 
 using Moq;
@@ -20,9 +22,10 @@ public class DeleteToDoCommandTests
     var toDoStore = new Mock<IToDoStore>();
     var reminderStore = new Mock<IReminderStore>();
     var toDoReminderScheduler = new Mock<IToDoReminderScheduler>();
+    var mediator = new Mock<IMediator>();
     var logger = new Mock<ILogger<DeleteToDoCommandHandler>>();
     _ = logger.Setup(x => x.IsEnabled(LogLevel.Warning)).Returns(true);
-    var handler = new DeleteToDoCommandHandler(toDoStore.Object, reminderStore.Object, toDoReminderScheduler.Object, logger.Object);
+    var handler = new DeleteToDoCommandHandler(toDoStore.Object, reminderStore.Object, toDoReminderScheduler.Object, mediator.Object, logger.Object);
 
     var toDoId = new ToDoId(Guid.NewGuid());
     var quartzJobId = new QuartzJobId(Guid.NewGuid());
@@ -71,9 +74,10 @@ public class DeleteToDoCommandTests
     var toDoStore = new Mock<IToDoStore>();
     var reminderStore = new Mock<IReminderStore>();
     var toDoReminderScheduler = new Mock<IToDoReminderScheduler>();
+    var mediator = new Mock<IMediator>();
     var logger = new Mock<ILogger<DeleteToDoCommandHandler>>();
     _ = logger.Setup(x => x.IsEnabled(LogLevel.Warning)).Returns(true);
-    var handler = new DeleteToDoCommandHandler(toDoStore.Object, reminderStore.Object, toDoReminderScheduler.Object, logger.Object);
+    var handler = new DeleteToDoCommandHandler(toDoStore.Object, reminderStore.Object, toDoReminderScheduler.Object, mediator.Object, logger.Object);
 
     var toDoId = new ToDoId(Guid.NewGuid());
     var quartzJobId = new QuartzJobId(Guid.NewGuid());
@@ -122,9 +126,10 @@ public class DeleteToDoCommandTests
     var toDoStore = new Mock<IToDoStore>();
     var reminderStore = new Mock<IReminderStore>();
     var toDoReminderScheduler = new Mock<IToDoReminderScheduler>();
+    var mediator = new Mock<IMediator>();
     var logger = new Mock<ILogger<DeleteToDoCommandHandler>>();
     _ = logger.Setup(x => x.IsEnabled(LogLevel.Warning)).Returns(true);
-    var handler = new DeleteToDoCommandHandler(toDoStore.Object, reminderStore.Object, toDoReminderScheduler.Object, logger.Object);
+    var handler = new DeleteToDoCommandHandler(toDoStore.Object, reminderStore.Object, toDoReminderScheduler.Object, mediator.Object, logger.Object);
 
     var toDoId = new ToDoId(Guid.NewGuid());
     var quartzJobId = new QuartzJobId(Guid.NewGuid());

@@ -1,3 +1,4 @@
+using Apollo.Application.ToDos.Notifications;
 using Apollo.Core;
 using Apollo.Core.Logging;
 using Apollo.Core.ToDos;
@@ -14,6 +15,7 @@ public sealed class CompleteToDoCommandHandler(
   IToDoStore toDoStore,
   IReminderStore reminderStore,
   IToDoReminderScheduler toDoReminderScheduler,
+  IMediator mediator,
   ILogger<CompleteToDoCommandHandler> logger) : IRequestHandler<CompleteToDoCommand, Result>
 {
   public async Task<Result> Handle(CompleteToDoCommand request, CancellationToken cancellationToken)
@@ -27,6 +29,8 @@ public sealed class CompleteToDoCommandHandler(
       {
         return completeResult;
       }
+
+      await mediator.Publish(new ToDoCompletedNotification(), cancellationToken);
 
       var cleanupResult = await CleanupRemindersForCompletedToDoAsync(linkedReminders, request.ToDoId, cancellationToken);
       return cleanupResult.IsFailed ? cleanupResult : completeResult;

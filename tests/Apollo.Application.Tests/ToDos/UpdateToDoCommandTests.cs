@@ -4,6 +4,8 @@ using Apollo.Domain.ToDos.ValueObjects;
 
 using FluentResults;
 
+using MediatR;
+
 using Moq;
 
 namespace Apollo.Application.Tests.ToDos;
@@ -15,7 +17,8 @@ public class UpdateToDoCommandTests
   {
     // Arrange
     var toDoStore = new Mock<IToDoStore>();
-    var handler = new UpdateToDoCommandHandler(toDoStore.Object);
+    var mediator = new Mock<IMediator>();
+    var handler = new UpdateToDoCommandHandler(toDoStore.Object, mediator.Object);
     var toDoId = new ToDoId(Guid.NewGuid());
     var description = new Description("Updated description");
 
@@ -36,7 +39,8 @@ public class UpdateToDoCommandTests
   {
     // Arrange
     var toDoStore = new Mock<IToDoStore>();
-    var handler = new UpdateToDoCommandHandler(toDoStore.Object);
+    var mediator = new Mock<IMediator>();
+    var handler = new UpdateToDoCommandHandler(toDoStore.Object, mediator.Object);
     var toDoId = new ToDoId(Guid.NewGuid());
     var description = new Description("Updated description");
 

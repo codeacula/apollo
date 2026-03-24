@@ -1,3 +1,4 @@
+using Apollo.Application.Configuration.Notifications;
 using Apollo.Core.Configuration;
 
 using FluentResults;
@@ -17,16 +18,25 @@ public sealed record UpdateAiConfigurationCommand(
   string? ApiKey
 ) : IRequest<Result<ConfigurationData>>;
 
-public sealed class UpdateAiConfigurationCommandHandler(IConfigurationStore configurationStore)
+public sealed class UpdateAiConfigurationCommandHandler(IConfigurationStore configurationStore, IMediator mediator)
   : IRequestHandler<UpdateAiConfigurationCommand, Result<ConfigurationData>>
 {
   public async Task<Result<ConfigurationData>> Handle(UpdateAiConfigurationCommand request, CancellationToken cancellationToken = default)
   {
     try
     {
-      return string.IsNullOrWhiteSpace(request.ModelId) && string.IsNullOrWhiteSpace(request.Endpoint)
-        ? Result.Fail<ConfigurationData>("At least one of ModelId or Endpoint must be provided.")
-        : await configurationStore.UpdateAiAsync(request.ModelId, request.Endpoint, request.ApiKey, cancellationToken);
+      if (string.IsNullOrWhiteSpace(request.ModelId) && string.IsNullOrWhiteSpace(request.Endpoint))
+      {
+        return Result.Fail<ConfigurationData>("At least one of ModelId or Endpoint must be provided.");
+      }
+
+      var result = await configurationStore.UpdateAiAsync(request.ModelId, request.Endpoint, request.ApiKey, cancellationToken);
+      if (result.IsSuccess)
+      {
+        await mediator.Publish(new AiConfigurationUpdatedNotification(), cancellationToken);
+      }
+
+      return result;
     }
     catch (Exception ex)
     {

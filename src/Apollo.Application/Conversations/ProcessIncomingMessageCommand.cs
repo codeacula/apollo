@@ -3,6 +3,7 @@ using Apollo.AI.Models;
 using Apollo.AI.Planning;
 using Apollo.AI.Requests;
 using Apollo.AI.Tooling;
+using Apollo.Application.Conversations.Notifications;
 using Apollo.Application.People;
 using Apollo.Application.Reminders;
 using Apollo.Application.ToDos;
@@ -82,7 +83,13 @@ public sealed class ProcessIncomingMessageCommandHandler(
 
     convoResult = await conversationStore.AddMessageAsync(convoResult.Value.Id, new Content(messageContent), cancellationToken);
 
-    return convoResult.IsFailed ? Result.Fail<Conversation>("Unable to add message to conversation.") : convoResult;
+    if (convoResult.IsFailed)
+    {
+      return Result.Fail<Conversation>("Unable to add message to conversation.");
+    }
+
+    await mediator.Publish(new MessageAddedNotification(), cancellationToken);
+    return convoResult;
   }
 
   private async Task<string> ProcessWithAIAsync(Conversation conversation, Person person, CancellationToken cancellationToken)
@@ -166,7 +173,10 @@ public sealed class ProcessIncomingMessageCommandHandler(
     if (addReplyResult.IsFailed)
     {
       DataAccessLogs.UnableToSaveMessageToConversation(logger, conversation.Id.Value, response);
+      return;
     }
+
+    await mediator.Publish(new ReplyAddedNotification(), cancellationToken);
   }
 
   private Result<Reply> CreateReplyToUser(string response)
@@ -229,7 +239,7 @@ public sealed class ProcessIncomingMessageCommandHandler(
 
   private ToolPlan LogParsingFailure(Guid personId, Result<ToolPlan> parseResult)
   {
-    var errorMsg = parseResult.Errors.Count > 0 ? parseResult.Errors[0].Message : "Unknown error";
+    var errorMsg = parseResult.GetErrorMessages();
     ConversationLogs.ToolPlanParsingFailed(logger, personId, errorMsg);
     return new ToolPlan();
   }

@@ -6,6 +6,8 @@ using Apollo.Domain.ToDos.ValueObjects;
 
 using FluentResults;
 
+using MediatR;
+
 using Moq;
 
 namespace Apollo.Application.Tests.ToDos;
@@ -17,7 +19,8 @@ public class RemoveReminderCommandHandlerTests
   {
     var reminderStore = new Mock<IReminderStore>();
     var scheduler = new Mock<IToDoReminderScheduler>();
-    var handler = new RemoveReminderCommandHandler(reminderStore.Object, scheduler.Object);
+    var mediator = new Mock<IMediator>();
+    var handler = new RemoveReminderCommandHandler(reminderStore.Object, scheduler.Object, mediator.Object);
 
     var toDoId = new ToDoId(Guid.NewGuid());
     var reminderId = new ReminderId(Guid.NewGuid());
@@ -57,7 +60,8 @@ public class RemoveReminderCommandHandlerTests
   {
     var reminderStore = new Mock<IReminderStore>();
     var scheduler = new Mock<IToDoReminderScheduler>();
-    var handler = new RemoveReminderCommandHandler(reminderStore.Object, scheduler.Object);
+    var mediator = new Mock<IMediator>();
+    var handler = new RemoveReminderCommandHandler(reminderStore.Object, scheduler.Object, mediator.Object);
 
     var toDoId = new ToDoId(Guid.NewGuid());
     var otherToDoId = new ToDoId(Guid.NewGuid());
@@ -90,7 +94,8 @@ public class RemoveReminderCommandHandlerTests
   {
     var reminderStore = new Mock<IReminderStore>();
     var scheduler = new Mock<IToDoReminderScheduler>();
-    var handler = new RemoveReminderCommandHandler(reminderStore.Object, scheduler.Object);
+    var mediator = new Mock<IMediator>();
+    var handler = new RemoveReminderCommandHandler(reminderStore.Object, scheduler.Object, mediator.Object);
 
     var toDoId = new ToDoId(Guid.NewGuid());
     var reminderId = new ReminderId(Guid.NewGuid());

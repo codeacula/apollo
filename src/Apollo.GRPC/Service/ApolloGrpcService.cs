@@ -254,7 +254,7 @@ public sealed class ApolloGrpcService(
     }
 
     // Grant access to the target user
-    var grantResult = await personStore.GrantAccessAsync(personResult.Value.Id);
+    var grantResult = await mediator.Send(new GrantPersonAccessCommand(personResult.Value.Id));
 
     return grantResult.IsFailed
       ? (GrpcResult<string>)grantResult.Errors.Select(e => new GrpcError(e.Message)).ToArray()
@@ -280,7 +280,7 @@ public sealed class ApolloGrpcService(
     }
 
     // Revoke access from the target user
-    var revokeResult = await personStore.RevokeAccessAsync(personResult.Value.Id);
+    var revokeResult = await mediator.Send(new RevokePersonAccessCommand(personResult.Value.Id));
 
     return revokeResult.IsFailed
       ? (GrpcResult<string>)revokeResult.Errors.Select(e => new GrpcError(e.Message)).ToArray()

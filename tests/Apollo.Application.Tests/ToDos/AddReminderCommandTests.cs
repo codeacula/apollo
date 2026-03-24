@@ -7,6 +7,8 @@ using Apollo.Domain.ToDos.ValueObjects;
 
 using FluentResults;
 
+using MediatR;
+
 using Moq;
 
 namespace Apollo.Application.Tests.ToDos;
@@ -19,7 +21,8 @@ public class AddReminderCommandHandlerTests
     var toDoStore = new Mock<IToDoStore>();
     var reminderStore = new Mock<IReminderStore>();
     var scheduler = new Mock<IToDoReminderScheduler>();
-    var handler = new AddReminderCommandHandler(toDoStore.Object, reminderStore.Object, scheduler.Object);
+    var mediator = new Mock<IMediator>();
+    var handler = new AddReminderCommandHandler(toDoStore.Object, reminderStore.Object, scheduler.Object, mediator.Object);
 
     var toDoId = new ToDoId(Guid.NewGuid());
     var reminderDate = DateTime.UtcNow.AddMinutes(30);
@@ -57,7 +60,8 @@ public class AddReminderCommandHandlerTests
     var toDoStore = new Mock<IToDoStore>();
     var reminderStore = new Mock<IReminderStore>();
     var scheduler = new Mock<IToDoReminderScheduler>();
-    var handler = new AddReminderCommandHandler(toDoStore.Object, reminderStore.Object, scheduler.Object);
+    var mediator = new Mock<IMediator>();
+    var handler = new AddReminderCommandHandler(toDoStore.Object, reminderStore.Object, scheduler.Object, mediator.Object);
 
     var toDoId = new ToDoId(Guid.NewGuid());
     var reminderDate = DateTime.UtcNow.AddMinutes(30);
@@ -79,7 +83,8 @@ public class AddReminderCommandHandlerTests
     var toDoStore = new Mock<IToDoStore>();
     var reminderStore = new Mock<IReminderStore>();
     var scheduler = new Mock<IToDoReminderScheduler>();
-    var handler = new AddReminderCommandHandler(toDoStore.Object, reminderStore.Object, scheduler.Object);
+    var mediator = new Mock<IMediator>();
+    var handler = new AddReminderCommandHandler(toDoStore.Object, reminderStore.Object, scheduler.Object, mediator.Object);
 
     var toDoId = new ToDoId(Guid.NewGuid());
     var reminderDate = DateTime.UtcNow.AddMinutes(30);

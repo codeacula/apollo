@@ -1,8 +1,11 @@
 using Apollo.Application.Configuration;
 using Apollo.Cache;
 using Apollo.API.Dashboard;
+using Apollo.Core.Configuration;
 using Apollo.Database;
 using Apollo.GRPC;
+using FluentResults;
+using MediatR;
 
 
 WebApplicationBuilder webAppBuilder = WebApplication.CreateBuilder(args);
@@ -28,21 +31,17 @@ _ = webAppBuilder.Services
   .AddScoped<IDashboardOverviewService, DashboardOverviewService>()
   .AddSingleton(TimeProvider.System);
 
-// Register MediatR scoped to only the configuration handlers.
-// Apollo.API is a pure REST gateway and only needs configuration CQRS handlers.
-// We register handlers explicitly to avoid pulling in AI-dependent handlers
-// from the full Apollo.Application assembly scan.
+// Register only the specific MediatR handlers Apollo.API needs.
+// Apollo.Application lives in the same assembly as AI/scheduler-dependent handlers,
+// so we cannot use RegisterServicesFromAssemblyContaining — it would pull in handlers
+// whose dependencies (IApolloAIAgent, IToDoReminderScheduler) are not registered here.
 _ = webAppBuilder.Services.AddMediatR(cfg =>
-  cfg.RegisterServicesFromAssemblyContaining<GetInitializationStatusQueryHandler>()
-);
-
-// Disable DI validate-on-build: Apollo.API is a gateway — not all registered handlers
-// (from transitive assembly scans) need resolvable dependencies in this host.
-webAppBuilder.Host.UseDefaultServiceProvider(options =>
-{
-  options.ValidateOnBuild = false;
-  options.ValidateScopes = webAppBuilder.Environment.IsDevelopment();
-});
+  cfg.RegisterServicesFromAssemblyContaining<DashboardConnectionTracker>());
+_ = webAppBuilder.Services
+  .AddTransient<IRequestHandler<GetInitializationStatusQuery, Result<InitializationStatus>>, GetInitializationStatusQueryHandler>()
+  .AddTransient<IRequestHandler<UpdateAiConfigurationCommand, Result<ConfigurationData>>, UpdateAiConfigurationCommandHandler>()
+  .AddTransient<IRequestHandler<UpdateDiscordConfigurationCommand, Result<ConfigurationData>>, UpdateDiscordConfigurationCommandHandler>()
+  .AddTransient<IRequestHandler<UpdateSuperAdminConfigurationCommand, Result<ConfigurationData>>, UpdateSuperAdminConfigurationCommandHandler>();
 
 WebApplication app = webAppBuilder.Build();
 
@@ -64,7 +63,9 @@ _ = app.MapHub<DashboardHub>("/hubs/dashboard");
 _ = app.MapMethods("{**path}", [HttpMethods.Get, HttpMethods.Head], async context =>
 #pragma warning restore ASP0018
 {
-  if (context.Request.Path.StartsWithSegments("/api") || context.Request.Path.StartsWithSegments("/hubs"))
+  if (context.Request.Path.StartsWithSegments("/api")
+    || context.Request.Path.StartsWithSegments("/hubs")
+    || context.Request.Path.StartsWithSegments("/assets"))
   {
     context.Response.StatusCode = StatusCodes.Status404NotFound;
     return;

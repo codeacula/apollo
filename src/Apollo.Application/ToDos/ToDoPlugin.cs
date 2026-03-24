@@ -381,7 +381,7 @@ public sealed class ToDoPlugin(
 
       return result switch
       {
-        { IsFailed: true } => $"Failed to retrieve todos: {(result.Errors.Count > 0 ? result.Errors[0].Message : "Unknown error")}",
+        { IsFailed: true } => $"Failed to retrieve todos: {result.GetErrorMessages()}",
         _ when !result.Value.Any() => "You currently have no active todos.",
         _ => FormatToDosAsTable(result.Value)
       };
@@ -403,7 +403,7 @@ public sealed class ToDoPlugin(
 
       if (result.IsFailed)
       {
-        return $"Failed to generate daily plan: {(result.Errors.Count > 0 ? result.Errors[0].Message : "Unknown error")}";
+        return $"Failed to generate daily plan: {result.GetErrorMessages()}";
       }
 
       var plan = result.Value;

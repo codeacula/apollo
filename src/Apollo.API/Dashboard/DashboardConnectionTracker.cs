@@ -4,8 +4,8 @@ public sealed class DashboardConnectionTracker
 {
   private int _connectionCount;
 
-  public int ConnectionCount => _connectionCount;
-  public bool HasConnections => _connectionCount > 0;
+  public int ConnectionCount => Volatile.Read(ref _connectionCount);
+  public bool HasConnections => Volatile.Read(ref _connectionCount) > 0;
 
   public void Connected()
   {

@@ -1,3 +1,4 @@
+using Apollo.Application.ToDos.Notifications;
 using Apollo.Core;
 using Apollo.Core.ToDos;
 using Apollo.Domain.ToDos.Models;
@@ -14,7 +15,8 @@ public sealed record RemoveReminderCommand(
 
 public sealed class RemoveReminderCommandHandler(
   IReminderStore reminderStore,
-  IToDoReminderScheduler toDoReminderScheduler) : IRequestHandler<RemoveReminderCommand, Result>
+  IToDoReminderScheduler toDoReminderScheduler,
+  IMediator mediator) : IRequestHandler<RemoveReminderCommand, Result>
 {
   public async Task<Result> Handle(RemoveReminderCommand request, CancellationToken cancellationToken)
   {
@@ -31,6 +33,8 @@ public sealed class RemoveReminderCommandHandler(
       {
         return unlinkResult;
       }
+
+      await mediator.Publish(new ReminderUnlinkedFromToDoNotification(), cancellationToken);
 
       await CleanupOrphanedReminderAsync(reminderResult.Value, cancellationToken);
       return Result.Ok();

@@ -1,6 +1,7 @@
 using System.Text.Json;
 
 using Apollo.Application.Configuration;
+using Apollo.Core;
 using Apollo.Core.Dashboard;
 
 using MediatR;
@@ -18,7 +19,7 @@ public sealed class DashboardOverviewService(
 
     if (statusResult.IsFailed)
     {
-      throw new InvalidOperationException(statusResult.Errors.Count > 0 ? statusResult.Errors[0].Message : "Unknown error");
+      throw new InvalidOperationException(statusResult.GetErrorMessages());
     }
 
     var now = timeProvider.GetUtcNow().UtcDateTime;
