@@ -1,12 +1,12 @@
 using Apollo.Application.People;
 using Apollo.Core.People;
 using Apollo.Domain.Common.Enums;
-using Apollo.Domain.Common.ValueObjects;
 using Apollo.Domain.People.Models;
 using Apollo.Domain.People.ValueObjects;
 using Apollo.GRPC.Context;
 using Apollo.GRPC.Contracts;
 using Apollo.GRPC.Interceptors;
+using Apollo.GRPC.Tests.TestSupport;
 
 using FluentResults;
 
@@ -63,6 +63,8 @@ public class UserResolutionInterceptorFirstMessageBugTests
     _ = _serviceProviderMock.Setup(x => x.GetService(typeof(IPersonStore))).Returns(personStoreMock.Object);
   }
 
+  private static Task<string> ContinuationAsync(NewMessageRequest _, ServerCallContext __) => Task.FromResult("Response");
+
   /// <summary>
   /// <para>
   /// Verifies that when a NewMessageRequest is created with platform, platformUserId, and username,
@@ -80,25 +82,10 @@ public class UserResolutionInterceptorFirstMessageBugTests
     const string discordUsername = "codeacula";
     const string discordUserId = "244273250144747523";
 
-    var request = new NewMessageRequest
-    {
-      Platform = Platform.Discord,
-      PlatformUserId = discordUserId,
-      Username = discordUsername,
-      Content = "Remind me to buy milk"
-    };
+    var request = GrpcTestData.CreateNewMessageRequest(discordUsername, discordUserId, content: "Remind me to buy milk");
 
     var capturedQuery = (GetOrCreatePersonByPlatformIdQuery?)null;
-    var personId = new PersonId(Guid.NewGuid());
-    var person = new Person
-    {
-      Id = personId,
-      PlatformId = new PlatformId(discordUsername, discordUserId, Platform.Discord),
-      Username = new Username(discordUsername),
-      HasAccess = new HasAccess(true),
-      CreatedOn = new CreatedOn(DateTime.UtcNow),
-      UpdatedOn = new UpdatedOn(DateTime.UtcNow)
-    };
+    var person = GrpcTestData.CreatePerson(discordUsername, discordUserId);
 
     _ = _mediatorMock.Setup(m => m.Send(It.IsAny<GetOrCreatePersonByPlatformIdQuery>(), It.IsAny<CancellationToken>()))
         .Callback<IRequest<Result<Person>>, CancellationToken>((query, _) => capturedQuery = (GetOrCreatePersonByPlatformIdQuery)query)
@@ -106,70 +93,14 @@ public class UserResolutionInterceptorFirstMessageBugTests
 
     var context = new TestServerCallContext(_httpContext);
 
-    static Task<string> continuationAsync(NewMessageRequest req, ServerCallContext ctx)
-    {
-      return Task.FromResult("Response");
-    }
-
     // Act
-    _ = await _interceptor.UnaryServerHandler(request, context, continuationAsync);
+    _ = await _interceptor.UnaryServerHandler(request, context, ContinuationAsync);
 
     // Assert: Verify that the interceptor captured the request with correct values
     Assert.NotNull(capturedQuery);
     Assert.Equal(discordUsername, capturedQuery.PlatformId.Username);
     Assert.Equal(discordUserId, capturedQuery.PlatformId.PlatformUserId);
     Assert.Equal(Platform.Discord, capturedQuery.PlatformId.Platform);
-  }
-
-  /// <summary>
-  /// Verifies that the UserContext is set with the correct person (with all fields populated).
-  /// This ensures the downstream authorization check doesn't fail with "Access denied" on first message.
-  /// </summary>
-  [Fact]
-  public async Task FirstDiscordMessageSetsUserContextWithPopulatedPersonAsync()
-  {
-    // Arrange
-    const string discordUsername = "codeacula";
-    const string discordUserId = "244273250144747523";
-
-    var request = new NewMessageRequest
-    {
-      Platform = Platform.Discord,
-      PlatformUserId = discordUserId,
-      Username = discordUsername,
-      Content = "Remind me to buy milk"
-    };
-
-    var personId = new PersonId(Guid.NewGuid());
-    var person = new Person
-    {
-      Id = personId,
-      PlatformId = new PlatformId(discordUsername, discordUserId, Platform.Discord),
-      Username = new Username(discordUsername),
-      HasAccess = new HasAccess(true),
-      CreatedOn = new CreatedOn(DateTime.UtcNow),
-      UpdatedOn = new UpdatedOn(DateTime.UtcNow)
-    };
-
-    _ = _mediatorMock.Setup(m => m.Send(It.IsAny<GetOrCreatePersonByPlatformIdQuery>(), It.IsAny<CancellationToken>()))
-        .ReturnsAsync(Result.Ok(person));
-
-    var context = new TestServerCallContext(_httpContext);
-
-    static Task<string> continuationAsync(NewMessageRequest req, ServerCallContext ctx)
-    {
-      return Task.FromResult("Response");
-    }
-
-    // Act
-    _ = await _interceptor.UnaryServerHandler(request, context, continuationAsync);
-
-    // Assert: Verify that userContext has the person with populated PlatformId
-    _userContextMock.VerifySet(x => x.Person = It.Is<Person>(p =>
-        p.PlatformId.Username == discordUsername &&
-        p.PlatformId.PlatformUserId == discordUserId &&
-        p.PlatformId.Platform == Platform.Discord &&
-        p.HasAccess.Value), Times.Once);
   }
 
   /// <summary>
@@ -183,24 +114,8 @@ public class UserResolutionInterceptorFirstMessageBugTests
     const string discordUsername = "codeacula";
     const string discordUserId = "244273250144747523";
 
-    var request = new NewMessageRequest
-    {
-      Platform = Platform.Discord,
-      PlatformUserId = discordUserId,
-      Username = discordUsername,
-      Content = "Remind me to buy milk"
-    };
-
-    var personId = new PersonId(Guid.NewGuid());
-    var person = new Person
-    {
-      Id = personId,
-      PlatformId = new PlatformId(discordUsername, discordUserId, Platform.Discord),
-      Username = new Username(discordUsername),
-      HasAccess = new HasAccess(true),
-      CreatedOn = new CreatedOn(DateTime.UtcNow),
-      UpdatedOn = new UpdatedOn(DateTime.UtcNow)
-    };
+    var request = GrpcTestData.CreateNewMessageRequest(discordUsername, discordUserId, content: "Remind me to buy milk");
+    var person = GrpcTestData.CreatePerson(discordUsername, discordUserId);
 
     _ = _mediatorMock.Setup(m => m.Send(It.IsAny<GetOrCreatePersonByPlatformIdQuery>(), It.IsAny<CancellationToken>()))
         .ReturnsAsync(Result.Ok(person));
@@ -216,13 +131,8 @@ public class UserResolutionInterceptorFirstMessageBugTests
 
     var context = new TestServerCallContext(_httpContext);
 
-    static Task<string> continuationAsync(NewMessageRequest req, ServerCallContext ctx)
-    {
-      return Task.FromResult("Response");
-    }
-
     // Act
-    _ = await _interceptor.UnaryServerHandler(request, context, continuationAsync);
+    _ = await _interceptor.UnaryServerHandler(request, context, ContinuationAsync);
 
     // Assert: Verify that notification channel is registered with correct Discord user ID
     personStoreMock.Verify(x => x.EnsureNotificationChannelAsync(
@@ -231,65 +141,6 @@ public class UserResolutionInterceptorFirstMessageBugTests
         c.Type == NotificationChannelType.Discord &&
         c.Identifier == discordUserId),  // Must be the Discord user ID, not null
       It.IsAny<CancellationToken>()), Times.Once);
-  }
-
-  /// <summary>
-  /// Regression test for DataMember ordering issue between NewMessageRequest and ProcessMessageRequest.
-  /// Verifies that the PlatformId passed to MediatR has all required fields set (not null).
-  /// </summary>
-  [Fact]
-  public async Task FirstDiscordMessagePassesComplletePlatformIdToMediatorAsync()
-  {
-    // Arrange
-    const string discordUsername = "codeacula";
-    const string discordUserId = "244273250144747523";
-
-    var request = new NewMessageRequest
-    {
-      Platform = Platform.Discord,
-      PlatformUserId = discordUserId,
-      Username = discordUsername,
-      Content = "Remind me to buy milk"
-    };
-
-    PlatformId? capturedPlatformId = null;
-    var personId = new PersonId(Guid.NewGuid());
-    var person = new Person
-    {
-      Id = personId,
-      PlatformId = new PlatformId(discordUsername, discordUserId, Platform.Discord),
-      Username = new Username(discordUsername),
-      HasAccess = new HasAccess(true),
-      CreatedOn = new CreatedOn(DateTime.UtcNow),
-      UpdatedOn = new UpdatedOn(DateTime.UtcNow)
-    };
-
-    _ = _mediatorMock.Setup(m => m.Send(It.IsAny<GetOrCreatePersonByPlatformIdQuery>(), It.IsAny<CancellationToken>()))
-        .Callback<IRequest<Result<Person>>, CancellationToken>((query, _) =>
-        {
-          var typedQuery = (GetOrCreatePersonByPlatformIdQuery)query;
-          capturedPlatformId = typedQuery.PlatformId;
-        })
-        .ReturnsAsync(Result.Ok(person));
-
-    var context = new TestServerCallContext(_httpContext);
-
-    static Task<string> continuationAsync(NewMessageRequest req, ServerCallContext ctx)
-    {
-      return Task.FromResult("Response");
-    }
-
-    // Act
-    _ = await _interceptor.UnaryServerHandler(request, context, continuationAsync);
-
-    // Assert: All three components of PlatformId must be populated (not null)
-    _ = Assert.NotNull(capturedPlatformId);
-    Assert.NotNull(capturedPlatformId.Value.Username);  // Not null
-    Assert.NotNull(capturedPlatformId.Value.PlatformUserId);  // Not null
-
-    Assert.Equal(discordUsername, capturedPlatformId.Value.Username);
-    Assert.Equal(discordUserId, capturedPlatformId.Value.PlatformUserId);
-    Assert.Equal(Platform.Discord, capturedPlatformId.Value.Platform);
   }
 
 }

@@ -1,12 +1,8 @@
+using Apollo.Application.Tests.TestSupport;
 using Apollo.Application.ToDos;
 using Apollo.Core.People;
 using Apollo.Core.ToDos;
-using Apollo.Domain.Common.Enums;
-using Apollo.Domain.Common.ValueObjects;
-using Apollo.Domain.People.Models;
 using Apollo.Domain.People.ValueObjects;
-using Apollo.Domain.ToDos.Models;
-using Apollo.Domain.ToDos.ValueObjects;
 
 using FluentResults;
 
@@ -18,6 +14,12 @@ namespace Apollo.Application.Tests.ToDos;
 
 public sealed class ToDoPluginTests
 {
+  public static TheoryData<string?, string, string> ReminderTimezoneCases => new()
+  {
+    { null, "in 10 minutes", "America/Chicago" },
+    { "Europe/London", "at 3pm", "Europe/London" }
+  };
+
   private readonly Mock<IMediator> _mediator = new();
   private readonly Mock<IPersonStore> _personStore = new();
   private readonly Mock<ITimeParsingService> _timeParsingService = new();
@@ -35,13 +37,13 @@ public sealed class ToDoPluginTests
     var reminderUtc = new DateTime(2026, 3, 1, 15, 0, 0, DateTimeKind.Utc);
 
     _ = _personStore.Setup(x => x.GetAsync(_personId, It.IsAny<CancellationToken>()))
-      .ReturnsAsync(Result.Ok(CreatePerson()));
+      .ReturnsAsync(Result.Ok(ApplicationTestData.CreatePerson(_personId)));
 
     _ = _timeParsingService.Setup(x => x.ParseTimeAsync("tomorrow at 3pm", "America/Chicago", It.IsAny<CancellationToken>()))
       .ReturnsAsync(Result.Ok(reminderUtc));
 
     _ = _mediator.Setup(m => m.Send(It.IsAny<CreateToDoCommand>(), It.IsAny<CancellationToken>()))
-      .ReturnsAsync(Result.Ok(CreateToDo("Buy milk")));
+      .ReturnsAsync(Result.Ok(ApplicationTestData.CreateToDo(_personId, "Buy milk")));
 
     // Act
     var result = await plugin.CreateToDoAsync("Buy milk", "tomorrow at 3pm");
@@ -52,17 +54,21 @@ public sealed class ToDoPluginTests
     _timeParsingService.Verify(x => x.ParseTimeAsync("tomorrow at 3pm", "America/Chicago", It.IsAny<CancellationToken>()), Times.Once);
   }
 
-  [Fact]
-  public async Task CreateToDoAsyncWithoutReminderDoesNotCallTimeParsingServiceAsync()
+  [Theory]
+  [InlineData(null)]
+  [InlineData("   ")]
+  public async Task CreateToDoAsyncWithoutParsableReminderDoesNotCallTimeParsingServiceAsync(string? reminderDate)
   {
     // Arrange
     var plugin = CreatePlugin();
 
     _ = _mediator.Setup(m => m.Send(It.IsAny<CreateToDoCommand>(), It.IsAny<CancellationToken>()))
-      .ReturnsAsync(Result.Ok(CreateToDo("Buy milk")));
+      .ReturnsAsync(Result.Ok(ApplicationTestData.CreateToDo(_personId, "Buy milk")));
 
     // Act
-    var result = await plugin.CreateToDoAsync("Buy milk");
+    var result = reminderDate is null
+      ? await plugin.CreateToDoAsync("Buy milk")
+      : await plugin.CreateToDoAsync("Buy milk", reminderDate);
 
     // Assert
     Assert.Contains("Successfully created todo", result);
@@ -77,7 +83,7 @@ public sealed class ToDoPluginTests
     var plugin = CreatePlugin();
 
     _ = _personStore.Setup(x => x.GetAsync(_personId, It.IsAny<CancellationToken>()))
-      .ReturnsAsync(Result.Ok(CreatePerson()));
+      .ReturnsAsync(Result.Ok(ApplicationTestData.CreatePerson(_personId)));
 
     _ = _timeParsingService.Setup(x => x.ParseTimeAsync("gibberish", "America/Chicago", It.IsAny<CancellationToken>()))
       .ReturnsAsync(Result.Fail<DateTime>("Invalid time format."));
@@ -91,102 +97,26 @@ public sealed class ToDoPluginTests
     _mediator.Verify(m => m.Send(It.IsAny<CreateToDoCommand>(), It.IsAny<CancellationToken>()), Times.Never);
   }
 
-  [Fact]
-  public async Task CreateToDoAsyncUsesDefaultTimeZoneWhenPersonHasNoTimeZoneAsync()
+  [Theory]
+  [MemberData(nameof(ReminderTimezoneCases))]
+  public async Task CreateToDoAsyncUsesExpectedTimezoneAsync(string? personTimeZoneId, string reminderDate, string expectedTimezone)
   {
     // Arrange
     var plugin = CreatePlugin();
-    var personWithoutTz = CreatePerson(timeZoneId: null);
+    var person = ApplicationTestData.CreatePerson(_personId, timeZoneId: personTimeZoneId);
 
     _ = _personStore.Setup(x => x.GetAsync(_personId, It.IsAny<CancellationToken>()))
-      .ReturnsAsync(Result.Ok(personWithoutTz));
+      .ReturnsAsync(Result.Ok(person));
 
-    _ = _timeParsingService.Setup(x => x.ParseTimeAsync("in 10 minutes", "America/Chicago", It.IsAny<CancellationToken>()))
+    _ = _timeParsingService.Setup(x => x.ParseTimeAsync(reminderDate, expectedTimezone, It.IsAny<CancellationToken>()))
       .ReturnsAsync(Result.Ok(DateTime.UtcNow.AddMinutes(10)));
 
     _ = _mediator.Setup(m => m.Send(It.IsAny<CreateToDoCommand>(), It.IsAny<CancellationToken>()))
-      .ReturnsAsync(Result.Ok(CreateToDo("Test")));
+      .ReturnsAsync(Result.Ok(ApplicationTestData.CreateToDo(_personId, "Test")));
 
     // Act
-    _ = await plugin.CreateToDoAsync("Test", "in 10 minutes");
+    _ = await plugin.CreateToDoAsync("Test", reminderDate);
 
-    // Assert — should use default "America/Chicago" since person has no timezone
-    _timeParsingService.Verify(x => x.ParseTimeAsync("in 10 minutes", "America/Chicago", It.IsAny<CancellationToken>()), Times.Once);
-  }
-
-  [Fact]
-  public async Task CreateToDoAsyncUsesPersonTimeZoneWhenAvailableAsync()
-  {
-    // Arrange
-    var plugin = CreatePlugin();
-    var personWithTz = CreatePerson(timeZoneId: "Europe/London");
-
-    _ = _personStore.Setup(x => x.GetAsync(_personId, It.IsAny<CancellationToken>()))
-      .ReturnsAsync(Result.Ok(personWithTz));
-
-    _ = _timeParsingService.Setup(x => x.ParseTimeAsync("at 3pm", "Europe/London", It.IsAny<CancellationToken>()))
-      .ReturnsAsync(Result.Ok(DateTime.UtcNow.AddHours(1)));
-
-    _ = _mediator.Setup(m => m.Send(It.IsAny<CreateToDoCommand>(), It.IsAny<CancellationToken>()))
-      .ReturnsAsync(Result.Ok(CreateToDo("Test")));
-
-    // Act
-    _ = await plugin.CreateToDoAsync("Test", "at 3pm");
-
-    // Assert — should use person's timezone "Europe/London"
-    _timeParsingService.Verify(x => x.ParseTimeAsync("at 3pm", "Europe/London", It.IsAny<CancellationToken>()), Times.Once);
-  }
-
-  [Fact]
-  public async Task CreateToDoAsyncWithWhitespaceReminderDateDoesNotCallTimeParsingServiceAsync()
-  {
-    // Arrange
-    var plugin = CreatePlugin();
-
-    _ = _mediator.Setup(m => m.Send(It.IsAny<CreateToDoCommand>(), It.IsAny<CancellationToken>()))
-      .ReturnsAsync(Result.Ok(CreateToDo("Buy milk")));
-
-    // Act
-    var result = await plugin.CreateToDoAsync("Buy milk", "   ");
-
-    // Assert — whitespace-only reminderDate should be treated as no reminder
-    Assert.Contains("Successfully created todo", result);
-    Assert.DoesNotContain("UTC", result);
-    _timeParsingService.Verify(x => x.ParseTimeAsync(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
-  }
-
-  private Person CreatePerson(string? timeZoneId = null)
-  {
-    PersonTimeZoneId? parsedTimeZoneId = null;
-    if (timeZoneId is not null && PersonTimeZoneId.TryParse(timeZoneId, out var tzId, out _))
-    {
-      parsedTimeZoneId = tzId;
-    }
-
-    return new Person
-    {
-      Id = _personId,
-      PlatformId = new PlatformId("testuser", "123", Platform.Discord),
-      Username = new Username("testuser"),
-      HasAccess = new HasAccess(true),
-      TimeZoneId = parsedTimeZoneId,
-      CreatedOn = new CreatedOn(DateTime.UtcNow),
-      UpdatedOn = new UpdatedOn(DateTime.UtcNow)
-    };
-  }
-
-  private ToDo CreateToDo(string description)
-  {
-    return new ToDo
-    {
-      Id = new ToDoId(Guid.NewGuid()),
-      PersonId = _personId,
-      Description = new Description(description),
-      Priority = new Priority(Level.Green),
-      Energy = new Energy(Level.Green),
-      Interest = new Interest(Level.Green),
-      CreatedOn = new CreatedOn(DateTime.UtcNow),
-      UpdatedOn = new UpdatedOn(DateTime.UtcNow)
-    };
+    _timeParsingService.Verify(x => x.ParseTimeAsync(reminderDate, expectedTimezone, It.IsAny<CancellationToken>()), Times.Once);
   }
 }

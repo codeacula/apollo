@@ -1,3 +1,4 @@
+using Apollo.Application.ToDos.Notifications;
 using Apollo.Core;
 using Apollo.Core.ToDos;
 using Apollo.Domain.Common.Enums;
@@ -21,7 +22,8 @@ public sealed record CreateToDoCommand(
 public sealed class CreateToDoCommandHandler(
   IToDoStore toDoStore,
   IReminderStore reminderStore,
-  IToDoReminderScheduler toDoReminderScheduler) : IRequestHandler<CreateToDoCommand, Result<ToDo>>
+  IToDoReminderScheduler toDoReminderScheduler,
+  IMediator mediator) : IRequestHandler<CreateToDoCommand, Result<ToDo>>
 {
   public async Task<Result<ToDo>> Handle(CreateToDoCommand request, CancellationToken cancellationToken)
   {
@@ -35,6 +37,8 @@ public sealed class CreateToDoCommandHandler(
       {
         return createResult;
       }
+
+      await mediator.Publish(new ToDoCreatedNotification(), cancellationToken);
 
       if (request.ReminderDate.HasValue)
       {

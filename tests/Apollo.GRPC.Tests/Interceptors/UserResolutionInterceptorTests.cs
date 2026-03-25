@@ -1,12 +1,12 @@
 using Apollo.Application.People;
 using Apollo.Core.People;
 using Apollo.Domain.Common.Enums;
-using Apollo.Domain.Common.ValueObjects;
 using Apollo.Domain.People.Models;
 using Apollo.Domain.People.ValueObjects;
 using Apollo.GRPC.Context;
 using Apollo.GRPC.Contracts;
 using Apollo.GRPC.Interceptors;
+using Apollo.GRPC.Tests.TestSupport;
 
 using FluentResults;
 
@@ -44,41 +44,25 @@ public class UserResolutionInterceptorTests
     _ = _serviceProviderMock.Setup(x => x.GetService(typeof(IPersonStore))).Returns(_personStoreMock.Object);
   }
 
+  private static Task<string> AuthenticatedContinuationAsync(NewMessageRequest _, ServerCallContext __) => Task.FromResult("Response");
+
+  private static Task<string> NonAuthenticatedContinuationAsync(string _, ServerCallContext __) => Task.FromResult("Response");
+
   [Fact]
   public async Task InterceptAuthenticatedRequestResolvesUserAsync()
   {
     // Arrange
-    var request = new NewMessageRequest
-    {
-      Platform = Platform.Discord,
-      PlatformUserId = "123",
-      Username = "testuser",
-      Content = "Hello"
-    };
+    var request = GrpcTestData.CreateNewMessageRequest();
 
-    var personId = new PersonId(Guid.NewGuid());
-    var person = new Person
-    {
-      Id = personId,
-      PlatformId = new PlatformId("testuser", "123", Platform.Discord),
-      Username = new Username("testuser"),
-      HasAccess = new HasAccess(true),
-      CreatedOn = new CreatedOn(DateTime.UtcNow),
-      UpdatedOn = new UpdatedOn(DateTime.UtcNow)
-    };
+    var person = GrpcTestData.CreatePerson(username: "testuser", platformUserId: "123");
 
     _ = _mediatorMock.Setup(m => m.Send(It.IsAny<GetOrCreatePersonByPlatformIdQuery>(), It.IsAny<CancellationToken>()))
         .ReturnsAsync(Result.Ok(person));
 
     var context = new TestServerCallContext(_httpContext);
 
-    static Task<string> continuationAsync(NewMessageRequest _, ServerCallContext __)
-    {
-      return Task.FromResult("Response");
-    }
-
     // Act
-    _ = await _interceptor.UnaryServerHandler(request, context, continuationAsync);
+    _ = await _interceptor.UnaryServerHandler(request, context, AuthenticatedContinuationAsync);
 
     // Assert
     _userContextMock.VerifySet(x => x.Person = person, Times.Once);
@@ -92,13 +76,9 @@ public class UserResolutionInterceptorTests
     // Arrange
     const string request = "NotAuthenticated"; // Just a string, doesn't implement IAuthenticatedRequest
     var context = new TestServerCallContext(_httpContext);
-    static Task<string> continuationAsync(string _, ServerCallContext __)
-    {
-      return Task.FromResult("Response");
-    }
 
     // Act
-    _ = await _interceptor.UnaryServerHandler(request, context, continuationAsync);
+    _ = await _interceptor.UnaryServerHandler(request, context, NonAuthenticatedContinuationAsync);
 
     // Assert
     _userContextMock.VerifySet(x => x.Person = It.IsAny<Person>(), Times.Never);
@@ -109,24 +89,9 @@ public class UserResolutionInterceptorTests
   public async Task InterceptAuthenticatedRequestRegistersDiscordNotificationChannelAsync()
   {
     // Arrange
-    var request = new NewMessageRequest
-    {
-      Platform = Platform.Discord,
-      PlatformUserId = "123",
-      Username = "testuser",
-      Content = "Hello"
-    };
+    var request = GrpcTestData.CreateNewMessageRequest();
 
-    var personId = new PersonId(Guid.NewGuid());
-    var person = new Person
-    {
-      Id = personId,
-      PlatformId = new PlatformId("testuser", "123", Platform.Discord),
-      Username = new Username("testuser"),
-      HasAccess = new HasAccess(true),
-      CreatedOn = new CreatedOn(DateTime.UtcNow),
-      UpdatedOn = new UpdatedOn(DateTime.UtcNow)
-    };
+    var person = GrpcTestData.CreatePerson(username: "testuser", platformUserId: "123");
 
     _ = _mediatorMock.Setup(m => m.Send(It.IsAny<GetOrCreatePersonByPlatformIdQuery>(), It.IsAny<CancellationToken>()))
         .ReturnsAsync(Result.Ok(person));
@@ -139,13 +104,8 @@ public class UserResolutionInterceptorTests
 
     var context = new TestServerCallContext(_httpContext);
 
-    static Task<string> continuationAsync(NewMessageRequest _, ServerCallContext __)
-    {
-      return Task.FromResult("Response");
-    }
-
     // Act
-    _ = await _interceptor.UnaryServerHandler(request, context, continuationAsync);
+    _ = await _interceptor.UnaryServerHandler(request, context, AuthenticatedContinuationAsync);
 
     // Assert
     _personStoreMock.Verify(x => x.EnsureNotificationChannelAsync(
@@ -161,26 +121,15 @@ public class UserResolutionInterceptorTests
   public async Task InterceptAuthenticatedRequestDoesNotRegisterChannelWhenPersonResolutionFailsAsync()
   {
     // Arrange
-    var request = new NewMessageRequest
-    {
-      Platform = Platform.Discord,
-      PlatformUserId = "123",
-      Username = "testuser",
-      Content = "Hello"
-    };
+    var request = GrpcTestData.CreateNewMessageRequest();
 
     _ = _mediatorMock.Setup(m => m.Send(It.IsAny<GetOrCreatePersonByPlatformIdQuery>(), It.IsAny<CancellationToken>()))
         .ReturnsAsync(Result.Fail<Person>("Person not found"));
 
     var context = new TestServerCallContext(_httpContext);
 
-    static Task<string> continuationAsync(NewMessageRequest _, ServerCallContext __)
-    {
-      return Task.FromResult("Response");
-    }
-
     // Act
-    _ = await _interceptor.UnaryServerHandler(request, context, continuationAsync);
+    _ = await _interceptor.UnaryServerHandler(request, context, AuthenticatedContinuationAsync);
 
     // Assert
     _personStoreMock.Verify(x => x.EnsureNotificationChannelAsync(
@@ -193,37 +142,17 @@ public class UserResolutionInterceptorTests
   public async Task InterceptAuthenticatedRequestSkipsChannelRegistrationForNonDiscordPlatformAsync()
   {
     // Arrange
-    var request = new NewMessageRequest
-    {
-      Platform = Platform.Web,
-      PlatformUserId = "456",
-      Username = "webuser",
-      Content = "Hello"
-    };
+    var request = GrpcTestData.CreateNewMessageRequest(username: "webuser", platformUserId: "456", platform: Platform.Web);
 
-    var personId = new PersonId(Guid.NewGuid());
-    var person = new Person
-    {
-      Id = personId,
-      PlatformId = new PlatformId("webuser", "456", Platform.Web),
-      Username = new Username("webuser"),
-      HasAccess = new HasAccess(true),
-      CreatedOn = new CreatedOn(DateTime.UtcNow),
-      UpdatedOn = new UpdatedOn(DateTime.UtcNow)
-    };
+    var person = GrpcTestData.CreatePerson(username: "webuser", platformUserId: "456", platform: Platform.Web);
 
     _ = _mediatorMock.Setup(m => m.Send(It.IsAny<GetOrCreatePersonByPlatformIdQuery>(), It.IsAny<CancellationToken>()))
         .ReturnsAsync(Result.Ok(person));
 
     var context = new TestServerCallContext(_httpContext);
 
-    static Task<string> continuationAsync(NewMessageRequest _, ServerCallContext __)
-    {
-      return Task.FromResult("Response");
-    }
-
     // Act
-    _ = await _interceptor.UnaryServerHandler(request, context, continuationAsync);
+    _ = await _interceptor.UnaryServerHandler(request, context, AuthenticatedContinuationAsync);
 
     // Assert
     _personStoreMock.Verify(x => x.EnsureNotificationChannelAsync(
@@ -236,24 +165,9 @@ public class UserResolutionInterceptorTests
   public async Task InterceptAuthenticatedRequestContinuesWhenChannelRegistrationFailsAsync()
   {
     // Arrange
-    var request = new NewMessageRequest
-    {
-      Platform = Platform.Discord,
-      PlatformUserId = "123",
-      Username = "testuser",
-      Content = "Hello"
-    };
+    var request = GrpcTestData.CreateNewMessageRequest();
 
-    var personId = new PersonId(Guid.NewGuid());
-    var person = new Person
-    {
-      Id = personId,
-      PlatformId = new PlatformId("testuser", "123", Platform.Discord),
-      Username = new Username("testuser"),
-      HasAccess = new HasAccess(true),
-      CreatedOn = new CreatedOn(DateTime.UtcNow),
-      UpdatedOn = new UpdatedOn(DateTime.UtcNow)
-    };
+    var person = GrpcTestData.CreatePerson(username: "testuser", platformUserId: "123");
 
     _ = _mediatorMock.Setup(m => m.Send(It.IsAny<GetOrCreatePersonByPlatformIdQuery>(), It.IsAny<CancellationToken>()))
         .ReturnsAsync(Result.Ok(person));
@@ -266,13 +180,8 @@ public class UserResolutionInterceptorTests
 
     var context = new TestServerCallContext(_httpContext);
 
-    static Task<string> continuationAsync(NewMessageRequest _, ServerCallContext __)
-    {
-      return Task.FromResult("Response");
-    }
-
     // Act
-    var response = await _interceptor.UnaryServerHandler(request, context, continuationAsync);
+    var response = await _interceptor.UnaryServerHandler(request, context, AuthenticatedContinuationAsync);
 
     // Assert
     Assert.Equal("Response", response);

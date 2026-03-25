@@ -28,7 +28,6 @@ public sealed class ReminderStore(IDocumentSession session, TimeProvider timePro
 
       _ = session.Events.StartStream<DbReminder>(id.Value, [ev]);
       await session.SaveChangesAsync(cancellationToken);
-
       var newReminder = await session.Events.AggregateStreamAsync<DbReminder>(id.Value, token: cancellationToken);
 
       return newReminder is null
@@ -113,7 +112,6 @@ public sealed class ReminderStore(IDocumentSession session, TimeProvider timePro
 
       _ = session.Events.StartStream<DbToDoReminder>(linkId, [ev]);
       await session.SaveChangesAsync(cancellationToken);
-
       return Result.Ok();
     }
     catch (Exception ex)
@@ -139,7 +137,6 @@ public sealed class ReminderStore(IDocumentSession session, TimeProvider timePro
 
       _ = session.Events.Append(link.Id, ev);
       await session.SaveChangesAsync(cancellationToken);
-
       return Result.Ok();
     }
     catch (Exception ex)
@@ -157,7 +154,6 @@ public sealed class ReminderStore(IDocumentSession session, TimeProvider timePro
 
       _ = session.Events.Append(id.Value, ev);
       await session.SaveChangesAsync(cancellationToken);
-
       return Result.Ok();
     }
     catch (Exception ex)
@@ -175,7 +171,6 @@ public sealed class ReminderStore(IDocumentSession session, TimeProvider timePro
 
       _ = session.Events.Append(id.Value, ev);
       await session.SaveChangesAsync(cancellationToken);
-
       return Result.Ok();
     }
     catch (Exception ex)
@@ -193,7 +188,6 @@ public sealed class ReminderStore(IDocumentSession session, TimeProvider timePro
 
       _ = session.Events.Append(id.Value, ev);
       await session.SaveChangesAsync(cancellationToken);
-
       return Result.Ok();
     }
     catch (Exception ex)

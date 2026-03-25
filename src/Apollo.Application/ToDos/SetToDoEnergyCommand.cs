@@ -1,3 +1,4 @@
+using Apollo.Application.ToDos.Notifications;
 using Apollo.Core.ToDos;
 using Apollo.Domain.People.ValueObjects;
 using Apollo.Domain.ToDos.ValueObjects;
@@ -12,16 +13,25 @@ public sealed record SetToDoEnergyCommand(
   Energy Energy
 ) : IRequest<Result>;
 
-public sealed class SetToDoEnergyCommandHandler(IToDoStore toDoStore) : IRequestHandler<SetToDoEnergyCommand, Result>
+public sealed class SetToDoEnergyCommandHandler(IToDoStore toDoStore, IMediator mediator) : IRequestHandler<SetToDoEnergyCommand, Result>
 {
   public async Task<Result> Handle(SetToDoEnergyCommand request, CancellationToken cancellationToken)
   {
     try
     {
       var ownershipResult = await VerifyOwnershipAsync(request.ToDoId, request.PersonId, cancellationToken);
-      return ownershipResult.IsFailed
-        ? ownershipResult
-        : await toDoStore.UpdateEnergyAsync(request.ToDoId, request.Energy, cancellationToken);
+      if (ownershipResult.IsFailed)
+      {
+        return ownershipResult;
+      }
+
+      var result = await toDoStore.UpdateEnergyAsync(request.ToDoId, request.Energy, cancellationToken);
+      if (result.IsSuccess)
+      {
+        await mediator.Publish(new ToDoEnergyUpdatedNotification(), cancellationToken);
+      }
+
+      return result;
     }
     catch (Exception ex)
     {

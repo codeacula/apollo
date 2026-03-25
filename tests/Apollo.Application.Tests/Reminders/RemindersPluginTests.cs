@@ -1,13 +1,9 @@
 using Apollo.Application.Reminders;
+using Apollo.Application.Tests.TestSupport;
 using Apollo.Application.ToDos;
 using Apollo.Core.People;
 using Apollo.Core.ToDos;
-using Apollo.Domain.Common.Enums;
-using Apollo.Domain.Common.ValueObjects;
-using Apollo.Domain.People.Models;
 using Apollo.Domain.People.ValueObjects;
-using Apollo.Domain.ToDos.Models;
-using Apollo.Domain.ToDos.ValueObjects;
 
 using FluentResults;
 
@@ -19,6 +15,12 @@ namespace Apollo.Application.Tests.Reminders;
 
 public sealed class RemindersPluginTests
 {
+  public static TheoryData<string?, string, string> TimezoneCases => new()
+  {
+    { "Europe/London", "at 3pm", "Europe/London" },
+    { null, "in 30 minutes", "America/Chicago" }
+  };
+
   private readonly Mock<IMediator> _mediator = new();
   private readonly Mock<IPersonStore> _personStore = new();
   private readonly Mock<ITimeParsingService> _timeParsingService = new();
@@ -36,13 +38,13 @@ public sealed class RemindersPluginTests
     var reminderUtc = new DateTime(2026, 3, 1, 15, 0, 0, DateTimeKind.Utc);
 
     _ = _personStore.Setup(x => x.GetAsync(_personId, It.IsAny<CancellationToken>()))
-      .ReturnsAsync(Result.Ok(CreatePerson()));
+      .ReturnsAsync(Result.Ok(ApplicationTestData.CreatePerson(_personId)));
 
     _ = _timeParsingService.Setup(x => x.ParseTimeAsync("in 10 minutes", "America/Chicago", It.IsAny<CancellationToken>()))
       .ReturnsAsync(Result.Ok(reminderUtc));
 
     _ = _mediator.Setup(m => m.Send(It.IsAny<CreateReminderCommand>(), It.IsAny<CancellationToken>()))
-      .ReturnsAsync(Result.Ok(CreateReminder("Take a break", reminderUtc)));
+      .ReturnsAsync(Result.Ok(ApplicationTestData.CreateReminder(_personId, "Take a break", reminderTime: reminderUtc)));
 
     // Act
     var result = await plugin.CreateReminderAsync("Take a break", "in 10 minutes");
@@ -53,14 +55,16 @@ public sealed class RemindersPluginTests
     _timeParsingService.Verify(x => x.ParseTimeAsync("in 10 minutes", "America/Chicago", It.IsAny<CancellationToken>()), Times.Once);
   }
 
-  [Fact]
-  public async Task CreateReminderAsyncWithEmptyTimeReturnsErrorAsync()
+  [Theory]
+  [InlineData("")]
+  [InlineData("   ")]
+  public async Task CreateReminderAsyncWithMissingTimeReturnsErrorAsync(string reminderTime)
   {
     // Arrange
     var plugin = CreatePlugin();
 
     // Act
-    var result = await plugin.CreateReminderAsync("Take a break", "");
+    var result = await plugin.CreateReminderAsync("Take a break", reminderTime);
 
     // Assert
     Assert.Contains("Failed to create reminder", result);
@@ -75,7 +79,7 @@ public sealed class RemindersPluginTests
     var plugin = CreatePlugin();
 
     _ = _personStore.Setup(x => x.GetAsync(_personId, It.IsAny<CancellationToken>()))
-      .ReturnsAsync(Result.Ok(CreatePerson()));
+      .ReturnsAsync(Result.Ok(ApplicationTestData.CreatePerson(_personId)));
 
     _ = _timeParsingService.Setup(x => x.ParseTimeAsync("gibberish", "America/Chicago", It.IsAny<CancellationToken>()))
       .ReturnsAsync(Result.Fail<DateTime>("Invalid time format."));
@@ -89,99 +93,27 @@ public sealed class RemindersPluginTests
     _mediator.Verify(m => m.Send(It.IsAny<CreateReminderCommand>(), It.IsAny<CancellationToken>()), Times.Never);
   }
 
-  [Fact]
-  public async Task CreateReminderAsyncUsesPersonTimeZoneWhenAvailableAsync()
+  [Theory]
+  [MemberData(nameof(TimezoneCases))]
+  public async Task CreateReminderAsyncUsesExpectedTimezoneAsync(string? personTimeZoneId, string reminderTime, string expectedTimezone)
   {
     // Arrange
     var plugin = CreatePlugin();
-    var personWithTz = CreatePerson(timeZoneId: "Europe/London");
     var reminderUtc = DateTime.UtcNow.AddHours(1);
+    var person = ApplicationTestData.CreatePerson(_personId, timeZoneId: personTimeZoneId);
 
     _ = _personStore.Setup(x => x.GetAsync(_personId, It.IsAny<CancellationToken>()))
-      .ReturnsAsync(Result.Ok(personWithTz));
+      .ReturnsAsync(Result.Ok(person));
 
-    _ = _timeParsingService.Setup(x => x.ParseTimeAsync("at 3pm", "Europe/London", It.IsAny<CancellationToken>()))
+    _ = _timeParsingService.Setup(x => x.ParseTimeAsync(reminderTime, expectedTimezone, It.IsAny<CancellationToken>()))
       .ReturnsAsync(Result.Ok(reminderUtc));
 
     _ = _mediator.Setup(m => m.Send(It.IsAny<CreateReminderCommand>(), It.IsAny<CancellationToken>()))
-      .ReturnsAsync(Result.Ok(CreateReminder("Test", reminderUtc)));
+      .ReturnsAsync(Result.Ok(ApplicationTestData.CreateReminder(_personId, "Test", reminderTime: reminderUtc)));
 
     // Act
-    _ = await plugin.CreateReminderAsync("Test", "at 3pm");
+    _ = await plugin.CreateReminderAsync("Test", reminderTime);
 
-    // Assert — should use person's timezone "Europe/London"
-    _timeParsingService.Verify(x => x.ParseTimeAsync("at 3pm", "Europe/London", It.IsAny<CancellationToken>()), Times.Once);
-  }
-
-  [Fact]
-  public async Task CreateReminderAsyncUsesDefaultTimeZoneWhenPersonHasNoTimeZoneAsync()
-  {
-    // Arrange
-    var plugin = CreatePlugin();
-    var personWithoutTz = CreatePerson(timeZoneId: null);
-    var reminderUtc = DateTime.UtcNow.AddMinutes(30);
-
-    _ = _personStore.Setup(x => x.GetAsync(_personId, It.IsAny<CancellationToken>()))
-      .ReturnsAsync(Result.Ok(personWithoutTz));
-
-    _ = _timeParsingService.Setup(x => x.ParseTimeAsync("in 30 minutes", "America/Chicago", It.IsAny<CancellationToken>()))
-      .ReturnsAsync(Result.Ok(reminderUtc));
-
-    _ = _mediator.Setup(m => m.Send(It.IsAny<CreateReminderCommand>(), It.IsAny<CancellationToken>()))
-      .ReturnsAsync(Result.Ok(CreateReminder("Test", reminderUtc)));
-
-    // Act
-    _ = await plugin.CreateReminderAsync("Test", "in 30 minutes");
-
-    // Assert — should use default "America/Chicago"
-    _timeParsingService.Verify(x => x.ParseTimeAsync("in 30 minutes", "America/Chicago", It.IsAny<CancellationToken>()), Times.Once);
-  }
-
-  [Fact]
-  public async Task CreateReminderAsyncWithWhitespaceTimeReturnsErrorAsync()
-  {
-    // Arrange
-    var plugin = CreatePlugin();
-
-    // Act
-    var result = await plugin.CreateReminderAsync("Take a break", "   ");
-
-    // Assert — whitespace-only reminderTime should be treated as missing
-    Assert.Contains("Failed to create reminder", result);
-    Assert.Contains("Reminder time is required.", result);
-    _timeParsingService.Verify(x => x.ParseTimeAsync(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
-  }
-
-  private Person CreatePerson(string? timeZoneId = null)
-  {
-    PersonTimeZoneId? parsedTimeZoneId = null;
-    if (timeZoneId is not null && PersonTimeZoneId.TryParse(timeZoneId, out var tzId, out _))
-    {
-      parsedTimeZoneId = tzId;
-    }
-
-    return new Person
-    {
-      Id = _personId,
-      PlatformId = new PlatformId("testuser", "123", Platform.Discord),
-      Username = new Username("testuser"),
-      HasAccess = new HasAccess(true),
-      TimeZoneId = parsedTimeZoneId,
-      CreatedOn = new CreatedOn(DateTime.UtcNow),
-      UpdatedOn = new UpdatedOn(DateTime.UtcNow)
-    };
-  }
-
-  private Reminder CreateReminder(string details, DateTime reminderTime)
-  {
-    return new Reminder
-    {
-      Id = new ReminderId(Guid.NewGuid()),
-      PersonId = _personId,
-      Details = new Details(details),
-      ReminderTime = new ReminderTime(reminderTime),
-      CreatedOn = new CreatedOn(DateTime.UtcNow),
-      UpdatedOn = new UpdatedOn(DateTime.UtcNow)
-    };
+    _timeParsingService.Verify(x => x.ParseTimeAsync(reminderTime, expectedTimezone, It.IsAny<CancellationToken>()), Times.Once);
   }
 }

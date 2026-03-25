@@ -1,6 +1,7 @@
 using Apollo.Application.Conversations;
 using Apollo.Application.People;
 using Apollo.Application.ToDos;
+using Apollo.Core.Configuration;
 using Apollo.Core.People;
 using Apollo.Core.ToDos;
 using Apollo.Domain.Common.Enums;
@@ -8,6 +9,8 @@ using Apollo.Domain.ToDos.Models;
 using Apollo.Domain.ToDos.ValueObjects;
 using Apollo.GRPC.Context;
 using Apollo.GRPC.Contracts;
+
+using FluentResults;
 
 using MediatR;
 
@@ -18,7 +21,7 @@ public sealed class ApolloGrpcService(
   IReminderStore reminderStore,
   IPersonStore personStore,
   ITimeParsingService timeParsingService,
-  SuperAdminConfig superAdminConfig,
+  IConfigurationStore configurationStore,
   IUserContext userContext
 ) : IApolloGrpcService
 {
@@ -251,7 +254,7 @@ public sealed class ApolloGrpcService(
     }
 
     // Grant access to the target user
-    var grantResult = await personStore.GrantAccessAsync(personResult.Value.Id);
+    var grantResult = await mediator.Send(new GrantPersonAccessCommand(personResult.Value.Id));
 
     return grantResult.IsFailed
       ? (GrpcResult<string>)grantResult.Errors.Select(e => new GrpcError(e.Message)).ToArray()
@@ -270,23 +273,37 @@ public sealed class ApolloGrpcService(
     }
 
     // Prevent revoking super admin's own access
-    if (IsSuperAdmin(request.TargetPlatform, request.TargetPlatformUserId))
+    var isSuperAdminResult = await IsSuperAdminAsync(request.TargetPlatform, request.TargetPlatformUserId);
+    if (isSuperAdminResult.IsSuccess && isSuperAdminResult.Value)
     {
       return new GrpcError("Cannot revoke access from the super admin", "FORBIDDEN");
     }
 
     // Revoke access from the target user
-    var revokeResult = await personStore.RevokeAccessAsync(personResult.Value.Id);
+    var revokeResult = await mediator.Send(new RevokePersonAccessCommand(personResult.Value.Id));
 
     return revokeResult.IsFailed
       ? (GrpcResult<string>)revokeResult.Errors.Select(e => new GrpcError(e.Message)).ToArray()
       : (GrpcResult<string>)$"Access revoked from {request.TargetUsername}";
   }
 
-  private bool IsSuperAdmin(Platform platform, string platformUserId)
+  private async Task<Result<bool>> IsSuperAdminAsync(Platform platform, string platformUserId)
   {
-    return !string.IsNullOrWhiteSpace(superAdminConfig.DiscordUserId)
-      && platform == Platform.Discord
-      && string.Equals(platformUserId, superAdminConfig.DiscordUserId, StringComparison.OrdinalIgnoreCase);
+    if (platform != Platform.Discord)
+    {
+      return Result.Ok(false);
+    }
+
+    var configResult = await configurationStore.GetAsync();
+    if (configResult.IsFailed)
+    {
+      return Result.Ok(false);
+    }
+
+    var superAdminDiscordUserId = configResult.Value.SuperAdminDiscordUserId;
+    var isSuperAdmin = !string.IsNullOrWhiteSpace(superAdminDiscordUserId)
+      && string.Equals(platformUserId, superAdminDiscordUserId, StringComparison.OrdinalIgnoreCase);
+
+    return Result.Ok(isSuperAdmin);
   }
 }

@@ -7,8 +7,8 @@ public static partial class ToDoLogs
   [LoggerMessage(
       EventId = 5000,
       Level = LogLevel.Information,
-      Message = "To-Do Reminder Job started at {Time}.")]
-  public static partial void LogJobStarted(ILogger logger, DateTimeOffset time);
+      Message = "To-Do Reminder Job started.")]
+  public static partial void LogJobStarted(ILogger logger);
 
   [LoggerMessage(
       EventId = 5001,
@@ -55,8 +55,8 @@ public static partial class ToDoLogs
   [LoggerMessage(
       EventId = 5007,
       Level = LogLevel.Information,
-      Message = "To-Do Reminder Job completed at {Time}.")]
-  public static partial void LogJobCompleted(ILogger logger, DateTimeOffset time);
+      Message = "To-Do Reminder Job completed.")]
+  public static partial void LogJobCompleted(ILogger logger);
 
   [LoggerMessage(
       EventId = 5008,

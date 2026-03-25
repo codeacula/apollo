@@ -1,3 +1,4 @@
+using Apollo.Application.ToDos.Notifications;
 using Apollo.Core.ToDos;
 using Apollo.Domain.People.ValueObjects;
 using Apollo.Domain.ToDos.ValueObjects;
@@ -12,16 +13,25 @@ public sealed record SetToDoInterestCommand(
   Interest Interest
 ) : IRequest<Result>;
 
-public sealed class SetToDoInterestCommandHandler(IToDoStore toDoStore) : IRequestHandler<SetToDoInterestCommand, Result>
+public sealed class SetToDoInterestCommandHandler(IToDoStore toDoStore, IMediator mediator) : IRequestHandler<SetToDoInterestCommand, Result>
 {
   public async Task<Result> Handle(SetToDoInterestCommand request, CancellationToken cancellationToken)
   {
     try
     {
       var ownershipResult = await VerifyOwnershipAsync(request.ToDoId, request.PersonId, cancellationToken);
-      return ownershipResult.IsFailed
-        ? ownershipResult
-        : await toDoStore.UpdateInterestAsync(request.ToDoId, request.Interest, cancellationToken);
+      if (ownershipResult.IsFailed)
+      {
+        return ownershipResult;
+      }
+
+      var result = await toDoStore.UpdateInterestAsync(request.ToDoId, request.Interest, cancellationToken);
+      if (result.IsSuccess)
+      {
+        await mediator.Publish(new ToDoInterestUpdatedNotification(), cancellationToken);
+      }
+
+      return result;
     }
     catch (Exception ex)
     {

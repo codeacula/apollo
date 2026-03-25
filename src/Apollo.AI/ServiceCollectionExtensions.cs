@@ -13,14 +13,10 @@ public static class ServiceCollectionExtensions
   {
     var apolloAiConfig = configuration.GetSection(nameof(ApolloAIConfig)).Get<ApolloAIConfig>();
 
-    if (apolloAiConfig == null)
-    {
-      Console.WriteLine("No AI configuration set; using default settings.");
-    }
-
     var config = apolloAiConfig ?? new ApolloAIConfig();
 
     _ = services
+      .AddLogging()
       .AddSingleton(config)
       .AddSingleton<IPromptLoader, PromptLoader>()
       .AddSingleton<IPromptTemplateProcessor, PromptTemplateProcessor>()
