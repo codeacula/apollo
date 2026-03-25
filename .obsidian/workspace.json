@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "docs/issues/069-figure-out-how-to-handle-message-edits.md",
+                "file": "docs/templates/issue-template.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "069-figure-out-how-to-handle-message-edits"
+              "title": "issue-template"
             }
           }
         ]
@@ -187,10 +187,34 @@
   },
   "active": "e10cc92770bd9554",
   "lastOpenFiles": [
-    "docs/templates/issue-template.md",
+    "docs/issues/Review Architecture.md",
+    "docs/issues/TodoQuickCreateComponent Defaults To Blue Energy Instead Of Green.md",
+    "docs/issues/No To-Dos Result In False Warning.md",
+    "docs/issues/Let Apollo Maintain Shared Identity And Context Across DMs Servers And Future Clients.md",
+    "docs/issues/Investigate PWA Mobile Notifications To Reduce Discord Dependency.md",
+    "docs/issues/Investigate If All The gRPC Contracts Have To Explicitly State User Credentials.md",
+    "docs/issues/Explore Multi-Tenant Apollo With Subscriptions And Tenant-Scoped Access.md",
+    "docs/issues/Dashboard MVP Overview Page With Operational Summary Cards.md",
+    "docs/issues/Clean Up Descriptions In Todo Plugin.md",
+    "docs/issues/Allow People To Have Multiple Platform IDs.md",
+    "docs/issues/Allow Apollo To Be Installed Into User-Managed Discord Servers.md",
+    "docs/issues/Add The Ability To Set Due Date In To-Dos.md",
+    "docs/issues/Add Realtime Client Updates For Dashboard To-Dos And Reminders.md",
+    "docs/issues/Add Persistent Reminder Follow-Up Interactions With Friendly Task Aliases.md",
+    "docs/issues/Add Dashboard Overview API Data Model For Workload And Recent Activity.md",
+    "docs/issues/Add Checking If To-Do Already Exists Or Sounds Similar.md",
+    "docs/issues/ReminderCreatedComponent Needs To Use The User's Timezone.md",
+    "docs/issues/Refactor Todo Interaction Module.md",
+    "docs/issues/Investigate Platform Management In DbPerson.md",
+    "docs/issues/Investigate Manage Access Request.md",
+    "docs/issues/GetDailyPlanQuery Looks Like It's Duplicating Code.md",
+    "docs/issues/Apollo Doesn't Send One Message For Multiple Reminders.md",
+    "docs/issues/Todoquickcreatecomponent Defaults To Blue Energy Instead Of Green.md",
+    "docs/issues/Store Tool Call Results Add Metadata.md",
+    "docs/issues/Review Tool Call Setup For Complexity.md",
+    "docs/issues/Review Architecture Md.md",
     "docs/templates",
     "docs",
-    "SUPPORT.md",
     "tests/Apollo.Domain.Tests/ToDos/ValueObjects/ToDoIdTests.cs",
     "tests/Apollo.Domain.Tests/ToDos/ValueObjects/ReminderIdTests.cs",
     "tests/Apollo.Domain.Tests/ToDos/ValueObjects/PriorityTests.cs",
@@ -198,29 +222,6 @@
     "tests/Apollo.Domain.Tests/ToDos/ValueObjects/EnergyTests.cs",
     "tests/Apollo.Domain.Tests/ToDos/ValueObjects/DueDateTests.cs",
     "tests/Apollo.Domain.Tests/ToDos/ValueObjects/DetailsTests.cs",
-    "tests/Apollo.Domain.Tests/ToDos/ValueObjects/DescriptionTests.cs",
-    "docs/issues/211-add-realtime-client-updates-for-dashboard-to-dos-and-reminders.md",
-    "docs/issues/210-add-dashboard-overview-api-data-model-for-workload-and-recent-activity.md",
-    "docs/issues/209-dashboard-mvp-overview-page-with-operational-summary-cards.md",
-    "docs/issues/208-let-apollo-maintain-shared-identity-and-context-across-dms-servers-and-future-clients.md",
-    "docs/issues/207-explore-multi-tenant-apollo-with-subscriptions-and-tenant-scoped-access.md",
-    "docs/issues/206-investigate-pwa-mobile-notifications-to-reduce-discord-dependency.md",
-    "docs/issues/205-reduce-discord-bot-permissions-to-the-minimum-required-set.md",
-    "docs/issues/204-add-user-access-requests-and-approval-flow.md",
-    "docs/issues/203-allow-apollo-to-be-installed-into-user-managed-discord-servers.md",
-    "docs/issues/202-discoverability-and-product-telemetry.md",
-    "docs/issues/199-refactor-todointeractionmodule.md",
-    "docs/issues/196-review-architecture-md.md",
-    "docs/issues/192-todoquickcreatecomponent-defaults-to-blue-energy-instead-of-green.md",
-    "docs/issues/191-remindercreatedcomponent-needs-to-use-the-user-s-timezone.md",
-    "docs/issues/190-getdailyplanquery-looks-like-it-s-duplicating-code.md",
-    "docs/issues/189-investigate-platform-management-in-dbperson.md",
-    "docs/issues/188-investigate-manageaccessrequest.md",
-    "docs/issues/187-review-tool-call-setup-for-complexity.md",
-    "docs/issues/186-investigate-if-all-the-grpc-contracts-have-to-explicitly-state-user-credentials.md",
-    "docs/issues/185-clean-up-descriptions-in-todoplugin.md",
-    "docs/issues/183-combine-config-settings-into-one.md",
-    "docs/issues/177-daily-report-talks-about-tasks-not-on-list.md",
-    "docs/issues/173-add-checking-if-to-do-already-exists-or-sounds-similar.md"
+    "tests/Apollo.Domain.Tests/ToDos/ValueObjects/DescriptionTests.cs"
   ]
 }
