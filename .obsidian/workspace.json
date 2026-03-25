@@ -4,21 +4,17 @@
     "type": "split",
     "children": [
       {
-        "id": "09f0b43a983c75a3",
+        "id": "cb6b5676ba1e70fd",
         "type": "tabs",
         "children": [
           {
-            "id": "19fdda3f6173fd42",
+            "id": "36411c0539f19775",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "docs/issues/Review Reminder Workflow.md",
-                "mode": "source",
-                "source": false
-              },
+              "type": "empty",
+              "state": {},
               "icon": "lucide-file",
-              "title": "Review Reminder Workflow"
+              "title": "New tab"
             }
           }
         ]
@@ -78,7 +74,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 353.5
+    "width": 462.5
   },
   "right": {
     "id": "05e279130e91eca5",
@@ -170,11 +166,9 @@
             "type": "leaf",
             "state": {
               "type": "file-properties",
-              "state": {
-                "file": "docs/issues/Review Reminder Workflow.md"
-              },
+              "state": {},
               "icon": "lucide-info",
-              "title": "File properties for Review Reminder Workflow"
+              "title": "File properties"
             }
           }
         ],
@@ -182,7 +176,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 300,
+    "collapsed": true
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -197,43 +192,43 @@
       "templater-obsidian:Templater": false
     }
   },
-  "active": "19fdda3f6173fd42",
+  "active": "c6a024bce332e88d",
   "lastOpenFiles": [
-    "docs/issues/Review Architecture.md",
-    "docs/issues/Allow People To Have Multiple Platform IDs.md",
-    "docs/issues/Review Reminder Workflow.md",
+    "ARCHITECTURE.md",
     "docs/templates/issue-template.md",
-    "docs/issues/Completed",
+    "docs/templates",
     "docs/issues/TodoQuickCreateComponent Defaults To Blue Energy Instead Of Green.md",
-    "docs/issues/No To-Dos Result In False Warning.md",
-    "docs/issues/Let Apollo Maintain Shared Identity And Context Across DMs Servers And Future Clients.md",
-    "docs/issues/Investigate PWA Mobile Notifications To Reduce Discord Dependency.md",
-    "docs/issues/Investigate If All The gRPC Contracts Have To Explicitly State User Credentials.md",
-    "docs/issues/Explore Multi-Tenant Apollo With Subscriptions And Tenant-Scoped Access.md",
-    "docs/issues/Dashboard MVP Overview Page With Operational Summary Cards.md",
-    "docs/issues/Clean Up Descriptions In Todo Plugin.md",
-    "docs/issues/Allow Apollo To Be Installed Into User-Managed Discord Servers.md",
-    "docs/issues/Add The Ability To Set Due Date In To-Dos.md",
-    "docs/issues/Add Realtime Client Updates For Dashboard To-Dos And Reminders.md",
-    "docs/issues/Add Persistent Reminder Follow-Up Interactions With Friendly Task Aliases.md",
-    "docs/issues/Add Dashboard Overview API Data Model For Workload And Recent Activity.md",
-    "docs/issues/Add Checking If To-Do Already Exists Or Sounds Similar.md",
+    "docs/issues/Store Tool Call Results Add Metadata.md",
+    "docs/issues/Review Tool Call Setup For Complexity.md",
+    "docs/issues/Review Reminder Workflow.md",
+    "docs/issues/Review Architecture.md",
+    "docs/issues/Research Mental Health Topics For Additional Prompting Context.md",
     "docs/issues/ReminderCreatedComponent Needs To Use The User's Timezone.md",
     "docs/issues/Refactor Todo Interaction Module.md",
+    "docs/issues/Reduce Discord Bot Permissions To The Minimum Required Set.md",
+    "docs/issues/No To-Dos Result In False Warning.md",
+    "docs/issues/New User Process.md",
+    "docs/issues/Let Apollo Maintain Shared Identity And Context Across DMs Servers And Future Clients.md",
     "docs/issues/Investigate Platform Management In DbPerson.md",
+    "docs/issues/Investigate PWA Mobile Notifications To Reduce Discord Dependency.md",
     "docs/issues/Investigate Manage Access Request.md",
+    "docs/issues/Investigate If All The gRPC Contracts Have To Explicitly State User Credentials.md",
+    "docs/issues/Include Easter Eggs.md",
     "docs/issues/GetDailyPlanQuery Looks Like It's Duplicating Code.md",
-    "docs/issues/Apollo Doesn't Send One Message For Multiple Reminders.md",
-    "docs/issues/Todoquickcreatecomponent Defaults To Blue Energy Instead Of Green.md",
-    "docs/issues/Store Tool Call Results Add Metadata.md",
-    "docs/templates",
-    "docs",
-    "tests/Apollo.Domain.Tests/ToDos/ValueObjects/ToDoIdTests.cs",
-    "tests/Apollo.Domain.Tests/ToDos/ValueObjects/ReminderIdTests.cs",
-    "tests/Apollo.Domain.Tests/ToDos/ValueObjects/PriorityTests.cs",
-    "tests/Apollo.Domain.Tests/ToDos/ValueObjects/InterestTests.cs",
-    "tests/Apollo.Domain.Tests/ToDos/ValueObjects/EnergyTests.cs",
-    "tests/Apollo.Domain.Tests/ToDos/ValueObjects/DueDateTests.cs",
-    "tests/Apollo.Domain.Tests/ToDos/ValueObjects/DetailsTests.cs"
+    "docs/issues/Figure Out How To Handle Message Edits.md",
+    "docs/issues/Explore Multi-Tenant Apollo With Subscriptions And Tenant-Scoped Access.md",
+    "docs/issues/Easter Egg Apollo Catching Drips.md",
+    "docs/issues/Discoverability And Product Telemetry.md",
+    "docs/issues/Dashboard MVP Overview Page With Operational Summary Cards.md",
+    "docs/issues/Daily Report Talks About Tasks Not On List.md",
+    "tests/Apollo.Service.Tests/StartupBehaviorTests.cs",
+    "tests/Apollo.Service.Tests/Apollo.Service.Tests.csproj",
+    "tests/Apollo.GRPC.Tests/TestSupport/GrpcTestData.cs",
+    "tests/Apollo.GRPC.Tests/TestSupport",
+    "tests/Apollo.GRPC.Tests/ConfigurationGrpcServiceTests.cs",
+    "tests/Apollo.Domain.Tests/ValueObjects/ValueObjectTheoryTests.cs",
+    "tests/Apollo.Domain.Tests/ValueObjects",
+    "tests/Apollo.Database.Tests/Config/AppConfigStoreTests.cs",
+    "tests/Apollo.Database.Tests/Config"
   ]
 }
