@@ -56,6 +56,6 @@ public sealed partial class DayOfWeekParser : ITimeExpressionParser
       }
     }
 
-    return Result.Ok(TimeParserHelpers.EnsureUtc(date));
+    return Result.Ok(TimeParserHelpers.PreserveInputKind(date));
   }
 }

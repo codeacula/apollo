@@ -51,7 +51,7 @@ public sealed class TimeParsingService(
     var now = timeProvider.GetUtcNow().UtcDateTime;
 
     // Step 1: Try FuzzyTimeParser (natural language patterns)
-    var fuzzyResult = fuzzyTimeParser.TryParseFuzzyTime(input, now);
+    var fuzzyResult = fuzzyTimeParser.TryParseFuzzyTime(input, now, userTimeZoneId);
     if (fuzzyResult.IsSuccess)
     {
       var utcFuzzy = ConvertToUtc(fuzzyResult.Value, userTimeZoneId);
