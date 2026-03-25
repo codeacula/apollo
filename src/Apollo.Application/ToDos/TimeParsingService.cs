@@ -174,5 +174,9 @@ public sealed class TimeParsingService(
     {
       return DateTime.SpecifyKind(parsedDate, DateTimeKind.Utc);
     }
+    catch (ArgumentException)
+    {
+      return DateTime.SpecifyKind(parsedDate, DateTimeKind.Utc);
+    }
   }
 }

@@ -468,4 +468,18 @@ public sealed class TimeParsingServiceTests
     Assert.True(result.IsSuccess);
     Assert.Equal(new DateTime(2025, 12, 31, 10, 0, 0, DateTimeKind.Utc), result.Value);
   }
+
+  [Fact]
+  public async Task ParseTimeAsyncWithInvalidLocalTimeFallsBackToUtcAsync()
+  {
+    const string input = "2025-03-09T02:30:00";
+    _ = _fuzzyTimeParser
+      .Setup(p => p.TryParseFuzzyTime(input, ReferenceTime, "America/Chicago"))
+      .Returns(Result.Fail<DateTime>("Not fuzzy"));
+
+    var result = await _service.ParseTimeAsync(input, "America/Chicago");
+
+    Assert.True(result.IsSuccess);
+    Assert.Equal(new DateTime(2025, 3, 9, 2, 30, 0, DateTimeKind.Utc), result.Value);
+  }
 }
