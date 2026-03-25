@@ -1,1 +1,11 @@
-{}
+{
+  "cssTheme": "AnuPpuccin",
+  "textFontFamily": "Montserrat",
+  "monospaceFontFamily": "JetBrainsMono Nerd Font",
+  "interfaceFontFamily": "Inter,Montserrat",
+  "baseFontSize": 16,
+  "accentColor": "",
+  "enabledCssSnippets": [
+    "extended-colorschemes"
+  ]
+}

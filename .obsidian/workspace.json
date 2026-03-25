@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "SUPPORT.md",
+                "file": "docs/issues/069-figure-out-how-to-handle-message-edits.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "SUPPORT"
+              "title": "069-figure-out-how-to-handle-message-edits"
             }
           }
         ]
@@ -94,7 +94,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "SUPPORT.md",
+                "file": "issues/_template.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -104,7 +104,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for SUPPORT"
+              "title": "Backlinks for _template"
             }
           },
           {
@@ -113,12 +113,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "SUPPORT.md",
+                "file": "issues/_template.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from SUPPORT"
+              "title": "Outgoing links from _template"
             }
           },
           {
@@ -156,13 +156,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "SUPPORT.md",
+                "file": "issues/_template.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of SUPPORT"
+              "title": "Outline of _template"
             }
           }
         ]
@@ -180,11 +180,17 @@
       "daily-notes:Open today's daily note": false,
       "templates:Insert template": false,
       "command-palette:Open command palette": false,
-      "bases:Create new base": false
+      "bases:Create new base": false,
+      "obsidian-excalidraw-plugin:New drawing": false,
+      "templater-obsidian:Templater": false
     }
   },
-  "active": "c6a024bce332e88d",
+  "active": "e10cc92770bd9554",
   "lastOpenFiles": [
+    "docs/templates/issue-template.md",
+    "docs/templates",
+    "docs",
+    "SUPPORT.md",
     "tests/Apollo.Domain.Tests/ToDos/ValueObjects/ToDoIdTests.cs",
     "tests/Apollo.Domain.Tests/ToDos/ValueObjects/ReminderIdTests.cs",
     "tests/Apollo.Domain.Tests/ToDos/ValueObjects/PriorityTests.cs",
@@ -193,33 +199,28 @@
     "tests/Apollo.Domain.Tests/ToDos/ValueObjects/DueDateTests.cs",
     "tests/Apollo.Domain.Tests/ToDos/ValueObjects/DetailsTests.cs",
     "tests/Apollo.Domain.Tests/ToDos/ValueObjects/DescriptionTests.cs",
-    "tests/Apollo.Domain.Tests/ToDos/ValueObjects/AcknowledgedOnTests.cs",
-    "tests/Apollo.Domain.Tests/ToDos/ValueObjects",
-    "tests/Apollo.Domain.Tests/ToDos",
-    "issues/_template.md",
-    "issues/211-add-realtime-client-updates-for-dashboard-to-dos-and-reminders.md",
-    "issues/210-add-dashboard-overview-api-data-model-for-workload-and-recent-activity.md",
-    "issues/209-dashboard-mvp-overview-page-with-operational-summary-cards.md",
-    "issues/208-let-apollo-maintain-shared-identity-and-context-across-dms-servers-and-future-clients.md",
-    "issues/207-explore-multi-tenant-apollo-with-subscriptions-and-tenant-scoped-access.md",
-    "issues/206-investigate-pwa-mobile-notifications-to-reduce-discord-dependency.md",
-    "issues/205-reduce-discord-bot-permissions-to-the-minimum-required-set.md",
-    "issues/204-add-user-access-requests-and-approval-flow.md",
-    "issues/203-allow-apollo-to-be-installed-into-user-managed-discord-servers.md",
-    "issues/202-discoverability-and-product-telemetry.md",
-    "issues/199-refactor-todointeractionmodule.md",
-    "issues/196-review-architecture-md.md",
-    "issues/192-todoquickcreatecomponent-defaults-to-blue-energy-instead-of-green.md",
-    "issues/191-remindercreatedcomponent-needs-to-use-the-user-s-timezone.md",
-    "issues/190-getdailyplanquery-looks-like-it-s-duplicating-code.md",
-    "issues/189-investigate-platform-management-in-dbperson.md",
-    "issues/188-investigate-manageaccessrequest.md",
-    "issues/187-review-tool-call-setup-for-complexity.md",
-    "issues/186-investigate-if-all-the-grpc-contracts-have-to-explicitly-state-user-credentials.md",
-    "issues/185-clean-up-descriptions-in-todoplugin.md",
-    "issues/183-combine-config-settings-into-one.md",
-    "issues/177-daily-report-talks-about-tasks-not-on-list.md",
-    "issues/173-add-checking-if-to-do-already-exists-or-sounds-similar.md",
-    "issues/168-no-todos-result-in-false-warning.md"
+    "docs/issues/211-add-realtime-client-updates-for-dashboard-to-dos-and-reminders.md",
+    "docs/issues/210-add-dashboard-overview-api-data-model-for-workload-and-recent-activity.md",
+    "docs/issues/209-dashboard-mvp-overview-page-with-operational-summary-cards.md",
+    "docs/issues/208-let-apollo-maintain-shared-identity-and-context-across-dms-servers-and-future-clients.md",
+    "docs/issues/207-explore-multi-tenant-apollo-with-subscriptions-and-tenant-scoped-access.md",
+    "docs/issues/206-investigate-pwa-mobile-notifications-to-reduce-discord-dependency.md",
+    "docs/issues/205-reduce-discord-bot-permissions-to-the-minimum-required-set.md",
+    "docs/issues/204-add-user-access-requests-and-approval-flow.md",
+    "docs/issues/203-allow-apollo-to-be-installed-into-user-managed-discord-servers.md",
+    "docs/issues/202-discoverability-and-product-telemetry.md",
+    "docs/issues/199-refactor-todointeractionmodule.md",
+    "docs/issues/196-review-architecture-md.md",
+    "docs/issues/192-todoquickcreatecomponent-defaults-to-blue-energy-instead-of-green.md",
+    "docs/issues/191-remindercreatedcomponent-needs-to-use-the-user-s-timezone.md",
+    "docs/issues/190-getdailyplanquery-looks-like-it-s-duplicating-code.md",
+    "docs/issues/189-investigate-platform-management-in-dbperson.md",
+    "docs/issues/188-investigate-manageaccessrequest.md",
+    "docs/issues/187-review-tool-call-setup-for-complexity.md",
+    "docs/issues/186-investigate-if-all-the-grpc-contracts-have-to-explicitly-state-user-credentials.md",
+    "docs/issues/185-clean-up-descriptions-in-todoplugin.md",
+    "docs/issues/183-combine-config-settings-into-one.md",
+    "docs/issues/177-daily-report-talks-about-tasks-not-on-list.md",
+    "docs/issues/173-add-checking-if-to-do-already-exists-or-sounds-similar.md"
   ]
 }
