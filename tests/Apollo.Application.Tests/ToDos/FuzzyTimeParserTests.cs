@@ -63,13 +63,35 @@ public class FuzzyTimeParserTests
   }
 
   [Fact]
-  public void TryParseFuzzyTimeConvertsUnspecifiedKindToUtc()
+  public void TryParseFuzzyTimeWithTimezoneUsesLocalReferenceForWallClockExpressions()
   {
-    var unspecifiedReference = new DateTime(2025, 12, 30, 12, 0, 0, DateTimeKind.Unspecified);
+    var utcReference = new DateTime(2025, 12, 30, 1, 30, 0, DateTimeKind.Utc);
 
-    var result = _parser.TryParseFuzzyTime("in 10 minutes", unspecifiedReference);
+    var result = _parser.TryParseFuzzyTime("tomorrow at 3pm", utcReference, "America/Chicago");
 
     Assert.True(result.IsSuccess);
-    Assert.Equal(DateTimeKind.Utc, result.Value.Kind);
+    Assert.Equal(new DateTime(2025, 12, 30, 15, 0, 0, DateTimeKind.Unspecified), result.Value);
+  }
+
+  [Fact]
+  public void TryParseFuzzyTimeWithTimezoneKeepsUtcReferenceForDurations()
+  {
+    var utcReference = new DateTime(2025, 12, 30, 1, 30, 0, DateTimeKind.Utc);
+
+    var result = _parser.TryParseFuzzyTime("in 10 minutes", utcReference, "America/Chicago");
+
+    Assert.True(result.IsSuccess);
+    Assert.Equal(new DateTime(2025, 12, 30, 1, 40, 0, DateTimeKind.Utc), result.Value);
+  }
+
+  [Fact]
+  public void TryParseFuzzyTimeWithTimezoneKeepsLocalReferenceForNextWeek()
+  {
+    var utcReference = new DateTime(2025, 12, 30, 1, 30, 0, DateTimeKind.Utc);
+
+    var result = _parser.TryParseFuzzyTime("next week", utcReference, "America/Chicago");
+
+    Assert.True(result.IsSuccess);
+    Assert.Equal(new DateTime(2026, 1, 5, 19, 30, 0, DateTimeKind.Unspecified), result.Value);
   }
 }

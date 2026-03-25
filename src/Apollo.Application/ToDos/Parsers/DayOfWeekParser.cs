@@ -31,7 +31,7 @@ public sealed partial class DayOfWeekParser : ITimeExpressionParser
   {
     if (NextWeekPattern().IsMatch(input))
     {
-      return Result.Ok(TimeParserHelpers.EnsureUtc(referenceTimeUtc.AddDays(7)));
+      return Result.Ok(TimeParserHelpers.KeepUtcElseUseUnspecified(referenceTimeUtc.AddDays(7)));
     }
 
     var dayMatch = DayPattern().Match(input);
@@ -56,6 +56,6 @@ public sealed partial class DayOfWeekParser : ITimeExpressionParser
       }
     }
 
-    return Result.Ok(TimeParserHelpers.EnsureUtc(date));
+    return Result.Ok(TimeParserHelpers.KeepUtcElseUseUnspecified(date));
   }
 }

@@ -23,7 +23,7 @@ public sealed partial class EndOfPeriodParser : ITimeExpressionParser
   {
     if (EndOfDayPattern().IsMatch(input))
     {
-      return Result.Ok(TimeParserHelpers.EnsureUtc(referenceTimeUtc.Date.AddHours(17)));
+      return Result.Ok(TimeParserHelpers.KeepUtcElseUseUnspecified(referenceTimeUtc.Date.AddHours(17)));
     }
 
     if (EndOfWeekPattern().IsMatch(input))
@@ -34,7 +34,7 @@ public sealed partial class EndOfPeriodParser : ITimeExpressionParser
         daysUntilFriday = 7;
       }
       var endOfWeek = referenceTimeUtc.Date.AddDays(daysUntilFriday).AddHours(17);
-      return Result.Ok(TimeParserHelpers.EnsureUtc(endOfWeek));
+      return Result.Ok(TimeParserHelpers.KeepUtcElseUseUnspecified(endOfWeek));
     }
 
     return Result.Fail<DateTime>($"'{input}' is not an end-of-period expression");
