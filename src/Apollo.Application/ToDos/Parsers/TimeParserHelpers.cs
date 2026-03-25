@@ -70,7 +70,7 @@ internal static class TimeParserHelpers
     };
   }
 
-  internal static DateTime PreserveInputKind(DateTime dt)
+  internal static DateTime KeepUtcElseUseUnspecified(DateTime dt)
   {
     return dt.Kind == DateTimeKind.Utc
       ? dt

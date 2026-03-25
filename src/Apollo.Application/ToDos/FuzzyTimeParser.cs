@@ -39,7 +39,7 @@ public sealed class FuzzyTimeParser : IFuzzyTimeParser
 
     foreach (var parser in Parsers)
     {
-      var reference = parser is Parsers.DurationParser ? utcReference : localReference;
+      var reference = parser is IUsesUtcReferenceTimeExpressionParser ? utcReference : localReference;
       var result = parser.TryParse(input, reference);
       if (result.IsSuccess)
       {

@@ -42,11 +42,11 @@ public sealed partial class ClockTimeParser : ITimeExpressionParser
 
     return timeStr switch
     {
-      "noon" => Result.Ok(TimeParserHelpers.PreserveInputKind(reference.Date.AddHours(12))),
-      "midnight" => Result.Ok(TimeParserHelpers.PreserveInputKind(reference.Date.AddDays(1))),
+      "noon" => Result.Ok(TimeParserHelpers.KeepUtcElseUseUnspecified(reference.Date.AddHours(12))),
+      "midnight" => Result.Ok(TimeParserHelpers.KeepUtcElseUseUnspecified(reference.Date.AddDays(1))),
       _ => TimeParserHelpers.ParseTimeOfDay(timeStr) switch
       {
-        { IsSuccess: true } timeResult => Result.Ok(TimeParserHelpers.PreserveInputKind(reference.Date.Add(timeResult.Value))),
+        { IsSuccess: true } timeResult => Result.Ok(TimeParserHelpers.KeepUtcElseUseUnspecified(reference.Date.Add(timeResult.Value))),
         _ => Result.Fail<DateTime>($"Could not resolve clock time '{timeStr}'")
       }
     };

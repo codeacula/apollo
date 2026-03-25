@@ -13,7 +13,7 @@ namespace Apollo.Application.ToDos.Parsers;
 ///           "5 minutes", "2 hours".
 /// </summary>
 [TimeExpressionParser]
-public sealed partial class DurationParser : ITimeExpressionParser
+public sealed partial class DurationParser : ITimeExpressionParser, IUsesUtcReferenceTimeExpressionParser
 {
   // "in N unit" — minutes, hours, days, weeks with common abbreviations
   [GeneratedRegex(

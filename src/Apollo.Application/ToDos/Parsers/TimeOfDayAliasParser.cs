@@ -27,7 +27,7 @@ public sealed partial class TimeOfDayAliasParser : ITimeExpressionParser
 
     if (match.Groups["tonight"].Success)
     {
-      return Result.Ok(TimeParserHelpers.PreserveInputKind(referenceTimeUtc.Date.AddHours(20)));
+      return Result.Ok(TimeParserHelpers.KeepUtcElseUseUnspecified(referenceTimeUtc.Date.AddHours(20)));
     }
 
     var hours = match.Groups["period"].Value.ToLowerInvariant() switch
@@ -38,6 +38,6 @@ public sealed partial class TimeOfDayAliasParser : ITimeExpressionParser
       _ => 12
     };
 
-    return Result.Ok(TimeParserHelpers.PreserveInputKind(referenceTimeUtc.Date.AddHours(hours)));
+    return Result.Ok(TimeParserHelpers.KeepUtcElseUseUnspecified(referenceTimeUtc.Date.AddHours(hours)));
   }
 }

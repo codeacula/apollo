@@ -35,7 +35,7 @@ public sealed partial class TomorrowParser : ITimeExpressionParser
       if (timeResult.IsSuccess)
       {
         var dt = referenceTimeUtc.Date.AddDays(1).Add(timeResult.Value);
-        return Result.Ok(TimeParserHelpers.PreserveInputKind(dt));
+        return Result.Ok(TimeParserHelpers.KeepUtcElseUseUnspecified(dt));
       }
     }
 
@@ -50,11 +50,11 @@ public sealed partial class TomorrowParser : ITimeExpressionParser
         _ => 9
       };
       var dt = referenceTimeUtc.Date.AddDays(1).AddHours(hours);
-      return Result.Ok(TimeParserHelpers.PreserveInputKind(dt));
+      return Result.Ok(TimeParserHelpers.KeepUtcElseUseUnspecified(dt));
     }
 
     return TomorrowPattern().IsMatch(input)
-      ? Result.Ok(TimeParserHelpers.PreserveInputKind(referenceTimeUtc.AddDays(1)))
+      ? Result.Ok(TimeParserHelpers.KeepUtcElseUseUnspecified(referenceTimeUtc.AddDays(1)))
       : Result.Fail<DateTime>($"'{input}' is not a tomorrow expression");
   }
 }
