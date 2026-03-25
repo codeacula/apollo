@@ -1,0 +1,239 @@
+{
+  "main": {
+    "id": "7942c98fd7f0ceaf",
+    "type": "split",
+    "children": [
+      {
+        "id": "09f0b43a983c75a3",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "19fdda3f6173fd42",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "docs/issues/Review Reminder Workflow.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Review Reminder Workflow"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "1684d1861ca06621",
+    "type": "split",
+    "children": [
+      {
+        "id": "8a3ad0417fef82df",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "c6a024bce332e88d",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "fa48c17f6e740e4b",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "643b44fa6fc529cc",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 353.5
+  },
+  "right": {
+    "id": "05e279130e91eca5",
+    "type": "split",
+    "children": [
+      {
+        "id": "fa8f91332fe9c9cf",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "b35521725d536cd6",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "issues/_template.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks for _template"
+            }
+          },
+          {
+            "id": "2015d7beb2762c94",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "issues/_template.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links from _template"
+            }
+          },
+          {
+            "id": "6387bc876ee7e5a7",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "b654f0fc7252317c",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "86ca3bf35295257a",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "issues/_template.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline of _template"
+            }
+          },
+          {
+            "id": "8def9d500a740aab",
+            "type": "leaf",
+            "state": {
+              "type": "file-properties",
+              "state": {
+                "file": "docs/issues/Review Reminder Workflow.md"
+              },
+              "icon": "lucide-info",
+              "title": "File properties for Review Reminder Workflow"
+            }
+          }
+        ],
+        "currentTab": 5
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false,
+      "obsidian-excalidraw-plugin:New drawing": false,
+      "templater-obsidian:Templater": false
+    }
+  },
+  "active": "19fdda3f6173fd42",
+  "lastOpenFiles": [
+    "docs/issues/Review Architecture.md",
+    "docs/issues/Allow People To Have Multiple Platform IDs.md",
+    "docs/issues/Review Reminder Workflow.md",
+    "docs/templates/issue-template.md",
+    "docs/issues/Completed",
+    "docs/issues/TodoQuickCreateComponent Defaults To Blue Energy Instead Of Green.md",
+    "docs/issues/No To-Dos Result In False Warning.md",
+    "docs/issues/Let Apollo Maintain Shared Identity And Context Across DMs Servers And Future Clients.md",
+    "docs/issues/Investigate PWA Mobile Notifications To Reduce Discord Dependency.md",
+    "docs/issues/Investigate If All The gRPC Contracts Have To Explicitly State User Credentials.md",
+    "docs/issues/Explore Multi-Tenant Apollo With Subscriptions And Tenant-Scoped Access.md",
+    "docs/issues/Dashboard MVP Overview Page With Operational Summary Cards.md",
+    "docs/issues/Clean Up Descriptions In Todo Plugin.md",
+    "docs/issues/Allow Apollo To Be Installed Into User-Managed Discord Servers.md",
+    "docs/issues/Add The Ability To Set Due Date In To-Dos.md",
+    "docs/issues/Add Realtime Client Updates For Dashboard To-Dos And Reminders.md",
+    "docs/issues/Add Persistent Reminder Follow-Up Interactions With Friendly Task Aliases.md",
+    "docs/issues/Add Dashboard Overview API Data Model For Workload And Recent Activity.md",
+    "docs/issues/Add Checking If To-Do Already Exists Or Sounds Similar.md",
+    "docs/issues/ReminderCreatedComponent Needs To Use The User's Timezone.md",
+    "docs/issues/Refactor Todo Interaction Module.md",
+    "docs/issues/Investigate Platform Management In DbPerson.md",
+    "docs/issues/Investigate Manage Access Request.md",
+    "docs/issues/GetDailyPlanQuery Looks Like It's Duplicating Code.md",
+    "docs/issues/Apollo Doesn't Send One Message For Multiple Reminders.md",
+    "docs/issues/Todoquickcreatecomponent Defaults To Blue Energy Instead Of Green.md",
+    "docs/issues/Store Tool Call Results Add Metadata.md",
+    "docs/templates",
+    "docs",
+    "tests/Apollo.Domain.Tests/ToDos/ValueObjects/ToDoIdTests.cs",
+    "tests/Apollo.Domain.Tests/ToDos/ValueObjects/ReminderIdTests.cs",
+    "tests/Apollo.Domain.Tests/ToDos/ValueObjects/PriorityTests.cs",
+    "tests/Apollo.Domain.Tests/ToDos/ValueObjects/InterestTests.cs",
+    "tests/Apollo.Domain.Tests/ToDos/ValueObjects/EnergyTests.cs",
+    "tests/Apollo.Domain.Tests/ToDos/ValueObjects/DueDateTests.cs",
+    "tests/Apollo.Domain.Tests/ToDos/ValueObjects/DetailsTests.cs"
+  ]
+}
