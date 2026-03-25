@@ -57,6 +57,7 @@ if (!string.IsNullOrWhiteSpace(appUrls) && appUrls.Contains("https://", StringCo
 }
 _ = app.UseDefaultFiles();
 _ = app.UseStaticFiles();
+_ = app.MapStaticAssets();
 _ = app.MapControllers();
 _ = app.MapHub<DashboardHub>("/hubs/dashboard");
 #pragma warning disable ASP0018 // route parameter 'path' is intentionally unused — catch-all for SPA routing
@@ -66,6 +67,12 @@ _ = app.MapMethods("{**path}", [HttpMethods.Get, HttpMethods.Head], async contex
   if (context.Request.Path.StartsWithSegments("/api")
     || context.Request.Path.StartsWithSegments("/hubs")
     || context.Request.Path.StartsWithSegments("/assets"))
+  {
+    context.Response.StatusCode = StatusCodes.Status404NotFound;
+    return;
+  }
+
+  if (Path.HasExtension(context.Request.Path.Value))
   {
     context.Response.StatusCode = StatusCodes.Status404NotFound;
     return;
