@@ -41,6 +41,16 @@ public class ApiRoutingTests(WebApplicationFactory<IApolloAPI> factory) : IClass
   }
 
   [Fact]
+  public async Task GetMissingFrontendModuleReturnsNotFoundAsync()
+  {
+    var client = _factory.CreateClient();
+
+    var response = await client.GetAsync("/src/main.ts");
+
+    Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
+  }
+
+  [Fact]
   public void FactoryCreatesClientSuccessfully()
   {
     var client = _factory.CreateClient();
