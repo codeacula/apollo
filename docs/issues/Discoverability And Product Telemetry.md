@@ -4,6 +4,10 @@ title: "Discoverability and product telemetry"
 status: "open"
 labels: ["enhancement"]
 assignees: []
+milestone: "near-term-dashboard-foundation"
+milestone_doc: "[[near-term-dashboard-foundation]]"
+parent_issue: 95
+parent_issue_doc: "[[Create Apollo Dashboard For Management And Live Status]]"
 created_at: "2026-03-22T19:17:12Z"
 updated_at: "2026-03-22T20:01:36Z"
 source_url: "https://github.com/codeacula/apollo/issues/202"

@@ -1,12 +1,15 @@
 ---
 issue_number: 166
-title: "Store Tool Call Results + Add Metadata"
-status: "open"
-labels: ["enhancement"]
+title: Store Tool Call Results + Add Metadata
+status: open
+labels:
+  - enhancement
 assignees: []
-created_at: "2026-02-02T03:06:15Z"
-updated_at: "2026-03-22T19:55:58Z"
-source_url: "https://github.com/codeacula/apollo/issues/166"
+milestone: backlog-architecture-and-workflow-foundation
+milestone_doc: "[[Backlog Architecture and Workflow Foundation]]"
+created_at: 2026-02-02T03:06:15Z
+updated_at: 2026-03-22T19:55:58Z
+source_url: https://github.com/codeacula/apollo/issues/166
 ---
 
 # Summary

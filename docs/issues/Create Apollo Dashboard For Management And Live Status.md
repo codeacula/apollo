@@ -4,6 +4,18 @@ title: "Create Apollo dashboard for management and live status"
 status: "open"
 labels: ["enhancement"]
 assignees: []
+milestone: "near-term-dashboard-foundation"
+milestone_doc: "[[near-term-dashboard-foundation]]"
+child_issues:
+  - 209
+  - 210
+  - 211
+  - 202
+child_issue_docs:
+  - "[[Dashboard MVP Overview Page With Operational Summary Cards]]"
+  - "[[Add Dashboard Overview API Data Model For Workload And Recent Activity]]"
+  - "[[Add Realtime Client Updates For Dashboard To-Dos And Reminders]]"
+  - "[[Discoverability And Product Telemetry]]"
 created_at: "2025-12-17T15:19:59Z"
 updated_at: "2026-03-22T20:17:43Z"
 source_url: "https://github.com/codeacula/apollo/issues/95"

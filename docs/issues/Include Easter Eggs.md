@@ -4,6 +4,12 @@ title: "Include Easter Eggs"
 status: "open"
 labels: ["enhancement"]
 assignees: []
+milestone: "backlog-product-adoption-and-delight"
+milestone_doc: "[[backlog-product-adoption-and-delight]]"
+child_issues:
+  - 164
+child_issue_docs:
+  - "[[Easter Egg Apollo Catching Drips]]"
 created_at: "2025-12-30T19:52:13Z"
 updated_at: "2026-03-22T20:10:26Z"
 source_url: "https://github.com/codeacula/apollo/issues/122"

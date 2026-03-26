@@ -1,12 +1,15 @@
 ---
 issue_number: 206
-title: "Investigate PWA/mobile notifications to reduce Discord dependency"
-status: "open"
-labels: ["enhancement"]
+title: Investigate PWA/mobile notifications to reduce Discord dependency
+status: open
+labels:
+  - enhancement
 assignees: []
-created_at: "2026-03-22T20:06:06Z"
-updated_at: "2026-03-22T20:06:06Z"
-source_url: "https://github.com/codeacula/apollo/issues/206"
+milestone: backlog-access-identity-and-platform
+milestone_doc: "[[Backlog Access Identity and Platform]]"
+created_at: 2026-03-22T20:06:06Z
+updated_at: 2026-03-22T20:06:06Z
+source_url: https://github.com/codeacula/apollo/issues/206
 ---
 
 # Summary

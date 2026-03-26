@@ -1,12 +1,15 @@
 ---
 issue_number: 140
-title: "Add Versioning to Event Source Workflow"
-status: "open"
-labels: ["enhancement"]
+title: Add Versioning to Event Source Workflow
+status: open
+labels:
+  - enhancement
 assignees: []
-created_at: "2026-01-09T18:23:06Z"
-updated_at: "2026-01-09T18:23:06Z"
-source_url: "https://github.com/codeacula/apollo/issues/140"
+milestone: backlog-architecture-and-workflow-foundation
+milestone_doc: "[[Backlog Architecture and Workflow Foundation]]"
+created_at: 2026-01-09T18:23:06Z
+updated_at: 2026-01-09T18:23:06Z
+source_url: https://github.com/codeacula/apollo/issues/140
 ---
 
 # Summary

@@ -1,12 +1,19 @@
 ---
 issue_number: 204
-title: "Add user access requests and approval flow"
-status: "open"
-labels: ["enhancement"]
+title: Add user access requests and approval flow
+status: open
+labels:
+  - enhancement
 assignees: []
-created_at: "2026-03-22T20:06:04Z"
-updated_at: "2026-03-22T20:06:04Z"
-source_url: "https://github.com/codeacula/apollo/issues/204"
+milestone: backlog-access-identity-and-platform
+milestone_doc: "[[Backlog Access Identity and Platform]]"
+child_issues:
+  - 188
+child_issue_docs:
+  - "[[Investigate Manage Access Request]]"
+created_at: 2026-03-22T20:06:04Z
+updated_at: 2026-03-22T20:06:04Z
+source_url: https://github.com/codeacula/apollo/issues/204
 ---
 
 # Summary

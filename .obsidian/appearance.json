@@ -2,7 +2,7 @@
   "cssTheme": "AnuPpuccin",
   "textFontFamily": "Montserrat",
   "monospaceFontFamily": "JetBrainsMono Nerd Font",
-  "interfaceFontFamily": "Inter,Montserrat",
+  "interfaceFontFamily": "Inter",
   "baseFontSize": 16,
   "accentColor": "",
   "enabledCssSnippets": [

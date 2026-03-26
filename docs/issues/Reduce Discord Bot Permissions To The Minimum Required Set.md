@@ -1,12 +1,15 @@
 ---
 issue_number: 205
-title: "Reduce Discord bot permissions to the minimum required set"
-status: "open"
-labels: ["enhancement"]
+title: Reduce Discord bot permissions to the minimum required set
+status: open
+labels:
+  - enhancement
 assignees: []
-created_at: "2026-03-22T20:06:05Z"
-updated_at: "2026-03-22T20:06:05Z"
-source_url: "https://github.com/codeacula/apollo/issues/205"
+milestone: backlog-access-identity-and-platform
+milestone_doc: "[[Backlog Access Identity and Platform]]"
+created_at: 2026-03-22T20:06:05Z
+updated_at: 2026-03-22T20:06:05Z
+source_url: https://github.com/codeacula/apollo/issues/205
 ---
 
 # Summary

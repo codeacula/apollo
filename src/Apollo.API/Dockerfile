@@ -4,6 +4,10 @@ EXPOSE 5144
 
 ENV ASPNETCORE_URLS=http://+:5144
 
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libgssapi-krb5-2 \
+    && rm -rf /var/lib/apt/lists/*
+
 USER app
 
 # Build the client

@@ -2,6 +2,12 @@
 status: open
 labels: []
 assignees: []
+milestone:
+milestone_doc:
+parent_issue:
+parent_issue_doc:
+child_issues: []
+child_issue_docs: []
 created: <% tp.file.creation_date() %>
 updated: <% tp.file.creation_date() %>
 ---

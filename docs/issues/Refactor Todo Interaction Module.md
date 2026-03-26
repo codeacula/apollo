@@ -4,6 +4,8 @@ title: "Refactor ToDoInteractionModule"
 status: "open"
 labels: ["good first issue"]
 assignees: []
+milestone: "backlog-reminder-and-todo-polish"
+milestone_doc: "[[backlog-reminder-and-todo-polish]]"
 created_at: "2026-02-25T21:43:59Z"
 updated_at: "2026-02-25T21:44:04Z"
 source_url: "https://github.com/codeacula/apollo/issues/199"

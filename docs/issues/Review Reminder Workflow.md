@@ -2,6 +2,8 @@
 status: open
 labels: []
 assignees: []
+milestone: "backlog-reminder-and-todo-polish"
+milestone_doc: "[[backlog-reminder-and-todo-polish]]"
 created: 2026-03-25 09:35
 updated: 2026-03-25 09:35
 ---

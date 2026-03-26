@@ -1,12 +1,15 @@
 ---
 issue_number: 207
-title: "Explore multi-tenant Apollo with subscriptions and tenant-scoped access"
-status: "open"
-labels: ["enhancement"]
+title: Explore multi-tenant Apollo with subscriptions and tenant-scoped access
+status: open
+labels:
+  - enhancement
 assignees: []
-created_at: "2026-03-22T20:10:05Z"
-updated_at: "2026-03-22T20:10:05Z"
-source_url: "https://github.com/codeacula/apollo/issues/207"
+milestone: backlog-access-identity-and-platform
+milestone_doc: "[[Backlog Access Identity and Platform]]"
+created_at: 2026-03-22T20:10:05Z
+updated_at: 2026-03-22T20:10:05Z
+source_url: https://github.com/codeacula/apollo/issues/207
 ---
 
 # Summary

@@ -4,6 +4,13 @@ title: "Add persistent reminder follow-up interactions with friendly task aliase
 status: "open"
 labels: ["enhancement"]
 assignees: []
+milestone: "short-term-nagging-reminders"
+milestone_doc: "[[short-term-nagging-reminders]]"
+child_issues: []
+child_issue_docs:
+  - "[[Add Reminder Interaction Persistence Model]]"
+  - "[[Add Reminder Follow-Up Scheduler And Cadence]]"
+  - "[[Add Reminder Response Resolution And Outcome Handling]]"
 created_at: "2025-12-30T18:38:54Z"
 updated_at: "2026-03-22T19:55:56Z"
 source_url: "https://github.com/codeacula/apollo/issues/121"
@@ -143,3 +150,10 @@ Apollo should interpret follow-up responses like:
 - quiet hours
 - sentiment-aware follow-up logic
 - advanced batching/window optimization based on usage analytics
+
+### Planning refinement
+- Treat this as an umbrella issue for the short-term nagging reminder work rather than a single implementation slice
+- Suggested child issues:
+  - `docs/issues/Add Reminder Interaction Persistence Model.md`
+  - `docs/issues/Add Reminder Follow-Up Scheduler And Cadence.md`
+  - `docs/issues/Add Reminder Response Resolution And Outcome Handling.md`

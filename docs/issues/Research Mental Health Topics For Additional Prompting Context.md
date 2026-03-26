@@ -4,6 +4,8 @@ title: "Research Mental Health Topics For Additional Prompting Context"
 status: "open"
 labels: ["question"]
 assignees: []
+milestone: "backlog-product-adoption-and-delight"
+milestone_doc: "[[backlog-product-adoption-and-delight]]"
 created_at: "2025-12-30T16:32:32Z"
 updated_at: "2026-03-22T20:10:29Z"
 source_url: "https://github.com/codeacula/apollo/issues/118"

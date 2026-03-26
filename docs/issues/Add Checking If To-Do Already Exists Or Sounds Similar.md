@@ -4,6 +4,8 @@ title: "Add checking if to do already exists or sounds similar"
 status: "open"
 labels: ["enhancement"]
 assignees: []
+milestone: "backlog-reminder-and-todo-polish"
+milestone_doc: "[[backlog-reminder-and-todo-polish]]"
 created_at: "2026-02-10T17:52:19Z"
 updated_at: "2026-03-22T19:56:00Z"
 source_url: "https://github.com/codeacula/apollo/issues/173"

@@ -11,9 +11,10 @@ public sealed class DashboardOverviewStore(IQuerySession querySession) : IDashbo
 {
   public async Task<DashboardOverviewData> GetOverviewDataAsync(DateTime nowUtc, CancellationToken cancellationToken = default)
   {
-    var dayStart = nowUtc.Date;
-    var messagesWindowStart = nowUtc.AddHours(-24);
-    var remindersWindowEnd = nowUtc.AddHours(24);
+    var databaseNow = AsDatabaseTimestamp(nowUtc);
+    var dayStart = AsDatabaseTimestamp(nowUtc.Date);
+    var messagesWindowStart = AsDatabaseTimestamp(nowUtc.AddHours(-24));
+    var remindersWindowEnd = AsDatabaseTimestamp(nowUtc.AddHours(24));
 
     var totalPeopleTask = querySession.Query<DbPerson>().CountAsync(cancellationToken);
     var peopleWithAccessTask = querySession.Query<DbPerson>().CountAsync(x => x.HasAccess, token: cancellationToken);
@@ -32,7 +33,7 @@ public sealed class DashboardOverviewStore(IQuerySession querySession) : IDashbo
       .Where(x => !x.IsDeleted)
       .CountAsync(cancellationToken);
     var dueSoonRemindersTask = querySession.Query<DbReminder>()
-      .Where(x => !x.IsDeleted && x.ReminderTime >= nowUtc && x.ReminderTime <= remindersWindowEnd
+      .Where(x => !x.IsDeleted && x.ReminderTime >= databaseNow && x.ReminderTime <= remindersWindowEnd
                   && !x.SentOn.HasValue && !x.AcknowledgedOn.HasValue)
       .CountAsync(cancellationToken);
     var sentTodayRemindersTask = querySession.Query<DbReminder>()
@@ -66,11 +67,12 @@ public sealed class DashboardOverviewStore(IQuerySession querySession) : IDashbo
     var sentTodayReminders = await sentTodayRemindersTask;
     var acknowledgedReminders = await acknowledgedRemindersTask;
     var totalConversations = await totalConversationsTask;
-    var messagesLast24Hours = (await querySession.Query<DbConversation>()
+    var recentMessageConversations = await querySession.Query<DbConversation>()
       .Where(x => x.UpdatedOn >= messagesWindowStart)
-      .Select(x => x.Messages.Count(m => m.CreatedOn >= messagesWindowStart))
-      .ToListAsync(cancellationToken))
-      .Sum();
+      .ToListAsync(cancellationToken);
+
+    var messagesLast24Hours = recentMessageConversations
+      .Sum(x => x.Messages.Count(m => m.CreatedOn >= messagesWindowStart));
 
     var recentToDos = await querySession.Query<DbToDo>()
       .Where(x => !x.IsDeleted)
@@ -81,22 +83,28 @@ public sealed class DashboardOverviewStore(IQuerySession querySession) : IDashbo
 
     var recentReminders = await querySession.Query<DbReminder>()
       .Where(x => !x.IsDeleted)
-      .OrderByDescending(x => x.SentOn ?? x.CreatedOn)
+      .OrderByDescending(x => x.UpdatedOn)
       .Take(6)
       .Select(x => new ReminderActivityProjection(x.PersonId, x.Details, x.CreatedOn, x.SentOn))
       .ToListAsync(cancellationToken);
 
-    var recentConversations = await querySession.Query<DbConversation>()
+    var recentConversations = (await querySession.Query<DbConversation>()
       .OrderByDescending(x => x.UpdatedOn)
       .Take(6)
-      .Select(x => new ConversationActivityProjection(
-        x.PersonId,
-        x.UpdatedOn,
-        x.Messages.Count > 0 ? x.Messages[x.Messages.Count - 1].Content : string.Empty,
-        x.Messages.Count > 0 && x.Messages[x.Messages.Count - 1].FromUser,
-        x.Messages.Count > 0 ? x.Messages[x.Messages.Count - 1].CreatedOn : x.UpdatedOn,
-        x.Messages.Count))
-      .ToListAsync(cancellationToken);
+      .ToListAsync(cancellationToken))
+      .Select(x =>
+      {
+        var lastMessage = x.Messages.Count > 0 ? x.Messages[^1] : null;
+
+        return new ConversationActivityProjection(
+          x.PersonId,
+          x.UpdatedOn,
+          lastMessage?.Content ?? string.Empty,
+          lastMessage?.FromUser ?? false,
+          lastMessage?.CreatedOn ?? x.UpdatedOn,
+          x.Messages.Count);
+      })
+      .ToList();
 
     var activityPersonIds = recentToDos.Select(x => x.PersonId)
       .Concat(recentReminders.Select(x => x.PersonId))
@@ -215,6 +223,13 @@ public sealed class DashboardOverviewStore(IQuerySession querySession) : IDashbo
     }
 
     return $"{value[..(maxLength - 3)]}...";
+  }
+
+  private static DateTime AsDatabaseTimestamp(DateTime value)
+  {
+    return value.Kind == DateTimeKind.Unspecified
+      ? value
+      : DateTime.SpecifyKind(value, DateTimeKind.Unspecified);
   }
 
   private sealed record PersonLookupProjection(Guid Id, string Username);

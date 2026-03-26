@@ -1,12 +1,15 @@
 ---
 issue_number: 183
-title: "Combine Config Settings Into One"
-status: "open"
-labels: ["good first issue"]
+title: Combine Config Settings Into One
+status: open
+labels:
+  - good first issue
 assignees: []
-created_at: "2026-02-19T15:38:56Z"
-updated_at: "2026-02-19T15:38:56Z"
-source_url: "https://github.com/codeacula/apollo/issues/183"
+milestone: backlog-architecture-and-workflow-foundation
+milestone_doc: "[[Backlog Architecture and Workflow Foundation]]"
+created_at: 2026-02-19T15:38:56Z
+updated_at: 2026-02-19T15:38:56Z
+source_url: https://github.com/codeacula/apollo/issues/183
 ---
 
 # Summary

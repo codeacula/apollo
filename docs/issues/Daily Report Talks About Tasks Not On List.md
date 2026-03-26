@@ -4,6 +4,8 @@ title: "Daily Report talks about tasks not on list"
 status: "open"
 labels: ["buggums"]
 assignees: []
+milestone: "backlog-reminder-and-todo-polish"
+milestone_doc: "[[backlog-reminder-and-todo-polish]]"
 created_at: "2026-02-12T18:04:09Z"
 updated_at: "2026-03-22T19:55:54Z"
 source_url: "https://github.com/codeacula/apollo/issues/177"

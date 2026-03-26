@@ -1,12 +1,12 @@
 ---
-issue_number: 203
-title: "Allow Apollo to be installed into user-managed Discord servers"
-status: "open"
-labels: ["enhancement"]
+title: Allow Apollo to be installed into user-managed Discord servers
+status: open
+labels:
+  - enhancement
 assignees: []
-created_at: "2026-03-22T20:06:02Z"
-updated_at: "2026-03-22T20:06:03Z"
-source_url: "https://github.com/codeacula/apollo/issues/203"
+milestone: "[[Backlog Access Identity and Platform]]"
+created_at: 2026-03-22T20:06:02Z
+updated_at: 2026-03-22T20:06:03Z
 ---
 
 # Summary

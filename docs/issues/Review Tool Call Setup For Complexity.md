@@ -1,12 +1,15 @@
 ---
 issue_number: 187
-title: "Review Tool Call Setup For Complexity"
-status: "open"
-labels: ["question"]
+title: Review Tool Call Setup For Complexity
+status: open
+labels:
+  - question
 assignees: []
-created_at: "2026-02-19T18:40:08Z"
-updated_at: "2026-03-22T19:53:17Z"
-source_url: "https://github.com/codeacula/apollo/issues/187"
+milestone: backlog-architecture-and-workflow-foundation
+milestone_doc: "[[Backlog Architecture and Workflow Foundation]]"
+created_at: 2026-02-19T18:40:08Z
+updated_at: 2026-03-22T19:53:17Z
+source_url: https://github.com/codeacula/apollo/issues/187
 ---
 
 # Summary

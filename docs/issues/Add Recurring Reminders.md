@@ -4,6 +4,8 @@ title: "Add Recurring Reminders"
 status: "open"
 labels: ["enhancement"]
 assignees: []
+milestone: "short-term-recurring-reminders-and-management"
+milestone_doc: "[[short-term-recurring-reminders-and-management]]"
 created_at: "2025-12-30T17:59:05Z"
 updated_at: "2026-01-09T15:33:19Z"
 source_url: "https://github.com/codeacula/apollo/issues/120"

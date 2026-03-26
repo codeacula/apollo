@@ -4,6 +4,10 @@ title: "Add realtime client updates for dashboard, to-dos, and reminders"
 status: "open"
 labels: ["enhancement"]
 assignees: []
+milestone: "near-term-dashboard-foundation"
+milestone_doc: "[[near-term-dashboard-foundation]]"
+parent_issue: 95
+parent_issue_doc: "[[Create Apollo Dashboard For Management And Live Status]]"
 created_at: "2026-03-22T20:17:42Z"
 updated_at: "2026-03-22T20:19:17Z"
 source_url: "https://github.com/codeacula/apollo/issues/211"

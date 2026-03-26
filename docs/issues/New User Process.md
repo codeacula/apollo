@@ -4,6 +4,8 @@ title: "New User Process"
 status: "open"
 labels: ["enhancement"]
 assignees: []
+milestone: "backlog-product-adoption-and-delight"
+milestone_doc: "[[backlog-product-adoption-and-delight]]"
 created_at: "2025-12-15T17:39:45Z"
 updated_at: "2026-03-22T19:56:02Z"
 source_url: "https://github.com/codeacula/apollo/issues/93"

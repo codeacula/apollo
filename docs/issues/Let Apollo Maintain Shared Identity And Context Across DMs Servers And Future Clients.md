@@ -1,12 +1,15 @@
 ---
 issue_number: 208
-title: "Let Apollo maintain shared identity and context across DMs, servers, and future clients"
-status: "open"
-labels: ["enhancement"]
+title: Let Apollo maintain shared identity and context across DMs, servers, and future clients
+status: open
+labels:
+  - enhancement
 assignees: []
-created_at: "2026-03-22T20:10:06Z"
-updated_at: "2026-03-22T20:10:06Z"
-source_url: "https://github.com/codeacula/apollo/issues/208"
+milestone: backlog-access-identity-and-platform
+milestone_doc: "[[Backlog Access Identity and Platform]]"
+created_at: 2026-03-22T20:10:06Z
+updated_at: 2026-03-22T20:10:06Z
+source_url: https://github.com/codeacula/apollo/issues/208
 ---
 
 # Summary

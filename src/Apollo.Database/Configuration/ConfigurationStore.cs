@@ -5,9 +5,11 @@ using FluentResults;
 
 using Marten;
 
+using Microsoft.Extensions.Configuration;
+
 namespace Apollo.Database.Configuration;
 
-public sealed class ConfigurationStore(IDocumentSession session) : IConfigurationStore
+public sealed class ConfigurationStore(IDocumentSession session, IConfiguration configuration) : IConfigurationStore
 {
   public async Task<Result<ConfigurationData>> GetAsync(CancellationToken cancellationToken = default)
   {
@@ -15,7 +17,7 @@ public sealed class ConfigurationStore(IDocumentSession session) : IConfiguratio
     {
       var config = await session.LoadAsync<DbConfiguration>(ConfigurationId.Root, cancellationToken);
       return config is null
-        ? Result.Fail<ConfigurationData>("Configuration not initialized")
+        ? Result.Ok(BuildFallbackConfiguration())
         : Result.Ok(ToConfigurationData(config));
     }
     catch (Exception ex)
@@ -107,7 +109,7 @@ public sealed class ConfigurationStore(IDocumentSession session) : IConfiguratio
     try
     {
       var config = await session.LoadAsync<DbConfiguration>(ConfigurationId.Root, cancellationToken);
-      return Result.Ok(config is not null);
+      return Result.Ok(config is not null || BuildFallbackConfiguration().IsInitialized);
     }
     catch (Exception ex)
     {
@@ -127,5 +129,18 @@ public sealed class ConfigurationStore(IDocumentSession session) : IConfiguratio
     SuperAdminDiscordUserId = config.SuperAdminDiscordUserId,
     DefaultTimeZoneId = config.DefaultTimeZoneId,
     DefaultDailyTaskCount = config.DefaultDailyTaskCount,
+  };
+
+  private ConfigurationData BuildFallbackConfiguration() => new()
+  {
+    Id = Guid.Empty,
+    AiModelId = configuration.GetSection("ApolloAIConfig")["ModelId"],
+    AiEndpoint = configuration.GetSection("ApolloAIConfig")["Endpoint"],
+    AiApiKey = configuration.GetSection("ApolloAIConfig")["ApiKey"],
+    DiscordToken = configuration.GetSection("Discord")["Token"],
+    DiscordPublicKey = configuration.GetSection("Discord")["PublicKey"],
+    DiscordBotName = configuration.GetSection("DiscordConfig")["BotName"],
+    SuperAdminDiscordUserId = configuration.GetSection("SuperAdminConfig")["DiscordUserId"],
+    DefaultTimeZoneId = configuration.GetSection("PersonConfig")["DefaultTimeZoneId"],
   };
 }
